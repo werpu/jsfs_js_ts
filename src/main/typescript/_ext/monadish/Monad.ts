@@ -462,6 +462,12 @@ export class Config extends Optional<any> {
     }
 
 
+    applyIf(condition: boolean,...keys: Array<any>) {
+        return  condition ? this.apply(keys) : {value: null};
+    }
+
+
+
     getIf(...keys: Array<string>): Config {
         return this.getClass().fromNullable(super.getIf.apply(this, keys).value);
     }

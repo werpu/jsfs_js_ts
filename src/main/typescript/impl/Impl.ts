@@ -1,17 +1,17 @@
-///<reference path='../_ext/Dom.d.ts'/>
 import {jsf} from "../api/jsf";
 import * as myfacesConfig from "../api/myfaces";
 import {myfaces} from "../api/myfaces";
 import {Lang} from "./util/Lang";
 import {Dom} from "./util/Dom";
-import {Monadish} from "./util/Monad";
+
 
 import {DomQuery} from "./util/Nodes";
 import {ErrorData, EventData, IListener, ListenerQueue} from "./util/ListenerQueue";
 import {Response} from "./xhrCore/Response";
 import {XhrRequest} from "./xhrCore/XhrRequest";
 import {AsynchronouseQueue} from "./util/Queue";
-import Config = Monadish.Config;
+import {Config} from "../_ext/monadish/Monad";
+
 
 
 export module Impl {

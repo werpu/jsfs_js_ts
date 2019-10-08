@@ -11,4 +11,5 @@ It uses functional constructs on micro scale
 to keep the maintainability and uses 
 my own monadish project as core framework base.
 
+ATM the code is not working but that will change soon.
 

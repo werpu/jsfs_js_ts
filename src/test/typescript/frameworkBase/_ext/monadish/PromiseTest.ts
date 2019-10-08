@@ -22,26 +22,6 @@ import {Promise as ShimPromise} from "../../../../../main/typescript/_ext/monadi
 
 describe('promise tests', () => {
 
-    let clock;
-    before(function () {
-       //clock = sinon.useFakeTimers();
-    });
-
-    after(() => {
-       //clock.restore();
-    });
-    
-    /*it('simple promise no async', () => {
-     let applyPromise = new ShimPromise((apply: Function, reject: Function) => {
-     apply(1);
-     });
-
-     applyPromise.then((data: any): Promise => {
-     expect(data).to.be.eq(1);
-     return null;
-     });
-     });*/
-
     it('simple promise', (done) => {
 
         let applyPromise = new ShimPromise((apply: Function, reject: Function) => {
@@ -65,9 +45,6 @@ describe('promise tests', () => {
 
     });
 
-
-
-
     it('simple promise failure', (done) => {
 
         let applyPromise = new ShimPromise((apply: Function, reject: Function) => {
@@ -90,7 +67,6 @@ describe('promise tests', () => {
 
 
     });
-
 
     it('chained promise', (done) => {
 
@@ -117,10 +93,7 @@ describe('promise tests', () => {
             expect(finallyCalled).to.be.true;
             done();
         });
-
-
     });
-
 
     it("Promise all test", (done) => {
         let applyPromise = new ShimPromise((apply: Function, reject: Function) => {
@@ -146,6 +119,7 @@ describe('promise tests', () => {
             expect(data).to.be.eq(1);
             return 2;
         });
+
         applyPromise2.then((data: any): any => {
             then2Called = true;
             expect(data).to.be.eq(2);
@@ -159,10 +133,6 @@ describe('promise tests', () => {
             expect(finallyCalled).to.be.true;
             done();
         });
-
-
-
-
     });
 
     it("Promise race test", (done) => {
@@ -172,12 +142,14 @@ describe('promise tests', () => {
             },  1);
 
         });
+
         let applyPromise2 = new ShimPromise((apply: Function, reject: Function) => {
             setTimeout(() => {
                 apply(2);
             },  6);
 
         });
+
         let applyPromise3 = ShimPromise.race(applyPromise, applyPromise2);
 
         let finallyCalled = false;
@@ -317,9 +289,7 @@ describe('promise tests', () => {
             expect(v).to.be.true;
             done();
         });
-
     });
-
 });
 
 

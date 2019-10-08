@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-import { expect } from 'chai';
-import { describe, it } from 'mocha';
-
-import * as sinon from 'sinon';
+import {expect} from 'chai';
+import {describe, it} from 'mocha';
 import {Promise as ShimPromise} from "../../../../../main/typescript/_ext/monadish/Monad";
 
 describe('promise tests', () => {
@@ -27,7 +25,7 @@ describe('promise tests', () => {
         let applyPromise = new ShimPromise((apply: Function, reject: Function) => {
             setTimeout(() => {
                 apply(1);
-            },  1);
+            }, 1);
 
         });
         let finallyCalled = false;
@@ -50,7 +48,7 @@ describe('promise tests', () => {
         let applyPromise = new ShimPromise((apply: Function, reject: Function) => {
             setTimeout(() => {
                 reject(1);
-            },  1);
+            }, 1);
 
         });
         let finallyCalled = false;
@@ -73,12 +71,12 @@ describe('promise tests', () => {
         let applyPromise = new ShimPromise((apply: Function, reject: Function) => {
             setTimeout(() => {
                 apply(1);
-            },  1);
-
+            }, 1);
         });
         let finallyCalled = false;
         let thenCalled = false;
         let then2Called = false;
+
         applyPromise.then((data: any): any => {
             thenCalled = true;
             expect(data).to.be.eq(1);
@@ -99,13 +97,13 @@ describe('promise tests', () => {
         let applyPromise = new ShimPromise((apply: Function, reject: Function) => {
             setTimeout(() => {
                 apply(1);
-            },  1);
+            }, 1);
 
         });
         let applyPromise2 = new ShimPromise((apply: Function, reject: Function) => {
             setTimeout(() => {
                 apply(2);
-            },  1);
+            }, 1);
 
         });
         let applyPromise3 = ShimPromise.all(applyPromise, applyPromise2);
@@ -139,14 +137,14 @@ describe('promise tests', () => {
         let applyPromise = new ShimPromise((apply: Function, reject: Function) => {
             setTimeout(() => {
                 apply(1);
-            },  1);
+            }, 1);
 
         });
 
         let applyPromise2 = new ShimPromise((apply: Function, reject: Function) => {
             setTimeout(() => {
                 apply(2);
-            },  6);
+            }, 6);
 
         });
 
@@ -167,12 +165,12 @@ describe('promise tests', () => {
             return 2;
         });
 
-        applyPromise3.then((val: any):any => {
+        applyPromise3.then((val: any): any => {
             finallyCalled = true;
         });
 
         ShimPromise.all(applyPromise3).finally(() => {
-            expect(thenCalled || then2Called).to.be.true;
+            expect(thenCalled || then2Called).to.be.true;
             expect(then2Called).to.be.eq(false);
             expect(finallyCalled).to.be.true;
             done();
@@ -184,14 +182,14 @@ describe('promise tests', () => {
         let applyPromise = new ShimPromise((apply: Function, reject: Function) => {
             setTimeout(() => {
                 apply(1);
-            },  1);
+            }, 1);
 
         });
         applyPromise.then(() => {
             return new ShimPromise((apply: Function, reject: Function) => {
                 setTimeout(() => {
                     apply(2);
-                },  6);
+                }, 6);
 
             })
         }).then(() => {
@@ -205,14 +203,14 @@ describe('promise tests', () => {
         let applyPromise = new ShimPromise((apply: Function, reject: Function) => {
             setTimeout(() => {
                 reject(1);
-            },  1);
+            }, 1);
 
         });
         applyPromise.catch(() => {
             return new ShimPromise((apply: Function, reject: Function) => {
                 setTimeout(() => {
                     apply(2);
-                },  6);
+                }, 6);
 
             })
         }).then(() => {
@@ -223,21 +221,21 @@ describe('promise tests', () => {
     });
 
     it("Promise chain3 test", (done) => {
-        var chainExecuted = false;
-        var promise2Called = false;
-        var promise3Called = false;
-        var promise4Called = false;
+        let chainExecuted = false;
+        let promise2Called = false;
+        let promise3Called = false;
+        let promise4Called = false;
 
         let applyPromise = new ShimPromise((apply: Function, reject: Function) => {
             setTimeout(() => {
                 reject(1);
-            },  1);
+            }, 1);
 
         }).catch(() => {
             return new ShimPromise((apply: Function, reject: Function) => {
                 setTimeout(() => {
                     apply(2);
-                },  6);
+                }, 6);
 
             })
         }).then(() => {
@@ -250,7 +248,7 @@ describe('promise tests', () => {
         let applyPromise2 = new ShimPromise((apply: Function, reject: Function) => {
             setTimeout(() => {
                 reject(1);
-            },  1);
+            }, 1);
 
         }).then(() => {
             promise2Called = true;
@@ -268,10 +266,10 @@ describe('promise tests', () => {
     });
 
     it("Promise resolve test", (done) => {
-        var promisCalled = false;
-        var original = ShimPromise.resolve(true);
-        var cast = ShimPromise.resolve(original);
-        cast.then(function(v) {
+        let promisCalled = false;
+        const original = ShimPromise.resolve(true);
+        const cast = ShimPromise.resolve(original);
+        cast.then(function (v) {
             promisCalled = true;
             expect(v).to.be.true;
             done();
@@ -280,11 +278,11 @@ describe('promise tests', () => {
     });
 
     it("Promise reject test", (done) => {
-        var promisCalled = false;
-        var original = ShimPromise.resolve(true);
-        var original2 = ShimPromise.resolve(original);
-        var cast = ShimPromise.reject(original2);
-        cast.catch(function(v) {
+        let promisCalled = false;
+        const original = ShimPromise.resolve(true);
+        const original2 = ShimPromise.resolve(original);
+        const cast = ShimPromise.reject(original2);
+        cast.catch(function (v) {
             promisCalled = true;
             expect(v).to.be.true;
             done();

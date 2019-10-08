@@ -16,6 +16,10 @@
 
 import {Lang} from "./Lang";
 import {jsf} from "../../api/jsf";
+/*
+ * @deprecated will be deleted soon
+ * in favor of DomQuery
+ */
 export class Dom {
     /*table elements which are used in various parts */
     private TABLE_ELEMS: any = {

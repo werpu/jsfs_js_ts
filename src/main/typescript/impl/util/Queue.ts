@@ -17,7 +17,11 @@
 
 import {AsyncRunnable} from "./AsyncRunnable";
 
-
+/**
+ * classical queue implementation
+ * but with a high speed mix to
+ * process the queue as fast as possible
+ */
 export class Queue<T> {
     //faster queue by http://safalra.com/web-design/javascript/queues/Queue.js
     //license public domain
@@ -84,7 +88,7 @@ export class Queue<T> {
         /*find element in queue*/
         let index = this.indexOf(element);
         /*found*/
-        if (index != -1) {
+        if (index >= 0) {
             this.q.splice(index, 1);
         }
     }
@@ -119,6 +123,20 @@ export class Queue<T> {
             }
         }
         // return the removed element
+        return element;
+    }
+
+    read(): T {
+        let element = null;
+
+        // check whether the queue is empty
+        let qLen = this.q.length;
+        let queue: any = this.q;
+
+        if (qLen) {
+            // fetch the oldest element in the queue
+            element = queue[this.space];
+        }
         return element;
     }
 
@@ -187,26 +205,34 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
 
     private appendElement(element: T) {
         let empty = this.isEmpty;
-        this._queue.enqueue(element);
+
         //only if the first element is added we start with a trigger
         //othwise a process already is running and not finished yet at that
         //time
-        if (empty) {
+        this._queue.enqueue(element);
+        if(empty) {
             this.walkQueue();
         }
     }
 
     private walkQueue() {
-        if (!this.isEmpty) {//newly added element, all promises are resolved now
-            let element: T = this.dequeue();
-            element.finally(() => {
-                //next one
-                this.walkQueue();
-            }).start();
+        if(this.isEmpty) {
+            return;
         }
+        let element = this.read();
+
+        let deq = () => {
+            //next one
+            this._queue.dequeue();
+            if (!this.isEmpty) {
+                this.walkQueue();
+            }
+
+        };
+        element.finally(deq).start();
     }
 
-    private get isEmpty(): boolean {
+    get isEmpty(): boolean {
         return this._queue.isEmpty;
     }
 
@@ -218,7 +244,13 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
         return this._queue.dequeue();
     }
 
+    read(): T {
+        return this._queue.read();
+    }
+
     cleanup() {
         this._queue.cleanup();
     }
+
+
 }

@@ -42,7 +42,7 @@ export class DomQuery {
             if (!(rootNode[0][0] instanceof DomQuery)) {
                 this.rootNode = this.rootNode.concat(rootNode[0]);
             } else {
-                for (var cnt = 0; cnt < rootNode[0].length; cnt++) {
+                for (let cnt = 0; cnt < rootNode[0].length; cnt++) {
                     rootNode[0][cnt].each((node: HTMLElement) => {
                         this.rootNode.push(node);
                     });
@@ -52,7 +52,7 @@ export class DomQuery {
             if (!(rootNode[0] instanceof DomQuery)) {
                 this.rootNode = this.rootNode.concat(rootNode);
             } else {
-                for (var cnt = 0; cnt < rootNode.length; cnt++) {
+                for (let cnt = 0; cnt < rootNode.length; cnt++) {
                     rootNode[cnt].each((node: HTMLElement) => {
                         this.rootNode.push(node);
                     });
@@ -99,8 +99,8 @@ export class DomQuery {
     }
 
     querySelectorAll(selector): DomQuery {
-        var nodes = [];
-        var nodeIdx = {};
+        let nodes = [];
+        let nodeIdx = {};
         for (let cnt = 0; cnt < this.rootNode.length; cnt++) {
             if (!this.rootNode[cnt].querySelectorAll) {
                 continue;
@@ -130,7 +130,7 @@ export class DomQuery {
     }
 
     byTagName(tagName: string, includeRoot ?: boolean): DomQuery {
-        var res = [];
+        let res = [];
         for (let cnt = 0; cnt < this.rootNode.length; cnt++) {
             if (includeRoot && this.rootNode[cnt].tagName == tagName) {
                 res.push(new DomQuery(this.rootNode[cnt]));
@@ -145,13 +145,13 @@ export class DomQuery {
     }
 
     setAttribute(attr: string, value: string) {
-        for (var cnt = 0, len = this.length; cnt < len; cnt++) {
+        for (let cnt = 0, len = this.length; cnt < len; cnt++) {
             this.asElem(cnt).value.setAttribute(attr, value);
         }
     }
 
     isMultipartCandidate(): boolean {
-        var found = false;
+        let found = false;
         this.querySelectorAll("input").each((item: HTMLElement) => {
             if (item.getAttribute("type") == "file") {
                 found = true;
@@ -194,7 +194,7 @@ export class DomQuery {
     }
 
     get type(): Optional<string> {
-        var retVal = this.asElem(0);
+        let retVal = this.asElem(0);
         if (retVal.isAbsent()) {
             return Optional.absent;
         }
@@ -202,7 +202,7 @@ export class DomQuery {
     }
 
     each(func: (item: HTMLElement, cnt?: number) => any): DomQuery {
-        for (var cnt = 0, len = this.rootNode.length; cnt < len; cnt++) {
+        for (let cnt = 0, len = this.rootNode.length; cnt < len; cnt++) {
             if (func(this.rootNode[cnt], cnt) === false) {
                 break;
             }
@@ -220,7 +220,7 @@ export class DomQuery {
 
 
     eachNode(func: (item: DomQuery, cnt?: number) => any): DomQuery {
-        for (var cnt = 0, len = this.rootNode.length; cnt < len; cnt++) {
+        for (let cnt = 0, len = this.rootNode.length; cnt < len; cnt++) {
             if (func(this.get(cnt), cnt) === false) {
                 break;
             }
@@ -246,8 +246,8 @@ export class DomQuery {
     }
 
     globalEval(code: string) {
-        var head = document.getElementsByTagName("head")[0] || document.documentElement;
-        var script = document.createElement("script");
+        let head = document.getElementsByTagName("head")[0] || document.documentElement;
+        let script = document.createElement("script");
         script.type = "text/javascript";
         script.text = code;
         head.insertBefore(script, head.firstChild);
@@ -279,7 +279,7 @@ export class DomQuery {
 
 
     childNodes(): DomQuery {
-        var res = [];
+        let res = [];
         this.each((item: HTMLElement) => {
             res = res.concat(Lang.instance.objToArray(item.childNodes))
         });
@@ -287,7 +287,7 @@ export class DomQuery {
     }
 
     loadScriptEval(src, type, defer, charSet, async) {
-        var xhr = new XMLHttpRequest();
+        let xhr = new XMLHttpRequest();
         xhr.open("GET", src, false);
 
         if (charSet) {
@@ -323,8 +323,8 @@ export class DomQuery {
     }
 
     insertAfter(...elem: Array<DomQuery>) {
-        var sibling = this.asElem(0).value;
-        for(var cnt = 0; cnt < elem.length; cnt++) {
+        let sibling = this.asElem(0).value;
+        for(let cnt = 0; cnt < elem.length; cnt++) {
             elem[cnt].each((myElem: HTMLElement) => {
                 sibling.parentNode.insertBefore(myElem,sibling.nextSibling);
                 sibling = <HTMLElement> sibling.nextSibling;
@@ -335,7 +335,7 @@ export class DomQuery {
     }
 
     insertBefore(...elem: Array<DomQuery>) {
-        for(var cnt = 0; cnt < elem.length; cnt++) {
+        for(let cnt = 0; cnt < elem.length; cnt++) {
             elem[cnt].each((myElem: HTMLElement) => {
                 this.asElem(0).value.parentNode.insertBefore(myElem, this.asElem(0).value);
                 this.rootNode.push(myElem);
@@ -381,8 +381,8 @@ export class DomQuery {
 
     copyAttrs(sourceItem: any): DomQuery {
         sourceItem.each((sourceNode: Node) => {
-            for (var cnt = 0; cnt < sourceNode.attributes.length; cnt++) {
-                var value = sourceNode.attributes[cnt].value;
+            for (let cnt = 0; cnt < sourceNode.attributes.length; cnt++) {
+                let value = sourceNode.attributes[cnt].value;
                 if(value) {
                     this.setAttribute(sourceNode.attributes[cnt].name, value)
                 }
@@ -428,17 +428,17 @@ export class DomQuery {
      * @param {Node} item
      */
     runScripts(): DomQuery {
-        var _Lang = Lang.instance,
+        let _Lang = Lang.instance,
             finalScripts = [],
             execScrpt = (item) => {
-                var tagName = item.tagName;
-                var itemType = item.type || "";
+                let tagName = item.tagName;
+                let itemType = item.type || "";
                 if (tagName && _Lang.equalsIgnoreCase(tagName, "script") &&
                     (itemType === "" || _Lang.equalsIgnoreCase(itemType, "text/javascript") ||
                     _Lang.equalsIgnoreCase(itemType, "javascript") ||
                     _Lang.equalsIgnoreCase(itemType, "text/ecmascript") ||
                     _Lang.equalsIgnoreCase(itemType, "ecmascript"))) {
-                    var src = item.getAttribute('src');
+                    let src = item.getAttribute('src');
                     if ('undefined' != typeof src
                         && null != src
                         && src.length > 0
@@ -460,8 +460,8 @@ export class DomQuery {
 
                     } else {
                         // embedded script auto eval
-                        var test = item.text;
-                        var go = true;
+                        let test = item.text;
+                        let go = true;
                         while (go) {
                             go = false;
                             if (test.substring(0, 1) == " ") {
@@ -485,9 +485,9 @@ export class DomQuery {
                 }
             };
         try {
-            var scriptElements = this.querySelectorAll("script");
+            let scriptElements = this.querySelectorAll("script");
             if (scriptElements == null) return;
-            for (var cnt = 0; cnt < scriptElements.length; cnt++) {
+            for (let cnt = 0; cnt < scriptElements.length; cnt++) {
                 execScrpt(scriptElements.asElem(cnt).value);
             }
             if (finalScripts.length) {
@@ -520,10 +520,10 @@ export class DomQuery {
             // _RT = this._RT,
             _Lang = Lang.instance,
             applyStyle = (item: HTMLElement, style: string) => {
-                var newSS: HTMLStyleElement = document.createElement("style");
+                let newSS: HTMLStyleElement = document.createElement("style");
                 document.getElementsByTagName("head")[0].appendChild(newSS);
 
-                var styleSheet = newSS.sheet ? newSS.sheet : (<any>newSS).styleSheet;
+                let styleSheet = newSS.sheet ? newSS.sheet : (<any>newSS).styleSheet;
 
                 newSS.setAttribute("rel", item.getAttribute("rel") || "stylesheet");
                 newSS.setAttribute("type", item.getAttribute("type") || "text/css");
@@ -538,17 +538,17 @@ export class DomQuery {
             },
 
             execCss = (item: HTMLElement) => {
-                var equalsIgnoreCase = _Lang.equalsIgnoreCase;
-                var tagName = item.tagName;
+                let equalsIgnoreCase = _Lang.equalsIgnoreCase;
+                let tagName = item.tagName;
                 if (tagName && equalsIgnoreCase(tagName, "link") && equalsIgnoreCase(item.getAttribute("type"), "text/css")) {
                     applyStyle(item, "@import url('" + item.getAttribute("href") + "');");
                 } else if (tagName && equalsIgnoreCase(tagName, "style") && equalsIgnoreCase(item.getAttribute("type"), "text/css")) {
-                    var innerText = [];
+                    let innerText = [];
                     //compliant browsers know child nodes
-                    var childNodes: NodeList = item.childNodes;
+                    let childNodes: NodeList = item.childNodes;
                     if (childNodes) {
-                        var len = childNodes.length;
-                        for (var cnt = 0; cnt < len; cnt++) {
+                        let len = childNodes.length;
+                        for (let cnt = 0; cnt < len; cnt++) {
                             innerText.push((<HTMLElement>childNodes[cnt]).innerHTML || (<CharacterData>childNodes[cnt]).data);
                         }
                         //non compliant ones innerHTML
@@ -561,9 +561,9 @@ export class DomQuery {
             };
 
         try {
-            var scriptElements: DomQuery = this.querySelectorAll("link, style");
+            let scriptElements: DomQuery = this.querySelectorAll("link, style");
             if (scriptElements == null) return;
-            for (var cnt = 0; cnt < scriptElements.length; cnt++) {
+            for (let cnt = 0; cnt < scriptElements.length; cnt++) {
                 let element: any = scriptElements.asElem(cnt);
                 execCss(element.value);
             }
@@ -596,7 +596,7 @@ export class DomQuery {
         //fortunately a table element also works which is less critical than form elements regarding
         //the inner content
         dummyPlaceHolder.html("<table><tbody><tr><td>" + markup + "</td></tr></tbody></table>");
-        var childs = dummyPlaceHolder.querySelectorAll("td").get(0).childNodes();
+        let childs = dummyPlaceHolder.querySelectorAll("td").get(0).childNodes();
         childs.detach();
         dummyPlaceHolder.html("");
         return childs;
@@ -611,9 +611,9 @@ export class DomQuery {
         }
 
 
-        var name = element.name;
-        var tagName = element.tagName.toLowerCase();
-        var elemType = element.type;
+        let name = element.name;
+        let tagName = element.tagName.toLowerCase();
+        let elemType = element.type;
         if (elemType != null) {
             elemType = elemType.toLowerCase();
         }
@@ -637,12 +637,12 @@ export class DomQuery {
             if (tagName == "select") {
                 // selectedIndex must be >= 0 sein to be submittet
                 if ((<HTMLSelectElement>element).selectedIndex >= 0) {
-                    var uLen = (<HTMLSelectElement>element).options.length;
-                    for (var u = 0; u < uLen; u++) {
+                    let uLen = (<HTMLSelectElement>element).options.length;
+                    for (let u = 0; u < uLen; u++) {
                         // find all selected options
-                        //var subBuf = [];
+                        //let subBuf = [];
                         if ((<any>(<HTMLSelectElement>element).options[u]).selected) {
-                            var elementOption = (<HTMLSelectElement>element).options[u];
+                            let elementOption = (<HTMLSelectElement>element).options[u];
                             targetBuf[name] = (elementOption.getAttribute("value") != null) ?
                                 elementOption.getAttribute("value"): elementOption.getAttribute("text");
                         }
@@ -684,7 +684,7 @@ export class XMLQuery {
             if (!(rootNode[0][0] instanceof DomQuery)) {
                 this.rootNode = this.rootNode.concat(rootNode[0]);
             } else {
-                for (var cnt = 0; cnt < rootNode[0].length; cnt++) {
+                for (let cnt = 0; cnt < rootNode[0].length; cnt++) {
                     rootNode[0][cnt].each((node: Node) => {
                         this.rootNode.push(node);
                     });
@@ -694,7 +694,7 @@ export class XMLQuery {
             if (!(rootNode[0] instanceof DomQuery)) {
                 this.rootNode = this.rootNode.concat(rootNode);
             } else {
-                for (var cnt = 0; cnt < rootNode.length; cnt++) {
+                for (let cnt = 0; cnt < rootNode.length; cnt++) {
                     rootNode[cnt].each((node: Node) => {
                         this.rootNode.push(node);
                     });
@@ -708,13 +708,13 @@ export class XMLQuery {
     }
 
     static parseXML(txt: string): XMLQuery {
-          var ret =  XMLQuery._parseXML(txt);
+          let ret =  XMLQuery._parseXML(txt);
           return ret;
     }
 
     private static _parseXML(txt: string): XMLQuery {
         //from jquery
-        var parsedXML;
+        let parsedXML;
         try {
             if ( (<any>window).DOMParser ) { // Standarrd
                 parsedXML = new DOMParser().parseFromString( txt , "text/xml" );
@@ -747,7 +747,7 @@ export class XMLQuery {
 
     private _getIf(tagsFound: Array<Node>, path: Array<String>, currLevel: Array<Node>) {
         let nameIdx = {};
-        var tags = path[0].split(",");
+        let tags = path[0].split(",");
         for(let cnt = 0; cnt < tags.length; cnt++) {
             nameIdx[Lang.instance.trim(tags[cnt])] = true;
         }
@@ -761,7 +761,7 @@ export class XMLQuery {
             return;
         }
 
-        for(var cnt = 0; currLevel && cnt < currLevel.length; cnt++) {
+        for(let cnt = 0; currLevel && cnt < currLevel.length; cnt++) {
             if((path[0] == "*") || nameIdx[currLevel[cnt].nodeName]) {
 
                 this._getIf(tagsFound, path.slice(1, path.length), Lang.instance.objToArray(currLevel[cnt].childNodes))
@@ -770,9 +770,9 @@ export class XMLQuery {
     }
 
     getIf(...path: Array<string>): XMLQuery {
-        var currLevel = this.rootNode;
+        let currLevel = this.rootNode;
 
-        var tagsFound = [];
+        let tagsFound = [];
 
         for(let cnt =  0; cnt < this.rootNode.length; cnt++) {
             this._getIf(tagsFound, path, Lang.instance.objToArray(this.rootNode[cnt].childNodes))
@@ -792,7 +792,7 @@ export class XMLQuery {
     }
 
     get childNodes(): XMLQuery {
-        var retVal = [];
+        let retVal = [];
         this.each((item: Node) => {
             retVal = retVal.concat(Lang.instance.objToArray(item.childNodes))
         });
@@ -801,7 +801,7 @@ export class XMLQuery {
     }
 
     each(func: (item: Node, cnt?: number) => any): XMLQuery {
-        for (var cnt = 0, len = this.rootNode.length; cnt < len; cnt++) {
+        for (let cnt = 0, len = this.rootNode.length; cnt < len; cnt++) {
             if (func(this.get(cnt).value[0], cnt) === false) {
                 break;
             }
@@ -811,7 +811,7 @@ export class XMLQuery {
     
     
     eachNode(func: (item: XMLQuery, cnt?: number) => any): XMLQuery {
-        for (var cnt = 0, len = this.rootNode.length; cnt < len; cnt++) {
+        for (let cnt = 0, len = this.rootNode.length; cnt < len; cnt++) {
             if (func(this.get(cnt), cnt) === false) {
                 break;
             }
@@ -825,14 +825,14 @@ export class XMLQuery {
         }
         if(node.childNodes) {
             let nodeArr = Lang.instance.objToArray(node.childNodes);
-            for(var cnt = 0; cnt < nodeArr.length; cnt++) {
+            for(let cnt = 0; cnt < nodeArr.length; cnt++) {
                 this._byTagName(resArr, nodeArr[cnt], tagName);
             }
         }
     }
 
     byTagName(tagName: string): XMLQuery {
-        var res = [];
+        let res = [];
 
         for (let cnt = 0; cnt < this.rootNode.length; cnt++) {
             this._byTagName(res, this.rootNode[cnt], tagName);
@@ -847,7 +847,7 @@ export class XMLQuery {
     }
 
     textContent(joinstr: string): string {
-        var retStr = [];
+        let retStr = [];
         this.each((item: Node) => {
             retStr.push( (<any>item).textContent);
         });
@@ -882,7 +882,7 @@ export class XMLQuery {
 
 
     get cDATAAsString(): string {
-        var cDataBlock = [];
+        let cDataBlock = [];
         // response may contain several blocks
         this.eachNode((item: XMLQuery) => {
             item.childNodes.each((node: Node) => {

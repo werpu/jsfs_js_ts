@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 import {Lang} from "./Lang";
 import {jsf} from "../../api/jsf";
 export class Dom {
@@ -55,10 +54,10 @@ export class Dom {
             // _RT = this._RT,
             _Lang = this._Lang,
             applyStyle = function (item: HTMLElement, style: string) {
-                var newSS: HTMLStyleElement = document.createElement("style");
+                let newSS: HTMLStyleElement = document.createElement("style");
                 document.getElementsByTagName("head")[0].appendChild(newSS);
 
-                var styleSheet = newSS.sheet ? newSS.sheet : (<any>newSS).styleSheet;
+                let styleSheet = newSS.sheet ? newSS.sheet : (<any>newSS).styleSheet;
 
                 newSS.setAttribute("rel", item.getAttribute("rel") || "stylesheet");
                 newSS.setAttribute("type", item.getAttribute("type") || "text/css");
@@ -73,17 +72,17 @@ export class Dom {
             },
 
             execCss = function (item: HTMLElement) {
-                var equalsIgnoreCase = _Lang.equalsIgnoreCase;
-                var tagName = item.tagName;
+                let equalsIgnoreCase = _Lang.equalsIgnoreCase;
+                let tagName = item.tagName;
                 if (tagName && equalsIgnoreCase(tagName, "link") && equalsIgnoreCase(item.getAttribute("type"), "text/css")) {
                     applyStyle(item, "@import url('" + item.getAttribute("href") + "');");
                 } else if (tagName && equalsIgnoreCase(tagName, "style") && equalsIgnoreCase(item.getAttribute("type"), "text/css")) {
-                    var innerText = [];
+                    let innerText = [];
                     //compliant browsers know child nodes
-                    var childNodes: NodeList = item.childNodes;
+                    let childNodes: NodeList = item.childNodes;
                     if (childNodes) {
-                        var len = childNodes.length;
-                        for (var cnt = 0; cnt < len; cnt++) {
+                        let len = childNodes.length;
+                        for (let cnt = 0; cnt < len; cnt++) {
                             innerText.push((<HTMLElement>childNodes[cnt]).innerHTML || (<CharacterData>childNodes[cnt]).data);
                         }
                         //non compliant ones innerHTML
@@ -96,9 +95,9 @@ export class Dom {
             };
 
         try {
-            var scriptElements: NodeListOf<Element> = document.querySelectorAll("link, style");
+            let scriptElements: NodeListOf<Element> = document.querySelectorAll("link, style");
             if (scriptElements == null) return;
-            for (var cnt = 0; cnt < scriptElements.length; cnt++) {
+            for (let cnt = 0; cnt < scriptElements.length; cnt++) {
                 let element: any = scriptElements[cnt];
                 execCss(element);
             }
@@ -120,18 +119,18 @@ export class Dom {
      * @param {Node} item
      */
     runScripts(item: HTMLElement, xmlData: Node) {
-        var _Lang = this._Lang,
+        let _Lang = this._Lang,
             _RT = this._RT,
             finalScripts = [],
             execScrpt = function (item) {
-                var tagName = item.tagName;
-                var itemType = item.type || "";
+                let tagName = item.tagName;
+                let itemType = item.type || "";
                 if (tagName && _Lang.equalsIgnoreCase(tagName, "script") &&
                     (itemType === "" || _Lang.equalsIgnoreCase(itemType, "text/javascript") ||
                     _Lang.equalsIgnoreCase(itemType, "javascript") ||
                     _Lang.equalsIgnoreCase(itemType, "text/ecmascript") ||
                     _Lang.equalsIgnoreCase(itemType, "ecmascript"))) {
-                    var src = item.getAttribute('src');
+                    let src = item.getAttribute('src');
                     if ('undefined' != typeof src
                         && null != src
                         && src.length > 0
@@ -153,8 +152,8 @@ export class Dom {
 
                     } else {
                         // embedded script auto eval
-                        var test = (!xmlData) ? item.text : _Lang.serializeChilds(item);
-                        var go = true;
+                        let test = (!xmlData) ? item.text : _Lang.serializeChilds(item);
+                        let go = true;
                         while (go) {
                             go = false;
                             if (test.substring(0, 1) == " ") {
@@ -178,9 +177,9 @@ export class Dom {
                 }
             };
         try {
-            var scriptElements = item.querySelectorAll("script");
+            let scriptElements = item.querySelectorAll("script");
             if (scriptElements == null) return;
-            for (var cnt = 0; cnt < scriptElements.length; cnt++) {
+            for (let cnt = 0; cnt < scriptElements.length; cnt++) {
                 execScrpt(scriptElements[cnt]);
             }
             if (finalScripts.length) {
@@ -212,17 +211,17 @@ export class Dom {
 
 
     getWindowId(node?: HTMLElement | string) {
-        var FORM = "form";
-        var WIN_ID = "javax.faces.WindowId";
+        let FORM = "form";
+        let WIN_ID = "javax.faces.WindowId";
 
-        var fetchWindowIdFromForms = function (forms) {
-            var result_idx = {};
-            var result;
-            var foundCnt = 0;
-            for (var cnt = forms.length - 1; cnt >= 0; cnt--) {
-                var UDEF = 'undefined';
-                var currentForm = forms[cnt];
-                var windowId = currentForm[WIN_ID] && currentForm[WIN_ID].value;
+        let fetchWindowIdFromForms = function (forms) {
+            let result_idx = {};
+            let result;
+            let foundCnt = 0;
+            for (let cnt = forms.length - 1; cnt >= 0; cnt--) {
+                let UDEF = 'undefined';
+                let currentForm = forms[cnt];
+                let windowId = currentForm[WIN_ID] && currentForm[WIN_ID].value;
                 if (UDEF != typeof windowId) {
                     if (foundCnt > 0 && UDEF == typeof result_idx[windowId]) throw Error("Multiple different windowIds found in document");
                     result = windowId;
@@ -233,17 +232,17 @@ export class Dom {
             return result;
         };
 
-        var getChildForms = function (currentElement:HTMLElement):Array<HTMLElement> {
+        let getChildForms = function (currentElement:HTMLElement):Array<HTMLElement> {
             //Special condition no element we return document forms
             //as search parameter, ideal would be to
             //have the viewroot here but the frameworks
             //can deal with that themselves by using
             //the viewroot as currentElement
             if (!currentElement) {
-                return Lang.instance.toArray(document.forms);
+                return Lang.instance.objToArray(document.forms);
             }
 
-            var targetArr:Array<HTMLElement> = [];
+            let targetArr:Array<HTMLElement> = [];
             if (!currentElement.tagName) return [];
             else if (currentElement.tagName.toLowerCase() == FORM) {
                 targetArr.push(currentElement);
@@ -252,14 +251,14 @@ export class Dom {
 
             //if query selectors are supported we can take
             //a non recursive shortcut
-            return Lang.instance.toArray(currentElement.querySelectorAll(FORM));
+            return Lang.instance.objToArray(currentElement.querySelectorAll(FORM));
         };
 
-        var fetchWindowIdFromURL = function () {
-            var href = window.location.href;
-            var windowId = "windowId";
-            var regex = new RegExp("[\\?&]" + windowId + "=([^&#\\;]*)");
-            var results = regex.exec(href);
+        let fetchWindowIdFromURL = function () {
+            let href = window.location.href;
+            let windowId = "windowId";
+            let regex = new RegExp("[\\?&]" + windowId + "=([^&#\\;]*)");
+            let results = regex.exec(href);
             //initial trial over the url and a regexp
             if (results != null) return results[1];
             return null;
@@ -282,19 +281,19 @@ export class Dom {
     }
 
     byTagName(node: HTMLElement | string, tagName: string):Array<HTMLElement> {
-        var finalNode = this.byId(node);
+        let finalNode = this.byId(node);
         return (finalNode.tagName === tagName) ? [finalNode] : Lang.instance.objToArray(finalNode.querySelectorAll(tagName));
     }
 
-    isMultipartCandidate(executes: Array<HTMLElement>) {
+    isMultipartCandidate(executes: Array<HTMLElement | string> | string) {
         if (Lang.instance.isString(executes)) {
-            executes = Lang.instance.strToArray(executes, /\s+/);
+            executes = Lang.instance.strToArray(<string> executes, /\s+/);
         }
 
-        for (var cnt = 0, len = executes.length; cnt < len ; cnt ++) {
-            var element = this.byId(executes[cnt]);
-            var inputs = this.byTagName(element, "input");
-            for (var cnt2 = 0, len2 = inputs.length; cnt2 < len2 ; cnt2++) {
+        for (let cnt = 0, len = executes.length; cnt < len ; cnt ++) {
+            let element = this.byId(executes[cnt]);
+            let inputs = this.byTagName(element, "input");
+            for (let cnt2 = 0, len2 = inputs.length; cnt2 < len2 ; cnt2++) {
                 if (inputs[cnt2].getAttribute("type") == "file") return true;
             }
         }

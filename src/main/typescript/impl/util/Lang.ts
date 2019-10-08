@@ -441,7 +441,7 @@ export class Lang {
          * given this function here is called very often
          * is a single entry without . in between we can do the lighter shortcut
          */
-        var myfaces = Config.fromNullable(<any>window);
+        let myfaces = Config.fromNullable(<any>window);
         return myfaces.getIf("myfaces", "config", configName).get(defaultValue).value;
     }
 

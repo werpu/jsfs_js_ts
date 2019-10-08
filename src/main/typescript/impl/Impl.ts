@@ -1,3 +1,19 @@
+/* Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import {jsf} from "../api/jsf";
 import * as myfacesConfig from "../api/myfaces";
 import {myfaces} from "../api/myfaces";
@@ -12,13 +28,10 @@ import {XhrRequest} from "./xhrCore/XhrRequest";
 import {AsynchronouseQueue} from "./util/Queue";
 import {Config} from "../_ext/monadish/Monad";
 
-
-
 export module Impl {
     "use strict";
 
-    var globalConfig = myfacesConfig.myfaces.config;
-
+    let globalConfig = myfacesConfig.myfaces.config;
 
     export class Implementation {
 
@@ -113,13 +126,13 @@ export module Impl {
                 return this.projectStage;
             }
 
-            var allowedProjectStages = {STG_PROD: 1, "Development": 1, "SystemTest": 1, "UnitTest": 1};
+            let allowedProjectStages = {STG_PROD: 1, "Development": 1, "SystemTest": 1, "UnitTest": 1};
 
             /* run through all script tags and try to find the one that includes jsf.js */
             DomQuery.querySelectorAll("script").filterNode((item: DomQuery) => {
                 return (<HTMLScriptElement>item.value[0]).src.search(/\/javax\.faces\.resource\/jsf\.js.*ln=javax\.faces/) != -1;
             }).first((item: HTMLScriptElement) => {
-                var result = item.src.match(/stage=([^&;]*)/);
+                let result = item.src.match(/stage=([^&;]*)/);
                 // we found stage=XXX
                 // return only valid values of ProjectStage
                 this.projectStage = (allowedProjectStages[result[1]]) ? result[1] : null;
@@ -144,7 +157,7 @@ export module Impl {
             DomQuery.querySelectorAll("script").filterNode(item => {
                 return (<HTMLScriptElement>item.value[0]).src.search(/\/javax\.faces\.resource.*\/jsf\.js.*separator/) != -1;
             }).first((item: HTMLScriptElement) => {
-                var result = item.src.match(/separator=([^&;]*)/);
+                let result = item.src.match(/separator=([^&;]*)/);
                 this.separator = decodeURIComponent(result[1]);
                 return false;
             });
@@ -154,7 +167,7 @@ export module Impl {
         }
 
         chain(source: any, event: Event, funcs ?: Array<Function | string>): boolean {
-            for (var cnt = 0; funcs && cnt < funcs.length; cnt++) {
+            for (let cnt = 0; funcs && cnt < funcs.length; cnt++) {
                 let ret: any;
                 if ("string" != typeof funcs[cnt]) {
                     ret = (<Function>funcs[cnt]).call(source, event);
@@ -209,7 +222,7 @@ export module Impl {
             /*preparations for jsf 2.2 windowid handling*/
             //pass the window id into the options if not set already
             if (options.getIf("windowId").isAbsent()) {
-                var windowId = Dom.instance.getWindowId();
+                let windowId = Dom.instance.getWindowId();
                 (windowId) ? options.apply(this.P_WINDOW_ID).value = windowId : null;
             } else {
                 options.apply(this.P_WINDOW_ID).value = options.getIf("windowId").value;
@@ -231,7 +244,7 @@ export module Impl {
             }
 
 
-            var elementId = elem.id;
+            let elementId = elem.id;
 
             //TODO cleaned up passthrough handling
             /*
@@ -239,7 +252,7 @@ export module Impl {
              * we should not touch the incoming params!
              */
 
-            var passThrgh = Lang.instance.mixMaps({}, <any>options, true, <any>this.BLOCKFILTER);
+            let passThrgh = Lang.instance.mixMaps({}, <any>options, true, <any>this.BLOCKFILTER);
 
             if (event) {
                 passThrgh[this.P_EVT] = event.type;
@@ -461,7 +474,7 @@ export module Impl {
                     eventData.responseXML = req.getIf("responseXML").value;
 
                 } catch (e) {
-                    var impl = _Lang.getGlobalConfig("jsfAjaxImpl", this);
+                    let impl = _Lang.getGlobalConfig("jsfAjaxImpl", this);
                     this.sendError(request, context, this.CLIENT_ERROR, "ErrorRetrievingResponse",
                         _Lang.getMessage("ERR_CONSTRUCT", e.toString()));
 
@@ -499,9 +512,9 @@ export module Impl {
             //this is a valid approach
             try {
                 if (this._threshold == "ERROR") {
-                    var mfInternal = exception._mfInternal || {};
+                    let mfInternal = exception._mfInternal || {};
 
-                    var finalMsg = [];
+                    let finalMsg = [];
                     finalMsg.push(exception.message);
                     this.sendError(request, context,
                         mfInternal.title || this.CLIENT_ERROR, mfInternal.name || exception.name, finalMsg.join("\n"), mfInternal.caller, mfInternal.callFunc);
@@ -577,7 +590,7 @@ export module Impl {
             this.errorQueue.broadcastEvent(eventData);
 
             if (jsf.getProjectStage() === "Development" && !this.errorQueue.length && ctx.getIf("onerror").isAbsent()) {
-                var DIVIDER = "--------------------------------------------------------",
+                let DIVIDER = "--------------------------------------------------------",
                     displayError: (string) => void = Lang.instance.getGlobalConfig("defaultErrorOutput", alert),
                     finalMessage = [],
                     //we remap the function to achieve a better compressability
@@ -611,7 +624,7 @@ export module Impl {
          * @param event
          */
         private getForm(elem: HTMLElement, event?: Event) {
-            var _Lang = Lang.instance;
+            let _Lang = Lang.instance;
 
             let queryElem = new DomQuery(elem);
             let eventTarget = event ? new DomQuery(_Lang.getEventTarget(event)) : new DomQuery();

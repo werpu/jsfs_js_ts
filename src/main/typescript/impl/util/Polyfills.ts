@@ -41,18 +41,18 @@ export class PolyFills {
 
             (<any>Array.prototype).forEach = function (callback: any, thisArg: any) {
 
-                var T, k;
+                let T, k;
 
                 if (this === null) {
                     throw new TypeError(' this is null or not defined');
                 }
 
                 // 1. Let O be the result of calling ToObject passing the |this| value as the argument.
-                var O = Object(this);
+                let O = Object(this);
 
                 // 2. Let lenValue be the result of calling the Get internal method of O with the argument "length".
                 // 3. Let len be ToUint32(lenValue).
-                var len = O.length >>> 0;
+                let len = O.length >>> 0;
 
                 // 4. If IsCallable(callback) is false, throw a TypeError exception.
                 // See: http://es5.github.com/#x9.11
@@ -71,7 +71,7 @@ export class PolyFills {
                 // 7. Repeat, while k < len
                 while (k < len) {
 
-                    var kValue;
+                    let kValue;
 
                     // a. Let Pk be ToString(k).
                     //   This is implicit for LHS operands of the in operator
@@ -105,17 +105,17 @@ export class PolyFills {
                     throw new TypeError();
                 }
 
-                var t = Object(this);
-                var len = t.length >>> 0;
+                let t = Object(this);
+                let len = t.length >>> 0;
                 if (typeof fun !== 'function') {
                     throw new TypeError();
                 }
 
-                var res = [];
-                var thisArg = arguments.length >= 2 ? arguments[1] : void 0;
-                for (var i = 0; i < len; i++) {
+                let res = [];
+                let thisArg = arguments.length >= 2 ? arguments[1] : void 0;
+                for (let i = 0; i < len; i++) {
                     if (i in t) {
-                        var val = t[i];
+                        let val = t[i];
 
                         // NOTE: Technically this should Object.defineProperty at
                         //       the next index, as push can be affected by

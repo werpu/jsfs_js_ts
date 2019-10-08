@@ -14,8 +14,8 @@ export class AjaxUtils {
             this.encodePartialSubmit(partialIds, targetBuf);
         } else {
             // add all nodes
-            var eLen = parentItem.elements.length;
-            for (var e = 0; e < eLen; e++) {
+            let eLen = parentItem.elements.length;
+            for (let e = 0; e < eLen; e++) {
                 this.encodeElement(<HTMLFormElement> parentItem.elements[e], targetBuf);
             } // end of for (formElements)
         }
@@ -55,9 +55,9 @@ export class AjaxUtils {
             return;
         }
 
-        var name = element.name;
-        var tagName = element.tagName.toLowerCase();
-        var elemType = element.type;
+        let name = element.name;
+        let tagName = element.tagName.toLowerCase();
+        let elemType = element.type;
         if (elemType != null) {
             elemType = elemType.toLowerCase();
         }
@@ -81,12 +81,12 @@ export class AjaxUtils {
             if (tagName == "select") {
                 // selectedIndex must be >= 0 sein to be submittet
                 if (element.selectedIndex >= 0) {
-                    var uLen = element.options.length;
-                    for (var u = 0; u < uLen; u++) {
+                    let uLen = element.options.length;
+                    for (let u = 0; u < uLen; u++) {
                         // find all selected options
-                        //var subBuf = [];
+                        //let subBuf = [];
                         if (element.options[u].selected) {
-                            var elementOption = element.options[u];
+                            let elementOption = element.options[u];
                             targetBuf.append(name, (elementOption.getAttribute("value") != null) ?
                                 elementOption.value : elementOption.text);
                         }

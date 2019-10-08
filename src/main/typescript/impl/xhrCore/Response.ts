@@ -78,7 +78,7 @@ export class Response {
             throw Response.raiseError(new Error(), responseXML.parserErrorText(""), "processResponse");
         }
 
-        var partial = responseXML.getIf(Response.RESP_PARTIAL);
+        let partial = responseXML.getIf(Response.RESP_PARTIAL);
         if (partial.isAbsent()) {
             throw Response.raiseError(new Error(), "Partial response not set", "processResponse");
         }
@@ -333,10 +333,10 @@ export class Response {
      * @param name the name of the error (optional)
      */
     private static raiseError(error: any, message: string, caller ?: string, title ?: string, name ?: string) {
-        var _Impl = Impl.Implementation.instance;
-        var finalTitle = title || _Impl.MALFORMEDXML;
-        var finalName = name || _Impl.MALFORMEDXML;
-        var finalMessage = message || "";
+        let _Impl = Impl.Implementation.instance;
+        let finalTitle = title || _Impl.MALFORMEDXML;
+        let finalName = name || _Impl.MALFORMEDXML;
+        let finalMessage = message || "";
 
         return Lang.instance.makeException(error, finalTitle, finalName, "Response", caller || ( ((<any>arguments).caller) ? (<any>arguments).caller.toString() : "_raiseError"), finalMessage);
     }

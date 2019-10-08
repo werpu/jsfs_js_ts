@@ -255,7 +255,7 @@ export class Optional<T> extends Monad<T> {
      * all values are flattened when accessed anyway, so there is no need to call this methiod
      */
     flatMap<R>(fn?: (data: T) => R): Optional<any> {
-        var val = super.flatMap(fn);
+        let val = super.flatMap(fn);
         if (!(val instanceof Optional)) {
             return Optional.fromNullable(val.value);
         }
@@ -454,7 +454,7 @@ export class Config extends Optional<any> {
 
         let currKey = this.keyVal(keys[keys.length - 1]);
         let arrPos = this.arrayIndex(keys[keys.length - 1]);
-        var retVal = new ConfigEntry(keys.length == 1 ? this.value : this.getIf.apply(this, keys.slice(0, keys.length - 1)).value,
+        let retVal = new ConfigEntry(keys.length == 1 ? this.value : this.getIf.apply(this, keys.slice(0, keys.length - 1)).value,
             currKey, arrPos
         );
 
@@ -494,14 +494,14 @@ export class Config extends Optional<any> {
         let parentPos = -1;
         let alloc = function (arr: Array<any>, length: number) {
             if (arr.length < length) {
-                for (var cnt = arr.length; cnt < length; cnt++) {
+                for (let cnt = arr.length; cnt < length; cnt++) {
                     arr.push({});
                 }
             }
         };
 
 
-        for (var cnt = 0; cnt < keys.length; cnt++) {
+        for (let cnt = 0; cnt < keys.length; cnt++) {
             let currKey = this.keyVal(keys[cnt]);
             let arrPos = this.arrayIndex(keys[cnt]);
 
@@ -526,7 +526,7 @@ export class Config extends Optional<any> {
                     val = <any>tempVal;
                 }
             } else {
-                var arr = (tempVal.value instanceof Array) ? tempVal.value : [];
+                let arr = (tempVal.value instanceof Array) ? tempVal.value : [];
                 alloc(arr, arrPos + 1);
                 val.value[currKey] = arr;
                 tempVal = this.getClass().fromNullable(arr[arrPos]);
@@ -608,13 +608,13 @@ export class Promise implements IPromise {
 
     static all(...promises: Array<IPromise>): IPromise {
 
-        var promiseCnt = 0;
-        var myapply: Function;
+        let promiseCnt = 0;
+        let myapply: Function;
 
-        var myPromise = new Promise((apply: Function, reject: Function) => {
+        let myPromise = new Promise((apply: Function, reject: Function) => {
             myapply = apply;
         });
-        var executor = () => {
+        let executor = () => {
             promiseCnt++;
 
             if (promises.length == promiseCnt) {
@@ -623,7 +623,7 @@ export class Promise implements IPromise {
         };
         (<any>executor).__last__ = true;
 
-        for (var cnt = 0; cnt < promises.length; cnt++) {
+        for (let cnt = 0; cnt < promises.length; cnt++) {
             promises[cnt].finally(executor);
         }
         return myPromise;
@@ -632,17 +632,17 @@ export class Promise implements IPromise {
 
     static race(...promises: Array<IPromise>): IPromise {
 
-        var promiseCnt = 0;
-        var myapply: Function;
-        var myreject: Function;
+        let promiseCnt = 0;
+        let myapply: Function;
+        let myreject: Function;
 
-        var myPromise = new Promise((apply: Function, reject: Function) => {
+        let myPromise = new Promise((apply: Function, reject: Function) => {
             myapply = apply;
             myreject = reject;
         });
 
 
-        var thenexecutor = (): IPromise => {
+        let thenexecutor = (): IPromise => {
             if (!!myapply) {
                 myapply();
             }
@@ -652,7 +652,7 @@ export class Promise implements IPromise {
         };
         (<any>thenexecutor).__last__ = true;
 
-        var catchexeutor = (): IPromise => {
+        let catchexeutor = (): IPromise => {
             if (!!myreject) {
                 myreject();
             }
@@ -662,7 +662,7 @@ export class Promise implements IPromise {
         };
         (<any>catchexeutor).__last__ = true;
 
-        for (var cnt = 0; cnt < promises.length; cnt++) {
+        for (let cnt = 0; cnt < promises.length; cnt++) {
             promises[cnt].then(thenexecutor);
             promises[cnt].catch(catchexeutor);
         }
@@ -670,7 +670,7 @@ export class Promise implements IPromise {
     }
 
     static reject(reason: any): Promise {
-        var retVal = new Promise((resolve: any, reject: any) => {
+        let retVal = new Promise((resolve: any, reject: any) => {
             //not really doable without a hack
             if (reason instanceof Promise) {
                 reason.then((val: any) => {
@@ -687,7 +687,7 @@ export class Promise implements IPromise {
     }
 
     static resolve(reason: any): Promise {
-        var retVal = new Promise((resolve: any, reject: any) => {
+        let retVal = new Promise((resolve: any, reject: any) => {
             //not really doable without a hack
             if (reason instanceof Promise) {
                 reason.then((val) => resolve(val));
@@ -732,8 +732,8 @@ export class Promise implements IPromise {
     private spliceLastFuncs() {
         let lastFuncs = [];
         let rest = [];
-        for (var cnt = 0; cnt < this.allFuncs.length; cnt++) {
-            for (var key in this.allFuncs[cnt]) {
+        for (let cnt = 0; cnt < this.allFuncs.length; cnt++) {
+            for (let key in this.allFuncs[cnt]) {
                 if (this.allFuncs[cnt][key].__last__) {
                     lastFuncs.push(this.allFuncs[cnt]);
                 } else {
@@ -752,9 +752,9 @@ export class Promise implements IPromise {
             if (!this.allFuncs[0].then) {
                 break;
             }
-            var fn = this.allFuncs.shift();
+            let fn = this.allFuncs.shift();
 
-            var funcResult = Optional.fromNullable(fn.then(val));
+            let funcResult = Optional.fromNullable(fn.then(val));
 
             if (funcResult.isPresent()) {
                 funcResult = funcResult.flatMap();

@@ -48,10 +48,10 @@ export class Lang {
     }
 
     arrToMap(arr:any[], offset: number = 0) {
-        var ret = new Array(arr.length);
-        var len = arr.length;
+        let ret = new Array(arr.length);
+        let len = arr.length;
         offset = (offset) ? offset : 0;
-        for (var cnt = 0; cnt < len; cnt++) {
+        for (let cnt = 0; cnt < len; cnt++) {
             ret[arr[cnt]] = cnt + offset;
         }
         return ret;

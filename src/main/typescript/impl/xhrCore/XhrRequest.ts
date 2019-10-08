@@ -11,11 +11,13 @@ import {Impl} from "../Impl";
 import {Lang} from "../util/Lang";
 import {LangTypes} from "../util/LangTypes";
 import {AjaxUtils} from "./AjaxUtils";
-import {AsyncRunnable} from "../../_supportive/AsyncRunnable";
-import {Monadish} from "../util/Monad";
+
 import Implementation = Impl.Implementation;
 import FormDataDecorator = LangTypes.FormDataDecorator;
-import Config = Monadish.Config;
+import {AsyncRunnable} from "../util/AsyncRunnable";
+import {Config} from "../../_ext/monadish/Monad";
+
+import {Promise as ShimPromise} from "../../_ext/monadish/Monad";
 
 type PROMISE_FUNC = (any?) => void;
 
@@ -58,16 +60,16 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     start(): Promise<XMLHttpRequest> {
         let xhr = this.xhrObject;
         try {
-            var sourceForm = sourceForm,
+            let sourceForm = this.sourceForm,
                 targetURL = (typeof sourceForm.elements[XhrRequest.ENCODED_URL] == 'undefined') ?
                     sourceForm.action :
                     sourceForm.elements[XhrRequest.ENCODED_URL].value,
                 formData: FormDataDecorator | { [key: string]: any } = this.getFormData();
 
-            formData = Lang.instance.mixMaps(<any>formData, this.requestContext.getIf("passThrgh").value, true);
+            formData =  Lang.instance.mixMaps(<any>formData, this.requestContext.getIf("passThrgh").value, true);
 
             this.xhrObject.open(this.ajaxType, targetURL +
-                ((this.ajaxType == XhrRequest.REQ_TYPE_GET) ? "?" + this.formDataToURI(formData) : "")
+                ((this.ajaxType == XhrRequest.REQ_TYPE_GET) ? "?" + this.formDataToURI(<FormDataDecorator> formData) : "")
                 , true);
 
             xhr.timeout = this.timeout;
@@ -121,7 +123,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
      */
 
     private applyContentType(xhr: XMLHttpRequest) {
-        var contentType = this.contentType + "; charset=utf-8";
+        let contentType = this.contentType + "; charset=utf-8";
         xhr.setRequestHeader(XhrRequest.CONTENT_TYPE, contentType);
     }
 
@@ -136,16 +138,16 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
      * which keeps the final Send Representation of the
      */
     private getFormData(): FormDataDecorator {
-        let myfacesOptions = this.requestContext.myfaces, ret = null;
+        let ret = null;
 
         if (!this.partialIdsArray || !this.partialIdsArray.length) {
-            myfacesOptions = this.requestContext.myfaces;
-            return Lang.instance.createFormDataDecorator(jsf.getViewState(this.sourceForm));
+             return Lang.instance.createFormDataDecorator(jsf.getViewState(this.sourceForm));
         } else {
             //now this is less performant but we have to call it to allow viewstate decoration
             ret = Lang.instance.createFormDataDecorator(new Array());
             AjaxUtils.encodeSubmittableFields(ret, this.sourceForm, this.partialIdsArray);
-            if (this.source && myfacesOptions && myfacesOptions.form)
+            //TODO myfaces options still needed?
+            if (this.source && this.requestContext.getIf("myfaces","form").isPresent())
                 AjaxUtils.appendIssuingItem(this.source, ret);
 
         }
@@ -173,7 +175,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
 
     onSuccess(data: any, resolve: PROMISE_FUNC, reject: PROMISE_FUNC) {
         this.sendEvent(XhrRequest.STATE_EVT_COMPLETE);
-        this.requestContext._mfInternal = this.requestContext._mfInternal || {};
+        this.requestContext.apply("_mfInternal").value = this.requestContext.getIf("_mfInternal").get({}).value;
         jsf.ajax.response(this.xhrObject, this.requestContext);
     }
 
@@ -209,7 +211,8 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     }
 
     finally(func: () => void): AsyncRunnable<XMLHttpRequest> {
-        this.pXhr.finally();
+        //no ie11 support we probably are going to revert to shims for that one
+        (<any>this.pXhr).finally(func);
         return this;
     }
 

@@ -20,12 +20,13 @@
 
 import {Impl} from "../impl/Impl";
 import Implementation = Impl.Implementation;
-declare var window: any;
+declare let window: any;
+declare type Context = {[key: string]: any};
 
 export module jsf {
     "use strict";
 
-    var Impl = Implementation.instance;
+    let Impl = Implementation.instance;
 
     /*
      * Version of the implementation for the jsf.js.
@@ -123,8 +124,19 @@ export module jsf {
          * @param {EVENT} event: any javascript event supported by that object
          * @param {Map} options : map of options being pushed into the ajax cycle
          */
-        export function request(element: any, event: any, options: any) {
+        export function request(element: Element, event: Event, options: Context) {
             return //Implementation.getInstance().requestInternal(element, event, options);
+        }
+
+        /**
+         * response handler
+         * @param request the request object having triggered this response
+         * @param context the request context
+         *
+         * TODO add info on what can be in the context
+         */
+        export function response(request: XMLHttpRequest, context: Context) {
+            return;
         }
 
         /**

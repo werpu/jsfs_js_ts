@@ -69,7 +69,7 @@ export class Queue<T> {
     }
 
     private readjust() {
-        var size = this.size;
+        let size = this.size;
         while (size && size > -1 && this.length > size) {
             this.dequeue();
         }
@@ -82,7 +82,7 @@ export class Queue<T> {
      */
     remove(element: T) {
         /*find element in queue*/
-        var index = this.indexOf(element);
+        let index = this.indexOf(element);
         /*found*/
         if (index != -1) {
             this.q.splice(index, 1);
@@ -96,11 +96,11 @@ export class Queue<T> {
      */
     dequeue(): T {
         // initialise the element to return to be undefined
-        var element = null;
+        let element = null;
 
         // check whether the queue is empty
-        var qLen = this.q.length;
-        var queue: any = this.q;
+        let qLen = this.q.length;
+        let queue: any = this.q;
 
         if (qLen) {
             // fetch the oldest element in the queue

@@ -31,21 +31,20 @@ export class HTMLStripper {
      */
     static parse(theString: string, tagNameStart: string) {
 
-        var BEGIN_TAG = "html",
+        let BEGIN_TAG = "html",
             _tagStart = -1,
             _tagEnd = -1,
             _contentStart = -1,
             _contentEnd = -1,
             _tokenPos = 0,
-            _tokenForward = 1,
-            tagNameStart = (!tagNameStart) ? BEGIN_TAG : tagNameStart;
+            _tokenForward = 1;
 
-        var proposedTagStartPos = theString.indexOf("<" + tagNameStart);
-        var _T = this;
+        tagNameStart = (!tagNameStart) ? BEGIN_TAG : tagNameStart;
 
+        let proposedTagStartPos = theString.indexOf("<" + tagNameStart);
         //we use closures instead of private methods to improve the compressability
 
-        var isValidPositionCombination = function (pos1, pos2, pos3, pos4) {
+        let isValidPositionCombination = function (pos1, pos2, pos3, pos4) {
             return pos1 <= pos2 && pos3 <= pos4;
         };
 
@@ -56,8 +55,8 @@ export class HTMLStripper {
          * @param tagPos the tag position from which the check onwards has to be perfomed
          * @return true in case a comment is found
          */
-        var checkForwardForComment = function (theStr, tagPos) {
-            var toCheck = theStr.substring(tagPos),
+        let checkForwardForComment = function (theStr, tagPos) {
+            let toCheck = theStr.substring(tagPos),
                 indexOf = Lang.instance.hitch(toCheck, toCheck.indexOf),
                 firstBeginComment = indexOf("<!--"),
                 firstEndComment = indexOf("-->"),
@@ -79,8 +78,8 @@ export class HTMLStripper {
          * @param tagPos the tag position from which the check should be performed
          * @return true in case a comment is found
          */
-        var checkBackForComment = function (theStr, tagPos) {
-            var toCheck = theStr.substring(tagPos),
+        let checkBackForComment = function (theStr, tagPos) {
+            let toCheck = theStr.substring(tagPos),
                 indexOf = Lang.instance.hitch(toCheck, toCheck.indexOf),
                 lastBeginComment = indexOf("<!--"),
                 lastEndComment = indexOf("-->"),
@@ -94,7 +93,7 @@ export class HTMLStripper {
         };
 
         //no need for ll parsing a handful of indexofs instead of slower regepx suffices
-        var theSubStr = Lang.instance.hitch(theString, theString.substring);
+        let theSubStr = Lang.instance.hitch(theString, theString.substring);
         while (_contentStart == -1 && proposedTagStartPos != -1) {
             if (checkBackForComment(theString, proposedTagStartPos)) {
                 _tagStart = proposedTagStartPos;
@@ -103,7 +102,7 @@ export class HTMLStripper {
             proposedTagStartPos = theSubStr(proposedTagStartPos + tagNameStart.length + 2).indexOf("<" + tagNameStart);
         }
 
-        var proposedEndTagPos = theString.lastIndexOf("</" + tagNameStart);
+        let proposedEndTagPos = theString.lastIndexOf("</" + tagNameStart);
         while (_contentEnd == -1 && proposedEndTagPos > 0) {
             if (checkForwardForComment(theString, proposedEndTagPos)) {
                 _tagEnd = proposedEndTagPos;

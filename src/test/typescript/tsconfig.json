@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "es2015",
+    "lib": [
+      "es2015",
+      "dom"
+    ],
+    "sourceMap": true,
+    "outDir": "../../../target",
+    "moduleResolution": "node",
+    "typeRoots": [
+      "../../node_modules/@types"
+    ],
+    "types": [
+      "node"
+    ]
+  }
+}

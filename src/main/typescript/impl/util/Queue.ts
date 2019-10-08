@@ -174,12 +174,11 @@ export class Queue<T> {
  * The callback must be static
  */
 export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
+
     private _queue = new Queue<T>();
-    //private _callback: (T) => Promise<void>;
     private _delayTimeout: number;
 
     constructor() {
-        //this._callback = callback;
     }
 
     /**
@@ -211,25 +210,28 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
         //time
         this._queue.enqueue(element);
         if(empty) {
-            this.walkQueue();
+            this.runEntry();
         }
     }
 
-    private walkQueue() {
+    private runEntry() {
         if(this.isEmpty) {
             return;
         }
         let element = this.read();
+        element
+            .catch((e) => {
+                this.cleanup();
+                throw e;
+            })
+            .then(() => this.runNext()).start();
+    }
 
-        let deq = () => {
-            //next one
-            this._queue.dequeue();
-            if (!this.isEmpty) {
-                this.walkQueue();
-            }
-
-        };
-        element.finally(deq).start();
+    private runNext() {
+        this._queue.dequeue();
+        if (!this.isEmpty) {
+            this.runEntry();
+        }
     }
 
     get isEmpty(): boolean {

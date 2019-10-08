@@ -109,7 +109,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
                 this.onSuccess(this.xhrObject, resolve, reject)
             };
             this.xhrObject.onloadend = () => {
-                this.ondone(this.xhrObject, resolve, reject);
+                this.onDone(this.xhrObject, resolve, reject);
             };
             this.xhrObject.onerror = (errorData: any) => {
                 this.onError(errorData, resolve, reject);
@@ -178,11 +178,6 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         this.requestContext.apply("_mfInternal").value = this.requestContext.getIf("_mfInternal").get({}).value;
         jsf.ajax.response(this.xhrObject, this.requestContext);
     }
-
-    ondone(data: any, resolve: PROMISE_FUNC, reject: PROMISE_FUNC) {
-        resolve(data);
-    }
-
 
     onDone(data: any, resolve: PROMISE_FUNC, reject: PROMISE_FUNC) {
         resolve(data);

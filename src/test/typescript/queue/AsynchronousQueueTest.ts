@@ -30,6 +30,7 @@ describe('Asynchronous Queue tests', () => {
 
    it('one entry', (done) => {
 
+
         const probe1 = new ProbeClass(setTimeout);
 
         const queue = new AsynchronouseQueue();
@@ -49,6 +50,7 @@ describe('Asynchronous Queue tests', () => {
         let finallyCnt = 0;
         probe1.then(() => {
             expect(probe1.thenPerformed, "called").to.be.true;
+            expect(queue.isEmpty).to.be.false;
             finallyCnt++;
         });
         probe2.then(() => {
@@ -65,7 +67,9 @@ describe('Asynchronous Queue tests', () => {
         queue.enqueue(probe2);
         queue.enqueue(probe3);
 
-        Promise.all([probe1.value, probe2.value, probe3.value]).finally(() => (finallyCnt == 3)? done() : null);
+        Promise.all([probe1.value, probe2.value, probe3.value]).finally(() => {
+            expect(queue.isEmpty).to.be.true;
+            (finallyCnt == 3)? done() : null});
 
     });
 });

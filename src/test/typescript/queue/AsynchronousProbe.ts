@@ -63,7 +63,6 @@ export class ProbeClass implements AsyncRunnable<Promise<any>>, IValueHolder<Pro
             func();
         };
         if (this.value) {
-
             this.value.finally(finallyFunc);
         } else {
             this.fFinally = finallyFunc;

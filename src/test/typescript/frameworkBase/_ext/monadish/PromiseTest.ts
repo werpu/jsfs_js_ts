@@ -23,12 +23,12 @@ import {Promise as ShimPromise} from "../../../../../main/typescript/_ext/monadi
 describe('promise tests', () => {
 
     let clock;
-    beforeEach(function () {
-        clock = sinon.useFakeTimers();
+    before(function () {
+       //clock = sinon.useFakeTimers();
     });
 
-    afterEach(() => {
-       clock.reset();
+    after(() => {
+       //clock.restore();
     });
     
     /*it('simple promise no async', () => {
@@ -42,7 +42,7 @@ describe('promise tests', () => {
      });
      });*/
 
-    it('simple promise', () => {
+    it('simple promise', (done) => {
 
         let applyPromise = new ShimPromise((apply: Function, reject: Function) => {
             setTimeout(() => {
@@ -57,16 +57,18 @@ describe('promise tests', () => {
             expect(data).to.be.eq(1);
         }).finally(() => {
             finallyCalled = true
+            expect(thenCalled).to.be.true;
+            expect(finallyCalled).to.be.true;
+            done();
         });
-        clock.tick(2);
-        expect(thenCalled).to.be.true;
-        expect(finallyCalled).to.be.true;
+
+
     });
 
 
 
 
-    it('simple promise failure', () => {
+    it('simple promise failure', (done) => {
 
         let applyPromise = new ShimPromise((apply: Function, reject: Function) => {
             setTimeout(() => {
@@ -81,14 +83,16 @@ describe('promise tests', () => {
             expect(data).to.be.eq(1);
         }).finally(() => {
             finallyCalled = true
+            expect(thenCalled).to.be.true;
+            expect(finallyCalled).to.be.true;
+            done();
         });
-        clock.tick(2);
-        expect(thenCalled).to.be.true;
-        expect(finallyCalled).to.be.true;
+
+
     });
 
 
-    it('chained promise', () => {
+    it('chained promise', (done) => {
 
         let applyPromise = new ShimPromise((apply: Function, reject: Function) => {
             setTimeout(() => {
@@ -108,15 +112,17 @@ describe('promise tests', () => {
             expect(data).to.be.eq(2);
         }).finally(() => {
             finallyCalled = true
+            expect(thenCalled).to.be.true;
+            expect(then2Called).to.be.true;
+            expect(finallyCalled).to.be.true;
+            done();
         });
-        clock.tick(2);
-        expect(thenCalled).to.be.true;
-        expect(then2Called).to.be.true;
-        expect(finallyCalled).to.be.true;
+
+
     });
 
 
-    it("Promise all test", () => {
+    it("Promise all test", (done) => {
         let applyPromise = new ShimPromise((apply: Function, reject: Function) => {
             setTimeout(() => {
                 apply(1);
@@ -148,16 +154,18 @@ describe('promise tests', () => {
 
         applyPromise3.finally(() => {
             finallyCalled = true;
+            expect(thenCalled).to.be.true;
+            expect(then2Called).to.be.true;
+            expect(finallyCalled).to.be.true;
+            done();
         });
 
 
-        clock.tick(4);
-        expect(thenCalled).to.be.true;
-        expect(then2Called).to.be.true;
-        expect(finallyCalled).to.be.true;
+
+
     });
 
-    it("Promise race test", () => {
+    it("Promise race test", (done) => {
         let applyPromise = new ShimPromise((apply: Function, reject: Function) => {
             setTimeout(() => {
                 apply(1);
@@ -191,15 +199,15 @@ describe('promise tests', () => {
             finallyCalled = true;
         });
 
-
-        clock.tick(4);
-
-        expect(thenCalled || then2Called).to.be.true;
-        expect(then2Called).to.be.eq(false);
-        expect(finallyCalled).to.be.true;
+        ShimPromise.all(applyPromise3).finally(() => {
+            expect(thenCalled || then2Called).to.be.true;
+            expect(then2Called).to.be.eq(false);
+            expect(finallyCalled).to.be.true;
+            done();
+        });
     });
 
-    it("Promise chain test", () => {
+    it("Promise chain test", (done) => {
         var chainExecuted = false;
         let applyPromise = new ShimPromise((apply: Function, reject: Function) => {
             setTimeout(() => {
@@ -216,13 +224,11 @@ describe('promise tests', () => {
             })
         }).then(() => {
             chainExecuted = true;
+            done();
         });
-        clock.tick(8);
-        expect(chainExecuted).to.be.true;
-
     });
 
-    it("Promise chain2 test", () => {
+    it("Promise chain2 test", (done) => {
         var chainExecuted = false;
         let applyPromise = new ShimPromise((apply: Function, reject: Function) => {
             setTimeout(() => {
@@ -239,12 +245,12 @@ describe('promise tests', () => {
             })
         }).then(() => {
             chainExecuted = true;
+            done();
         });
-        clock.tick(8);
-        expect(chainExecuted).to.be.true;
+
     });
 
-    it("Promise chain3 test", () => {
+    it("Promise chain3 test", (done) => {
         var chainExecuted = false;
         var promise2Called = false;
         var promise3Called = false;
@@ -281,27 +287,27 @@ describe('promise tests', () => {
             promise3Called = true;
         });
 
-        clock.tick(118);
-        expect(chainExecuted).to.be.true;
-        expect(promise3Called).to.be.true;
-        expect(promise4Called).to.be.true;
+        ShimPromise.all(applyPromise, applyPromise2, applyPromise3).finally(() => {
+            expect(chainExecuted).to.be.true;
+            expect(promise3Called).to.be.true;
+            expect(promise4Called).to.be.true;
+            done();
+        });
     });
 
-    it("Promise resolve test", () => {
+    it("Promise resolve test", (done) => {
         var promisCalled = false;
         var original = ShimPromise.resolve(true);
         var cast = ShimPromise.resolve(original);
         cast.then(function(v) {
             promisCalled = true;
             expect(v).to.be.true;
+            done();
         });
 
-
-        clock.tick(118);
-        expect(promisCalled).to.be.true;
     });
 
-    it("Promise reject test", () => {
+    it("Promise reject test", (done) => {
         var promisCalled = false;
         var original = ShimPromise.resolve(true);
         var original2 = ShimPromise.resolve(original);
@@ -309,11 +315,9 @@ describe('promise tests', () => {
         cast.catch(function(v) {
             promisCalled = true;
             expect(v).to.be.true;
+            done();
         });
 
-
-        clock.tick(118);
-        expect(promisCalled).to.be.true;
     });
 
 });

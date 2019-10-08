@@ -4,7 +4,7 @@
   "description": "My webpack project",
   "main": "index.js",
   "scripts": {
-    "test": "mocha -r ts-node/register -P ./test/typescript/ ./test/typescript/**/**/*Test*.ts",
+    "test": "mocha -r ts-node/register ./test/typescript/**/**/*Test*.ts",
     "build": "webpack"
   },
   "keywords": [

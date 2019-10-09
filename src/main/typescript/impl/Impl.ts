@@ -151,7 +151,7 @@ export class Implementation {
      * a) transformArguments out of the function
      * b) passThrough handling with a map copy with a filter map block map
      */
-    request(el: Element, event?: Event, opts?: { [key: string]: string | Function | { [key: string]: string | Function } }) {
+    request(el: Element | string, event?: Event, opts?: { [key: string]: string | Function | { [key: string]: string | Function } }) {
         const _Lang = Lang.instance;
         /*
          *namespace remap for our local function context we mix the entire function namespace into
@@ -183,9 +183,6 @@ export class Implementation {
          * we cross reference statically hence the mapping here
          * the entire mapping between the functions is stateless
          */
-        //null definitely means no event passed down so we skip the ie specific checks
-
-
         let elementId = elem.id;
 
         //TODO cleaned up passthrough handling

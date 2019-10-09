@@ -489,6 +489,14 @@ export class Config extends Optional<any> {
         return this.getClass().fromNullable(super.get(defaultVal).value);
     }
 
+    //empties the current config entry
+    delete(key: string): Config {
+        if(key in this.value) {
+            delete this.value[key];
+        }
+        return this;
+    }
+
     toJson(): any {
         return JSON.stringify(this.value);
     }

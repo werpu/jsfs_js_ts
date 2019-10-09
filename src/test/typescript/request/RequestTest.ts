@@ -69,10 +69,6 @@ window.jsf = jsf;
  */
 
 describe('jsf.ajax.request test suite', () => {
-    beforeEach(() => {
-
-
-    });
 
     it("jsf.ajax.request can be called", () => {
         //we stub the addRequestToQueue, to enable the request check only

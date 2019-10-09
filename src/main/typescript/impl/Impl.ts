@@ -27,8 +27,6 @@ import {DomQuery} from "../_ext/monadish/DomQuery";
 import {ExtDom} from "./util/ExtDom";
 
 
-
-
 let globalConfig = myfacesConfig.myfaces.config;
 
 export class Implementation {
@@ -385,22 +383,72 @@ export class Implementation {
      * (note we also could use a simple string replace but then
      * we would have had double entries under some circumstances)
      *
-     * @param passThrgh
-     * @param target
-     * @param srcStr
-     * @param form
-     * @param elementId
+     * there are several standardized constants which need a special treatment
+     * like @all, @none, @form, @this
+     *
+     * @param targetConfig the target configuration receiving the final values
+     * @param targetKey the target key
+     * @param userValues the passed user values (aka input string which needs to be transformed)
+     * @param issuingForm the form where the issuing element originates
+     * @param issuingElementId the issuing element
      */
-    private transformList(passThrgh: Config, target: string, srcStr: string, form: Element | string, elementId: string): Config {
+    private transformList(targetConfig: Config, targetKey: string, userValues: string, issuingForm: Element, issuingElementId: string): Config {
+        //a cleaner implementation of the transform list method
+        let _Lang = Lang.instance;
+        let iterValues = (userValues) ? _Lang.trim(userValues).split(/\s+/) : [];
+        let ret = [];
+        let added = {};
+        for (let cnt = 0; cnt < iterValues.length; cnt++) {
+            //avoid doubles
+            if (iterValues[cnt] in added) {
+                continue;
+            }
+            switch (iterValues[cnt]) {
+                //@none no values should be sent
+                case this.IDENT_NONE:
+                    return targetConfig.delete(targetKey);
+                //@all is a pass through case according to the spec
+                case this.IDENT_ALL:
+                    targetConfig.apply(targetKey).value = this.IDENT_ALL;
+                    return targetConfig;
+                //@form pushes the issuing form id into our list
+                case this.IDENT_FORM:
+                    ret.push(issuingForm.id);
+                    added[issuingForm.id] = true;
+                    break;
+                //@this is replaced with the current issuing element id
+                case this.IDENT_THIS:
+                    if (!(issuingElementId in added)) {
+                        ret.push(issuingElementId);
+                        added[issuingElementId] = true;
+                    }
+                    break;
+                default:
+                    ret.push(iterValues[cnt])
+                    added[iterValues[cnt]] = true;
+            }
+        }
+        //We now add the target as joined list
+        targetConfig.apply(targetKey).value = ret.join(" ");
+        return targetConfig;
+    }
+
+    /**
+     * @deprecated remove once done
+     */
+    private transformList2(targetConfig: Config, targetKey: string, userValues: string, issuingForm: Element | string, issuingElementId: string): Config {
         let _Lang = Lang.instance;
         //this is probably the fastest transformation method
         //it uses an array and an index to position all elements correctly
         //the offset variable is there to prevent 0 which results in a javascript
         //false
-        srcStr = _Lang.trim(srcStr);
+        //the other alternative probably would be to use a set of regexp searches
+        //but that would be slower than an indexed search on the constants
+        //and replacing them via the direct index positions
+        userValues = _Lang.trim(userValues);
         let offset = 1,
-            vals = (srcStr) ? srcStr.split(/\s+/) : [],
-            idIdx = (vals.length) ? _Lang.arrToMap(vals, offset) : {},
+            resultValues: string[] = (userValues) ? userValues.split(/\s+/) : [],
+            idIdx = (resultValues.length) ? _Lang.arrToMap(resultValues, offset) : {},
 
             //helpers to improve speed and compression
             none = idIdx[this.IDENT_NONE],
@@ -408,34 +456,36 @@ export class Implementation {
             theThis = idIdx[this.IDENT_THIS],
             theForm = idIdx[this.IDENT_FORM];
 
-        //TODO simplify this, lots of this stuff now can be covered
-        //better by our config class
+        //transformations
+        //none means nothing is passed nas target value
+        //original spec if none is passed do not create post data
+        //argument execute and render
         if (none) {
-            //in case of none nothing is returned
-            if (passThrgh.getIf(target).isPresent()) {
-                delete passThrgh.value.target;
-            }
-            return passThrgh;
+            return targetConfig.delete(targetKey);
         }
+        //in case of all simply send post data argument @all in render and execute
         if (all) {
             //in case of all only one value is returned
-            passThrgh.apply(target).value = this.IDENT_ALL;
-            return passThrgh;
+            targetConfig.apply(targetKey).value = this.IDENT_ALL;
+            return targetConfig;
         }
 
+        //in case of @form simply replace it with the form id
         if (theForm) {
             //the form is replaced with the proper id but the other
             //values are not touched
-            vals[theForm - offset] = (<HTMLFormElement>form).id;
+            resultValues[theForm - offset] = (<HTMLFormElement>issuingForm).id;
         }
-        if (theThis && !idIdx[elementId]) {
+
+        //@this becomes the issuing element id
+        if (theThis && !idIdx[issuingElementId]) {
             //in case of this, the element id is set
-            vals[theThis - offset] = elementId;
+            resultValues[theThis - offset] = issuingElementId;
         }
 
         //the final list must be blank separated
-        passThrgh.apply(target).value = vals.join(" ");
-        return passThrgh;
+        targetConfig.apply(targetKey).value = resultValues.join(" ");
+        return targetConfig;
     }
 
     /**

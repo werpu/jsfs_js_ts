@@ -447,7 +447,7 @@ export class DomQuery {
      * no other methods are supported anymore
      * @param code
      */
-    globalEval(code: string, nonce ?:string) {
+    globalEval(code: string, nonce ?:string): DomQuery {
         let head = document.getElementsByTagName("head")[0] || document.documentElement;
         let script = document.createElement("script");
         if(nonce) {

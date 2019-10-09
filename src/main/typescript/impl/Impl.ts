@@ -22,7 +22,7 @@ import {ErrorData, EventData, IListener, ListenerQueue} from "./util/ListenerQue
 import {Response} from "./xhrCore/Response";
 import {XhrRequest} from "./xhrCore/XhrRequest";
 import {AsynchronouseQueue} from "./util/Queue";
-import {Config} from "../_ext/monadish/Monad";
+import {Config, Optional} from "../_ext/monadish/Monad";
 import {DomQuery} from "../_ext/monadish/DomQuery";
 import {ExtDom} from "./util/ExtDom";
 
@@ -43,15 +43,15 @@ export class Implementation {
      * [STATIC] constants
      */
 
-    P_PARTIAL_SOURCE: "javax.faces.source";
-    P_VIEWSTATE: "javax.faces.ViewState";
-    P_CLIENTWINDOW: "javax.faces.ClientWindow";
-    P_AJAX: "javax.faces.partial.ajax";
-    P_EXECUTE: "javax.faces.partial.execute";
-    P_RENDER: "javax.faces.partial.render";
-    P_EVT: "javax.faces.partial.event";
-    P_CLIENT_WINDOW: "javax.faces.ClientWindow";
-    P_RESET_VALUES: "javax.faces.partial.resetValues";
+    P_PARTIAL_SOURCE = "javax.faces.source";
+    P_VIEWSTATE = "javax.faces.ViewState";
+    P_CLIENTWINDOW = "javax.faces.ClientWindow";
+    P_AJAX = "javax.faces.partial.ajax";
+    P_EXECUTE = "javax.faces.partial.execute";
+    P_RENDER = "javax.faces.partial.render";
+    P_EVT = "javax.faces.partial.event";
+    P_CLIENT_WINDOW = "javax.faces.ClientWindow";
+    P_RESET_VALUES = "javax.faces.partial.resetValues";
 
     P_WINDOW_ID = "javax.faces.windowId";
 
@@ -105,7 +105,7 @@ export class Implementation {
 
     static get instance(): Implementation {
         if (this._instance) {
-            return this.instance;
+            return this._instance;
         }
         this._instance = new Implementation();
         return this._instance;
@@ -210,12 +210,17 @@ export class Implementation {
 
         //options not set we define a default one with nothing
         let options = new Config(opts || {});
-        let elem = DomQuery.byId(el);
+        let elem = DomQuery.byId(el || <Element>event.target);
 
         /*assert if the onerror is set and once if it is set it must be of type function*/
         Lang.instance.assertType(options.getIf("onerror").value, "function");
         /*assert if the onevent is set and once if it is set it must be of type function*/
         Lang.instance.assertType(options.getIf("onevent").value, "function");
+        //improve the error messages if an empty elem is passed
+
+        if (elem.isAbsent()) {
+            throw Lang.instance.makeException(new Error(), "ArgNotSet", null, "Impl", "request", Lang.instance.getMessage("ERR_MUST_BE_PROVIDED1", "{0}: source  must be provided", "jsf.ajax.request", "source element id"));
+        }
 
         /*preparations for jsf 2.2 windowid handling*/
         //pass the window id into the options if not set already
@@ -232,15 +237,7 @@ export class Implementation {
          * the entire mapping between the functions is stateless
          */
         //null definitely means no event passed down so we skip the ie specific checks
-        if ('undefined' == typeof event) {
-            event = window.event || null;
-        }
-
-        //improve the error messages if an empty elem is passed
-        if (elem.isAbsent()) {
-            throw Lang.instance.makeException(new Error(), "ArgNotSet", null, "Impl", "request", Lang.instance.getMessage("ERR_MUST_BE_PROVIDED1", "{0}: source  must be provided", "jsf.ajax.request", "source element id"));
-        }
-
+        event == event || window.event;
 
         let elementId = elem.id;
 
@@ -277,8 +274,12 @@ export class Implementation {
          * so that people can use dummy forms and work
          * with detached objects
          */
-        let form = DomQuery.querySelectorAll("#" + (ctx.getIf("myfaces", "form").value || "__mf_none__"))
-            .presentOrElse(this.getForm(elem.value[0], event)).value[0];
+        let domForm = DomQuery
+            .querySelectorAll("#" + (ctx.getIf("myfaces", "form").value || "__mf_none__"))
+            .presentOrElseLazy(() => {
+                return new DomQuery(this.getForm(elem.getAsElem(0).value, event).value);
+            });
+        let form: Element = domForm.getAsElem(0).value;
 
         /**
          * binding contract the javax.faces.source must be set
@@ -344,9 +345,9 @@ export class Implementation {
         this.requestQueue.enqueue(new XhrRequest(elem, form, ctx));
     }
 
-    private applyRender(options, ctx, form, elementId) {
+    private applyRender(options: Config, ctx: Config, form, elementId) {
         if (options.getIf("render").isPresent()) {
-            this.transformList(ctx.getIf(this.CTX_PARAM_PASS_THR).get([]).value, this.P_RENDER, <string>options.getIf("render").value, form, <any>elementId);
+            this.transformList(ctx.getIf(this.CTX_PARAM_PASS_THR).get({}), this.P_RENDER, <string>options.getIf("render").value, form, <any>elementId);
         }
     }
 
@@ -361,7 +362,7 @@ export class Implementation {
             if ((<string>options.getIf(this.CTX_PARAM_EXECUTE).value).indexOf("@this") == -1) {
                 options.apply(this.CTX_PARAM_EXECUTE).value = options.getIf(this.CTX_PARAM_EXECUTE).value + " @this";
             }
-            this.transformList(ctx.getIf(this.CTX_PARAM_PASS_THR), this.P_EXECUTE, <string>options.getIf(this.CTX_PARAM_EXECUTE).value, form, <any>elementId);
+            this.transformList(ctx.getIf(this.CTX_PARAM_PASS_THR).get({}), this.P_EXECUTE, <string>options.getIf(this.CTX_PARAM_EXECUTE).value, form, <any>elementId);
         } else {
             ctx.apply(this.CTX_PARAM_PASS_THR, this.P_EXECUTE).value = elementId;
         }
@@ -627,19 +628,19 @@ export class Implementation {
      * @param elem
      * @param event
      */
-    private getForm(elem: HTMLElement, event?: Event) {
+    private getForm(elem: Element, event?: Event): Optional<Element> {
         let _Lang = Lang.instance;
 
         let queryElem = new DomQuery(elem);
         let eventTarget = event ? new DomQuery(_Lang.getEventTarget(event)) : new DomQuery();
         let form = queryElem.parents("form").presentOrElse(queryElem.byTagName("form", true))
-            .presentOrElse(eventTarget.parents("form")
-                .presentOrElse(eventTarget.byTagName("form"))).first();
+            .presentOrElseLazy(() => eventTarget.parents("form")
+                .presentOrElseLazy(() => eventTarget.byTagName("form"))).first();
         if (form.isAbsent()) {
             throw _Lang.makeException(new Error(), null, null, "Impl", "getForm", _Lang.getMessage("ERR_FORM"));
         }
 
-        return form.value;
+        return form.getAsElem(0);
     }
 
 }

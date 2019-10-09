@@ -14,22 +14,16 @@
  * limitations under the License.
  */
 
-
-
 ///<reference path='./_apiInterfaces.ts'/>
-
-
-
+import {Implementation} from "../impl/Impl";
 
 declare let window: any;
 declare type Context = {[key: string]: any};
-import {Implementation} from "../impl/Impl";
+const Impl = Implementation.instance;
 
-let Impl = Implementation.instance;
 
 export module jsf {
     "use strict";
-
 
 
 

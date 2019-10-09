@@ -555,24 +555,31 @@ export class DomQuery {
         }
     }
 
+    presentOrElseLazy(func: () => any): DomQuery {
+        if (this.isPresent()) {
+            return this;
+        } else {
+            return new DomQuery(func());
+        }
+    }
+
     parents(tagName: string): DomQuery {
         let retArr = [];
+        const lowerTagName = tagName.toLowerCase();
         let resolveItem = (item: Element) => {
-            if (item.tagName == tagName) {
+
+            if (item.tagName.toLowerCase() == lowerTagName) {
                 retArr.push(item);
             }
-            if (tagName == "form" && retArr.length) {
-                return false;
-            }
+
         };
 
         this.eachElem((item: Element) => {
-            if (resolveItem(item) === false) {
-                return false;
-            }
             while (item.parentNode) {
                 item = <Element>item.parentNode;
-                if (resolveItem(item) === false) {
+                resolveItem(item);
+                //nested forms not possible, performance shortcut
+                if(tagName == "form" && retArr.length) {
                     return false;
                 }
             }
@@ -804,14 +811,72 @@ export class DomQuery {
         return this;
     }
 
+    addEventListener(type: string, listener: (evt: Event) => void, options?:  boolean | EventListenerOptions): DomQuery {
+        this.eachElem((node: Element) => {
+           node.addEventListener(type, listener, options);
+        });
+        return this;
+    }
+
+    removeEventListener(type: string, listener: (evt: Event) => void, options?:  boolean | EventListenerOptions): DomQuery {
+        this.eachElem((node: Element) => {
+            node.removeEventListener(type, listener, options);
+        });
+        return this;
+    }
+
     /**
      * fires an event
      */
     fireEvent(eventName: string) {
         this.eachElem((node: Element) => {
-            let event = document.createEvent('HTMLEvents');
-            event.initEvent(eventName, false, true);
-            node.dispatchEvent(event);
+            var doc;
+            if (node.ownerDocument) {
+                doc = node.ownerDocument;
+            } else if (node.nodeType == 9){
+                // the node may be the document itself, nodeType 9 = DOCUMENT_NODE
+                doc = node;
+            } else {
+                throw new Error("Invalid node passed to fireEvent: " + node.id);
+            }
+
+            if (node.dispatchEvent) {
+                // Gecko-style approach (now the standard) takes more work
+                var eventClass = "";
+
+                // Different events have different event classes.
+                // If this switch statement can't map an eventName to an eventClass,
+                // the event firing is going to fail.
+                switch (eventName) {
+                    case "click": // Dispatching of 'click' appears to not work correctly in Safari. Use 'mousedown' or 'mouseup' instead.
+                    case "mousedown":
+                    case "mouseup":
+                        eventClass = "MouseEvents";
+                        break;
+
+                    case "focus":
+                    case "change":
+                    case "blur":
+                    case "select":
+                        eventClass = "HTMLEvents";
+                        break;
+
+                    default:
+                        throw "fireEvent: Couldn't find an event class for event '" + eventName + "'.";
+                        break;
+                }
+                var event = doc.createEvent(eventClass);
+                event.initEvent(eventName, true, true); // All events created as bubbling and cancelable.
+
+                event.synthetic = true; // allow detection of synthetic events
+                // The second parameter says go ahead with the default action
+                node.dispatchEvent(event);
+            } else  if ((<any>node).fireEvent) {
+                // IE-old school style, you can drop this if you don't need to support IE8 and lower
+                var event = doc.createEventObject();
+                event.synthetic = true; // allow detection of synthetic events
+                (<any>node).fireEvent("on" + eventName, event);
+            }
         })
     }
 

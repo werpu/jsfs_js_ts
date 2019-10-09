@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+
 const jsdom = require("jsdom");
 const {JSDOM} = jsdom;
 let dom = new JSDOM(`
@@ -26,7 +28,7 @@ let dom = new JSDOM(`
                 <form id="blarg">
                     <input type="text" id="input_1" name="input_1"></input>
                     <input type="button" id="input_2" name="input_2"
-                        onclick="jsf.ajax.request(this, event, {render:'@all', execute:'@form'})"
+                        
                     ></input>
                 </form>
             </body>
@@ -44,6 +46,9 @@ let window = dom.window;
     language: "en-En"
 };
 
+import {jsf} from "../../../main/typescript/api/jsf";
+(<any>global).jsf = jsf;
+window.jsf = jsf;
 import {describe, it} from 'mocha';
 import {expect} from 'chai';
 import * as sinon from 'sinon';
@@ -68,7 +73,7 @@ describe('jsf.ajax.request test suite', () => {
 
     });
 
-    it("jsf.ajax.request can be called", () => {
+    it("jsf.ajax.request can be called", (done) => {
         //we stub the addRequestToQueue, to enable the request check only
         //without any xhr and response, both will be tested separately for
         //proper behavior
@@ -78,8 +83,16 @@ describe('jsf.ajax.request test suite', () => {
         //lets check it out
 
         try {
-            DomQuery.byId("input_2").click();
-            expect(addRequestToQueue.called).to.be.true;
+            DomQuery.byId("input_2").addEventListener("click", (event: Event) => {
+                jsf.ajax.request(null, event, {render:'@all', execute:'@form'})
+            }).click();
+            setTimeout(() => {
+                expect(addRequestToQueue.called).to.be.true;
+                expect(addRequestToQueue.callCount).to.eq(1);
+                expect(addRequestToQueue.args[0][2]["passThrgh"].render).eq("blarg");
+                done();
+            }, 1500);
+
         } finally {
             //once done we restore the proper state
             addRequestToQueue.restore();

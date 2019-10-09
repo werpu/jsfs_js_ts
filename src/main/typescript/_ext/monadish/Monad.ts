@@ -250,6 +250,19 @@ export class Optional<T> extends Monad<T> {
         }
     }
 
+    /**
+     * lazy, passes a function which then is lazily evaluated
+     * instead of a direct value
+     * @param func
+     */
+    presentOrElseLazy(func: () => any): Optional<any> {
+        if (this.isPresent()) {
+            return this;
+        } else {
+            return this.flatMap(this.getClass().fromNullable(func()));
+        }
+    }
+
     /*
      * we need to implement it to fullfill the contract, although it is used only internally
      * all values are flattened when accessed anyway, so there is no need to call this methiod

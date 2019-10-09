@@ -24,7 +24,7 @@ import {XhrRequest} from "./xhrCore/XhrRequest";
 import {AsynchronouseQueue} from "./util/Queue";
 import {Config, Optional} from "../_ext/monadish/Monad";
 import {DomQuery} from "../_ext/monadish/DomQuery";
-import {ExtDom} from "./util/ExtDom";
+import {ExtDomQuery} from "./util/ExtDomQuery";
 import {Const} from "./core/Const";
 
 
@@ -152,7 +152,7 @@ export class Implementation {
      * b) passThrough handling with a map copy with a filter map block map
      */
     request(el: Element, event?: Event, opts?: { [key: string]: string | Function | { [key: string]: string | Function } }) {
-
+        const _Lang = Lang.instance;
         /*
          *namespace remap for our local function context we mix the entire function namespace into
          *a local function variable so that we do not have to write the entire namespace
@@ -164,31 +164,27 @@ export class Implementation {
         let elem = DomQuery.byId(el || <Element>event.target);
 
         /*assert if the onerror is set and once if it is set it must be of type function*/
-        Lang.instance.assertType(options.getIf("onerror").value, "function");
+
+        _Lang.assertType(options.getIf(Const.ON_ERROR).value, "function");
         /*assert if the onevent is set and once if it is set it must be of type function*/
-        Lang.instance.assertType(options.getIf("onevent").value, "function");
+        _Lang.assertType(options.getIf(Const.ON_EVENT).value, "function");
         //improve the error messages if an empty elem is passed
 
-        if (elem.isAbsent()) {
-            throw Lang.instance.makeException(new Error(), "ArgNotSet", null, "Impl", "request", Lang.instance.getMessage("ERR_MUST_BE_PROVIDED1", "{0}: source  must be provided", "jsf.ajax.request", "source element id"));
-        }
+        this.assertElementExists(elem);
 
         /*preparations for jsf 2.2 windowid handling*/
         //pass the window id into the options if not set already
-        if (options.getIf("windowId").isAbsent()) {
-            let windowId = ExtDom.getWindowId();
-            (windowId) ? options.apply(Const.P_WINDOW_ID).value = windowId : null;
-        } else {
-            options.apply(Const.P_WINDOW_ID).value = options.getIf("windowId").value;
-            delete options.value.windowId;
-        }
+
+        options.apply(Const.P_WINDOW_ID).value = options.getIf("windowId").presentOrElse(ExtDomQuery.windowId).value;
+        options.delete("windowId");
+
 
         /**
          * we cross reference statically hence the mapping here
          * the entire mapping between the functions is stateless
          */
         //null definitely means no event passed down so we skip the ie specific checks
-        event == event || window.event;
+        event = _Lang.getEvent(event);
 
         let elementId = elem.id;
 
@@ -198,7 +194,7 @@ export class Implementation {
          * we should not touch the incoming params!
          */
 
-        let passThrgh = Lang.instance.mixMaps({}, <any>options, true, <any>this.BLOCKFILTER);
+        let passThrgh = _Lang.mixMaps({}, <any>options, true, <any>this.BLOCKFILTER);
 
         if (event) {
             passThrgh[Const.P_EVT] = event.type;
@@ -267,13 +263,13 @@ export class Implementation {
         this.applyExecute(options, ctx, form, elementId.value);
         this.applyRender(options, ctx, form, elementId.value);
 
-        let delay = options.getIf(Const.CTX_PARAM_DELAY).get(Lang.instance.getLocalOrGlobalConfig(ctx.value, Const.CTX_PARAM_DELAY, 0)).value;
+        let delay = options.getIf(Const.CTX_PARAM_DELAY).get(_Lang.getLocalOrGlobalConfig(ctx.value, Const.CTX_PARAM_DELAY, 0)).value;
 
         //additional meta information to speed things up, note internal non jsf
         //pass through options are stored under _mfInternal in the context
         ctx.apply(Const.CTX_PARAM_MF_INTERNAL, Const.CTX_PARAM_SRC_FRM_ID).value = form.id.value;
         ctx.apply(Const.CTX_PARAM_MF_INTERNAL, Const.CTX_PARAM_SRC_CTL_ID).value = elementId;
-        ctx.apply(Const.CTX_PARAM_MF_INTERNAL, Const.CTX_PARAM_TR_TYPE).value = "POST";
+        ctx.apply(Const.CTX_PARAM_MF_INTERNAL, Const.CTX_PARAM_TR_TYPE).value = Const.REQ_TYPE_POST;
 
         //mojarra compatibility, mojarra is sending the form id as well
         //this is not documented behavior but can be determined by running
@@ -288,6 +284,13 @@ export class Implementation {
         //queue and let the queue take over the rest
         this.addRequestToQueue(elem, form, ctx);
     }
+
+    private assertElementExists(elem: DomQuery) {
+        if (elem.isAbsent()) {
+            throw Lang.instance.makeException(new Error(), "ArgNotSet", null, "Impl", "request", Lang.instance.getMessage("ERR_MUST_BE_PROVIDED1", "{0}: source  must be provided", "jsf.ajax.request", "source element id"));
+        }
+    }
+
 
     /**
      * public to make it shimmable for tests

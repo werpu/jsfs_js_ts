@@ -447,9 +447,12 @@ export class DomQuery {
      * no other methods are supported anymore
      * @param code
      */
-    globalEval(code: string) {
+    globalEval(code: string, nonce ?:string) {
         let head = document.getElementsByTagName("head")[0] || document.documentElement;
         let script = document.createElement("script");
+        if(nonce) {
+            script.setAttribute("nonce", nonce);
+        }
         script.type = "text/javascript";
         script.text = code;
         head.insertBefore(script, head.firstChild);

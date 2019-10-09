@@ -18,12 +18,16 @@ export class Const {
     static P_EVT = "javax.faces.partial.event";
     static P_CLIENT_WINDOW = "javax.faces.ClientWindow";
     static P_RESET_VALUES = "javax.faces.partial.resetValues";
+    static P_WIN_ID = "javax.faces.WindowId";
 
     static P_WINDOW_ID = "javax.faces.windowId";
 
     /* message types */
     static ERROR = "error";
     static EVENT = "event";
+
+    static ON_ERROR = "onerror";
+    static ON_EVENT = "onevent";
 
     /* event emitting stages */
     static BEGIN = "begin";
@@ -58,4 +62,6 @@ export class Const {
 
 
     static STAGE_DEVELOPMENT = "Development";
+
+    static REQ_TYPE_POST = "POST";
 }

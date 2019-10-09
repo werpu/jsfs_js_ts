@@ -3,7 +3,8 @@ import {DomQuery} from "../../_ext/monadish/DomQuery";
 
 export class ExtDom {
 
-    //TODO check if we still need this
+    //TODO merge this somehwere else in
+    //This class is just a placeholder
     static getWindowId(node?: HTMLElement | string) {
         let FORM = "form";
         let WIN_ID = "javax.faces.WindowId";

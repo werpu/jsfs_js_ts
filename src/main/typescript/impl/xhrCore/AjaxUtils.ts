@@ -1,4 +1,4 @@
-import {Dom} from "../util/Dom";
+import {DomQuery} from "../../_ext/monadish/DomQuery";
 
 export class AjaxUtils {
     /**
@@ -23,7 +23,7 @@ export class AjaxUtils {
 
     static encodePartialSubmit(partialIds: string[], targetBuf: {[key: string]: any}) {
         for(let cnt = 0; cnt < partialIds.length; cnt++) {
-           let element:HTMLFormElement = <HTMLFormElement> Dom.instance.byId(partialIds[cnt]);
+           let element:HTMLFormElement = <HTMLFormElement> DomQuery.byId(partialIds[cnt]).getAsElem(0).value;
            this.encodeElement(element, targetBuf);
         }
     }

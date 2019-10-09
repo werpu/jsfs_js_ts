@@ -6,18 +6,19 @@
  * and let the queue do the processing.
  *
  */
-import {jsf} from "../../api/jsf";
-import {Impl} from "../Impl";
+
+
 import {Lang} from "../util/Lang";
 import {LangTypes} from "../util/LangTypes";
 import {AjaxUtils} from "./AjaxUtils";
 
-import Implementation = Impl.Implementation;
+
 import FormDataDecorator = LangTypes.FormDataDecorator;
 import {AsyncRunnable} from "../util/AsyncRunnable";
 import {Config} from "../../_ext/monadish/Monad";
 
 import {Promise as ShimPromise} from "../../_ext/monadish/Monad";
+import {Implementation} from "../Impl";
 
 type PROMISE_FUNC = (any?) => void;
 
@@ -141,7 +142,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         let ret = null;
 
         if (!this.partialIdsArray || !this.partialIdsArray.length) {
-             return Lang.instance.createFormDataDecorator(jsf.getViewState(this.sourceForm));
+             return Lang.instance.createFormDataDecorator((<any>window).jsf.getViewState(this.sourceForm));
         } else {
             //now this is less performant but we have to call it to allow viewstate decoration
             ret = Lang.instance.createFormDataDecorator(new Array());
@@ -176,7 +177,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     onSuccess(data: any, resolve: PROMISE_FUNC, reject: PROMISE_FUNC) {
         this.sendEvent(XhrRequest.STATE_EVT_COMPLETE);
         this.requestContext.apply("_mfInternal").value = this.requestContext.getIf("_mfInternal").get({}).value;
-        jsf.ajax.response(this.xhrObject, this.requestContext);
+        (<any>window).jsf.ajax.response(this.xhrObject, this.requestContext);
     }
 
     onDone(data: any, resolve: PROMISE_FUNC, reject: PROMISE_FUNC) {

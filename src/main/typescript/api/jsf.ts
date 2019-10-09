@@ -18,15 +18,21 @@
 
 ///<reference path='./_apiInterfaces.ts'/>
 
-import {Impl} from "../impl/Impl";
-import Implementation = Impl.Implementation;
+
+
+
 declare let window: any;
 declare type Context = {[key: string]: any};
+import {Implementation} from "../impl/Impl";
+
+let Impl = Implementation.instance;
 
 export module jsf {
     "use strict";
 
-    let Impl = Implementation.instance;
+
+
+
 
     /*
      * Version of the implementation for the jsf.js.

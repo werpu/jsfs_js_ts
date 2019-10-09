@@ -15,11 +15,15 @@
  */
 
 
-import {Monadish} from "../util/Monad";
-import Config = Monadish.Config;
+
+
 import {Lang} from "../util/Lang";
-import {DomQuery, XMLQuery} from "../util/Nodes";
-import {Impl} from "../Impl";
+
+
+import {Config} from "../../_ext/monadish/Monad";
+import {XMLQuery} from "../../_ext/monadish/XmlQuery";
+import {DomQuery} from "../../_ext/monadish/DomQuery";
+import {Implementation} from "../Impl";
 export class Response {
 
     /*partial response types*/
@@ -64,7 +68,7 @@ export class Response {
     static processResponse(request: XMLHttpRequest, context: { [key: string]: any }) {
         let req = Config.fromNullable(request);
         let ctx = Config.fromNullable(context);
-        let _Impl = Impl.Implementation.instance;
+        let _Impl = Implementation.instance;
 
         ctx.apply(Response.MF_INTERNAL, Response.UPDATE_FORMS).value = [];
         ctx.apply(Response.MF_INTERNAL, Response.UPDATE_ELEMS).value = [];
@@ -83,7 +87,7 @@ export class Response {
             throw Response.raiseError(new Error(), "Partial response not set", "processResponse");
         }
 
-        partial.getIf([Response.CMD_ERROR, Response.CMD_REDIRECT, Response.CMD_CHANGES].join(",")).eachNode(
+        partial.getIf([Response.CMD_ERROR, Response.CMD_REDIRECT, Response.CMD_CHANGES].join(",")).each(
             (node: XMLQuery) => {
                 switch ((<any>node.value).tagName) {
                     case Response.CMD_ERROR:
@@ -127,7 +131,7 @@ export class Response {
     }
 
     private static appendViewStateToForms(forms: DomQuery, viewState: any) {
-        forms.eachNode((form: DomQuery) => {
+        forms.each((form: DomQuery) => {
             let viewStates = forms.querySelectorAll("[name='" + Response.P_VIEWSTATE + "']");
             if (viewStates.isAbsent()) {
                 let newViewState = DomQuery.fromMarkup(
@@ -135,7 +139,7 @@ export class Response {
                 );
                 form.appendTo(newViewState);
             } else {
-                viewStates.setAttribute("value", viewState);
+                viewStates.attr("value").value = viewState;
             }
         });
     }
@@ -176,7 +180,7 @@ export class Response {
     }
 
     private static processChanges(request: XMLHttpRequest, context: Config, node: XMLQuery): boolean {
-        node.getIf([Response.CMD_UPDATE, Response.CMD_EVAL, Response.CMD_INSERT, Response.CMD_DELETE, Response.CMD_ATTRIBUTES, Response.CMD_EXTENSION].join(",")).eachNode(
+        node.getIf([Response.CMD_UPDATE, Response.CMD_EVAL, Response.CMD_INSERT, Response.CMD_DELETE, Response.CMD_ATTRIBUTES, Response.CMD_EXTENSION].join(",")).each(
             (node: XMLQuery) => {
                 switch ((<any>node.value).tagName) {
                     case Response.CMD_UPDATE:
@@ -210,8 +214,8 @@ export class Response {
     private static processAttributes(request: XMLHttpRequest, context: Config, node: XMLQuery) {
         let id = node.getAttribute("id");
         let elem = DomQuery.querySelectorAll("#"+id.value);
-        node.byTagName("attribute").eachNode((item: XMLQuery) => {
-            elem.setAttribute(item.getAttribute("name").value, item.getAttribute("value").value);
+        node.byTagName("attribute").each((item: XMLQuery) => {
+            elem.attr(item.getAttribute("name").value ).value =  item.getAttribute("value").value;
         });
     }
 
@@ -333,7 +337,7 @@ export class Response {
      * @param name the name of the error (optional)
      */
     private static raiseError(error: any, message: string, caller ?: string, title ?: string, name ?: string) {
-        let _Impl = Impl.Implementation.instance;
+        let _Impl = Implementation.instance;
         let finalTitle = title || _Impl.MALFORMEDXML;
         let finalName = name || _Impl.MALFORMEDXML;
         let finalMessage = message || "";

@@ -131,14 +131,14 @@ export class XMLQuery {
 
     get childNodes(): XMLQuery {
         let retVal = [];
-        this.each((item: Node) => {
+        this.eachElem((item: Node) => {
             retVal = retVal.concat(Lang.instance.objToArray(item.childNodes))
         });
 
         return new XMLQuery(...retVal);
     }
 
-    each(func: (item: Node, cnt?: number) => any): XMLQuery {
+    eachElem(func: (item: Node, cnt?: number) => any): XMLQuery {
         for (let cnt = 0, len = this.rootNode.length; cnt < len; cnt++) {
             if (func(this.get(cnt).value[0], cnt) === false) {
                 break;
@@ -148,7 +148,7 @@ export class XMLQuery {
     }
 
 
-    eachNode(func: (item: XMLQuery, cnt?: number) => any): XMLQuery {
+    each(func: (item: XMLQuery, cnt?: number) => any): XMLQuery {
         for (let cnt = 0, len = this.rootNode.length; cnt < len; cnt++) {
             if (func(this.get(cnt), cnt) === false) {
                 break;
@@ -186,7 +186,7 @@ export class XMLQuery {
 
     textContent(joinstr: string): string {
         let retStr = [];
-        this.each((item: Node) => {
+        this.eachElem((item: Node) => {
             retStr.push((<any>item).textContent);
         });
         return retStr.join(joinstr || " ");
@@ -205,9 +205,11 @@ export class XMLQuery {
         return Optional.fromNullable((<any>this.rootNode[0]).getAttribute(key));
     }
 
+    //TODO insert attribute api like we have it on DomQuery
+
     toString(): string {
         let ret = [];
-        this.each((node: any) => {
+        this.eachElem((node: any) => {
             if (typeof (<any>window).XMLSerializer != "undefined") {
                 ret.push(new (<any>window).XMLSerializer().serializeToString(node));
             } else if (typeof node.xml != "undefined") {
@@ -221,8 +223,8 @@ export class XMLQuery {
     get cDATAAsString(): string {
         let cDataBlock = [];
         // response may contain several blocks
-        this.eachNode((item: XMLQuery) => {
-            item.childNodes.each((node: Node) => {
+        this.each((item: XMLQuery) => {
+            item.childNodes.eachElem((node: Node) => {
                 cDataBlock.push(<string>(<any>node).data);
             });
         });

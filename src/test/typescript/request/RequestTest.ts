@@ -13,10 +13,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const jsdom = require("jsdom");
+const {JSDOM} = jsdom;
+let dom = new JSDOM(`
+            <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <title>Title</title>
+            </head>
+            <body>
+                <form id="blarg">
+                    <input type="text" id="input_1" name="input_1"></input>
+                    <input type="button" id="input_2" name="input_2"
+                        onclick="jsf.ajax.request(this, event, {render:'@all', execute:'@form'})"
+                    ></input>
+                </form>
+            </body>
+            </html>
+    
+    `)
+
+let window = dom.window;
+
+
+(<any>global).window = window;
+(<any>global).body = window.document.body;
+(<any>global).document = window.document;
+(<any>global).navigator = {
+    language: "en-En"
+};
 
 import {describe, it} from 'mocha';
 import {expect} from 'chai';
 import * as sinon from 'sinon';
+
+
+import {DomQuery} from "../../../main/typescript/_ext/monadish/DomQuery";
+import {Implementation} from "../../../main/typescript/impl/Impl";
+
+
 
 
 /**
@@ -27,7 +63,27 @@ import * as sinon from 'sinon';
  */
 
 describe('jsf.ajax.request test suite', () => {
+    beforeEach(() => {
+
+
+    });
+
     it("jsf.ajax.request can be called", () => {
+        //we stub the addRequestToQueue, to enable the request check only
+        //without any xhr and response, both will be tested separately for
+        //proper behavior
+        let addRequestToQueue = sinon.stub(Implementation.instance, "addRequestToQueue");
+        //now the jsf.ajax.request should trigger but should not go into
+        //the asynchronous event loop.
+        //lets check it out
+
+        try {
+            DomQuery.byId("input_2").click();
+            expect(addRequestToQueue.called).to.be.true;
+        } finally {
+            //once done we restore the proper state
+            addRequestToQueue.restore();
+        }
 
     });
 });

@@ -78,7 +78,8 @@ describe('jsf.ajax.request test suite', () => {
         //we stub the addRequestToQueue, to enable the request check only
         //without any xhr and response, both will be tested separately for
         //proper behavior
-        let addRequestToQueue = sinon.stub(Implementation.instance, "addRequestToQueue");
+        let Impl = Implementation.instance;
+        let addRequestToQueue = sinon.stub(Impl, "addRequestToQueue");
         //now the jsf.ajax.request should trigger but should not go into
         //the asynchronous event loop.
         //lets check it out
@@ -90,8 +91,11 @@ describe('jsf.ajax.request test suite', () => {
 
             expect(addRequestToQueue.called).to.be.true;
             expect(addRequestToQueue.callCount).to.eq(1);
-            expect((<Config>addRequestToQueue.args[0][2]).getIf("passThrgh",Implementation.instance.P_RENDER).value).eq("@all");
-
+            let argElement = <Config>addRequestToQueue.args[0][2];
+            const context = (<Config>addRequestToQueue.args[0][2]);
+            expect(context.getIf("passThrgh",Impl.P_RENDER).value).eq("@all");
+            //Execute issuing form due to @form and always the issuing element
+            expect(context.getIf("passThrgh",Impl.P_EXECUTE).value).eq("blarg input_2");
         } finally {
             //once done we restore the proper state
             addRequestToQueue.restore();

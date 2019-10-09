@@ -21,6 +21,8 @@
 
 /*IMonad definitions*/
 
+import {Lang} from "./Lang";
+
 /**
  * IFunctor interface,
  * defines an interface which allows to map a functor
@@ -480,7 +482,7 @@ export class Config extends Optional<any> {
     }
 
 
-    applyIf(condition: boolean,...keys: Array<any>) {
+    applyIf(condition: boolean,...keys: Array<any>): IValueHolder<any> {
         return  condition ? this.apply(keys) : {value: null};
     }
 
@@ -504,6 +506,10 @@ export class Config extends Optional<any> {
 
     toJson(): any {
         return JSON.stringify(this.value);
+    }
+
+    get shallowCopy(): Config {
+        return new Config(Lang.instance.mergeMaps([{}, this.value || {}]));
     }
 
     protected getClass(): any {

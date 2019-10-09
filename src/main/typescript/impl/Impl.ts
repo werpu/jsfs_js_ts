@@ -22,7 +22,7 @@ import {ErrorData, EventData, IListener, ListenerQueue} from "./util/ListenerQue
 import {Response} from "./xhrCore/Response";
 import {XhrRequest} from "./xhrCore/XhrRequest";
 import {AsynchronouseQueue} from "./util/Queue";
-import {Config, Optional} from "../_ext/monadish/Monad";
+import {Config, Optional, saveResolve} from "../_ext/monadish/Monad";
 import {DomQuery} from "../_ext/monadish/DomQuery";
 import {ExtDomQuery} from "./util/ExtDomQuery";
 import {Const} from "./core/Const";
@@ -69,7 +69,7 @@ export class Implementation {
      */
     getProjectStage(): string {
         let projectStage = Optional.fromNullable(globalConfig.projectStage).presentOrElse(Optional.fromNullable(this.projectStage));
-        if(projectStage.isPresent()) {
+        if (projectStage.isPresent()) {
             return projectStage.value;
         }
 
@@ -87,7 +87,7 @@ export class Implementation {
      */
     getSeparatorChar(): string {
         let separator = Optional.fromNullable(globalConfig.separator).presentOrElse(Optional.fromNullable(this.separator));
-        if(separator.isPresent()) {
+        if (separator.isPresent()) {
             return separator.value;
         }
 
@@ -131,17 +131,21 @@ export class Implementation {
      * a) transformArguments out of the function
      * b) passThrough handling with a map copy with a filter map block map
      */
-    request(el: Element | string, event?: Event, opts?: { [key: string]: string | Function | { [key: string]: string | Function } }) {
+    request(el: Element | string, event?: Event, opts?: { [key: string]: string | Function | { [key: string]: string | Function } }) {
         const _Lang = Lang.instance;
+        const  MYFACES = "myfaces";
         /*
          *namespace remap for our local function context we mix the entire function namespace into
          *a local function variable so that we do not have to write the entire namespace
          *all the time
          */
         event = _Lang.getEvent(event);
+
         //options not set we define a default one with nothing
-        let options = new Config(opts || {});
-        let elem = DomQuery.byId(el || <Element>event.target);
+        const options = new Config(opts).shallowCopy;
+        const elem = DomQuery.byId(el || <Element>event.target);
+        const elementId = elem.id;
+        const ctx = new Config({});
 
         /*assert if the onerror is set and once if it is set it must be of type function*/
 
@@ -149,47 +153,23 @@ export class Implementation {
         /*assert if the onevent is set and once if it is set it must be of type function*/
         _Lang.assertType(options.getIf(Const.ON_EVENT).value, "function");
         //improve the error messages if an empty elem is passed
-
         this.assertElementExists(elem);
 
-        /*preparations for jsf 2.2 windowid handling*/
-        //pass the window id into the options if not set already
+        this.applyWindowId(options);
 
-        options.apply(Const.P_WINDOW_ID).value = options.getIf("windowId").presentOrElse(ExtDomQuery.windowId).value;
-        options.delete("windowId");
-
-
-        /**
-         * we cross reference statically hence the mapping here
-         * the entire mapping between the functions is stateless
-         */
-        let elementId = elem.id;
-
-        //TODO cleaned up passthrough handling
-        /*
-         * We make a copy of our options because
-         * we should not touch the incoming params!
-         */
-
-        let passThrgh = _Lang.mixMaps({}, <any>options, true, <any>this.BLOCKFILTER);
-
-        if (event) {
-            passThrgh[Const.P_EVT] = event.type;
-        }
+        ctx.apply(Const.CTX_PARAM_PASS_THR).value = _Lang.mergeMaps([{}, <any>options.value], true, <any>this.BLOCKFILTER);
+        ctx.applyIf(!!event, Const.CTX_PARAM_PASS_THR, Const.P_EVT).value = saveResolve(() => event.type);
 
         /**
          * ajax pass through context with the source
          * onevent and onerror
          */
-        let context = {};
-        let ctx = new Config(context);
-
         ctx.apply(Const.SOURCE).value = elem;
         ctx.apply(Const.ON_EVENT).value = options.getIf(Const.ON_EVENT).value;
         ctx.apply(Const.ON_ERROR).value = options.getIf(Const.ON_ERROR).value;
-        ctx.apply("myfaces").value = options.getIf("myfaces").value;
-        ctx.apply(Const.CTX_PARAM_DELAY).value = options.getIf(Const.CTX_PARAM_DELAY).value;
 
+        ctx.apply(MYFACES).value = options.getIf(MYFACES).value;
+        ctx.apply(Const.CTX_PARAM_DELAY).value = options.getIf(Const.CTX_PARAM_DELAY).value;
 
         /**
          * fetch the parent form
@@ -198,9 +178,9 @@ export class Implementation {
          * so that people can use dummy forms and work
          * with detached objects
          */
-        const configId = ctx.getIf("myfaces", "form").presentOrElse(Optional.fromNullable("__mf_none__")).value;
+        const configId = ctx.getIf(MYFACES, "form").presentOrElse("__mf_none__").value;
         let form: DomQuery = DomQuery
-            .byId( configId)
+            .byId(configId)
             .presentOrElseLazy(() => this.getForm(elem.getAsElem(0).value, event));
 
         /**
@@ -212,7 +192,7 @@ export class Implementation {
          */
         ctx.apply(Const.CTX_PARAM_PASS_THR, Const.P_AJAX).value = elementId;
 
-        this.applyClientWindowId(form, ctx, passThrgh);
+        this.applyClientWindowId(form, ctx);
 
         /**
          * binding contract the javax.faces.source must be set
@@ -260,6 +240,14 @@ export class Implementation {
         this.addRequestToQueue(elem, form, ctx);
     }
 
+    private applyWindowId(options) {
+        /*preparations for jsf 2.2 windowid handling*/
+        //pass the window id into the options if not set already
+        //TODO probably not needed anymore
+        options.apply(Const.P_WINDOW_ID).value = options.getIf("windowId").presentOrElse(ExtDomQuery.windowId).value;
+        options.delete("windowId");
+    }
+
     private assertElementExists(elem: DomQuery) {
         if (elem.isAbsent()) {
             throw Lang.instance.makeException(new Error(), "ArgNotSet", null, "Impl", "request", Lang.instance.getMessage("ERR_MUST_BE_PROVIDED1", "{0}: source  must be provided", "jsf.ajax.request", "source element id"));
@@ -301,7 +289,7 @@ export class Implementation {
     /**
      * probably deprecated in favor of windowId need to check the specs
      */
-    private applyClientWindowId(form: DomQuery, ctx: Config, passThrgh?: any) {
+    private applyClientWindowId(form: DomQuery, ctx: Config) {
         let clientWindow = (<any>window).jsf.getClientWindow(form.getAsElem(0).value);
         if (clientWindow) {
             if (form.querySelectorAll("[name='" + Const.P_CLIENTWINDOW + "']").length == 0) {

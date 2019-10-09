@@ -24,6 +24,7 @@ import {Config} from "../../_ext/monadish/Monad";
 import {XMLQuery} from "../../_ext/monadish/XmlQuery";
 import {DomQuery} from "../../_ext/monadish/DomQuery";
 import {Implementation} from "../Impl";
+import {Const} from "../core/Const";
 export class Response {
 
     /*partial response types*/
@@ -74,7 +75,7 @@ export class Response {
         ctx.apply(Response.MF_INTERNAL, Response.UPDATE_ELEMS).value = [];
 
         if (req.getIf("responseXML").isAbsent()) {
-            throw Lang.instance.makeException(new Error(), _Impl.EMPTY_RESPONSE, _Impl.EMPTY_RESPONSE, "Response", "processResponse", "");
+            throw Lang.instance.makeException(new Error(), Const.EMPTY_RESPONSE, Const.EMPTY_RESPONSE, "Response", "processResponse", "");
         }
         let responseXML = new XMLQuery(req.getIf("responseXML").value);
 
@@ -338,8 +339,8 @@ export class Response {
      */
     private static raiseError(error: any, message: string, caller ?: string, title ?: string, name ?: string) {
         let _Impl = Implementation.instance;
-        let finalTitle = title || _Impl.MALFORMEDXML;
-        let finalName = name || _Impl.MALFORMEDXML;
+        let finalTitle = title || Const.MALFORMEDXML;
+        let finalName = name || Const.MALFORMEDXML;
         let finalMessage = message || "";
 
         return Lang.instance.makeException(error, finalTitle, finalName, "Response", caller || ( ((<any>arguments).caller) ? (<any>arguments).caller.toString() : "_raiseError"), finalMessage);

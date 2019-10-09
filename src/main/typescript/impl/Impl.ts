@@ -25,64 +25,13 @@ import {AsynchronouseQueue} from "./util/Queue";
 import {Config, Optional} from "../_ext/monadish/Monad";
 import {DomQuery} from "../_ext/monadish/DomQuery";
 import {ExtDom} from "./util/ExtDom";
+import {Const} from "./core/Const";
 
 
 let globalConfig = myfacesConfig.myfaces.config;
 
 export class Implementation {
 
-    /*internal identifiers for options*/
-    IDENT_ALL = "@all";
-    IDENT_NONE = "@none";
-    IDENT_THIS = "@this";
-    IDENT_FORM = "@form";
-
-    /*
-     * [STATIC] constants
-     */
-
-    P_PARTIAL_SOURCE = "javax.faces.source";
-    P_VIEWSTATE = "javax.faces.ViewState";
-    P_CLIENTWINDOW = "javax.faces.ClientWindow";
-    P_AJAX = "javax.faces.partial.ajax";
-    P_EXECUTE = "javax.faces.partial.execute";
-    P_RENDER = "javax.faces.partial.render";
-    P_EVT = "javax.faces.partial.event";
-    P_CLIENT_WINDOW = "javax.faces.ClientWindow";
-    P_RESET_VALUES = "javax.faces.partial.resetValues";
-
-    P_WINDOW_ID = "javax.faces.windowId";
-
-    /* message types */
-    ERROR = "error";
-    EVENT = "event";
-
-    /* event emitting stages */
-    BEGIN = "begin";
-    COMPLETE = "complete";
-    SUCCESS = "success";
-
-    /*ajax errors spec 14.4.2*/
-    HTTPERROR = "httpError";
-    EMPTY_RESPONSE = "emptyResponse";
-    MALFORMEDXML = "malformedXML";
-    SERVER_ERROR = "serverError";
-    CLIENT_ERROR = "clientError";
-    TIMEOUT_EVENT = "timeout";
-
-    CTX_PARAM_MF_INTERNAL = "_mfInternal";
-
-
-    /*error reporting threshold*/
-    _threshold = "ERROR";
-
-    private CTX_PARAM_SRC_FRM_ID = "_mfSourceFormId";
-    private CTX_PARAM_SRC_CTL_ID = "_mfSourceControlId";
-    private CTX_PARAM_TR_TYPE = "_mfTransportType";
-    private CTX_PARAM_PASS_THR = "passThrgh";
-    private CTX_PARAM_DELAY = "delay";
-    private CTX_PARAM_RST = "resetValues";
-    private CTX_PARAM_EXECUTE = "execute";
 
     /*blockfilter for the passthrough filtering; the attributes given here
      * will not be transmitted from the options into the passthrough*/
@@ -97,6 +46,10 @@ export class Implementation {
     private eventQueue = new ListenerQueue<EventData>();
     private errorQueue = new ListenerQueue<ErrorData>();
     private requestQueue = new AsynchronouseQueue<XhrRequest>();
+
+
+    /*error reporting threshold*/
+    private threshold = "ERROR";
 
     private constructor() {
     }
@@ -224,9 +177,9 @@ export class Implementation {
         //pass the window id into the options if not set already
         if (options.getIf("windowId").isAbsent()) {
             let windowId = ExtDom.getWindowId();
-            (windowId) ? options.apply(this.P_WINDOW_ID).value = windowId : null;
+            (windowId) ? options.apply(Const.P_WINDOW_ID).value = windowId : null;
         } else {
-            options.apply(this.P_WINDOW_ID).value = options.getIf("windowId").value;
+            options.apply(Const.P_WINDOW_ID).value = options.getIf("windowId").value;
             delete options.value.windowId;
         }
 
@@ -248,7 +201,7 @@ export class Implementation {
         let passThrgh = Lang.instance.mixMaps({}, <any>options, true, <any>this.BLOCKFILTER);
 
         if (event) {
-            passThrgh[this.P_EVT] = event.type;
+            passThrgh[Const.P_EVT] = event.type;
         }
 
         /**
@@ -258,11 +211,11 @@ export class Implementation {
         let context = {};
         let ctx = new Config(context);
 
-        ctx.apply("source").value = elem;
+        ctx.apply(Const.SOURCE).value = elem;
         ctx.apply("onevent").value = options.getIf("onevent").value;
         ctx.apply("onerror").value = options.getIf("onerror").value;
         ctx.apply("myfaces").value = options.getIf("myfaces").value;
-        ctx.apply(this.CTX_PARAM_DELAY).value = options.getIf(this.CTX_PARAM_DELAY).value;
+        ctx.apply(Const.CTX_PARAM_DELAY).value = options.getIf(Const.CTX_PARAM_DELAY).value;
 
 
         /**
@@ -282,23 +235,23 @@ export class Implementation {
         /**
          * binding contract the javax.faces.source must be set
          */
-        ctx.apply(this.CTX_PARAM_PASS_THR, this.P_PARTIAL_SOURCE).value = elementId;
+        ctx.apply(Const.CTX_PARAM_PASS_THR, Const.P_PARTIAL_SOURCE).value = elementId;
         /**
          * javax.faces.partial.ajax must be set to true
          */
-        ctx.apply(this.CTX_PARAM_PASS_THR, this.P_AJAX).value = elementId;
+        ctx.apply(Const.CTX_PARAM_PASS_THR, Const.P_AJAX).value = elementId;
 
         this.applyClientWindowId(form, ctx, passThrgh);
 
         /**
          * binding contract the javax.faces.source must be set
          */
-        ctx.apply(this.CTX_PARAM_PASS_THR, this.P_PARTIAL_SOURCE).value = elementId;
+        ctx.apply(Const.CTX_PARAM_PASS_THR, Const.P_PARTIAL_SOURCE).value = elementId;
 
         /**
          * javax.faces.partial.ajax must be set to true
          */
-        ctx.apply(this.CTX_PARAM_PASS_THR, this.P_AJAX).value = elementId;
+        ctx.apply(Const.CTX_PARAM_PASS_THR, Const.P_AJAX).value = elementId;
 
         /**
          * if resetValues is set to true
@@ -308,26 +261,26 @@ export class Implementation {
          * the specs jsdoc
          */
 
-        ctx.applyIf(true === options.getIf(this.CTX_PARAM_RST).get(false).value,
-            this.CTX_PARAM_PASS_THR, this.P_RESET_VALUES).value = true;
+        ctx.applyIf(true === options.getIf(Const.CTX_PARAM_RST).get(false).value,
+            Const.CTX_PARAM_PASS_THR, Const.P_RESET_VALUES).value = true;
 
         this.applyExecute(options, ctx, form, elementId.value);
         this.applyRender(options, ctx, form, elementId.value);
 
-        let delay = options.getIf(this.CTX_PARAM_DELAY).get(Lang.instance.getLocalOrGlobalConfig(ctx.value, this.CTX_PARAM_DELAY, 0)).value;
+        let delay = options.getIf(Const.CTX_PARAM_DELAY).get(Lang.instance.getLocalOrGlobalConfig(ctx.value, Const.CTX_PARAM_DELAY, 0)).value;
 
         //additional meta information to speed things up, note internal non jsf
         //pass through options are stored under _mfInternal in the context
-        ctx.apply(this.CTX_PARAM_MF_INTERNAL, this.CTX_PARAM_SRC_FRM_ID).value = form.id.value;
-        ctx.apply(this.CTX_PARAM_MF_INTERNAL, this.CTX_PARAM_SRC_CTL_ID).value = elementId;
-        ctx.apply(this.CTX_PARAM_MF_INTERNAL, this.CTX_PARAM_TR_TYPE).value = "POST";
+        ctx.apply(Const.CTX_PARAM_MF_INTERNAL, Const.CTX_PARAM_SRC_FRM_ID).value = form.id.value;
+        ctx.apply(Const.CTX_PARAM_MF_INTERNAL, Const.CTX_PARAM_SRC_CTL_ID).value = elementId;
+        ctx.apply(Const.CTX_PARAM_MF_INTERNAL, Const.CTX_PARAM_TR_TYPE).value = "POST";
 
         //mojarra compatibility, mojarra is sending the form id as well
         //this is not documented behavior but can be determined by running
         //mojarra under blackbox conditions
         //i assume it does the same as our formId_submit=1 so leaving it out
         //wont hurt but for the sake of compatibility we are going to add it
-        ctx.apply(this.CTX_PARAM_PASS_THR, form.id.value).value = form.id.value;
+        ctx.apply(Const.CTX_PARAM_PASS_THR, form.id.value).value = form.id.value;
 
         //todo partial id handling from config
 
@@ -339,40 +292,38 @@ export class Implementation {
     /**
      * public to make it shimmable for tests
      */
-    addRequestToQueue(elem:DomQuery, form: DomQuery, ctx: Config) {
+    addRequestToQueue(elem: DomQuery, form: DomQuery, ctx: Config) {
         this.requestQueue.enqueue(new XhrRequest(elem, form, ctx));
     }
 
     private applyRender(options: Config, ctx: Config, form: DomQuery, elementId: string) {
         if (options.getIf("render").isPresent()) {
-            this.transformValues(ctx.getIf(this.CTX_PARAM_PASS_THR).get({}), this.P_RENDER, <string>options.getIf("render").value, form, <any>elementId);
+            this.transformValues(ctx.getIf(Const.CTX_PARAM_PASS_THR).get({}), Const.P_RENDER, <string>options.getIf("render").value, form, <any>elementId);
         }
     }
 
 
     private applyExecute(options: Config, ctx: Config, form: DomQuery, elementId: string) {
         //TODO none handling
-        if (options.getIf(this.CTX_PARAM_EXECUTE).isPresent()) {
+        if (options.getIf(Const.CTX_PARAM_EXECUTE).isPresent()) {
             /*the options must be a blank delimited list of strings*/
             /*compliance with Mojarra which automatically adds @this to an execute
              * the spec rev 2.0a however states, if none is issued nothing at all should be sent down
              */
-            if ((<string>options.getIf(this.CTX_PARAM_EXECUTE).value).indexOf("@this") == -1) {
-                options.apply(this.CTX_PARAM_EXECUTE).value = options.getIf(this.CTX_PARAM_EXECUTE).value + " @this";
-            }
-            this.transformValues(ctx.getIf(this.CTX_PARAM_PASS_THR).get({}), this.P_EXECUTE, <string>options.getIf(this.CTX_PARAM_EXECUTE).value, form, <any>elementId);
+            options.apply(Const.CTX_PARAM_EXECUTE).value = options.getIf(Const.CTX_PARAM_EXECUTE).value + " @this";
+            this.transformValues(ctx.getIf(Const.CTX_PARAM_PASS_THR).get({}), Const.P_EXECUTE, <string>options.getIf(Const.CTX_PARAM_EXECUTE).value, form, <any>elementId);
         } else {
-            ctx.apply(this.CTX_PARAM_PASS_THR, this.P_EXECUTE).value = elementId;
+            ctx.apply(Const.CTX_PARAM_PASS_THR, Const.P_EXECUTE).value = elementId;
         }
     }
 
     private applyClientWindowId(form: DomQuery, ctx: Config, passThrgh?: any) {
         let clientWindow = (<any>window).jsf.getClientWindow(form.getAsElem(0).value);
         if (clientWindow) {
-            if (form.querySelectorAll("[name='" + this.P_CLIENTWINDOW + "']").length == 0) {
-                ctx.apply(this.CTX_PARAM_MF_INTERNAL, "_clientWindow").value = clientWindow;
+            if (form.querySelectorAll("[name='" + Const.P_CLIENTWINDOW + "']").length == 0) {
+                ctx.apply(Const.CTX_PARAM_MF_INTERNAL, "_clientWindow").value = clientWindow;
             } else {
-                ctx.apply(this.CTX_PARAM_PASS_THR, this.P_CLIENTWINDOW).value = clientWindow;
+                ctx.apply(Const.CTX_PARAM_PASS_THR, Const.P_CLIENTWINDOW).value = clientWindow;
             }
         }
     }
@@ -411,19 +362,19 @@ export class Implementation {
             }
             switch (iterValues[cnt]) {
                 //@none no values should be sent
-                case this.IDENT_NONE:
+                case Const.IDENT_NONE:
                     return targetConfig.delete(targetKey);
                 //@all is a pass through case according to the spec
-                case this.IDENT_ALL:
-                    targetConfig.apply(targetKey).value = this.IDENT_ALL;
+                case Const.IDENT_ALL:
+                    targetConfig.apply(targetKey).value = Const.IDENT_ALL;
                     return targetConfig;
                 //@form pushes the issuing form id into our list
-                case this.IDENT_FORM:
+                case Const.IDENT_FORM:
                     ret.push(issuingForm.id.value);
                     added[issuingForm.id.value] = true;
                     break;
                 //@this is replaced with the current issuing element id
-                case this.IDENT_THIS:
+                case Const.IDENT_THIS:
                     if (!(issuingElementId in added)) {
                         ret.push(issuingElementId);
                         added[issuingElementId] = true;
@@ -469,21 +420,21 @@ export class Implementation {
 
         let req = new Config(request);
 
-        eventData.type = this.EVENT;
+        eventData.type = Const.EVENT;
 
         eventData.status = name;
         eventData.source = context.source;
 
-        if (name !== this.BEGIN) {
+        if (name !== Const.BEGIN) {
 
             try {
-                eventData.responseCode = req.getIf("status").value;
-                eventData.responseText = req.getIf("responseText").value;
-                eventData.responseXML = req.getIf("responseXML").value;
+                eventData.responseCode = req.getIf(Const.STATUS).value;
+                eventData.responseText = req.getIf(Const.RESPONSE_TEXT).value;
+                eventData.responseXML = req.getIf(Const.RESPONSE_XML).value;
 
             } catch (e) {
                 let impl = _Lang.getGlobalConfig("jsfAjaxImpl", this);
-                this.sendError(request, context, this.CLIENT_ERROR, "ErrorRetrievingResponse",
+                this.sendError(request, context, Const.CLIENT_ERROR, "ErrorRetrievingResponse",
                     _Lang.getMessage("ERR_CONSTRUCT", e.toString()));
 
                 //client errors are not swallowed
@@ -519,13 +470,13 @@ export class Implementation {
         //on ie as well, since the stdErrorHandler usually is called between requests
         //this is a valid approach
         try {
-            if (this._threshold == "ERROR") {
+            if (this.threshold == "ERROR") {
                 let mfInternal = exception._mfInternal || {};
 
                 let finalMsg = [];
                 finalMsg.push(exception.message);
                 this.sendError(request, context,
-                    mfInternal.title || this.CLIENT_ERROR, mfInternal.name || exception.name, finalMsg.join("\n"), mfInternal.caller, mfInternal.callFunc);
+                    mfInternal.title || Const.CLIENT_ERROR, mfInternal.name || exception.name, finalMsg.join("\n"), mfInternal.caller, mfInternal.callFunc);
             }
         } finally {
             if (clearRequestQueue) {
@@ -568,22 +519,22 @@ export class Implementation {
 
         //by setting unknown values to unknown we can handle cases
         //better where a simulated context is pushed into the system
-        eventData.type = this.ERROR;
+        eventData.type = Const.ERROR;
 
         eventData.status = name || UNKNOWN;
         eventData.serverErrorName = serverErrorName || UNKNOWN;
         eventData.serverErrorMessage = serverErrorMessage || UNKNOWN;
 
         try {
-            eventData.source = ctx.getIf("source").presentOrElse(UNKNOWN).value;
-            eventData.responseCode = ctx.getIf("status").presentOrElse(UNKNOWN).value;
-            eventData.responseText = ctx.getIf("responseText").presentOrElse(UNKNOWN).value;
-            eventData.responseXML = ctx.getIf("responseXML").presentOrElse(UNKNOWN).value;
+            eventData.source = ctx.getIf(Const.SOURCE).presentOrElse(UNKNOWN).value;
+            eventData.responseCode = ctx.getIf(Const.STATUS).presentOrElse(UNKNOWN).value;
+            eventData.responseText = ctx.getIf(Const.RESPONSE_TEXT).presentOrElse(UNKNOWN).value;
+            eventData.responseXML = ctx.getIf(Const.RESPONSE_XML).presentOrElse(UNKNOWN).value;
         } catch (e) {
             // silently ignore: user can find out by examining the event data
         }
         //extended error message only in dev mode
-        if ((<any>window).jsf.getProjectStage() === "Development") {
+        if ((<any>window).jsf.getProjectStage() === Const.STAGE_DEVELOPMENT) {
             eventData.serverErrorMessage = eventData.serverErrorMessage || "";
             eventData.serverErrorMessage = (caller) ? eventData.serverErrorMessage + "\nCalling class: " + caller : eventData.serverErrorMessage;
             eventData.serverErrorMessage = (callFunc) ? eventData.serverErrorMessage + "\n Calling function: " + callFunc : eventData.serverErrorMessage;
@@ -597,7 +548,7 @@ export class Implementation {
         /*now we serve the queue as well*/
         this.errorQueue.broadcastEvent(eventData);
 
-        if ((<any>window).getProjectStage() === "Development" && !this.errorQueue.length && ctx.getIf("onerror").isAbsent()) {
+        if ((<any>window).getProjectStage() === Const.STAGE_DEVELOPMENT && !this.errorQueue.length && ctx.getIf("onerror").isAbsent()) {
             let DIVIDER = "--------------------------------------------------------",
                 displayError: (string) => void = Lang.instance.getGlobalConfig("defaultErrorOutput", alert),
                 finalMessage = [],

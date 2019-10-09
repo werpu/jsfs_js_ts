@@ -56,6 +56,7 @@ import * as sinon from 'sinon';
 
 import {DomQuery} from "../../../main/typescript/_ext/monadish/DomQuery";
 import {Implementation} from "../../../main/typescript/impl/Impl";
+import {Const} from "../../../main/typescript/impl/core/Const";
 
 (<any>global).jsf = jsf;
 window.jsf = jsf;
@@ -89,9 +90,9 @@ describe('jsf.ajax.request test suite', () => {
             expect(addRequestToQueue.callCount).to.eq(1);
             let argElement = <Config>addRequestToQueue.args[0][2];
             const context = (<Config>addRequestToQueue.args[0][2]);
-            expect(context.getIf("passThrgh",Impl.P_RENDER).value).eq("@all");
+            expect(context.getIf("passThrgh",Const.P_RENDER).value).eq("@all");
             //Execute issuing form due to @form and always the issuing element
-            expect(context.getIf("passThrgh",Impl.P_EXECUTE).value).eq("blarg input_2");
+            expect(context.getIf("passThrgh",Const.P_EXECUTE).value).eq("blarg input_2");
         } finally {
             //once done we restore the proper state
             addRequestToQueue.restore();

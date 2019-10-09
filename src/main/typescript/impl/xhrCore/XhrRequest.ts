@@ -19,6 +19,7 @@ import {Config} from "../../_ext/monadish/Monad";
 
 import {Promise as ShimPromise} from "../../_ext/monadish/Monad";
 import {Implementation} from "../Impl";
+import {DomQuery} from "../../_ext/monadish/DomQuery";
 
 type PROMISE_FUNC = (any?) => void;
 
@@ -45,8 +46,8 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     static NO_TIMEOUT = 0;
 
     constructor(
-        private source,
-        private sourceForm,
+        private source: DomQuery,
+        private sourceForm: DomQuery,
         private requestContext: Config,
         private partialIdsArray = [],
         private ajaxType = XhrRequest.REQ_TYPE_POST,
@@ -60,14 +61,16 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
 
     start(): Promise<XMLHttpRequest> {
         let xhr = this.xhrObject;
+        let _Lang = Lang.instance;
         try {
+            let srcFormElement: HTMLFormElement = <HTMLFormElement> this.sourceForm.getAsElem(0).value;
             let sourceForm = this.sourceForm,
-                targetURL = (typeof sourceForm.elements[XhrRequest.ENCODED_URL] == 'undefined') ?
-                    sourceForm.action :
-                    sourceForm.elements[XhrRequest.ENCODED_URL].value,
+                targetURL = (typeof srcFormElement.elements[XhrRequest.ENCODED_URL] == 'undefined') ?
+                    srcFormElement.action :
+                    srcFormElement.elements[XhrRequest.ENCODED_URL].value,
                 formData: FormDataDecorator | { [key: string]: any } = this.getFormData();
 
-            formData =  Lang.instance.mixMaps(<any>formData, this.requestContext.getIf("passThrgh").value, true);
+            formData =  _Lang.mixMaps(<any>formData, this.requestContext.getIf("passThrgh").value, true);
 
             this.xhrObject.open(this.ajaxType, targetURL +
                 ((this.ajaxType == XhrRequest.REQ_TYPE_GET) ? "?" + this.formDataToURI(<FormDataDecorator> formData) : "")
@@ -92,7 +95,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
 
         } catch (e) {
             //_onError//_onError
-            e = (e._mfInternal) ? e : Lang.instance.makeException(new Error(), "sendError", "sendError", "XHRPromise", "send", e.message);
+            e = (e._mfInternal) ? e : _Lang.makeException(new Error(), "sendError", "sendError", "XHRPromise", "send", e.message);
             this.handleError(e);
         }
         return this.pXhr;
@@ -139,14 +142,14 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
      * which keeps the final Send Representation of the
      */
     private getFormData(): FormDataDecorator {
-        let ret = null;
+        let ret: FormDataDecorator = null;
 
         if (!this.partialIdsArray || !this.partialIdsArray.length) {
              return Lang.instance.createFormDataDecorator((<any>window).jsf.getViewState(this.sourceForm));
         } else {
             //now this is less performant but we have to call it to allow viewstate decoration
             ret = Lang.instance.createFormDataDecorator(new Array());
-            AjaxUtils.encodeSubmittableFields(ret, this.sourceForm, this.partialIdsArray);
+            AjaxUtils.encodeSubmittableFields(ret,<HTMLFormElement> this.sourceForm.getAsElem(0).value, this.partialIdsArray);
             //TODO myfaces options still needed?
             if (this.source && this.requestContext.getIf("myfaces","form").isPresent())
                 AjaxUtils.appendIssuingItem(this.source, ret);

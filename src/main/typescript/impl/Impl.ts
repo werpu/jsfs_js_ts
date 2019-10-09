@@ -272,12 +272,12 @@ export class Implementation {
          * so that people can use dummy forms and work
          * with detached objects
          */
-        let domForm = DomQuery
+        let form: DomQuery = DomQuery
             .querySelectorAll("#" + (ctx.getIf("myfaces", "form").value || "__mf_none__"))
             .presentOrElseLazy(() => {
                 return new DomQuery(this.getForm(elem.getAsElem(0).value, event).value);
             });
-        let form: Element = domForm.getAsElem(0).value;
+
 
         /**
          * binding contract the javax.faces.source must be set
@@ -318,7 +318,7 @@ export class Implementation {
 
         //additional meta information to speed things up, note internal non jsf
         //pass through options are stored under _mfInternal in the context
-        ctx.apply(this.CTX_PARAM_MF_INTERNAL, this.CTX_PARAM_SRC_FRM_ID).value = form.id;
+        ctx.apply(this.CTX_PARAM_MF_INTERNAL, this.CTX_PARAM_SRC_FRM_ID).value = form.id.value;
         ctx.apply(this.CTX_PARAM_MF_INTERNAL, this.CTX_PARAM_SRC_CTL_ID).value = elementId;
         ctx.apply(this.CTX_PARAM_MF_INTERNAL, this.CTX_PARAM_TR_TYPE).value = "POST";
 
@@ -327,7 +327,7 @@ export class Implementation {
         //mojarra under blackbox conditions
         //i assume it does the same as our formId_submit=1 so leaving it out
         //wont hurt but for the sake of compatibility we are going to add it
-        ctx.apply(this.CTX_PARAM_PASS_THR, form.id).value = form.id;
+        ctx.apply(this.CTX_PARAM_PASS_THR, form.id.value).value = form.id.value;
 
         //todo partial id handling from config
 
@@ -339,18 +339,18 @@ export class Implementation {
     /**
      * public to make it shimmable for tests
      */
-    addRequestToQueue(elem, form, ctx) {
+    addRequestToQueue(elem:DomQuery, form: DomQuery, ctx: Config) {
         this.requestQueue.enqueue(new XhrRequest(elem, form, ctx));
     }
 
-    private applyRender(options: Config, ctx: Config, form: Element, elementId: string) {
+    private applyRender(options: Config, ctx: Config, form: DomQuery, elementId: string) {
         if (options.getIf("render").isPresent()) {
-            this.transformList(ctx.getIf(this.CTX_PARAM_PASS_THR).get({}), this.P_RENDER, <string>options.getIf("render").value, form, <any>elementId);
+            this.transformValues(ctx.getIf(this.CTX_PARAM_PASS_THR).get({}), this.P_RENDER, <string>options.getIf("render").value, form, <any>elementId);
         }
     }
 
 
-    private applyExecute(options: Config, ctx: Config, form: Element, elementId: string) {
+    private applyExecute(options: Config, ctx: Config, form: DomQuery, elementId: string) {
         //TODO none handling
         if (options.getIf(this.CTX_PARAM_EXECUTE).isPresent()) {
             /*the options must be a blank delimited list of strings*/
@@ -360,16 +360,16 @@ export class Implementation {
             if ((<string>options.getIf(this.CTX_PARAM_EXECUTE).value).indexOf("@this") == -1) {
                 options.apply(this.CTX_PARAM_EXECUTE).value = options.getIf(this.CTX_PARAM_EXECUTE).value + " @this";
             }
-            this.transformList(ctx.getIf(this.CTX_PARAM_PASS_THR).get({}), this.P_EXECUTE, <string>options.getIf(this.CTX_PARAM_EXECUTE).value, form, <any>elementId);
+            this.transformValues(ctx.getIf(this.CTX_PARAM_PASS_THR).get({}), this.P_EXECUTE, <string>options.getIf(this.CTX_PARAM_EXECUTE).value, form, <any>elementId);
         } else {
             ctx.apply(this.CTX_PARAM_PASS_THR, this.P_EXECUTE).value = elementId;
         }
     }
 
-    private applyClientWindowId(form: Element | String, ctx: Config, passThrgh?: any) {
-        let clientWindow = (<any>window).jsf.getClientWindow(form);
+    private applyClientWindowId(form: DomQuery, ctx: Config, passThrgh?: any) {
+        let clientWindow = (<any>window).jsf.getClientWindow(form.getAsElem(0).value);
         if (clientWindow) {
-            if (new DomQuery(<Element>form).querySelectorAll("[name='" + this.P_CLIENTWINDOW + "']").length == 0) {
+            if (form.querySelectorAll("[name='" + this.P_CLIENTWINDOW + "']").length == 0) {
                 ctx.apply(this.CTX_PARAM_MF_INTERNAL, "_clientWindow").value = clientWindow;
             } else {
                 ctx.apply(this.CTX_PARAM_PASS_THR, this.P_CLIENTWINDOW).value = clientWindow;
@@ -378,7 +378,7 @@ export class Implementation {
     }
 
     /**
-     * transforms the list to the expected one
+     * transforms the user values to the expected one
      * with the proper none all form and this handling
      * (note we also could use a simple string replace but then
      * we would have had double entries under some circumstances)
@@ -392,12 +392,18 @@ export class Implementation {
      * @param issuingForm the form where the issuing element originates
      * @param issuingElementId the issuing element
      */
-    private transformList(targetConfig: Config, targetKey: string, userValues: string, issuingForm: Element, issuingElementId: string): Config {
+    private transformValues(targetConfig: Config, targetKey: string, userValues: string, issuingForm: DomQuery, issuingElementId: string): Config {
         //a cleaner implementation of the transform list method
         let _Lang = Lang.instance;
-        let iterValues = (userValues) ? _Lang.trim(userValues).split(/\s+/) : [];
+        let iterValues = (userValues) ? _Lang.trim(userValues).split(/\s+/gi) : [];
         let ret = [];
         let added = {};
+
+        //the idea is simply to loop over all values and then replace
+        //their generic values and filter out doubles
+        //this is more readable than the old indexed based solution
+        //and not really slower because we had to build up the index in our old solution
+        //anyway
         for (let cnt = 0; cnt < iterValues.length; cnt++) {
             //avoid doubles
             if (iterValues[cnt] in added) {
@@ -413,8 +419,8 @@ export class Implementation {
                     return targetConfig;
                 //@form pushes the issuing form id into our list
                 case this.IDENT_FORM:
-                    ret.push(issuingForm.id);
-                    added[issuingForm.id] = true;
+                    ret.push(issuingForm.id.value);
+                    added[issuingForm.id.value] = true;
                     break;
                 //@this is replaced with the current issuing element id
                 case this.IDENT_THIS:
@@ -424,67 +430,12 @@ export class Implementation {
                     }
                     break;
                 default:
-                    ret.push(iterValues[cnt])
+                    ret.push(iterValues[cnt]);
                     added[iterValues[cnt]] = true;
             }
         }
         //We now add the target as joined list
         targetConfig.apply(targetKey).value = ret.join(" ");
-        return targetConfig;
-    }
-
-    /**
-     * @deprecated remove once done
-     */
-    private transformList2(targetConfig: Config, targetKey: string, userValues: string, issuingForm: Element | string, issuingElementId: string): Config {
-        let _Lang = Lang.instance;
-        //this is probably the fastest transformation method
-        //it uses an array and an index to position all elements correctly
-        //the offset variable is there to prevent 0 which results in a javascript
-        //false
-        //the other alternative probably would be to use a set of regexp searches
-        //but that would be slower than an indexed search on the constants
-        //and replacing them via the direct index positions
-        userValues = _Lang.trim(userValues);
-        let offset = 1,
-            resultValues: string[] = (userValues) ? userValues.split(/\s+/) : [],
-            idIdx = (resultValues.length) ? _Lang.arrToMap(resultValues, offset) : {},
-
-            //helpers to improve speed and compression
-            none = idIdx[this.IDENT_NONE],
-            all = idIdx[this.IDENT_ALL],
-            theThis = idIdx[this.IDENT_THIS],
-            theForm = idIdx[this.IDENT_FORM];
-
-        //transformations
-        //none means nothing is passed nas target value
-        //original spec if none is passed do not create post data
-        //argument execute and render
-        if (none) {
-            return targetConfig.delete(targetKey);
-        }
-        //in case of all simply send post data argument @all in render and execute
-        if (all) {
-            //in case of all only one value is returned
-            targetConfig.apply(targetKey).value = this.IDENT_ALL;
-            return targetConfig;
-        }
-
-        //in case of @form simply replace it with the form id
-        if (theForm) {
-            //the form is replaced with the proper id but the other
-            //values are not touched
-            resultValues[theForm - offset] = (<HTMLFormElement>issuingForm).id;
-        }
-
-        //@this becomes the issuing element id
-        if (theThis && !idIdx[issuingElementId]) {
-            //in case of this, the element id is set
-            resultValues[theThis - offset] = issuingElementId;
-        }
-
-        //the final list must be blank separated
-        targetConfig.apply(targetKey).value = resultValues.join(" ");
         return targetConfig;
     }
 

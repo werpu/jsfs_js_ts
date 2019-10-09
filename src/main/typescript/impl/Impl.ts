@@ -68,26 +68,16 @@ export class Implementation {
      * The value for it comes from the requestInternal parameter of the jsf.js script called "stage".
      */
     getProjectStage(): string {
-        if (globalConfig.projectStage !== null) {
-            return globalConfig.projectStage;
-        }
-        if (this.projectStage !== null) {
-            return this.projectStage;
+        let projectStage = Optional.fromNullable(globalConfig.projectStage).presentOrElse(Optional.fromNullable(this.projectStage));
+        if(projectStage.isPresent()) {
+            return projectStage.value;
         }
 
-        let allowedProjectStages = {STG_PROD: 1, "Development": 1, "SystemTest": 1, "UnitTest": 1};
+        let allowedProjectStages = {"Production": 1, "Development": 1, "SystemTest": 1, "UnitTest": 1};
 
         /* run through all script tags and try to find the one that includes jsf.js */
-        DomQuery.querySelectorAll("script").filter((item: DomQuery) => {
-            return item.attr("src", "").value.search(/\/javax\.faces\.resource\/jsf\.js.*ln=javax\.faces/) != -1;
-        }).first((item: DomQuery) => {
-            let result = item.attr("src", "").value.match(/stage=([^&;]*)/);
-            // we found stage=XXX
-            // return only valid values of ProjectStage
-            this.projectStage = (allowedProjectStages[result[1]]) ? result[1] : null;
-        });
-
-        return this.projectStage;
+        let foundStage = ExtDomQuery.searchJsfJsFor(/stage=([^&;]*)/).presentOrElse(null).value;
+        return allowedProjectStages[foundStage] ? this.projectStage = foundStage : null;
     }
 
     /**
@@ -96,22 +86,12 @@ export class Implementation {
      * @return {char} the separator char for the given script tags
      */
     getSeparatorChar(): string {
-        if (globalConfig.separator !== null) {
-            return globalConfig.separator;
-        }
-        if (this.separator) {
-            return this.separator;
+        let separator = Optional.fromNullable(globalConfig.separator).presentOrElse(Optional.fromNullable(this.separator));
+        if(separator.isPresent()) {
+            return separator.value;
         }
 
-        DomQuery.querySelectorAll("script").filter(item => {
-            return item.attr("src", "").value.search(/\/javax\.faces\.resource.*\/jsf\.js.*separator/) != -1;
-        }).first((item: DomQuery) => {
-            let result = item.attr("src", "").value.match(/separator=([^&;]*)/);
-            this.separator = decodeURIComponent(result[1]);
-            return false;
-        });
-
-        this.separator = this.separator || ":";
+        this.separator = ExtDomQuery.searchJsfJsFor(/separator=([^&;]*)/).presentOrElse(":").value;
         return this.separator;
     }
 

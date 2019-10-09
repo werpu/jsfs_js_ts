@@ -1,5 +1,5 @@
 import {DomQuery} from "../../_ext/monadish/DomQuery";
-import {Config, IValueHolder} from "../../_ext/monadish/Monad";
+import {Config, IValueHolder, Optional} from "../../_ext/monadish/Monad";
 import {Const} from "../core/Const";
 
 declare let window: any;
@@ -69,6 +69,18 @@ export class ExtDomQuery extends DomQuery {
         return <string> nonce.value;
     }
 
+    searchJsfJsFor(item: RegExp): Optional<string> {
+        let res:string = null;
+        DomQuery.querySelectorAll("script").filter(item => {
+            return item.attr("src", "").value.search(/\/javax\.faces\.resource.*\/jsf\.js.*separator/) != -1;
+        }).first((item: DomQuery) => {
+            let result = item.attr("src", "").value.match(<any> item);
+            res = decodeURIComponent(result[1]);
+            return false;
+        });
+        return Optional.fromNullable(res);
+    }
+
     globalEval(code: string, nonce ?:string): DomQuery {
         return super.globalEval(code, nonce || this.nonce);
     }
@@ -79,5 +91,9 @@ export class ExtDomQuery extends DomQuery {
 
     static get nonce(): string {
         return new ExtDomQuery(document.body).nonce;
+    }
+
+    static searchJsfJsFor(item: RegExp): Optional<String> {
+        return new ExtDomQuery(document).searchJsfJsFor(item);
     }
 }

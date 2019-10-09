@@ -208,8 +208,8 @@ export class Implementation {
         let ctx = new Config(context);
 
         ctx.apply(Const.SOURCE).value = elem;
-        ctx.apply("onevent").value = options.getIf("onevent").value;
-        ctx.apply("onerror").value = options.getIf("onerror").value;
+        ctx.apply(Const.ON_EVENT).value = options.getIf(Const.ON_EVENT).value;
+        ctx.apply(Const.ON_ERROR).value = options.getIf(Const.ON_ERROR).value;
         ctx.apply("myfaces").value = options.getIf("myfaces").value;
         ctx.apply(Const.CTX_PARAM_DELAY).value = options.getIf(Const.CTX_PARAM_DELAY).value;
 
@@ -544,14 +544,14 @@ export class Implementation {
         }
 
         /**/
-        if (ctx.getIf("onerror").isPresent()) {
+        if (ctx.getIf(Const.ON_ERROR).isPresent()) {
             context.onerror(eventData);
         }
 
         /*now we serve the queue as well*/
         this.errorQueue.broadcastEvent(eventData);
 
-        if ((<any>window).getProjectStage() === Const.STAGE_DEVELOPMENT && !this.errorQueue.length && ctx.getIf("onerror").isAbsent()) {
+        if ((<any>window).getProjectStage() === Const.STAGE_DEVELOPMENT && !this.errorQueue.length && ctx.getIf(Const.ON_ERROR).isAbsent()) {
             let DIVIDER = "--------------------------------------------------------",
                 displayError: (string) => void = Lang.instance.getGlobalConfig("defaultErrorOutput", alert),
                 finalMessage = [],

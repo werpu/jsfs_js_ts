@@ -15,6 +15,8 @@
  */
 
 
+import {Config} from "../../../main/typescript/_ext/monadish/Monad";
+
 const jsdom = require("jsdom");
 const {JSDOM} = jsdom;
 let dom = new JSDOM(`
@@ -88,7 +90,7 @@ describe('jsf.ajax.request test suite', () => {
 
             expect(addRequestToQueue.called).to.be.true;
             expect(addRequestToQueue.callCount).to.eq(1);
-            expect(addRequestToQueue.args[0][2]["passThrgh"].render).eq("blarg");
+            expect((<Config>addRequestToQueue.args[0][2]).getIf("passThrgh",Implementation.instance.P_RENDER).value).eq("@all");
 
         } finally {
             //once done we restore the proper state

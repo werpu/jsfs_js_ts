@@ -313,8 +313,8 @@ export class Implementation {
         ctx.applyIf(true === options.getIf(this.CTX_PARAM_RST).get(false).value,
             this.CTX_PARAM_PASS_THR, this.P_RESET_VALUES).value = true;
 
-        this.applyExecute(options, ctx, form, elementId);
-        this.applyRender(options, ctx, form, elementId);
+        this.applyExecute(options, ctx, form, elementId.value);
+        this.applyRender(options, ctx, form, elementId.value);
 
         let delay = options.getIf(this.CTX_PARAM_DELAY).get(Lang.instance.getLocalOrGlobalConfig(ctx.value, this.CTX_PARAM_DELAY, 0)).value;
 
@@ -345,14 +345,14 @@ export class Implementation {
         this.requestQueue.enqueue(new XhrRequest(elem, form, ctx));
     }
 
-    private applyRender(options: Config, ctx: Config, form, elementId) {
+    private applyRender(options: Config, ctx: Config, form: Element, elementId: string) {
         if (options.getIf("render").isPresent()) {
             this.transformList(ctx.getIf(this.CTX_PARAM_PASS_THR).get({}), this.P_RENDER, <string>options.getIf("render").value, form, <any>elementId);
         }
     }
 
 
-    private applyExecute(options, ctx, form, elementId) {
+    private applyExecute(options: Config, ctx: Config, form: Element, elementId: string) {
         //TODO none handling
         if (options.getIf(this.CTX_PARAM_EXECUTE).isPresent()) {
             /*the options must be a blank delimited list of strings*/
@@ -391,7 +391,7 @@ export class Implementation {
      * @param form
      * @param elementId
      */
-    private transformList(passThrgh: Config, target: string, srcStr: string, form: HTMLElement | string, elementId: string): Config {
+    private transformList(passThrgh: Config, target: string, srcStr: string, form: Element | string, elementId: string): Config {
         let _Lang = Lang.instance;
         //this is probably the fastest transformation method
         //it uses an array and an index to position all elements correctly
@@ -408,16 +408,18 @@ export class Implementation {
             theThis = idIdx[this.IDENT_THIS],
             theForm = idIdx[this.IDENT_FORM];
 
+        //TODO simplify this, lots of this stuff now can be covered
+        //better by our config class
         if (none) {
             //in case of none nothing is returned
-            if (passThrgh.getIf("target").isPresent()) {
+            if (passThrgh.getIf(target).isPresent()) {
                 delete passThrgh.value.target;
             }
             return passThrgh;
         }
         if (all) {
             //in case of all only one value is returned
-            passThrgh.apply("target").value = this.IDENT_ALL;
+            passThrgh.apply(target).value = this.IDENT_ALL;
             return passThrgh;
         }
 
@@ -432,7 +434,7 @@ export class Implementation {
         }
 
         //the final list must be blank separated
-        passThrgh.apply("target").value = vals.join(" ");
+        passThrgh.apply(target).value = vals.join(" ");
         return passThrgh;
     }
 

@@ -263,7 +263,7 @@ export class Optional<T> extends Monad<T> {
         if (this.isPresent()) {
             return this;
         } else {
-            return this.flatMap(this.getClass().fromNullable(func()));
+            return this.flatMap(func);
         }
     }
 

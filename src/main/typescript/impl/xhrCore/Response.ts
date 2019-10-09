@@ -225,15 +225,15 @@ export class Response {
             context.apply(Response.MF_INTERNAL, "appliedViewState").value = node.textContent("");
 
 
-            let elemId = context.getIf("_mfSourceControlId").presentOrElse(context.getIf("source").isPresent() ? context.getIf("source", "id") : null);
+            let elemId = context.getIf("_mfSourceControlId").orElse(context.getIf("source").isPresent() ? context.getIf("source", "id") : null);
             let sourceFormId = context.getIf(Response.MF_INTERNAL, "_mfSourceFormId");
 
             let sourceForm = new DomQuery(sourceFormId.isPresent() ? document.forms[sourceFormId.value] : null);
 
             let elem = DomQuery.querySelectorAll("#" + elemId.value);
-            sourceForm = sourceForm.presentOrElse(elem.parents("form"))
-                .presentOrElse(elem.querySelectorAll("form"))
-                .presentOrElse(DomQuery.querySelectorAll("form"));
+            sourceForm = sourceForm.orElse(elem.parents("form"))
+                .orElse(elem.querySelectorAll("form"))
+                .orElse(DomQuery.querySelectorAll("form"));
 
             if (sourceForm.isAbsent()) {
                 //no source form found is not an error because
@@ -322,7 +322,7 @@ export class Response {
 
     private static updateElement(context: Config, node: XMLQuery, cdataBlock: string) {
         let result = DomQuery.querySelectorAll("#"+node.getAttribute("id").value).outerHTML(cdataBlock);
-        let sourceForm = result.parents("form").presentOrElse(result.byTagName("form", true));
+        let sourceForm = result.parents("form").orElse(result.byTagName("form", true));
 
         context.apply(Response.MF_INTERNAL, Response.UPDATE_FORMS).value.push(sourceForm);
         context.apply(Response.MF_INTERNAL,Response.UPDATE_ELEMS).value.push(result);

@@ -244,7 +244,7 @@ export class Optional<T> extends Monad<T> {
         return !this.isAbsent();
     }
 
-    presentOrElse(elseValue: any): Optional<any> {
+    orElse(elseValue: any): Optional<any> {
         if (this.isPresent()) {
             return this;
         } else {
@@ -261,7 +261,7 @@ export class Optional<T> extends Monad<T> {
      * instead of a direct value
      * @param func
      */
-    presentOrElseLazy(func: () => any): Optional<any> {
+    orElseLazy(func: () => any): Optional<any> {
         if (this.isPresent()) {
             return this;
         } else {

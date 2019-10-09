@@ -26,7 +26,7 @@ export class ElementAttribute implements IValueHolder<string> {
 
     set value(value: string) {
 
-        let val: Element[] = this.element.get(0).presentOrElse(...[]).values;
+        let val: Element[] = this.element.get(0).orElse(...[]).values;
 
         for(let cnt = 0; cnt < val.length; cnt++) {
             val[cnt].setAttribute(this.attributeName, value);
@@ -35,7 +35,7 @@ export class ElementAttribute implements IValueHolder<string> {
     }
 
     get value(): string {
-        let val: Element[] = this.element.get(0).presentOrElse(...[]).values;
+        let val: Element[] = this.element.get(0).orElse(...[]).values;
         if (!val.length) {
             return this.defaultVal;
         }
@@ -550,7 +550,7 @@ export class DomQuery {
     }
 
 
-    presentOrElse(...elseValue: any): DomQuery {
+    orElse(...elseValue: any): DomQuery {
         if (this.isPresent()) {
             return this;
         } else {
@@ -558,7 +558,7 @@ export class DomQuery {
         }
     }
 
-    presentOrElseLazy(func: () => any): DomQuery {
+    orElseLazy(func: () => any): DomQuery {
         if (this.isPresent()) {
             return this;
         } else {

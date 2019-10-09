@@ -35,7 +35,7 @@ export class Implementation {
 
     /*blockfilter for the passthrough filtering; the attributes given here
      * will not be transmitted from the options into the passthrough*/
-    private BLOCKFILTER = {onerror: 1, onevent: 1, render: 1, execute: 1, myfaces: 1};
+    private BLOCKFILTER = {onerror: 1, onevent: 1, render: 1, execute: 1, myfaces: 1, delay: 1, windowId:1};
 
 
     private static _instance: Implementation = null;
@@ -68,7 +68,7 @@ export class Implementation {
      * The value for it comes from the requestInternal parameter of the jsf.js script called "stage".
      */
     getProjectStage(): string {
-        let projectStage = Optional.fromNullable(globalConfig.projectStage).presentOrElse(Optional.fromNullable(this.projectStage));
+        let projectStage = Optional.fromNullable(globalConfig.projectStage).orElse(Optional.fromNullable(this.projectStage));
         if (projectStage.isPresent()) {
             return projectStage.value;
         }
@@ -76,7 +76,7 @@ export class Implementation {
         let projectStages = {"Production": 1, "Development": 1, "SystemTest": 1, "UnitTest": 1};
 
         /* run through all script tags and try to find the one that includes jsf.js */
-        let foundStage = ExtDomQuery.searchJsfJsFor(/stage=([^&;]*)/).presentOrElse(null).value;
+        let foundStage = ExtDomQuery.searchJsfJsFor(/stage=([^&;]*)/).orElse(null).value;
         return (foundStage in projectStages) ? this.projectStage = foundStage : null;
     }
 
@@ -86,12 +86,12 @@ export class Implementation {
      * @return {char} the separator char for the given script tags
      */
     getSeparatorChar(): string {
-        let separator = Optional.fromNullable(globalConfig.separator).presentOrElse(Optional.fromNullable(this.separator));
+        let separator = Optional.fromNullable(globalConfig.separator).orElse(Optional.fromNullable(this.separator));
         if (separator.isPresent()) {
             return separator.value;
         }
 
-        this.separator = ExtDomQuery.searchJsfJsFor(/separator=([^&;]*)/).presentOrElse(":").value;
+        this.separator = ExtDomQuery.searchJsfJsFor(/separator=([^&;]*)/).orElse(":").value;
         return this.separator;
     }
 
@@ -178,21 +178,20 @@ export class Implementation {
          * so that people can use dummy forms and work
          * with detached objects
          */
-        const configId = ctx.getIf(MYFACES, "form").presentOrElse("__mf_none__").value;
+        const configId = ctx.getIf(MYFACES, "form").orElse("__mf_none__").value;
         let form: DomQuery = DomQuery
             .byId(configId)
-            .presentOrElseLazy(() => this.getForm(elem.getAsElem(0).value, event));
+            .orElseLazy(() => this.getForm(elem.getAsElem(0).value, event));
 
         /**
          * binding contract the javax.faces.source must be set
          */
         ctx.apply(Const.CTX_PARAM_PASS_THR, Const.P_PARTIAL_SOURCE).value = elementId;
+
         /**
          * javax.faces.partial.ajax must be set to true
          */
         ctx.apply(Const.CTX_PARAM_PASS_THR, Const.P_AJAX).value = elementId;
-
-        this.applyClientWindowId(form, ctx);
 
         /**
          * binding contract the javax.faces.source must be set
@@ -211,14 +210,8 @@ export class Implementation {
          * the value has to be explicitly true, according to
          * the specs jsdoc
          */
-
         ctx.applyIf(true === options.getIf(Const.CTX_PARAM_RST).get(false).value,
             Const.CTX_PARAM_PASS_THR, Const.P_RESET_VALUES).value = true;
-
-        this.applyExecute(options, ctx, form, elementId.value);
-        this.applyRender(options, ctx, form, elementId.value);
-
-        let delay = options.getIf(Const.CTX_PARAM_DELAY).get(_Lang.getLocalOrGlobalConfig(ctx.value, Const.CTX_PARAM_DELAY, 0)).value;
 
         //additional meta information to speed things up, note internal non jsf
         //pass through options are stored under _mfInternal in the context
@@ -237,14 +230,24 @@ export class Implementation {
 
         //now we enqueue the request as asynchronous runnable into our request
         //queue and let the queue take over the rest
-        this.addRequestToQueue(elem, form, ctx);
+
+        this.applyClientWindowId(form, ctx);
+        this.applyExecute(options, ctx, form, elementId.value);
+        this.applyRender(options, ctx, form, elementId.value);
+
+
+        let delay: number = options.getIf(Const.CTX_PARAM_DELAY)
+            .orElseLazy(() => _Lang.getLocalOrGlobalConfig(ctx.value, Const.CTX_PARAM_DELAY, 0))
+            .value;
+
+        this.addRequestToQueue(elem, form, ctx, delay);
     }
 
     private applyWindowId(options) {
         /*preparations for jsf 2.2 windowid handling*/
         //pass the window id into the options if not set already
         //TODO probably not needed anymore
-        options.apply(Const.P_WINDOW_ID).value = options.getIf("windowId").presentOrElse(ExtDomQuery.windowId).value;
+        options.apply(Const.P_WINDOW_ID).value = options.getIf("windowId").orElse(ExtDomQuery.windowId).value;
         options.delete("windowId");
     }
 
@@ -258,8 +261,8 @@ export class Implementation {
     /**
      * public to make it shimmable for tests
      */
-    addRequestToQueue(elem: DomQuery, form: DomQuery, ctx: Config) {
-        this.requestQueue.enqueue(new XhrRequest(elem, form, ctx));
+    addRequestToQueue(elem: DomQuery, form: DomQuery, ctx: Config, delay = 0) {
+        this.requestQueue.enqueue(new XhrRequest(elem, form, ctx), delay);
     }
 
     private applyRender(options: Config, ctx: Config, form: DomQuery, elementId: string) {
@@ -398,7 +401,6 @@ export class Implementation {
         eventData.source = context.source;
 
         if (name !== Const.BEGIN) {
-
             try {
                 eventData.responseCode = req.getIf(Const.STATUS).value;
                 eventData.responseText = req.getIf(Const.RESPONSE_TEXT).value;
@@ -414,7 +416,6 @@ export class Implementation {
             }
 
         }
-
         /**/
         if (context.onevent) {
             /*calling null to preserve the original scope*/
@@ -435,24 +436,30 @@ export class Implementation {
      * @param request the request currently being processed
      * @param context the context affected by this error
      * @param exception the exception being thrown
+     * @param clearRequestQueue if set to true, clears the request queue of all pending requests
      */
-    stdErrorHandler(request: XMLHttpRequest, context: { [key: string]: any }, exception: any, clearRequestQueue = false) {
+    stdErrorHandler(request: XMLHttpRequest,
+                    context: { [key: string]: any },
+                    exception: any,
+                    clearRequestQueue = false) {
         //newer browsers do not allow to hold additional values on native objects like exceptions
         //we hence capsule it into the request, which is gced automatically
         //on ie as well, since the stdErrorHandler usually is called between requests
         //this is a valid approach
         try {
             if (this.threshold == "ERROR") {
-                let mfInternal = exception._mfInternal || {};
+                let mfInternal = new Config(exception._mfInternal || {});
 
-                let finalMsg = [];
-                finalMsg.push(exception.message);
                 this.sendError(request, context,
-                    mfInternal.title || Const.CLIENT_ERROR, mfInternal.name || exception.name, finalMsg.join("\n"), mfInternal.caller, mfInternal.callFunc);
+                    mfInternal.getIf("title").orElse( Const.CLIENT_ERROR).value,
+                    mfInternal.getIf("name").orElse(exception.name).value,
+                    exception.message || "",
+                    mfInternal.getIf("caller").value,
+                    mfInternal.getIf("callFunc").value);
             }
         } finally {
             if (clearRequestQueue) {
-                //TODO requestQueue cleaup call
+                this.requestQueue.cleanup();
             }
         }
     }
@@ -478,7 +485,14 @@ export class Implementation {
      *
      *
      */
-    sendError(request: XMLHttpRequest, context: { [key: string]: any }, name: string, serverErrorName?: string, serverErrorMessage?: string, caller?: string, callFunc?: string) {
+    sendError(request: XMLHttpRequest,
+              context: { [key: string]: any },
+              name: string,
+              serverErrorName?: string,
+              serverErrorMessage?: string,
+              caller?: string,
+              callFunc?: string) {
+
         let _Lang = Lang.instance;
         let UNKNOWN = _Lang.getMessage("UNKNOWN");
 
@@ -498,18 +512,22 @@ export class Implementation {
         eventData.serverErrorMessage = serverErrorMessage || UNKNOWN;
 
         try {
-            eventData.source = ctx.getIf(Const.SOURCE).presentOrElse(UNKNOWN).value;
-            eventData.responseCode = ctx.getIf(Const.STATUS).presentOrElse(UNKNOWN).value;
-            eventData.responseText = ctx.getIf(Const.RESPONSE_TEXT).presentOrElse(UNKNOWN).value;
-            eventData.responseXML = ctx.getIf(Const.RESPONSE_XML).presentOrElse(UNKNOWN).value;
+            eventData.source = ctx.getIf(Const.SOURCE).orElse(UNKNOWN).value;
+            eventData.responseCode = ctx.getIf(Const.STATUS).orElse(UNKNOWN).value;
+            eventData.responseText = ctx.getIf(Const.RESPONSE_TEXT).orElse(UNKNOWN).value;
+            eventData.responseXML = ctx.getIf(Const.RESPONSE_XML).orElse(UNKNOWN).value;
         } catch (e) {
             // silently ignore: user can find out by examining the event data
         }
         //extended error message only in dev mode
         if ((<any>window).jsf.getProjectStage() === Const.STAGE_DEVELOPMENT) {
-            eventData.serverErrorMessage = eventData.serverErrorMessage || "";
-            eventData.serverErrorMessage = (caller) ? eventData.serverErrorMessage + "\nCalling class: " + caller : eventData.serverErrorMessage;
-            eventData.serverErrorMessage = (callFunc) ? eventData.serverErrorMessage + "\n Calling function: " + callFunc : eventData.serverErrorMessage;
+            let errTpl = `
+                    Error:
+                    Server Error Message: ${eventData.serverErrorMessage || ''}
+                    Calling class: ${caller || ''}
+                    Calling function: ${callFunc || ''}
+            `;
+            eventData.serverErrorMessage = errTpl;
         }
 
         /**/
@@ -521,28 +539,27 @@ export class Implementation {
         this.errorQueue.broadcastEvent(eventData);
 
         if ((<any>window).getProjectStage() === Const.STAGE_DEVELOPMENT && !this.errorQueue.length && ctx.getIf(Const.ON_ERROR).isAbsent()) {
-            let DIVIDER = "--------------------------------------------------------",
-                displayError: (string) => void = Lang.instance.getGlobalConfig("defaultErrorOutput", alert),
-                finalMessage = [],
-                //we remap the function to achieve a better compressability
-                pushMsg = (item: any) => {
-                    finalMessage.push(item);
-                };
 
-            (serverErrorMessage) ? pushMsg(_Lang.getMessage("MSG_ERROR_MESSAGE") + " " + serverErrorMessage + "\n") : null;
+            let errTpl = `
+                    --------------------------------------------------------
+                    Error:
+                    Server Error Message: ${serverErrorMessage || ''}
+                    Calling class: ${caller || ''}
+                    Calling function: ${callFunc || ''}
+                    Error Name: ${_Lang.getMessage("MSG_ERROR_NAME") + (name || "")}
+                    Server Error Name: ${serverErrorName || ''}
+                    
+                    ${malFormedMessage()}
+                    
+                    --------------------------------------------------------
+                    
+                    ${_Lang.getMessage("MSG_DEV_MODE")}
+                    
+                    --------------------------------------------------------
+            `;
 
-            pushMsg(DIVIDER);
-
-            (caller) ? pushMsg("Calling class:" + caller) : null;
-            (callFunc) ? pushMsg("Calling function:" + callFunc) : null;
-            (name) ? pushMsg(_Lang.getMessage("MSG_ERROR_NAME") + " " + name) : null;
-            (serverErrorName && name != serverErrorName) ? pushMsg("Server error name: " + serverErrorName) : null;
-
-
-            pushMsg(malFormedMessage());
-            pushMsg(DIVIDER);
-            pushMsg(_Lang.getMessage("MSG_DEV_MODE"));
-            displayError(finalMessage.join("\n"));
+            let displayError: (string) => void = Lang.instance.getGlobalConfig("defaultErrorOutput", alert);
+            displayError(errTpl);
         }
     }
 
@@ -555,14 +572,16 @@ export class Implementation {
      * @param event
      */
     private getForm(elem: Element, event?: Event): DomQuery {
-        let _Lang = Lang.instance;
+        const _Lang = Lang.instance;
+        const FORM = "form";
 
         let queryElem = new DomQuery(elem);
         let eventTarget = new DomQuery(_Lang.getEventTarget(event));
-        let form = queryElem.parents("form")
-            .presentOrElseLazy(() => queryElem.byTagName("form", true))
-            .presentOrElseLazy(() => eventTarget.parents("form"))
-            .presentOrElseLazy(() => eventTarget.byTagName("form"))
+
+        let form = queryElem.parents(FORM)
+            .orElseLazy(() => queryElem.byTagName(FORM, true))
+            .orElseLazy(() => eventTarget.parents(FORM))
+            .orElseLazy(() => eventTarget.byTagName(FORM))
             .first();
 
         if (form.isAbsent()) {

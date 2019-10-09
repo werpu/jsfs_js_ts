@@ -19,7 +19,9 @@ import {Config} from "../../../main/typescript/_ext/monadish/Monad";
 
 const jsdom = require("jsdom");
 const {JSDOM} = jsdom;
-let dom = new JSDOM(`
+
+let initGlobals = function () {
+    let dom = new JSDOM(`
             <!DOCTYPE html>
         <html lang="en">
         <head>
@@ -38,17 +40,20 @@ let dom = new JSDOM(`
     
     `)
 
-let window = dom.window;
+    let window = dom.window;
 
 
-(<any>global).window = window;
-(<any>global).body = window.document.body;
-(<any>global).document = window.document;
-(<any>global).navigator = {
-    language: "en-En"
+    (<any>global).window = window;
+    (<any>global).body = window.document.body;
+    (<any>global).document = window.document;
+    (<any>global).navigator = {
+        language: "en-En"
+    };
+    return window;
 };
+let window = initGlobals();
 
-import {jsf} from "../../../main/typescript/api/jsf";
+
 import {describe, it} from 'mocha';
 import {expect} from 'chai';
 import * as sinon from 'sinon';
@@ -57,6 +62,8 @@ import * as sinon from 'sinon';
 import {DomQuery} from "../../../main/typescript/_ext/monadish/DomQuery";
 import {Implementation} from "../../../main/typescript/impl/Impl";
 import {Const} from "../../../main/typescript/impl/core/Const";
+
+import {jsf} from "../../../main/typescript/api/jsf";
 
 (<any>global).jsf = jsf;
 window.jsf = jsf;

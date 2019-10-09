@@ -47,8 +47,6 @@ let window = dom.window;
 };
 
 import {jsf} from "../../../main/typescript/api/jsf";
-(<any>global).jsf = jsf;
-window.jsf = jsf;
 import {describe, it} from 'mocha';
 import {expect} from 'chai';
 import * as sinon from 'sinon';
@@ -57,7 +55,8 @@ import * as sinon from 'sinon';
 import {DomQuery} from "../../../main/typescript/_ext/monadish/DomQuery";
 import {Implementation} from "../../../main/typescript/impl/Impl";
 
-
+(<any>global).jsf = jsf;
+window.jsf = jsf;
 
 
 /**
@@ -73,7 +72,7 @@ describe('jsf.ajax.request test suite', () => {
 
     });
 
-    it("jsf.ajax.request can be called", (done) => {
+    it("jsf.ajax.request can be called", () => {
         //we stub the addRequestToQueue, to enable the request check only
         //without any xhr and response, both will be tested separately for
         //proper behavior
@@ -84,14 +83,12 @@ describe('jsf.ajax.request test suite', () => {
 
         try {
             DomQuery.byId("input_2").addEventListener("click", (event: Event) => {
-                jsf.ajax.request(null, event, {render:'@all', execute:'@form'})
+                jsf.ajax.request(null, event, {render: '@all', execute: '@form'})
             }).click();
-            setTimeout(() => {
-                expect(addRequestToQueue.called).to.be.true;
-                expect(addRequestToQueue.callCount).to.eq(1);
-                expect(addRequestToQueue.args[0][2]["passThrgh"].render).eq("blarg");
-                done();
-            }, 1500);
+
+            expect(addRequestToQueue.called).to.be.true;
+            expect(addRequestToQueue.callCount).to.eq(1);
+            expect(addRequestToQueue.args[0][2]["passThrgh"].render).eq("blarg");
 
         } finally {
             //once done we restore the proper state

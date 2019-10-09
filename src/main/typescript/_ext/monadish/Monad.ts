@@ -246,10 +246,11 @@ export class Optional<T> extends Monad<T> {
         if (this.isPresent()) {
             return this;
         } else {
+            //shortcut
             if(elseValue == null) {
                 return Optional.absent;
             }
-            return this.flatMap(this.getClass().fromNullable(elseValue));
+            return this.flatMap(() => elseValue);
         }
     }
 
@@ -275,6 +276,7 @@ export class Optional<T> extends Monad<T> {
         if (!(val instanceof Optional)) {
             return Optional.fromNullable(val.value);
         }
+
         return <Optional<any>> val.flatMap();
     }
 

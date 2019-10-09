@@ -73,11 +73,11 @@ export class Implementation {
             return projectStage.value;
         }
 
-        let allowedProjectStages = {"Production": 1, "Development": 1, "SystemTest": 1, "UnitTest": 1};
+        let projectStages = {"Production": 1, "Development": 1, "SystemTest": 1, "UnitTest": 1};
 
         /* run through all script tags and try to find the one that includes jsf.js */
         let foundStage = ExtDomQuery.searchJsfJsFor(/stage=([^&;]*)/).presentOrElse(null).value;
-        return allowedProjectStages[foundStage] ? this.projectStage = foundStage : null;
+        return (foundStage in projectStages) ? this.projectStage = foundStage : null;
     }
 
     /**
@@ -198,12 +198,10 @@ export class Implementation {
          * so that people can use dummy forms and work
          * with detached objects
          */
+        const configId = ctx.getIf("myfaces", "form").presentOrElse(Optional.fromNullable("__mf_none__")).value;
         let form: DomQuery = DomQuery
-            .querySelectorAll("#" + (ctx.getIf("myfaces", "form").value || "__mf_none__"))
-            .presentOrElseLazy(() => {
-                return new DomQuery(this.getForm(elem.getAsElem(0).value, event).value);
-            });
-
+            .byId( configId)
+            .presentOrElseLazy(() => this.getForm(elem.getAsElem(0).value, event));
 
         /**
          * binding contract the javax.faces.source must be set
@@ -568,19 +566,22 @@ export class Implementation {
      * @param elem
      * @param event
      */
-    private getForm(elem: Element, event?: Event): Optional<Element> {
+    private getForm(elem: Element, event?: Event): DomQuery {
         let _Lang = Lang.instance;
 
         let queryElem = new DomQuery(elem);
-        let eventTarget = event ? new DomQuery(_Lang.getEventTarget(event)) : new DomQuery();
-        let form = queryElem.parents("form").presentOrElse(queryElem.byTagName("form", true))
-            .presentOrElseLazy(() => eventTarget.parents("form")
-                .presentOrElseLazy(() => eventTarget.byTagName("form"))).first();
+        let eventTarget = new DomQuery(_Lang.getEventTarget(event));
+        let form = queryElem.parents("form")
+            .presentOrElseLazy(() => queryElem.byTagName("form", true))
+            .presentOrElseLazy(() => eventTarget.parents("form"))
+            .presentOrElseLazy(() => eventTarget.byTagName("form"))
+            .first();
+
         if (form.isAbsent()) {
             throw _Lang.makeException(new Error(), null, null, "Impl", "getForm", _Lang.getMessage("ERR_FORM"));
         }
 
-        return form.getAsElem(0);
+        return form;
     }
 
 }

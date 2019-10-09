@@ -72,4 +72,6 @@ describe('Asynchronous Queue tests', () => {
             (finallyCnt == 3)? done() : null});
 
     });
+
+    //TODO error test?
 });

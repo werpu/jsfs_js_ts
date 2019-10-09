@@ -343,7 +343,7 @@ export class Lang {
      * @param evt the event object
      * (with a fallback for ie events if none is present)
      */
-    getEventTarget(evt: Event): Event {
+    getEventTarget(evt: Event): Element {
         //ie6 and 7 fallback
         evt = this.getEvent(evt);
         /**

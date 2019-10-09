@@ -92,7 +92,7 @@ export module jsf {
      * @param {optional String | DomNode}  the node for which the client identifier has to be determined
      * @return the window identifier or null if none is found
      */
-    export function getClientWindow(rootNode?: HTMLElement | String): string {
+    export function getClientWindow(rootNode?: Element | String): string {
         return null;
     }
 
@@ -124,8 +124,9 @@ export module jsf {
          * @param {EVENT} event: any javascript event supported by that object
          * @param {Map} options : map of options being pushed into the ajax cycle
          */
-        export function request(element: Element, event: Event, options: Context) {
-            return //Implementation.getInstance().requestInternal(element, event, options);
+        export function request(element: Element, event?: Event, options?: Context | {[key: string]: any}) {
+            Impl.request(element, event, options)
+             //Implementation.getInstance().requestInternal(element, event, options);
         }
 
         /**
@@ -135,8 +136,8 @@ export module jsf {
          *
          * TODO add info on what can be in the context
          */
-        export function response(request: XMLHttpRequest, context: Context) {
-            return;
+        export function response(request: XMLHttpRequest, context?: Context  | {[key: string]: any}) {
+            Impl.response(request, response);
         }
 
         /**
@@ -157,6 +158,7 @@ export module jsf {
          * @param {function} errorListener error handler must be of the format <i>function errorListener(&lt;errorData&gt;)</i>
          */
         export function addOnError( errorFunc: (data: _apiInterfaces.ErrorData) => void) {
+            Impl.addOnError(<any> errorFunc);
         }
 
         /**
@@ -166,6 +168,7 @@ export module jsf {
          * @param {function} eventListener event must be of the format <i>function eventListener(&lt;eventData&gt;)</i>
          */
         export function addOnEvent( eventFunc: (data: _apiInterfaces.EventData) => void) {
+            Impl.addOnEvent(<any> eventFunc);
         }
     }
 
@@ -183,7 +186,7 @@ export module jsf {
          *
          */
         static chain(source, event, ...funcs : Array<Function | string>): boolean {
-            return Impl.chain(source, event, funcs);
+            return Impl.chain(source, event, ...funcs);
         }
     }
 }

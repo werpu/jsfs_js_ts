@@ -18,15 +18,17 @@ import {jsf} from "../api/jsf";
 import * as myfacesConfig from "../api/myfaces";
 import {myfaces} from "../api/myfaces";
 import {Lang} from "./util/Lang";
-import {Dom} from "./util/Dom";
+;
 
 
-import {DomQuery} from "./util/Nodes";
+
 import {ErrorData, EventData, IListener, ListenerQueue} from "./util/ListenerQueue";
 import {Response} from "./xhrCore/Response";
 import {XhrRequest} from "./xhrCore/XhrRequest";
 import {AsynchronouseQueue} from "./util/Queue";
-import {Config} from "../_ext/monadish/Monad";
+import {Config, Optional} from "../_ext/monadish/Monad";
+import {DomQuery} from "../_ext/monadish/DomQuery";
+import {ExtDom} from "./util/ExtDom";
 
 export module Impl {
     "use strict";
@@ -129,10 +131,10 @@ export module Impl {
             let allowedProjectStages = {STG_PROD: 1, "Development": 1, "SystemTest": 1, "UnitTest": 1};
 
             /* run through all script tags and try to find the one that includes jsf.js */
-            DomQuery.querySelectorAll("script").filterNode((item: DomQuery) => {
-                return (<HTMLScriptElement>item.value[0]).src.search(/\/javax\.faces\.resource\/jsf\.js.*ln=javax\.faces/) != -1;
-            }).first((item: HTMLScriptElement) => {
-                let result = item.src.match(/stage=([^&;]*)/);
+            DomQuery.querySelectorAll("script").filter((item: DomQuery) => {
+                return item.attr("src", "").value.search(/\/javax\.faces\.resource\/jsf\.js.*ln=javax\.faces/) != -1;
+            }).first((item: DomQuery) => {
+                let result = item.attr("src","").value.match(/stage=([^&;]*)/);
                 // we found stage=XXX
                 // return only valid values of ProjectStage
                 this.projectStage = (allowedProjectStages[result[1]]) ? result[1] : null;
@@ -154,10 +156,10 @@ export module Impl {
                 return this.separator;
             }
 
-            DomQuery.querySelectorAll("script").filterNode(item => {
-                return (<HTMLScriptElement>item.value[0]).src.search(/\/javax\.faces\.resource.*\/jsf\.js.*separator/) != -1;
-            }).first((item: HTMLScriptElement) => {
-                let result = item.src.match(/separator=([^&;]*)/);
+            DomQuery.querySelectorAll("script").filter(item => {
+                return item.attr("src", "").value.search(/\/javax\.faces\.resource.*\/jsf\.js.*separator/) != -1;
+            }).first((item: DomQuery) => {
+                let result = item.attr("src", "").value.match(/separator=([^&;]*)/);
                 this.separator = decodeURIComponent(result[1]);
                 return false;
             });
@@ -166,7 +168,7 @@ export module Impl {
             return this.separator;
         }
 
-        chain(source: any, event: Event, funcs ?: Array<Function | string>): boolean {
+        chain(source: any, event: Event, ...funcs : Array<Function | string>): boolean {
             for (let cnt = 0; funcs && cnt < funcs.length; cnt++) {
                 let ret: any;
                 if ("string" != typeof funcs[cnt]) {
@@ -202,7 +204,7 @@ export module Impl {
          * a) transformArguments out of the function
          * b) passThrough handling with a map copy with a filter map block map
          */
-        request(el: HTMLElement, event?: Event, opts?: { [key: string]: string | Function | { [key: string]: string | Function } }) {
+        request(el: Element, event?: Event, opts?: { [key: string]: string | Function | { [key: string]: string | Function } }) {
 
             /*
              *namespace remap for our local function context we mix the entire function namespace into
@@ -222,7 +224,7 @@ export module Impl {
             /*preparations for jsf 2.2 windowid handling*/
             //pass the window id into the options if not set already
             if (options.getIf("windowId").isAbsent()) {
-                let windowId = Dom.instance.getWindowId();
+                let windowId = ExtDom.getWindowId();
                 (windowId) ? options.apply(this.P_WINDOW_ID).value = windowId : null;
             } else {
                 options.apply(this.P_WINDOW_ID).value = options.getIf("windowId").value;
@@ -363,10 +365,10 @@ export module Impl {
             }
         }
 
-        private applyClientWindowId(form: HTMLElement | String, ctx: Config, passThrgh?: any) {
+        private applyClientWindowId(form: Element | String, ctx: Config, passThrgh?: any) {
             let clientWindow = jsf.getClientWindow(form);
             if (clientWindow) {
-                if (new DomQuery(form).querySelectorAll("[name='" + this.P_CLIENTWINDOW + "']").length == 0) {
+                if (new DomQuery(<Element> form).querySelectorAll("[name='" + this.P_CLIENTWINDOW + "']").length == 0) {
                     ctx.apply(this.CTX_PARAM_MF_INTERNAL, "_clientWindow").value = clientWindow;
                 } else {
                     ctx.apply(this.CTX_PARAM_PASS_THR, this.P_CLIENTWINDOW).value = clientWindow;
@@ -630,7 +632,7 @@ export module Impl {
             let eventTarget = event ? new DomQuery(_Lang.getEventTarget(event)) : new DomQuery();
             let form = queryElem.parents("form").presentOrElse(queryElem.byTagName("form", true))
                 .presentOrElse(eventTarget.parents("form")
-                    .presentOrElse(eventTarget.byTagName("form"))).firstNode();
+                    .presentOrElse(eventTarget.byTagName("form"))).first();
             if (form.isAbsent()) {
                 throw _Lang.makeException(new Error(), null, null, "Impl", "getForm", _Lang.getMessage("ERR_FORM"));
             }

@@ -20,7 +20,7 @@ import {IValueHolder, Optional} from "./Monad";
 
 export class ElementAttribute implements IValueHolder<string> {
 
-    constructor(private element: DomQuery, private attributeName: string) {
+    constructor(private element: DomQuery, private attributeName: string, private defaultVal:string = null) {
     }
 
     set value(value: string) {
@@ -36,7 +36,7 @@ export class ElementAttribute implements IValueHolder<string> {
     get value(): string {
         let val: Element[] = this.element.get(0).presentOrElse(...[]).values;
         if (!val.length) {
-            return null;
+            return this.defaultVal;
         }
 
         return val[0].getAttribute(this.attributeName);
@@ -109,8 +109,8 @@ export class DomQuery {
      * returns the nth element as optional of an Element object
      * @param index
      */
-    getAsElem(index: number): Optional<Element> {
-        return (index < this.rootNode.length) ? Optional.fromNullable(this.rootNode[index]) : Optional.absent;
+    getAsElem(index: number, defaults?: Optional<any>): Optional<Element> {
+        return (index < this.rootNode.length) ? Optional.fromNullable(this.rootNode[index]) : (defaults) ? defaults : Optional.absent;
     }
 
     /**
@@ -243,8 +243,8 @@ export class DomQuery {
      * or let value myQuery.attr("class").value
      * @param attr
      */
-    attr(attr: string): ElementAttribute {
-        return new ElementAttribute(this, attr);
+    attr(attr: string, noneGetValue: string = null): ElementAttribute {
+        return new ElementAttribute(this, attr, noneGetValue);
     }
 
     /**
@@ -436,7 +436,7 @@ export class DomQuery {
     filter(func: (item: DomQuery) => boolean): DomQuery {
         let reArr: Array<DomQuery> = [];
         this.each((item: DomQuery) => {
-           func(item) ? reArr.push(item) : null;
+            func(item) ? reArr.push(item) : null;
         });
         return new DomQuery(...<any>reArr);
     }

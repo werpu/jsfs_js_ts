@@ -158,7 +158,7 @@ export class Implementation {
          *a local function variable so that we do not have to write the entire namespace
          *all the time
          */
-
+        event = _Lang.getEvent(event);
         //options not set we define a default one with nothing
         let options = new Config(opts || {});
         let elem = DomQuery.byId(el || <Element>event.target);
@@ -184,7 +184,7 @@ export class Implementation {
          * the entire mapping between the functions is stateless
          */
         //null definitely means no event passed down so we skip the ie specific checks
-        event = _Lang.getEvent(event);
+
 
         let elementId = elem.id;
 

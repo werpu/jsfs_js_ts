@@ -44,12 +44,12 @@ export class ExtDomQuery extends DomQuery {
     determines the jsfjs nonce and adds them to the namespace
     * this is done once and only lazily
     */
-    get nonce() {
+    get nonce(): string {
         //already processed
         let myfacesConfig = new Config(window.myfaces);
         let nonce: IValueHolder<string> = myfacesConfig.apply("config", "cspMeta", "nonce");
         if (nonce.value) {
-            return nonce.value;
+            return <string> nonce.value;
         }
 
         let curScript = new DomQuery(document.currentScript);
@@ -66,14 +66,18 @@ export class ExtDomQuery extends DomQuery {
         if (nonceScript.isPresent()) {
             nonce.value = nonceScript.attr("nonce").value;
         }
-        return nonce.value;
+        return <string> nonce.value;
+    }
+
+    globalEval(code: string, nonce ?:string): DomQuery {
+        return super.globalEval(code, nonce || this.nonce);
     }
 
     static get windowId() {
         return new ExtDomQuery(document.body).windowId;
     }
 
-    static get nonce() {
+    static get nonce(): string {
         return new ExtDomQuery(document.body).nonce;
     }
 }

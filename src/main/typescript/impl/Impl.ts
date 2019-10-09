@@ -304,19 +304,25 @@ export class Implementation {
 
 
     private applyExecute(options: Config, ctx: Config, form: DomQuery, elementId: string) {
-        //TODO none handling
-        if (options.getIf(Const.CTX_PARAM_EXECUTE).isPresent()) {
+        const PARAM_EXECUTE = Const.CTX_PARAM_EXECUTE;
+        const PARAM_PASS_THR = Const.CTX_PARAM_PASS_THR;
+        const P_EXECUTE = Const.P_EXECUTE;
+
+        if (options.getIf(PARAM_EXECUTE).isPresent()) {
             /*the options must be a blank delimited list of strings*/
             /*compliance with Mojarra which automatically adds @this to an execute
              * the spec rev 2.0a however states, if none is issued nothing at all should be sent down
              */
-            options.apply(Const.CTX_PARAM_EXECUTE).value = options.getIf(Const.CTX_PARAM_EXECUTE).value + " @this";
-            this.transformValues(ctx.getIf(Const.CTX_PARAM_PASS_THR).get({}), Const.P_EXECUTE, <string>options.getIf(Const.CTX_PARAM_EXECUTE).value, form, <any>elementId);
+            options.apply(PARAM_EXECUTE).value = options.getIf(PARAM_EXECUTE).value + " @this";
+            this.transformValues(ctx.getIf(PARAM_PASS_THR).get({}), P_EXECUTE, <string>options.getIf(PARAM_EXECUTE).value, form, <any>elementId);
         } else {
-            ctx.apply(Const.CTX_PARAM_PASS_THR, Const.P_EXECUTE).value = elementId;
+            ctx.apply(PARAM_PASS_THR, P_EXECUTE).value = elementId;
         }
     }
 
+    /**
+     * probably deprecated in favor of windowId need to check the specs
+     */
     private applyClientWindowId(form: DomQuery, ctx: Config, passThrgh?: any) {
         let clientWindow = (<any>window).jsf.getClientWindow(form.getAsElem(0).value);
         if (clientWindow) {

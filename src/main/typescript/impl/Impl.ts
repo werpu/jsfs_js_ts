@@ -30,13 +30,24 @@ import {Const} from "./core/Const";
 
 let globalConfig = myfacesConfig.myfaces.config;
 
+type EvalFuncs = Array<Function | string>;
+type Options = { [key: string]: string | Function | { [key: string]: string | Function } };
+type Context = { [key: string]: any };
+
+/**
+ * Core Implementation
+ * to distinct between api and impl
+ *
+ * The original idea was to make the implementation pluggable
+ * but this is pointless, you always can overwrite the thin api layer
+ * however a dedicated api makes sense for readability reasons
+ */
 export class Implementation {
 
 
     /*blockfilter for the passthrough filtering; the attributes given here
      * will not be transmitted from the options into the passthrough*/
-    private BLOCKFILTER = {onerror: 1, onevent: 1, render: 1, execute: 1, myfaces: 1, delay: 1, windowId:1};
-
+    private BLOCK_FILTER = {onerror: 1, onevent: 1, render: 1, execute: 1, myfaces: 1, delay: 1, windowId:1};
 
     private static _instance: Implementation = null;
     private projectStage: string = null;
@@ -54,6 +65,11 @@ export class Implementation {
     private constructor() {
     }
 
+    /**
+     * singleton for now, but we probably
+     * can move this code into a module
+     * to avoid the initialisation via instance
+     */
     static get instance(): Implementation {
         if (this._instance) {
             return this._instance;
@@ -95,7 +111,7 @@ export class Implementation {
         return this.separator;
     }
 
-    chain(source: any, event: Event, ...funcs: Array<Function | string>): boolean {
+    chain(source: any, event: Event, ...funcs: EvalFuncs): boolean {
         for (let cnt = 0; funcs && cnt < funcs.length; cnt++) {
             let ret: any;
             if ("string" != typeof funcs[cnt]) {
@@ -137,7 +153,7 @@ export class Implementation {
      * a) transformArguments out of the function
      * b) passThrough handling with a map copy with a filter map block map
      */
-    request(el: Element | string, event?: Event, opts?: { [key: string]: string | Function | { [key: string]: string | Function } }) {
+    request(el: Element | string, event?: Event, opts?: Options) {
         const _Lang = Lang.instance;
         const  MYFACES = "myfaces";
         /*
@@ -163,7 +179,7 @@ export class Implementation {
 
         this.applyWindowId(options);
 
-        ctx.apply(Const.CTX_PARAM_PASS_THR).value = _Lang.mergeMaps([{}, <any>options.value], true, <any>this.BLOCKFILTER);
+        ctx.apply(Const.CTX_PARAM_PASS_THR).value = _Lang.mergeMaps([{}, <any>options.value], true, <any>this.BLOCK_FILTER);
         ctx.applyIf(!!event, Const.CTX_PARAM_PASS_THR, Const.P_EVT).value = Lang.saveResolve(() => event.type);
 
         /**
@@ -242,7 +258,7 @@ export class Implementation {
         this.addRequestToQueue(elem, form, ctx, delay);
     }
 
-    private applyWindowId(options) {
+    private applyWindowId(options: Config) {
         /*preparations for jsf 2.2 windowid handling*/
         //pass the window id into the options if not set already
         //TODO probably not needed anymore
@@ -370,7 +386,7 @@ export class Implementation {
      * @param {XMLHttpRequest} request - the ajax request
      * @param {Object} context - the ajax context
      */
-    response(request: XMLHttpRequest, context: { [key: string]: any }) {
+    response(request: XMLHttpRequest, context: Context) {
         Response.processResponse(request, context);
     }
 
@@ -387,7 +403,7 @@ export class Implementation {
     /**
      * sends an event
      */
-    sendEvent(/*Object*/request: XMLHttpRequest, /*Object*/ context: { [key: string]: any }, /*event name*/ name: string) {
+    sendEvent(/*Object*/request: XMLHttpRequest, /*Object*/ context: Context, /*event name*/ name: string) {
         let _Lang = Lang.instance;
         let eventData = new EventData();
         let UNKNOWN = _Lang.getMessage("UNKNOWN");
@@ -438,7 +454,7 @@ export class Implementation {
      * @param clearRequestQueue if set to true, clears the request queue of all pending requests
      */
     stdErrorHandler(request: XMLHttpRequest,
-                    context: { [key: string]: any },
+                    context: Context,
                     exception: any,
                     clearRequestQueue = false) {
         //newer browsers do not allow to hold additional values on native objects like exceptions
@@ -485,7 +501,7 @@ export class Implementation {
      *
      */
     sendError(request: XMLHttpRequest,
-              context: { [key: string]: any },
+              context: Context,
               name: string,
               serverErrorName?: string,
               serverErrorMessage?: string,
@@ -557,7 +573,7 @@ export class Implementation {
                     --------------------------------------------------------
             `;
 
-            let displayError: (string) => void = Lang.instance.getGlobalConfig("defaultErrorOutput", alert);
+            let displayError: (string) => void = _Lang.getGlobalConfig("defaultErrorOutput", (console ? console.error : alert));
             displayError(errTpl);
         }
     }

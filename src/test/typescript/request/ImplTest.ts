@@ -116,6 +116,12 @@ describe('jsf.ajax.request test suite', () => {
 
     });
 
+
+    it("jsf.ajax.request passthroughs must end up in passthrough", (done) => {
+        //TODO implementation
+        done();
+    });
+
     it("jsf.util.chain must work", () => {
         let called = {};
         (<any>window).called = called;

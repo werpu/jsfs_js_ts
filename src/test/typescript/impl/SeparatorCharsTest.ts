@@ -39,7 +39,6 @@ describe('various tests for get separator char', () => {
         waitForResult.then((close) => {
             try {
                 let separator = jsf.separatorchar;
-                console.debug("sep:", separator);
                 expect(separator).to.eq(":");
             } finally {
                 Implementation.reset();
@@ -73,7 +72,6 @@ describe('various tests for get separator char', () => {
         waitForResult.then((close) => {
             try {
                 let separator = Implementation.instance.separatorChar;
-                console.debug("sep:", separator);
                 expect(separator).to.eq("!");
             } finally {
                 Implementation.reset();
@@ -83,6 +81,4 @@ describe('various tests for get separator char', () => {
         });
 
     });
-
-
 });

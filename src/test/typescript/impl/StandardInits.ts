@@ -59,9 +59,7 @@ export module standardInits {
             <body>
                 <form id="blarg">
                     <input type="text" id="input_1" name="input_1"></input>
-                    <input type="button" id="input_2" name="input_2"
-                        
-                    ></input>
+                    <input type="button" id="input_2" name="input_2"></input>
                 </form>
             </body>
             </html>
@@ -86,10 +84,15 @@ export module standardInits {
         let clean =  null;
         //we use jsdom global to fullfill our requirements
         //we need to import dynamically and use awaits
+        delete (<any>global).jsf;
+        delete (<any>global).Implementation;
+
+        // @ts-ignore
         await import('jsdom-global').then((domIt) => {
             clean = domIt(template);
         });
 
+        // @ts-ignore
         await import("../../../main/typescript/api/jsf").then((data) => {
              let Implementation = require("../../../main/typescript/impl/Impl");
              (<any>global).jsf = data.jsf;

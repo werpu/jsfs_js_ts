@@ -102,7 +102,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     }
 
     private createPromise() {
-        return new Promise<XMLHttpRequest>((resolve: PROMISE_FUNC, reject: PROMISE_FUNC) => {
+        return new Lang.Promise((resolve: PROMISE_FUNC, reject: PROMISE_FUNC) => {
             this.xhrObject.onabort = () => {
                 this.onAbort(resolve, reject);
             };

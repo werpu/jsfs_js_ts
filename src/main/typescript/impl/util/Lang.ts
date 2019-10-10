@@ -18,14 +18,8 @@
  */
 
 
-import {PolyFills} from "./Polyfills";
+
 import {LangTypes} from "./LangTypes";
-import JSFErrorData = LangTypes.JSFErrorData;
-import MyFacesErrorData = LangTypes.MyFacesErrorData;
-import FormDataDecorator = LangTypes.FormDataDecorator;
-import FormDataDecoratorArray = LangTypes.FormDataDecoratorArray;
-import FormDataDecoratorString = LangTypes.FormDataDecoratorString;
-import FormDataDecoratorOther = LangTypes.FormDataDecoratorOther;
 
 import {Lang as LangBase} from "../../_ext/monadish/Lang";
 
@@ -36,6 +30,12 @@ import {Messages_it} from "../i18n/Messages_it";
 import {Messages} from "../i18n/Messages";
 import {Config, Optional} from "../../_ext/monadish/Monad";
 import {CancellablePromise} from "../../_ext/monadish/Promise";
+import JSFErrorData = LangTypes.JSFErrorData;
+import MyFacesErrorData = LangTypes.MyFacesErrorData;
+import FormDataDecorator = LangTypes.FormDataDecorator;
+import FormDataDecoratorArray = LangTypes.FormDataDecoratorArray;
+import FormDataDecoratorString = LangTypes.FormDataDecoratorString;
+import FormDataDecoratorOther = LangTypes.FormDataDecoratorOther;
 
 
 export class Lang {
@@ -56,7 +56,6 @@ export class Lang {
     private static _instance: Lang;
 
 
-
     static get instance() {
         if (!Lang._instance) {
             Lang._instance = new Lang();
@@ -66,12 +65,8 @@ export class Lang {
 
     private constructor() {
         this.base = LangBase.instance;
-        PolyFills.init();
         this.initLocale();
     }
-
-
-
 
 
     /**
@@ -106,12 +101,12 @@ export class Lang {
      * @param {RegExp} splitter our splitter reglar expression
      * @return an array of the splitted string
      */
-    strToArray(it: string, splitter: string | RegExp = /\./gi): Array<string> {
+    strToArray(it: string, splitter: string | RegExp = /\./gi): Array<string> {
         return this.base.strToArray(it, splitter);
     }
 
 
-    arrToMap(arr:any[], offset: number = 0) {
+    arrToMap(arr: any[], offset: number = 0) {
         return this.base.arrToMap(arr, offset);
     }
 
@@ -164,7 +159,7 @@ export class Lang {
      * the function is sideffect free
      * @param maps
      */
-    mergeMaps(maps: {[key:string]:any}[], overwrite: boolean = true, blockFilter: Function = (item) => false, whitelistFilter: Function = (item) => true): {[key:string]:any} {
+    mergeMaps(maps: { [key: string]: any }[], overwrite: boolean = true, blockFilter: Function = (item) => false, whitelistFilter: Function = (item) => true): { [key: string]: any } {
         return this.base.mergeMaps(maps, overwrite, blockFilter, whitelistFilter);
     }
 
@@ -221,7 +216,7 @@ export class Lang {
      * @param {String} str string to check for
      */
     contains<T>(arr: T[], str: string) {
-       return this.base.contains(arr, str);
+        return this.base.contains(arr, str);
     }
 
     /**
@@ -234,7 +229,7 @@ export class Lang {
      * @param element the index to search for
      * @param fromIndex
      */
-    arrIndexOf<T>(arr: any, element: T, fromIndex : number = 0): number {
+    arrIndexOf<T>(arr: any, element: T, fromIndex: number = 0): number {
         return this.base.arrIndexOf(arr, element, fromIndex);
     }
 
@@ -253,7 +248,7 @@ export class Lang {
      *  <li> scope (optional) the scope to apply the closure to</li>
      * </ul>
      */
-    arrFilter<T>(arr: any, callbackfn: (value: T, index?: number, array?: T[]) => boolean, startPos : number = 0, scope : Function = null) {
+    arrFilter<T>(arr: any, callbackfn: (value: T, index?: number, array?: T[]) => boolean, startPos: number = 0, scope: Function = null) {
         return this.base.arrFilter(arr, callbackfn, startPos, scope);
     }
 
@@ -283,7 +278,7 @@ export class Lang {
      * @param val the value
      * @param delimiter the delimiter
      */
-    keyValToStr(key: string, val: string, delimiter : string = "\n") {
+    keyValToStr(key: string, val: string, delimiter: string = "\n") {
         let ret = [];
         ret.push(key);
         ret.push(val);
@@ -375,7 +370,6 @@ export class Lang {
     }
 
 
-
     /**
      * creates a neutral form data wrapper over an existing form Data element
      * the wrapper delegates following methods, append
@@ -424,9 +418,8 @@ export class Lang {
     }
 
 
-
     interval(timeout: number): CancellablePromise {
-       return this.base.interval(timeout);
+        return this.base.interval(timeout);
     }
 
 
@@ -529,8 +522,19 @@ export class Lang {
      * @param defaultValue an optional default value if the producer failes to produce anything
      * @returns an Optional of the produced value
      */
-    static saveResolve<T>(resolverProducer: () => T, defaultValue:T = null): Optional<T> {
+    static saveResolve<T>(resolverProducer: () => T, defaultValue: T = null): Optional<T> {
         return LangBase.saveResolve(resolverProducer, defaultValue);
+    }
+
+    /**
+     * instead of Polyfills we rely on class
+     * producers
+     * @constructor
+     */
+    static get Promise(): any {
+        return this.saveResolve<any>(
+            () => window.Promise.prototype.then ? window.Promise : CancellablePromise,
+            CancellablePromise).value
     }
 
 }

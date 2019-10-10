@@ -43,7 +43,7 @@ declare var Implementation: any;
 
 describe('jsf.ajax.request test suite', () => {
 
-    before(() => {
+    beforeEach(() => {
 
 
         let dom2 = new JSDOM(`
@@ -89,8 +89,8 @@ describe('jsf.ajax.request test suite', () => {
         //we stub the addRequestToQueue, to enable the request check only
         //without any xhr and response, both will be tested separately for
         //proper behavior
-        let Impl = Implementation.instance;
-        let addRequestToQueue = sinon.stub(Impl, "addRequestToQueue");
+        const Impl = Implementation.instance;
+        const addRequestToQueue = sinon.stub(Impl, "addRequestToQueue");
         //now the jsf.ajax.request should trigger but should not go into
         //the asynchronous event loop.
         //lets check it out
@@ -102,8 +102,10 @@ describe('jsf.ajax.request test suite', () => {
 
             expect(addRequestToQueue.called).to.be.true;
             expect(addRequestToQueue.callCount).to.eq(1);
-            let argElement = <Config>addRequestToQueue.args[0][2];
+
+            const argElement = <Config>addRequestToQueue.args[0][2];
             const context = (<Config>addRequestToQueue.args[0][2]);
+
             expect(context.getIf("passThrgh", Const.P_RENDER).value).eq("@all");
             //Execute issuing form due to @form and always the issuing element
             expect(context.getIf("passThrgh", Const.P_EXECUTE).value).eq("blarg input_2");
@@ -113,4 +115,52 @@ describe('jsf.ajax.request test suite', () => {
         }
 
     });
+
+    it("jsf.util.chain must work", () => {
+        let called = {};
+        (<any>window).called = called;
+
+        let func1 = () => {
+            called["func1"] = true;
+            return true;
+        }
+
+        let func2 = `function func2(called) {
+            called["func2"] = true;
+            return true;
+        }`;
+
+        let func3 = () => {
+            called["func3"] = true;
+            return false;
+        }
+
+        let func4 = `return (function func4(called) {
+            called["func4"] = true;
+            return false;
+        })(event)`;
+
+        let func5 = () => {
+            called["func5"] = true;
+            return false;
+        };
+
+        jsf.util.chain(this, called, func1, func2, func3, func4, func5);
+
+        expect(called["func1"]).to.be.true;
+        expect(called["func2"]).to.be.true;
+        expect(!!called["func3"]).to.be.true;
+        expect(!!called["func4"]).to.be.false;
+        expect(!!called["func5"]).to.be.false;
+
+        called = {};
+        jsf.util.chain(this, called, func1, func2, func4, func5);
+        expect(called["func1"]).to.be.true;
+        expect(called["func2"]).to.be.true;
+        expect(!!called["func4"]).to.be.true;
+        expect(!!called["func5"]).to.be.false;
+
+    })
 });
+
+

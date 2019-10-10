@@ -102,7 +102,13 @@ export class Implementation {
                 ret = (<Function>funcs[cnt]).call(source, event);
             } else {
                 //either a function or a string can be passed in case of a string we have to wrap it into another function
-                ret = new Function("event", <string>funcs[cnt]).call(source, event);
+                //it it is not a plain executable code but a definition
+                let sourceCode = Lang.instance.trim(<string>funcs[cnt]);
+                if(sourceCode.indexOf("function ") == 0) {
+                    sourceCode = `return ${sourceCode} (event)`;
+                }
+
+                ret = new Function("event", sourceCode).call(source, event);
             }
             if (ret === false) {
                 return false;

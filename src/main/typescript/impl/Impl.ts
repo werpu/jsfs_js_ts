@@ -606,4 +606,9 @@ export class Implementation {
         return form;
     }
 
+    //for testing only
+    static reset() {
+        this._instance = null;
+    }
+
 }

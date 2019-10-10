@@ -8,6 +8,7 @@
     "sourceMap": true,
     "outDir": "../../../target",
     "moduleResolution": "node",
+    "module": "commonjs",
     "typeRoots": [
       "../../build/npm/node_modules/@types"
     ]

@@ -24,6 +24,8 @@ import * as sinon from 'sinon';
 import {DomQuery} from "../../../main/typescript/_ext/monadish/DomQuery";
 
 import {Const} from "../../../main/typescript/impl/core/Const";
+import {standardInits} from "./StandardInits";
+import defaultMyFaces = standardInits.defaultMyFaces;
 
 const jsdom = require("jsdom");
 const {JSDOM} = jsdom;
@@ -43,47 +45,7 @@ declare var Implementation: any;
 
 describe('jsf.ajax.request test suite', () => {
 
-    beforeEach(() => {
-
-
-        let dom2 = new JSDOM(`
-            <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <title>Title</title>
-            </head>
-            <body>
-                <form id="blarg">
-                    <input type="text" id="input_1" name="input_1"></input>
-                    <input type="button" id="input_2" name="input_2"
-                        
-                    ></input>
-                </form>
-            </body>
-            </html>
-    
-    `)
-
-        let window = dom2.window;
-
-
-        (<any>global).window = window;
-
-
-        (<any>global).body = window.document.body;
-        (<any>global).document = window.document;
-        (<any>global).navigator = {
-            language: "en-En"
-        };
-
-        let Implementation = require("../../../main/typescript/impl/Impl");
-        let jsf = require("../../../main/typescript/api/jsf");
-        (<any>global).jsf = jsf.jsf;
-        (<any>global).Implementation = Implementation.Implementation;
-        //window.jsf = jsf.jsf;
-
-    });
+    beforeEach(defaultMyFaces);
 
     it("jsf.ajax.request can be called", () => {
         //we stub the addRequestToQueue, to enable the request check only
@@ -169,11 +131,7 @@ describe('jsf.ajax.request test suite', () => {
     })
 
 
-    it("should have : as standard separator char", () => {
-       let separator = jsf.separatorchar;
 
-       expect(separator).to.eq(":");
-    });
 });
 
 

@@ -421,7 +421,7 @@ export class DomQuery {
      * @param func a an optional callback function to perform an operation on the first element
      */
     first(func: (item: DomQuery, cnt?: number) => any = (item) => item): DomQuery {
-        if (this.rootNode.length > 1) {
+        if (this.rootNode.length >= 1) {
             func(this.get(0), 0);
             return this.get(0);
         }

@@ -69,12 +69,12 @@ export class ExtDomQuery extends DomQuery {
         return <string> nonce.value;
     }
 
-    searchJsfJsFor(item: RegExp): Optional<string> {
+    searchJsfJsFor(rexp: RegExp): Optional<string> {
         let res:string = null;
         DomQuery.querySelectorAll("script").filter(item => {
             return item.attr("src", "").value.search(/\/javax\.faces\.resource.*\/jsf\.js.*separator/) != -1;
         }).first((item: DomQuery) => {
-            let result = item.attr("src", "").value.match(<any> item);
+            let result = item.attr("src", "").value.match(rexp);
             res = decodeURIComponent(result[1]);
             return false;
         });

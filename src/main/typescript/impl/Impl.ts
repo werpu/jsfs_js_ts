@@ -33,6 +33,7 @@ let globalConfig = myfacesConfig.myfaces.config;
 type EvalFuncs = Array<Function | string>;
 type Options = { [key: string]: string | Function | { [key: string]: string | Function } };
 type Context = { [key: string]: any };
+type ElemDef =  Element | string;
 
 /**
  * Core Implementation
@@ -47,7 +48,7 @@ export class Implementation {
 
     /*blockfilter for the passthrough filtering; the attributes given here
      * will not be transmitted from the options into the passthrough*/
-    private BLOCK_FILTER = {onerror: 1, onevent: 1, render: 1, execute: 1, myfaces: 1, delay: 1, windowId:1};
+    private BLOCK_FILTER = {onerror: 1, onevent: 1, render: 1, execute: 1, myfaces: 1, delay: 1, windowId: 1};
 
     private static _instance: Implementation = null;
     private projectStage: string = null;
@@ -84,16 +85,15 @@ export class Implementation {
      * The value for it comes from the requestInternal parameter of the jsf.js script called "stage".
      */
     getProjectStage(): string {
-        let projectStage = Optional.fromNullable(globalConfig.projectStage).orElse(this.projectStage);
-        if (projectStage.isPresent()) {
-            return projectStage.value;
-        }
+        return Optional.fromNullable(globalConfig.projectStage)
+            .orElse(this.projectStage)
+            .orElseLazy(() => {
+                let projectStages = {"Production": 1, "Development": 1, "SystemTest": 1, "UnitTest": 1};
 
-        let projectStages = {"Production": 1, "Development": 1, "SystemTest": 1, "UnitTest": 1};
-
-        /* run through all script tags and try to find the one that includes jsf.js */
-        let foundStage = ExtDomQuery.searchJsfJsFor(/stage=([^&;]*)/).orElse(null).value;
-        return (foundStage in projectStages) ? this.projectStage = foundStage : null;
+                /* run through all script tags and try to find the one that includes jsf.js */
+                let foundStage = ExtDomQuery.searchJsfJsFor(/stage=([^&;]*)/).orElse(null).value;
+                return (foundStage in projectStages) ? this.projectStage = foundStage : null;
+            }).value;
     }
 
     /**
@@ -102,13 +102,12 @@ export class Implementation {
      * @return {char} the separator char for the given script tags
      */
     getSeparatorChar(): string {
-        let separator = Optional.fromNullable(globalConfig.separator).orElse(this.separator);
-        if (separator.isPresent()) {
-            return separator.value;
-        }
-
-        this.separator = ExtDomQuery.searchJsfJsFor(/separator=([^&;]*)/).orElse(":").value;
-        return this.separator;
+        return Optional.fromNullable(globalConfig.separator)
+            .orElse(this.separator)
+            .orElseLazy(() => {
+                this.separator = ExtDomQuery.searchJsfJsFor(/separator=([^&;]*)/).orElse(":").value;
+                return this.separator;
+            }).value;
     }
 
     chain(source: any, event: Event, ...funcs: EvalFuncs): boolean {
@@ -120,7 +119,7 @@ export class Implementation {
                 //either a function or a string can be passed in case of a string we have to wrap it into another function
                 //it it is not a plain executable code but a definition
                 let sourceCode = Lang.instance.trim(<string>funcs[cnt]);
-                if(sourceCode.indexOf("function ") == 0) {
+                if (sourceCode.indexOf("function ") == 0) {
                     sourceCode = `return ${sourceCode} (event)`;
                 }
 
@@ -153,9 +152,9 @@ export class Implementation {
      * a) transformArguments out of the function
      * b) passThrough handling with a map copy with a filter map block map
      */
-    request(el: Element | string, event?: Event, opts?: Options) {
+    request(el: ElemDef, event?: Event, opts?: Options) {
         const _Lang = Lang.instance;
-        const  MYFACES = "myfaces";
+        const MYFACES = "myfaces";
         /*
          *namespace remap for our local function context we mix the entire function namespace into
          *a local function variable so that we do not have to write the entire namespace
@@ -262,7 +261,8 @@ export class Implementation {
         /*preparations for jsf 2.2 windowid handling*/
         //pass the window id into the options if not set already
         //TODO probably not needed anymore
-        options.apply(Const.P_WINDOW_ID).value = options.getIf("windowId").orElse(ExtDomQuery.windowId).value;
+        options.apply(Const.P_WINDOW_ID).value = options.getIf("windowId")
+            .orElseLazy(() => ExtDomQuery.windowId).value;
         options.delete("windowId");
     }
 
@@ -466,7 +466,7 @@ export class Implementation {
                 let mfInternal = new Config(exception._mfInternal || {});
 
                 this.sendError(request, context,
-                    mfInternal.getIf("title").orElse( Const.CLIENT_ERROR).value,
+                    mfInternal.getIf("title").orElse(Const.CLIENT_ERROR).value,
                     mfInternal.getIf("name").orElse(exception.name).value,
                     exception.message || "",
                     mfInternal.getIf("caller").value,
@@ -561,7 +561,7 @@ export class Implementation {
                     Server Error Message: ${serverErrorMessage || ''}
                     Calling class: ${caller || ''}
                     Calling function: ${callFunc || ''}
-                    Error Name: ${_Lang.getMessage("MSG_ERROR_NAME") + (name || "")}
+                    Error Name: ${_Lang.getMessage("MSG_ERROR_NAME") + (name || "")}
                     Server Error Name: ${serverErrorName || ''}
                     
                     ${malFormedMessage()}

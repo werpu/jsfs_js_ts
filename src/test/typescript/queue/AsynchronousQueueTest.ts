@@ -25,7 +25,6 @@ import {AsynchronouseQueue} from "../../../main/typescript/impl/util/Queue";
 
 describe('Asynchronous Queue tests', () => {
 
-    let clock;
 
 
    it('one entry', (done) => {

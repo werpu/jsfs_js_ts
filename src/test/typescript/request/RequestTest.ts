@@ -16,12 +16,37 @@
 
 
 import {Config} from "../../../main/typescript/_ext/monadish/Monad";
+import {describe, it} from 'mocha';
+import {expect} from 'chai';
+import * as sinon from 'sinon';
+
+
+import {DomQuery} from "../../../main/typescript/_ext/monadish/DomQuery";
+
+import {Const} from "../../../main/typescript/impl/core/Const";
 
 const jsdom = require("jsdom");
 const {JSDOM} = jsdom;
 
-let initGlobals = function () {
-    let dom = new JSDOM(`
+
+sinon.reset();
+
+declare var jsf: any;
+declare var Implementation: any;
+
+/**
+ * testing the jsf.ajax.request api without triggering any
+ * xhr request...
+ * the idea is to shim the code which triggers the request out and check what is going in
+ * and what is coming out
+ */
+
+describe('jsf.ajax.request test suite', () => {
+
+    before(() => {
+
+
+        let dom2 = new JSDOM(`
             <!DOCTYPE html>
         <html lang="en">
         <head>
@@ -40,43 +65,25 @@ let initGlobals = function () {
     
     `)
 
-    let window = dom.window;
+        let window = dom2.window;
 
 
-    (<any>global).window = window;
-    (<any>global).body = window.document.body;
-    (<any>global).document = window.document;
-    (<any>global).navigator = {
-        language: "en-En"
-    };
-    return window;
-};
-let window = initGlobals();
+        (<any>global).window = window;
 
 
-import {describe, it} from 'mocha';
-import {expect} from 'chai';
-import * as sinon from 'sinon';
+        (<any>global).body = window.document.body;
+        (<any>global).document = window.document;
+        (<any>global).navigator = {
+            language: "en-En"
+        };
 
+        let Implementation = require("../../../main/typescript/impl/Impl");
+        let jsf = require("../../../main/typescript/api/jsf");
+        (<any>global).jsf = jsf.jsf;
+        (<any>global).Implementation = Implementation.Implementation;
+        //window.jsf = jsf.jsf;
 
-import {DomQuery} from "../../../main/typescript/_ext/monadish/DomQuery";
-import {Implementation} from "../../../main/typescript/impl/Impl";
-import {Const} from "../../../main/typescript/impl/core/Const";
-
-import {jsf} from "../../../main/typescript/api/jsf";
-
-(<any>global).jsf = jsf;
-window.jsf = jsf;
-
-
-/**
- * testing the jsf.ajax.request api without triggering any
- * xhr request...
- * the idea is to shim the code which triggers the request out and check what is going in
- * and what is coming out
- */
-
-describe('jsf.ajax.request test suite', () => {
+    });
 
     it("jsf.ajax.request can be called", () => {
         //we stub the addRequestToQueue, to enable the request check only
@@ -97,9 +104,9 @@ describe('jsf.ajax.request test suite', () => {
             expect(addRequestToQueue.callCount).to.eq(1);
             let argElement = <Config>addRequestToQueue.args[0][2];
             const context = (<Config>addRequestToQueue.args[0][2]);
-            expect(context.getIf("passThrgh",Const.P_RENDER).value).eq("@all");
+            expect(context.getIf("passThrgh", Const.P_RENDER).value).eq("@all");
             //Execute issuing form due to @form and always the issuing element
-            expect(context.getIf("passThrgh",Const.P_EXECUTE).value).eq("blarg input_2");
+            expect(context.getIf("passThrgh", Const.P_EXECUTE).value).eq("blarg input_2");
         } finally {
             //once done we restore the proper state
             addRequestToQueue.restore();

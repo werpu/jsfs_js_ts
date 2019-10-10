@@ -191,4 +191,10 @@ export module jsf {
     }
 }
 
+//fullfill the window contract
+if(!window.jsf) {
+    window.jsf = jsf;
+}
+
+
 

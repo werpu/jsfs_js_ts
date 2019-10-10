@@ -17,7 +17,7 @@ import FormDataDecorator = LangTypes.FormDataDecorator;
 import {AsyncRunnable} from "../util/AsyncRunnable";
 import {Config} from "../../_ext/monadish/Monad";
 
-import {Promise as ShimPromise} from "../../_ext/monadish/Monad";
+import {Promise as ShimPromise} from "../../_ext/monadish/Promise";
 import {Implementation} from "../Impl";
 import {DomQuery} from "../../_ext/monadish/DomQuery";
 

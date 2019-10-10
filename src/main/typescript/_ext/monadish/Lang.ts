@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import {CancellablePromise} from "./Monad";
+import {CancellablePromise} from "./Promise";
+import {Optional} from "./Monad";
 
 /**
  * Lang helpers crossported from the apache myfaces project
@@ -48,10 +49,10 @@ export class Lang {
     }
 
     arrToMap(arr:any[], offset: number = 0) {
-        let ret = new Array(arr.length);
-        let len = arr.length;
+        var ret = new Array(arr.length);
+        var len = arr.length;
         offset = (offset) ? offset : 0;
-        for (let cnt = 0; cnt < len; cnt++) {
+        for (var cnt = 0; cnt < len; cnt++) {
             ret[arr[cnt]] = cnt + offset;
         }
         return ret;
@@ -368,4 +369,35 @@ export class Lang {
     public assertType(probe: any, theType: any): boolean {
         return this.isString(theType) ? typeof probe ==  theType : probe instanceof theType;
     }
+
+    //should be in lang, but for now here to avoid recursive imports, not sure if typescript still has a problem with those
+    /**
+     * helper function to savely resolve anything
+     * this is not an elvis operator, it resolves
+     * a value without exception in a tree and if
+     * it is not resolvable then an optional of
+     * a default value is restored or Optional.empty
+     * if none is given
+     *
+     * usage
+     * <code>
+     *     let var: Optiona<string> = saveResolve(() => a.b.c.d.e, "foobaz")
+     * </code>
+     *
+     * @param resolverProducer a lambda which can produce the value
+     * @param defaultValue an optional default value if the producer failes to produce anything
+     * @returns an Optional of the produced value
+     */
+    static saveResolve<T>(resolverProducer: () => T, defaultValue:T = null): Optional<T> {
+        try {
+            let result = resolverProducer();
+            if("undefined" == typeof result || null == result) {
+                return Optional.fromNullable(defaultValue);
+            }
+            return Optional.fromNullable(result);
+        } catch (e) {
+            return Optional.absent;
+        }
+    }
+
 }

@@ -22,7 +22,7 @@ import {ErrorData, EventData, IListener, ListenerQueue} from "./util/ListenerQue
 import {Response} from "./xhrCore/Response";
 import {XhrRequest} from "./xhrCore/XhrRequest";
 import {AsynchronouseQueue} from "./util/Queue";
-import {Config, Optional, saveResolve} from "../_ext/monadish/Monad";
+import {Config, Optional} from "../_ext/monadish/Monad";
 import {DomQuery} from "../_ext/monadish/DomQuery";
 import {ExtDomQuery} from "./util/ExtDomQuery";
 import {Const} from "./core/Const";
@@ -68,7 +68,7 @@ export class Implementation {
      * The value for it comes from the requestInternal parameter of the jsf.js script called "stage".
      */
     getProjectStage(): string {
-        let projectStage = Optional.fromNullable(globalConfig.projectStage).orElse(Optional.fromNullable(this.projectStage));
+        let projectStage = Optional.fromNullable(globalConfig.projectStage).orElse(this.projectStage);
         if (projectStage.isPresent()) {
             return projectStage.value;
         }
@@ -86,7 +86,7 @@ export class Implementation {
      * @return {char} the separator char for the given script tags
      */
     getSeparatorChar(): string {
-        let separator = Optional.fromNullable(globalConfig.separator).orElse(Optional.fromNullable(this.separator));
+        let separator = Optional.fromNullable(globalConfig.separator).orElse(this.separator);
         if (separator.isPresent()) {
             return separator.value;
         }
@@ -158,19 +158,17 @@ export class Implementation {
         this.applyWindowId(options);
 
         ctx.apply(Const.CTX_PARAM_PASS_THR).value = _Lang.mergeMaps([{}, <any>options.value], true, <any>this.BLOCKFILTER);
-        ctx.applyIf(!!event, Const.CTX_PARAM_PASS_THR, Const.P_EVT).value = saveResolve(() => event.type);
+        ctx.applyIf(!!event, Const.CTX_PARAM_PASS_THR, Const.P_EVT).value = Lang.saveResolve(() => event.type);
 
         /**
          * ajax pass through context with the source
          * onevent and onerror
          */
-        ctx.apply(Const.SOURCE).value = elem;
+        ctx.apply(Const.SOURCE).value = elementId.value;
         ctx.apply(Const.ON_EVENT).value = options.getIf(Const.ON_EVENT).value;
         ctx.apply(Const.ON_ERROR).value = options.getIf(Const.ON_ERROR).value;
 
         ctx.apply(MYFACES).value = options.getIf(MYFACES).value;
-        ctx.apply(Const.CTX_PARAM_DELAY).value = options.getIf(Const.CTX_PARAM_DELAY).value;
-
         /**
          * fetch the parent form
          *
@@ -186,22 +184,18 @@ export class Implementation {
         /**
          * binding contract the javax.faces.source must be set
          */
-        ctx.apply(Const.CTX_PARAM_PASS_THR, Const.P_PARTIAL_SOURCE).value = elementId;
+        ctx.apply(Const.CTX_PARAM_PASS_THR, Const.P_PARTIAL_SOURCE).value = elementId.value;
 
         /**
          * javax.faces.partial.ajax must be set to true
+         * TODO error?
          */
-        ctx.apply(Const.CTX_PARAM_PASS_THR, Const.P_AJAX).value = elementId;
+        ctx.apply(Const.CTX_PARAM_PASS_THR, Const.P_AJAX).value = elementId.value;
 
         /**
          * binding contract the javax.faces.source must be set
          */
-        ctx.apply(Const.CTX_PARAM_PASS_THR, Const.P_PARTIAL_SOURCE).value = elementId;
-
-        /**
-         * javax.faces.partial.ajax must be set to true
-         */
-        ctx.apply(Const.CTX_PARAM_PASS_THR, Const.P_AJAX).value = elementId;
+        ctx.apply(Const.CTX_PARAM_PASS_THR, Const.P_PARTIAL_SOURCE).value = elementId.value;
 
         /**
          * if resetValues is set to true
@@ -216,7 +210,7 @@ export class Implementation {
         //additional meta information to speed things up, note internal non jsf
         //pass through options are stored under _mfInternal in the context
         ctx.apply(Const.CTX_PARAM_MF_INTERNAL, Const.CTX_PARAM_SRC_FRM_ID).value = form.id.value;
-        ctx.apply(Const.CTX_PARAM_MF_INTERNAL, Const.CTX_PARAM_SRC_CTL_ID).value = elementId;
+        ctx.apply(Const.CTX_PARAM_MF_INTERNAL, Const.CTX_PARAM_SRC_CTL_ID).value = elementId.value;
         ctx.apply(Const.CTX_PARAM_MF_INTERNAL, Const.CTX_PARAM_TR_TYPE).value = Const.REQ_TYPE_POST;
 
         //mojarra compatibility, mojarra is sending the form id as well
@@ -234,7 +228,6 @@ export class Implementation {
         this.applyClientWindowId(form, ctx);
         this.applyExecute(options, ctx, form, elementId.value);
         this.applyRender(options, ctx, form, elementId.value);
-
 
         let delay: number = options.getIf(Const.CTX_PARAM_DELAY)
             .orElseLazy(() => _Lang.getLocalOrGlobalConfig(ctx.value, Const.CTX_PARAM_DELAY, 0))

@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-
-import {Monad, Promise as PolyPRomise} from "../../_ext/monadish/Monad";
+import {Promise as PolyPRomise} from "../../_ext/monadish/Promise";
 
 
 export class PolyFills {

@@ -167,6 +167,13 @@ describe('jsf.ajax.request test suite', () => {
         expect(!!called["func5"]).to.be.false;
 
     })
+
+
+    it("should have : as standard separator char", () => {
+       let separator = jsf.separatorchar;
+
+       expect(separator).to.eq(":");
+    });
 });
 
 

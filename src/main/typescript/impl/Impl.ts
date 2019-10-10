@@ -101,7 +101,7 @@ export class Implementation {
      *
      * @return {char} the separator char for the given script tags
      */
-    getSeparatorChar(): string {
+    get separatorChar(): string {
         return Optional.fromNullable(globalConfig.separator)
             .orElse(this.separator)
             .orElseLazy(() => {

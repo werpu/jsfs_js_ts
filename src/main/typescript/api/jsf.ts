@@ -98,7 +98,7 @@ export module jsf {
 
     //private helper functions
     function getSeparatorChar() {
-        return Impl.getSeparatorChar;
+        return Impl.separatorChar;
     }
 
     //We hook the old namespace system into our npm system

@@ -18,45 +18,29 @@
 import {expect} from 'chai';
 import {describe, it} from 'mocha';
 import {DomQuery} from "../../../../../main/typescript/_ext/monadish/DomQuery";
-
+import {standardInits} from "../shared/StandardInits";
+import defaultHtml = standardInits.defaultHtml;
+import standardInit = standardInits.standardInit;
+import standardClose = standardInits.standardClose;
 
 
 const jsdom = require("jsdom");
 const {JSDOM} = jsdom;
 
-describe('DOMQuery tests', () => {
+describe('DOMQuery tests', function () {
 
-    beforeEach(() => {
-
-        let dom = new JSDOM(`
-            <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <title>Title</title>
-            </head>
-            <body>
-                <div id="id_1"></div>
-                <div id="id_2"  booga="blarg"></div>
-                <div id="id_3"></div>
-                <div id="id_4"></div>
-            </body>
-            </html>
-    
-    `)
-
-        let window = dom.window;
-
-
-        (<any>global).window = window;
-        (<any>global).body = window.document.body;
-        (<any>global).document = window.document;
-        (<any>global).navigator = {
-            language: "en-En"
-        };
+    beforeEach(function() {
+        return standardInit(this,() => {
+            return defaultHtml(false);
+        });
     });
 
-    it('basic init', () => {
+    afterEach(function () {
+        standardClose(this);
+    });
+
+
+    it('basic init', function() {
         let probe1 = new DomQuery(window.document.body);
         let probe2 = DomQuery.querySelectorAll("div");
         let probe3 = new DomQuery(probe1, probe2);
@@ -70,7 +54,7 @@ describe('DOMQuery tests', () => {
         expect(probe4.length == 6).to.be.true;
     });
 
-    it('domquery ops test filter', () => {
+    it('domquery ops test filter', function()  {
         let probe2 = DomQuery.querySelectorAll("div");
         probe2 = probe2.filter((item: DomQuery) => item.id.match((id) => id != "id_1"));
         expect(probe2.length == 3);
@@ -86,7 +70,7 @@ describe('DOMQuery tests', () => {
         expect(noIter == 4).to.be.true;
     });
 
-    it('domquery ops test2 eachNode', () => {
+    it('domquery ops test2 eachNode', function()  {
         let probe2 = DomQuery.querySelectorAll("div");
         let noIter = 0;
         probe2 = probe2.each((item, cnt) => {
@@ -97,7 +81,7 @@ describe('DOMQuery tests', () => {
         expect(noIter == 4).to.be.true;
     });
 
-    it('domquery ops test2 byId', () => {
+    it('domquery ops test2 byId', function()  {
         let probe2 = DomQuery.byId("id_1");
         expect(probe2.length == 1).to.be.true;
         probe2 = DomQuery.byTagName("div");
@@ -105,7 +89,7 @@ describe('DOMQuery tests', () => {
     });
 
 
-    it('outerhtml and eval tests', () => {
+    it('outerhtml and eval tests', function()  {
         let probe1 = new DomQuery(window.document.body);
         probe1.querySelectorAll("#id_1").outerHTML(`
             <div id='barg'>
@@ -121,10 +105,10 @@ describe('DOMQuery tests', () => {
         expect(window.document.body.innerHTML.indexOf("blarg") != -1).to.be.true;
     });
 
-    it('attrn test and eval tests', () => {
+    it('attrn test and eval tests', function()  {
 
         let probe1 = new DomQuery(document);
-        probe1.querySelectorAll("div#id_2").attr("style").value="border=1;";
+        probe1.querySelectorAll("div#id_2").attr("style").value = "border=1;";
         let blarg = probe1.querySelectorAll("div#id_2").attr("booga").value;
         let style = probe1.querySelectorAll("div#id_2").attr("style").value;
         let nonexistent = probe1.querySelectorAll("div#id_2").attr("buhaha").value;
@@ -134,7 +118,7 @@ describe('DOMQuery tests', () => {
         expect(nonexistent).to.be.eq(null);
     });
 
-    it('hasclass and addclass test', () => {
+    it('hasclass and addclass test', function()  {
         let probe1 = new DomQuery(document);
         let element = probe1.querySelectorAll("div#id_2");
         element.addClass("booga").addClass("Booga2");

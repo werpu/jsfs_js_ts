@@ -6,7 +6,7 @@ module.exports = {
     entry: "./main/typescript/api/jsf.ts",
     output: {
         path: path.resolve(__dirname, '../targets'),
-        libraryTarget: "commonjs",
+        libraryTarget: "window",
         filename: "jsf.js"
     },
     resolve: {

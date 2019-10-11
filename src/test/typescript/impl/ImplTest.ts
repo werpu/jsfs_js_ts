@@ -24,8 +24,9 @@ import * as sinon from 'sinon';
 import {DomQuery} from "../../../main/typescript/_ext/monadish/DomQuery";
 
 import {Const} from "../../../main/typescript/impl/core/Const";
-import {standardInits} from "./StandardInits";
+import {standardInits} from "../frameworkBase/_ext/shared/StandardInits";
 import defaultMyFaces = standardInits.defaultMyFaces;
+
 
 const jsdom = require("jsdom");
 const {JSDOM} = jsdom;
@@ -45,7 +46,9 @@ declare var Implementation: any;
 
 describe('jsf.ajax.request test suite', () => {
 
-    beforeEach(defaultMyFaces);
+    beforeEach(() => {
+        return defaultMyFaces();
+    });
 
     it("jsf.ajax.request can be called", () => {
         //we stub the addRequestToQueue, to enable the request check only

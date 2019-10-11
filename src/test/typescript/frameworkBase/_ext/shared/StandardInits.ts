@@ -52,10 +52,8 @@ export module standardInits {
 </head>
 <body>
 <form id="blarg">
-    <input type="text" id="input_1" name="input_1"/>
-    <input type="button" id="input_2" name="input_2"
-
-    ></input>
+    <input type="text" id="input_1" name="input_1"></input>
+    <input type="button" id="input_2" name="input_2"></input>
 </form>
 </body>
 </html>
@@ -82,11 +80,11 @@ export module standardInits {
     `;
     }
 
-    export function standardInit(scope: any, initFunc: Function): Promise<any> {
+    export function standardInit(scope: any, initFunc: (boolean) => Promise<() => void> = defaultHtml): Promise<any> {
         (<any>global).navigator = {
             language: "en-En"
         };
-        return defaultHtml(false).then((closeFunc: Function) => {
+        return initFunc(false).then((closeFunc: Function) => {
             (<any>scope).currentTest.closeIt = () => {
                 closeFunc();
                 delete (<any>global).navigator;
@@ -98,20 +96,20 @@ export module standardInits {
         (<any>scope).currentTest.closeIt();
     }
 
-    export function defaultHtml(withJsf = true): Promise<any> {
+    export function defaultHtml(withJsf = true): Promise<() => void> {
         return init(HTML_DEFAULT, withJsf);
     }
 
-    export function defaultMyFaces(withJsf = true): Promise<any> {
+    export function defaultMyFaces(withJsf = true): Promise<() => void> {
         return init(HTML_FORM_DEFAULT, withJsf);
     }
 
-    export function defaultSeparatorChar(separatorChar: string, withJsf = true): Promise<any> {
+    export function defaultSeparatorChar(separatorChar: string, withJsf = true): Promise<() => void> {
         let template = HTML_DEFAULT_SEPARATOR_CHAR(separatorChar);
         return init(template, withJsf);
     }
 
-    async function init(template: string, withJsf = true) {
+    async function init(template: string, withJsf = true): Promise<() => void> {
         //let dom2 = new JSDOM(template)
         //return initMyFacesFromDom(dom2);
         let clean = null;

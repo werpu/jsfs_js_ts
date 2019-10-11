@@ -104,6 +104,10 @@ export class Lang {
         return LangBase.saveResolve(resolverProducer, defaultValue);
     }
 
+    static saveExecute<T>(resolverProducer: () => T, defaultValue: T = null): void {
+        LangBase.saveResolve(resolverProducer, defaultValue);
+    }
+
     /**
      * returns a given localized message upon a given key
      * basic java log like templating functionality is included

@@ -49,7 +49,8 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     static STATE_EVT_COMPLETE = "COMPLETE";
     static URL_ENCODED = "application/x-www-form-urlencoded";
     static NO_TIMEOUT = 0;
-    _pXhr: Promise<XMLHttpRequest>;
+
+    private _pXhr: Promise<XMLHttpRequest>;
 
     /**
      * Reqired Parameters
@@ -81,9 +82,6 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     start(): Promise<XMLHttpRequest> {
         let _Lang = Lang.instance;
         try {
-            let srcFormElement: HTMLFormElement = <HTMLFormElement>this.sourceForm.getAsElem(0).value;
-            let sourceForm = this.sourceForm;
-
             let formData: XhrFormData = new XhrFormData(this.sourceForm, this.source);
 
             //next step the pass through parameters are merged in for post params
@@ -99,15 +97,14 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             //a bug in the xhr stub library prevents the setRequestHeader to be properly executed on fake xhr objects
             //normal browsers should resolve this
             //tests can quietly fail on this one
-            Lang.saveResolve(() => this.xhrObject.setRequestHeader(XhrRequest.CONTENT_TYPE, `${this.contentType}; charset=utf-8"`));
-            Lang.saveResolve(() => this.xhrObject.setRequestHeader(XhrRequest.HEAD_FACES_REQ, XhrRequest.VAL_AJAX));
+            Lang.saveExecute(() => this.xhrObject.setRequestHeader(XhrRequest.CONTENT_TYPE, `${this.contentType}; charset=utf-8"`));
+            Lang.saveExecute(() => this.xhrObject.setRequestHeader(XhrRequest.HEAD_FACES_REQ, XhrRequest.VAL_AJAX));
 
             //probably not needed anymore, will test this
             //some webkit based mobile browsers do not follow the w3c spec of
             // setting the accept headers automatically
-            //if(this._RT.browser.isWebKit) {
-            //    xhr.setRequestHeader("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
-            //}
+            Lang.saveExecute(() => this.xhrObject.setRequestHeader("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"));
+
             this.sendEvent(XhrRequest.STATE_EVT_BEGIN);
 
             this.sendRequest(formData);
@@ -120,25 +117,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         return this.$promise;
     }
 
-    private resolveTargetUrl(srcFormElement: HTMLFormElement) {
-        return (typeof srcFormElement.elements[XhrRequest.ENCODED_URL] == 'undefined') ?
-            srcFormElement.action :
-            srcFormElement.elements[XhrRequest.ENCODED_URL].value;
-    }
 
-    protected sendRequest(formData: XhrFormData) {
-        this.xhrObject.send((this.ajaxType != XhrRequest.REQ_TYPE_GET) ? formData.toString() : null);
-    }
-
-    private resolveFinalUrl(formData: XhrFormData) {
-        let targetUrl =  this.resolveTargetUrl(<HTMLFormElement>this.sourceForm.getAsElem(0).value);
-
-        return targetUrl + (this.isGetRequest() ? "?" + formData.toString() : "");
-    }
-
-    private isGetRequest() {
-        return this.ajaxType == XhrRequest.REQ_TYPE_GET;
-    }
 
     onAbort(resolve: PROMISE_FUNC, reject: PROMISE_FUNC) {
         reject();
@@ -183,31 +162,34 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     get $promise(): Promise<any> {
         if (!this._pXhr) {
             this._pXhr = new Lang.Promise((resolve: PROMISE_FUNC, reject: PROMISE_FUNC) => {
-                this.xhrObject.onabort = () => {
-                    this.onAbort(resolve, reject);
-                };
-                this.xhrObject.ontimeout = () => {
-                    this.onTimeout(resolve, reject);
-                };
-                this.xhrObject.onload = () => {
-                    this.onSuccess(this.xhrObject, resolve, reject)
-                };
-                this.xhrObject.onloadend = () => {
-                    this.onDone(this.xhrObject, resolve, reject);
-                };
-                this.xhrObject.onerror = (errorData: any) => {
-                    this.onError(errorData, resolve, reject);
-                };
+                this.attachInternalCallbacks(resolve, reject);
             });
         }
         return this._pXhr;
     }
 
-    private formDataToURI(formData: FormDataDecorator): string | FormDataDecorator {
-        if (formData && formData.makeFinal) {
-            return formData.makeFinal()
-        }
-        return formData;
+    /**
+     * attaches the internal event and processing
+     * callback within the promise to our xhr object
+     * @param resolve
+     * @param reject
+     */
+    private attachInternalCallbacks(resolve: PROMISE_FUNC, reject: PROMISE_FUNC) {
+        this.xhrObject.onabort = () => {
+            this.onAbort(resolve, reject);
+        };
+        this.xhrObject.ontimeout = () => {
+            this.onTimeout(resolve, reject);
+        };
+        this.xhrObject.onload = () => {
+            this.onSuccess(this.xhrObject, resolve, reject)
+        };
+        this.xhrObject.onloadend = () => {
+            this.onDone(this.xhrObject, resolve, reject);
+        };
+        this.xhrObject.onerror = (errorData: any) => {
+            this.onError(errorData, resolve, reject);
+        };
     }
 
     private sendEvent(evtType: string) {
@@ -218,4 +200,23 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         Implementation.instance.stdErrorHandler(this.xhrObject, this.requestContext, exception, true);
     }
 
+    private resolveTargetUrl(srcFormElement: HTMLFormElement) {
+        return (typeof srcFormElement.elements[XhrRequest.ENCODED_URL] == 'undefined') ?
+            srcFormElement.action :
+            srcFormElement.elements[XhrRequest.ENCODED_URL].value;
+    }
+
+    protected sendRequest(formData: XhrFormData) {
+        this.xhrObject.send((this.ajaxType != XhrRequest.REQ_TYPE_GET) ? formData.toString() : null);
+    }
+
+    private resolveFinalUrl(formData: XhrFormData) {
+        let targetUrl =  this.resolveTargetUrl(<HTMLFormElement>this.sourceForm.getAsElem(0).value);
+
+        return targetUrl + (this.isGetRequest() ? "?" + formData.toString() : "");
+    }
+
+    private isGetRequest() {
+        return this.ajaxType == XhrRequest.REQ_TYPE_GET;
+    }
 }

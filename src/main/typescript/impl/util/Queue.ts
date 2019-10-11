@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 import {AsyncRunnable} from "./AsyncRunnable";
 
 /**
@@ -72,13 +71,6 @@ export class Queue<T> {
         this.readjust();
     }
 
-    private readjust() {
-        let size = this.size;
-        while (size && size > -1 && this.length > size) {
-            this.dequeue();
-        }
-    }
-
     /**
      * removes a listener form the queue
      *
@@ -92,7 +84,6 @@ export class Queue<T> {
             this.q.splice(index, 1);
         }
     }
-
 
     /**
      * dequeues the last element in the queue
@@ -140,7 +131,6 @@ export class Queue<T> {
         return element;
     }
 
-
     each(callbackfn: (value: T, index: number, array: T[]) => void) {
         this.q.forEach(callbackfn);
     }
@@ -164,6 +154,13 @@ export class Queue<T> {
         this.q = [];
         this.space = 0;
     }
+
+    private readjust() {
+        let size = this.size;
+        while (size && size > -1 && this.length > size) {
+            this.dequeue();
+        }
+    }
 }
 
 /**
@@ -179,6 +176,14 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
     private _delayTimeout: number;
 
     constructor() {
+    }
+
+    get isEmpty(): boolean {
+        return this._queue.isEmpty;
+    }
+
+    private set queueSize(newSize: number) {
+        this._queue.queueSize = newSize;
     }
 
     /**
@@ -202,6 +207,18 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
         }
     }
 
+    dequeue(): T {
+        return this._queue.dequeue();
+    }
+
+    read(): T {
+        return this._queue.read();
+    }
+
+    cleanup() {
+        this._queue.cleanup();
+    }
+
     private appendElement(element: T) {
         let empty = this.isEmpty;
 
@@ -209,13 +226,13 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
         //othwise a process already is running and not finished yet at that
         //time
         this._queue.enqueue(element);
-        if(empty) {
+        if (empty) {
             this.runEntry();
         }
     }
 
     private runEntry() {
-        if(this.isEmpty) {
+        if (this.isEmpty) {
             return;
         }
         let element = this.read();
@@ -233,26 +250,5 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
             this.runEntry();
         }
     }
-
-    get isEmpty(): boolean {
-        return this._queue.isEmpty;
-    }
-
-    private set queueSize(newSize: number) {
-        this._queue.queueSize = newSize;
-    }
-
-    dequeue(): T {
-        return this._queue.dequeue();
-    }
-
-    read(): T {
-        return this._queue.read();
-    }
-
-    cleanup() {
-        this._queue.cleanup();
-    }
-
 
 }

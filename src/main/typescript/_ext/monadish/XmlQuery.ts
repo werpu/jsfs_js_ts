@@ -18,9 +18,9 @@ import {Optional} from "./Monad";
 import {Lang} from "./Lang";
 import {DomQuery} from "./DomQuery";
 
-
 export class XMLQuery {
 
+    static absent = new XMLQuery();
     private rootNode: Array<Element> = [];
 
     constructor(...rootNode: Array<any>) {
@@ -47,6 +47,34 @@ export class XMLQuery {
                 }
             }
         }
+    }
+
+    get length(): number {
+        return this.rootNode.length;
+    }
+
+    get value(): Array<Element> {
+        return this.rootNode;
+    }
+
+    get childNodes(): XMLQuery {
+        let retVal = [];
+        this.eachElem((item: Node) => {
+            retVal = retVal.concat(Lang.instance.objToArray(item.childNodes))
+        });
+
+        return new XMLQuery(...retVal);
+    }
+
+    get cDATAAsString(): string {
+        let cDataBlock = [];
+        // response may contain several blocks
+        this.each((item: XMLQuery) => {
+            item.childNodes.eachElem((node: Node) => {
+                cDataBlock.push(<string>(<any>node).data);
+            });
+        });
+        return cDataBlock.join('');
     }
 
     static fromString(data: string): XMLQuery {
@@ -78,35 +106,6 @@ export class XMLQuery {
         return !this.isAbsent();
     }
 
-    get length(): number {
-        return this.rootNode.length;
-    }
-
-
-    private _getIf(tagsFound: Array<Node>, path: Array<String>, currLevel: Array<Node>) {
-        let nameIdx = {};
-        let tags = path[0].split(",");
-        for (let cnt = 0; cnt < tags.length; cnt++) {
-            nameIdx[Lang.instance.trim(tags[cnt])] = true;
-        }
-
-        if (path.length == 1) {
-            for (let cnt = 0; currLevel && cnt < currLevel.length; cnt++) {
-                if ((path[0] == "*") || nameIdx[currLevel[cnt].nodeName]) {
-                    tagsFound.push(currLevel[cnt]);
-                }
-            }
-            return;
-        }
-
-        for (let cnt = 0; currLevel && cnt < currLevel.length; cnt++) {
-            if ((path[0] == "*") || nameIdx[currLevel[cnt].nodeName]) {
-
-                this._getIf(tagsFound, path.slice(1, path.length), Lang.instance.objToArray(currLevel[cnt].childNodes))
-            }
-        }
-    }
-
     getIf(...path: Array<string>): XMLQuery {
         let currLevel = this.rootNode;
 
@@ -125,19 +124,6 @@ export class XMLQuery {
         return new XMLQuery(this.rootNode[pos]);
     }
 
-    get value(): Array<Element> {
-        return this.rootNode;
-    }
-
-    get childNodes(): XMLQuery {
-        let retVal = [];
-        this.eachElem((item: Node) => {
-            retVal = retVal.concat(Lang.instance.objToArray(item.childNodes))
-        });
-
-        return new XMLQuery(...retVal);
-    }
-
     eachElem(func: (item: Node, cnt?: number) => any): XMLQuery {
         for (let cnt = 0, len = this.rootNode.length; cnt < len; cnt++) {
             if (func(this.get(cnt).value[0], cnt) === false) {
@@ -146,7 +132,6 @@ export class XMLQuery {
         }
         return this;
     }
-
 
     each(func: (item: XMLQuery, cnt?: number) => any): XMLQuery {
         for (let cnt = 0, len = this.rootNode.length; cnt < len; cnt++) {
@@ -157,18 +142,6 @@ export class XMLQuery {
         return this;
     }
 
-    private _byTagName(resArr: Array<Node>, node: Node, tagName: string) {
-        if (node && node.nodeName == tagName) {
-            resArr.push(node);
-        }
-        if (node.childNodes) {
-            let nodeArr: Array<Element> = Lang.instance.objToArray(node.childNodes);
-            for (let cnt = 0; cnt < nodeArr.length; cnt++) {
-                this._byTagName(resArr, nodeArr[cnt], tagName);
-            }
-        }
-    }
-
     byTagName(tagName: string): XMLQuery {
         let res = [];
 
@@ -177,7 +150,6 @@ export class XMLQuery {
         }
         return new XMLQuery(res);
     }
-
 
     isXMLParserError(): boolean {
 
@@ -191,7 +163,6 @@ export class XMLQuery {
         });
         return retStr.join(joinstr || " ");
     }
-
 
     parserErrorText(joinstr: string): string {
         return this.byTagName("parsererror").textContent(joinstr);
@@ -219,17 +190,39 @@ export class XMLQuery {
         return ret.join("");
     }
 
+    private _getIf(tagsFound: Array<Node>, path: Array<String>, currLevel: Array<Node>) {
+        let nameIdx = {};
+        let tags = path[0].split(",");
+        for (let cnt = 0; cnt < tags.length; cnt++) {
+            nameIdx[Lang.instance.trim(tags[cnt])] = true;
+        }
 
-    get cDATAAsString(): string {
-        let cDataBlock = [];
-        // response may contain several blocks
-        this.each((item: XMLQuery) => {
-            item.childNodes.eachElem((node: Node) => {
-                cDataBlock.push(<string>(<any>node).data);
-            });
-        });
-        return cDataBlock.join('');
+        if (path.length == 1) {
+            for (let cnt = 0; currLevel && cnt < currLevel.length; cnt++) {
+                if ((path[0] == "*") || nameIdx[currLevel[cnt].nodeName]) {
+                    tagsFound.push(currLevel[cnt]);
+                }
+            }
+            return;
+        }
+
+        for (let cnt = 0; currLevel && cnt < currLevel.length; cnt++) {
+            if ((path[0] == "*") || nameIdx[currLevel[cnt].nodeName]) {
+
+                this._getIf(tagsFound, path.slice(1, path.length), Lang.instance.objToArray(currLevel[cnt].childNodes))
+            }
+        }
     }
 
-    static absent = new XMLQuery();
+    private _byTagName(resArr: Array<Node>, node: Node, tagName: string) {
+        if (node && node.nodeName == tagName) {
+            resArr.push(node);
+        }
+        if (node.childNodes) {
+            let nodeArr: Array<Element> = Lang.instance.objToArray(node.childNodes);
+            for (let cnt = 0; cnt < nodeArr.length; cnt++) {
+                this._byTagName(resArr, nodeArr[cnt], tagName);
+            }
+        }
+    }
 }

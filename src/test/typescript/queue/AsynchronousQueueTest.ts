@@ -20,15 +20,9 @@ import * as sinon from 'sinon';
 import {ProbeClass} from "./AsynchronousProbe";
 import {AsynchronouseQueue} from "../../../main/typescript/impl/util/Queue";
 
-
-
-
 describe('Asynchronous Queue tests', () => {
 
-
-
-   it('one entry', (done) => {
-
+    it('one entry', (done) => {
 
         const probe1 = new ProbeClass(setTimeout);
 
@@ -40,7 +34,7 @@ describe('Asynchronous Queue tests', () => {
         queue.enqueue(probe1);
     });
 
-    it('multiple  entries',  (done) => {
+    it('multiple  entries', (done) => {
         const queue = new AsynchronouseQueue();
         const probe1 = new ProbeClass(setTimeout);
         const probe2 = new ProbeClass(setTimeout);
@@ -68,7 +62,8 @@ describe('Asynchronous Queue tests', () => {
 
         Promise.all([probe1.value, probe2.value, probe3.value]).finally(() => {
             expect(queue.isEmpty).to.be.true;
-            (finallyCnt == 3)? done() : null});
+            (finallyCnt == 3) ? done() : null
+        });
 
     });
 

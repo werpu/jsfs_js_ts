@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 
-
 import {Config} from "../../../main/typescript/_ext/monadish/Monad";
 import {describe, it} from 'mocha';
 import {expect} from 'chai';
 import * as sinon from 'sinon';
-
 
 import {DomQuery} from "../../../main/typescript/_ext/monadish/DomQuery";
 
@@ -27,10 +25,8 @@ import {Const} from "../../../main/typescript/impl/core/Const";
 import {standardInits} from "../frameworkBase/_ext/shared/StandardInits";
 import defaultMyFaces = standardInits.defaultMyFaces;
 
-
 const jsdom = require("jsdom");
 const {JSDOM} = jsdom;
-
 
 sinon.reset();
 
@@ -80,7 +76,6 @@ describe('jsf.ajax.request test suite', () => {
         }
 
     });
-
 
     it("jsf.ajax.request passthroughs must end up in passthrough", (done) => {
         //TODO implementation
@@ -132,8 +127,6 @@ describe('jsf.ajax.request test suite', () => {
         expect(!!called["func5"]).to.be.false;
 
     })
-
-
 
 });
 

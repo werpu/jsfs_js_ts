@@ -14,15 +14,12 @@
  * limitations under the License.
  */
 
-
-import { expect } from 'chai';
-import { describe, it } from 'mocha';
+import {expect} from 'chai';
+import {describe, it} from 'mocha';
 import {Lang} from "../../../../../main/typescript/_ext/monadish/Lang";
 
-
-
 const jsdom = require("jsdom");
-const { JSDOM } = jsdom;
+const {JSDOM} = jsdom;
 const dom = new JSDOM(`
     <!DOCTYPE html>
 <html lang="en">
@@ -40,23 +37,19 @@ const dom = new JSDOM(`
     
     `)
 
-
-
-
 export const window = dom.window;
 
 class Probe {
 
-    constructor() {
-    }
-
     val1 = 1;
     val2 = 2;
     val3 = 3;
+
+    constructor() {
+    }
 }
 
 describe('Lang tests', () => {
-
 
     it('initializable', () => {
         const lang = Lang.instance;
@@ -105,35 +98,38 @@ describe('Lang tests', () => {
         expect(lang.isString('')).to.be.true;
         expect(lang.isString(null)).to.be.false;
         expect(lang.isString(undefined)).to.be.false;
-        expect(lang.isString(function() {return true;})).to.be.false;
+        expect(lang.isString(function () {
+            return true;
+        })).to.be.false;
         expect(lang.isString(new Probe())).to.be.false;
     });
 
     it('isFunc working', () => {
         const lang = Lang.instance;
-        expect(lang.isFunc(() => {})).to.be.true;
-        expect(lang.isFunc(function() {return true;})).to.be.true;
+        expect(lang.isFunc(() => {
+        })).to.be.true;
+        expect(lang.isFunc(function () {
+            return true;
+        })).to.be.true;
         expect(lang.isFunc("blarg")).to.be.false;
         expect(lang.isFunc(new Probe())).to.be.false;
     });
 
-
-
     it('mergeMaps working', () => {
         const lang = Lang.instance;
         let probe1 = {
-            "key1":"val1",
-            "key2":"val1_2",
-            "key3":"val_2"
+            "key1": "val1",
+            "key2": "val1_2",
+            "key3": "val_2"
         }
 
         let probe2 = {
-            "key1":"val2_1",
+            "key1": "val2_1",
             "key4": "val4"
         }
 
         let probe3 = {
-            "key2":"val2_2",
+            "key2": "val2_2",
             "key5": "val5"
         }
 
@@ -155,8 +151,6 @@ describe('Lang tests', () => {
         expect(resultArr.length).to.eq(4);
         expect(lang.assertType(resultArr, Array)).to.be.true;
     });
-
-
 
     it('equals ignore case test', () => {
         const lang = Lang.instance;

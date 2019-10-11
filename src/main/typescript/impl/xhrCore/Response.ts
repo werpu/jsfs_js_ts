@@ -14,24 +14,21 @@
  * limitations under the License.
  */
 
-
-
-
 import {Lang} from "../util/Lang";
-
 
 import {Config} from "../../_ext/monadish/Monad";
 import {XMLQuery} from "../../_ext/monadish/XmlQuery";
 import {DomQuery} from "../../_ext/monadish/DomQuery";
 import {Implementation} from "../Impl";
 import {Const} from "../core/Const";
+
 export class Response {
 
     /*partial response types*/
-    static RESP_PARTIAL         = "partial-response";
-    static RESP_TYPE_ERROR      = "error";
-    static RESP_TYPE_REDIRECT   = "redirect";
-    static RESP_TYPE_CHANGES    = "changes";
+    static RESP_PARTIAL = "partial-response";
+    static RESP_TYPE_ERROR = "error";
+    static RESP_TYPE_REDIRECT = "redirect";
+    static RESP_TYPE_CHANGES = "changes";
 
     /*partial commands*/
     static CMD_CHANGES = "changes";
@@ -49,7 +46,7 @@ export class Response {
     static P_VIEWROOT = "javax.faces.ViewRoot";
     static P_VIEWHEAD = "javax.faces.ViewHead";
     static P_VIEWBODY = "javax.faces.ViewBody";
-    
+
     private static MF_INTERNAL = "_mfInternal";
     private static UPDATE_FORMS = "_updateForms";
     private static UPDATE_ELEMS = "_updateElems";
@@ -116,13 +113,13 @@ export class Response {
         updateelems.runCss();
         updateelems.runScripts();
     }
-    
+
     private static fixViewStates(context: Config) {
-        if(context.getIf(Response.MF_INTERNAL, "appliedViewState").isAbsent()) {
+        if (context.getIf(Response.MF_INTERNAL, "appliedViewState").isAbsent()) {
             return;
         }
         let viewState = context.getIf(Response.MF_INTERNAL, "appliedViewState").value;
-        if(Lang.instance.getLocalOrGlobalConfig(context, "no_portlet_env", false)) {
+        if (Lang.instance.getLocalOrGlobalConfig(context, "no_portlet_env", false)) {
             let forms = DomQuery.querySelectorAll("form");
             this.appendViewStateToForms(forms, viewState);
         } else {
@@ -145,7 +142,6 @@ export class Response {
         });
     }
 
-   
     /**
      * processes an incoming error from the response
      * which is hosted under the &lt;error&gt; tag
@@ -214,16 +210,15 @@ export class Response {
 
     private static processAttributes(request: XMLHttpRequest, context: Config, node: XMLQuery) {
         let id = node.getAttribute("id");
-        let elem = DomQuery.querySelectorAll("#"+id.value);
+        let elem = DomQuery.querySelectorAll("#" + id.value);
         node.byTagName("attribute").each((item: XMLQuery) => {
-            elem.attr(item.getAttribute("name").value ).value =  item.getAttribute("value").value;
+            elem.attr(item.getAttribute("name").value).value = item.getAttribute("value").value;
         });
     }
 
     private static processUpdate(request: XMLHttpRequest, context: Config, node: XMLQuery) {
         if (node.getAttribute("id").value == Response.P_VIEWSTATE) {
             context.apply(Response.MF_INTERNAL, "appliedViewState").value = node.textContent("");
-
 
             let elemId = context.getIf("_mfSourceControlId").orElse(context.getIf("source").isPresent() ? context.getIf("source", "id") : null);
             let sourceFormId = context.getIf(Response.MF_INTERNAL, "_mfSourceFormId");
@@ -246,7 +241,7 @@ export class Response {
             let cdataBlock = node.cDATAAsString;
             switch (node.getAttribute("id").value) {
                 case Response.P_VIEWROOT :
-                    Response.replaceViewRoot(context,XMLQuery.parseXML(cdataBlock.substring(cdataBlock.indexOf("<html"))));
+                    Response.replaceViewRoot(context, XMLQuery.parseXML(cdataBlock.substring(cdataBlock.indexOf("<html"))));
                     break;
 
                 case Response.P_VIEWHEAD:
@@ -272,36 +267,35 @@ export class Response {
 
         let insertNodes = DomQuery.fromMarkup(node.cDATAAsString);
 
-        if(before.isPresent()) {
-            DomQuery.querySelectorAll("#"+before.value).insertBefore(insertNodes);
+        if (before.isPresent()) {
+            DomQuery.querySelectorAll("#" + before.value).insertBefore(insertNodes);
         } else {
-            DomQuery.querySelectorAll("#"+after.value).insertAfter(insertNodes);
+            DomQuery.querySelectorAll("#" + after.value).insertAfter(insertNodes);
         }
 
-        context.apply(Response.MF_INTERNAL,Response.UPDATE_ELEMS).value.push(insertNodes);
+        context.apply(Response.MF_INTERNAL, Response.UPDATE_ELEMS).value.push(insertNodes);
     }
 
     private static processDelete(request: XMLHttpRequest, context: Config, node: XMLQuery) {
         let id = node.getAttribute("id");
-        DomQuery.querySelectorAll("#"+id.value).delete();
+        DomQuery.querySelectorAll("#" + id.value).delete();
     }
-
 
     private static replaceViewRoot(context: Config, shadownResponse: XMLQuery) {
 
         let head = shadownResponse.byTagName("head");
         let body = shadownResponse.byTagName("body");
 
-        if(head.isPresent()) {
+        if (head.isPresent()) {
             Response.replaceHead(context, head);
         }
-        if(body.isPresent()) {
+        if (body.isPresent()) {
             Response.replaceBody(context, body);
         }
     }
 
     private static replaceHead(context: Config, shadowHead: XMLQuery) {
-        let shadowHTML = <DomQuery> DomQuery.fromMarkup("<head />").html(shadowHead.getIf("*").toString());
+        let shadowHTML = <DomQuery>DomQuery.fromMarkup("<head />").html(shadowHead.getIf("*").toString());
         let oldHead = DomQuery.querySelectorAll("head");
 
         oldHead.querySelectorAll("script, style, link").delete();
@@ -312,22 +306,21 @@ export class Response {
     private static replaceBody(context: Config, shadowBody: XMLQuery) {
         let shadowInnerHTML = shadowBody.getIf("*").toString();
 
-        let resultb = <DomQuery> DomQuery.querySelectorAll("body").html(shadowInnerHTML);
+        let resultb = <DomQuery>DomQuery.querySelectorAll("body").html(shadowInnerHTML);
         let sourceFormb = resultb.querySelectorAll("form");
         context.apply(Response.MF_INTERNAL, Response.UPDATE_FORMS).value.push(sourceFormb);
-        context.apply(Response.MF_INTERNAL,Response.UPDATE_ELEMS).value.push(resultb);
+        context.apply(Response.MF_INTERNAL, Response.UPDATE_ELEMS).value.push(resultb);
 
         resultb.copyAttrs(shadowBody);
     }
 
     private static updateElement(context: Config, node: XMLQuery, cdataBlock: string) {
-        let result = DomQuery.querySelectorAll("#"+node.getAttribute("id").value).outerHTML(cdataBlock);
+        let result = DomQuery.querySelectorAll("#" + node.getAttribute("id").value).outerHTML(cdataBlock);
         let sourceForm = result.parents("form").orElse(result.byTagName("form", true));
 
         context.apply(Response.MF_INTERNAL, Response.UPDATE_FORMS).value.push(sourceForm);
-        context.apply(Response.MF_INTERNAL,Response.UPDATE_ELEMS).value.push(result);
+        context.apply(Response.MF_INTERNAL, Response.UPDATE_ELEMS).value.push(result);
     }
-
 
     /**
      * internal helper which raises an error in the
@@ -343,6 +336,6 @@ export class Response {
         let finalName = name || Const.MALFORMEDXML;
         let finalMessage = message || "";
 
-        return Lang.instance.makeException(error, finalTitle, finalName, "Response", caller || ( ((<any>arguments).caller) ? (<any>arguments).caller.toString() : "_raiseError"), finalMessage);
+        return Lang.instance.makeException(error, finalTitle, finalName, "Response", caller || (((<any>arguments).caller) ? (<any>arguments).caller.toString() : "_raiseError"), finalMessage);
     }
 }

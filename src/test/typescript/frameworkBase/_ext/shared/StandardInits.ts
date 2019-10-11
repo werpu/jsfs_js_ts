@@ -82,7 +82,6 @@ export module standardInits {
     `;
     }
 
-
     export function standardInit(scope: any, initFunc: Function): Promise<any> {
         (<any>global).navigator = {
             language: "en-En"
@@ -111,7 +110,6 @@ export module standardInits {
         let template = HTML_DEFAULT_SEPARATOR_CHAR(separatorChar);
         return init(template, withJsf);
     }
-
 
     async function init(template: string, withJsf = true) {
         //let dom2 = new JSDOM(template)

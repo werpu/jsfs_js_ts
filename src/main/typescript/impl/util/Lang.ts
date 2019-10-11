@@ -17,8 +17,6 @@
  *
  */
 
-
-
 import {LangTypes} from "./LangTypes";
 
 import {Lang as LangBase} from "../../_ext/monadish/Lang";
@@ -37,7 +35,6 @@ import FormDataDecoratorArray = LangTypes.FormDataDecoratorArray;
 import FormDataDecoratorString = LangTypes.FormDataDecoratorString;
 import FormDataDecoratorOther = LangTypes.FormDataDecoratorOther;
 
-
 export class Lang {
 
     private static LANGUAGE_MAPS: { [key: string]: any } = {
@@ -52,9 +49,12 @@ export class Lang {
     private installedLocale: Messages;
     private nameSpace = "impl/util/Lang/";
 
+    private constructor() {
+        this.base = LangBase.instance;
+        this.initLocale();
+    }
 
     private static _instance: Lang;
-
 
     static get instance() {
         if (!Lang._instance) {
@@ -63,11 +63,46 @@ export class Lang {
         return Lang._instance;
     }
 
-    private constructor() {
-        this.base = LangBase.instance;
-        this.initLocale();
+    /**
+     * instead of Polyfills we rely on class
+     * producers
+     * @constructor
+     */
+    static get Promise(): any {
+        return this.saveResolve<any>(
+            () => window.Promise.prototype.then ? window.Promise : CancellablePromise,
+            CancellablePromise).value
     }
 
+    private get language(): string {
+        //TODO global config override
+
+        let language: string = ("undefined" != typeof (<any>navigator).languages) ? (<any>navigator).languages[0] : navigator.language;
+        language = language.split("-")[0];
+        return language;
+    }
+
+    //should be in lang, but for now here to avoid recursive imports, not sure if typescript still has a problem with those
+    /**
+     * helper function to savely resolve anything
+     * this is not an elvis operator, it resolves
+     * a value without exception in a tree and if
+     * it is not resolvable then an optional of
+     * a default value is restored or Optional.empty
+     * if none is given
+     *
+     * usage
+     * <code>
+     *     let var: Optiona<string> = saveResolve(() => a.b.c.d.e, "foobaz")
+     * </code>
+     *
+     * @param resolverProducer a lambda which can produce the value
+     * @param defaultValue an optional default value if the producer failes to produce anything
+     * @returns an Optional of the produced value
+     */
+    static saveResolve<T>(resolverProducer: () => T, defaultValue: T = null): Optional<T> {
+        return LangBase.saveResolve(resolverProducer, defaultValue);
+    }
 
     /**
      * returns a given localized message upon a given key
@@ -94,7 +129,6 @@ export class Lang {
         return msg;
     }
 
-
     /**
      * String to array function performs a string to array transformation
      * @param {String} it the string which has to be changed into an array
@@ -104,7 +138,6 @@ export class Lang {
     strToArray(it: string, splitter: string | RegExp = /\./gi): Array<string> {
         return this.base.strToArray(it, splitter);
     }
-
 
     arrToMap(arr: any[], offset: number = 0) {
         return this.base.arrToMap(arr, offset);
@@ -119,7 +152,6 @@ export class Lang {
         return this.base.trim(str);
     }
 
-
     /**
      * Backported from dojo
      * a failsafe string determination method
@@ -130,7 +162,6 @@ export class Lang {
     isString(it?: any): boolean {
         return this.base.isString(it);
     }
-
 
     isFunc(it: any): boolean {
         return this.base.isFunc(it);
@@ -285,7 +316,6 @@ export class Lang {
         return ret.join(delimiter);
     }
 
-
     serializeXML(xmlNode: Node | CDATASection, escape?: boolean): string {
         if (!escape) {
             if ((<CDATASection>xmlNode).data) return (<CDATASection>xmlNode).data; //CDATA block has raw data
@@ -314,7 +344,6 @@ export class Lang {
             }
             return false;
         };
-
 
         return !xmlContent ||
             ((<any>xmlContent).parseError && (<any>xmlContent).parserError.errorCode) || findParseError(xmlContent);
@@ -369,7 +398,6 @@ export class Lang {
         return this.base.equalsIgnoreCase(source, destination);
     }
 
-
     /**
      * creates a neutral form data wrapper over an existing form Data element
      * the wrapper delegates following methods, append
@@ -391,7 +419,6 @@ export class Lang {
         }
         return bufInstance;
     }
-
 
     /**
      * creates an exeption with additional internal parameters
@@ -417,11 +444,9 @@ export class Lang {
         return this.base.timeout(timeout);
     }
 
-
     interval(timeout: number): CancellablePromise {
         return this.base.interval(timeout);
     }
-
 
     /**
      * fetches a global config entry
@@ -494,47 +519,6 @@ export class Lang {
         languageClass = (languageClass) ? languageClass : Messages;
 
         this.installedLocale = new languageClass();
-    }
-
-    private get language(): string {
-        //TODO global config override
-
-        let language: string = ("undefined" != typeof (<any>navigator).languages) ? (<any>navigator).languages[0] : navigator.language;
-        language = language.split("-")[0];
-        return language;
-    }
-
-    //should be in lang, but for now here to avoid recursive imports, not sure if typescript still has a problem with those
-    /**
-     * helper function to savely resolve anything
-     * this is not an elvis operator, it resolves
-     * a value without exception in a tree and if
-     * it is not resolvable then an optional of
-     * a default value is restored or Optional.empty
-     * if none is given
-     *
-     * usage
-     * <code>
-     *     let var: Optiona<string> = saveResolve(() => a.b.c.d.e, "foobaz")
-     * </code>
-     *
-     * @param resolverProducer a lambda which can produce the value
-     * @param defaultValue an optional default value if the producer failes to produce anything
-     * @returns an Optional of the produced value
-     */
-    static saveResolve<T>(resolverProducer: () => T, defaultValue: T = null): Optional<T> {
-        return LangBase.saveResolve(resolverProducer, defaultValue);
-    }
-
-    /**
-     * instead of Polyfills we rely on class
-     * producers
-     * @constructor
-     */
-    static get Promise(): any {
-        return this.saveResolve<any>(
-            () => window.Promise.prototype.then ? window.Promise : CancellablePromise,
-            CancellablePromise).value
     }
 
 }

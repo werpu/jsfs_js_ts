@@ -1,6 +1,5 @@
 import {Optional} from "./Monad";
 
-
 export enum PromiseStatus {
     PENDING, FULLFILLED, REJECTED
 }
@@ -14,8 +13,6 @@ export interface IPromise {
 
 }
 
-
-
 /**
  * a small (probably not 100% correct, although I tried to be correct as possible) Promise implementation
  * for systems which do not have a promise implemented
@@ -25,11 +22,9 @@ export interface IPromise {
  */
 export class Promise implements IPromise {
 
-    private value: (resolve: (val?: any) => void, reject: (val?: any) => void) => void;
-
     status = PromiseStatus.PENDING;
-
     protected allFuncs: Array<any> = [];
+    private value: (resolve: (val?: any) => void, reject: (val?: any) => void) => void;
 
     constructor(executor: (resolve: (val?: any) => void, reject: (val?: any) => void) => void) {
         //super(executor);
@@ -60,7 +55,6 @@ export class Promise implements IPromise {
         return myPromise;
     }
 
-
     static race(...promises: Array<IPromise>): IPromise {
 
         let promiseCnt = 0;
@@ -71,7 +65,6 @@ export class Promise implements IPromise {
             myapply = apply;
             myreject = reject;
         });
-
 
         let thenexecutor = (): IPromise => {
             if (!!myapply) {
@@ -148,7 +141,6 @@ export class Promise implements IPromise {
         return this;
     }
 
-
     finally(executorFunc: () => void): Promise {
         if ((<any>this).__reason__) {
             (<any>this).__reason__.finally(executorFunc);
@@ -160,24 +152,7 @@ export class Promise implements IPromise {
         return this;
     }
 
-    private spliceLastFuncs() {
-        let lastFuncs = [];
-        let rest = [];
-        for (let cnt = 0; cnt < this.allFuncs.length; cnt++) {
-            for (let key in this.allFuncs[cnt]) {
-                if (this.allFuncs[cnt][key].__last__) {
-                    lastFuncs.push(this.allFuncs[cnt]);
-                } else {
-                    rest.push(this.allFuncs[cnt]);
-                }
-            }
-        }
-        this.allFuncs = rest.concat(lastFuncs);
-    }
-
-
     protected resolve(val?: any) {
-
 
         while (this.allFuncs.length) {
             if (!this.allFuncs[0].then) {
@@ -236,19 +211,34 @@ export class Promise implements IPromise {
         this.appyFinally();
     }
 
-    private transferIntoNewPromise(val: any) {
-        for (var cnt = 0; cnt < this.allFuncs.length; cnt++) {
-            for (let key in this.allFuncs[cnt]) {
-                val[key](this.allFuncs[cnt][key]);
-            }
-        }
-    }
-
     protected appyFinally() {
         while (this.allFuncs.length) {
             var fn = this.allFuncs.shift();
             if (fn.finally) {
                 fn.finally();
+            }
+        }
+    }
+
+    private spliceLastFuncs() {
+        let lastFuncs = [];
+        let rest = [];
+        for (let cnt = 0; cnt < this.allFuncs.length; cnt++) {
+            for (let key in this.allFuncs[cnt]) {
+                if (this.allFuncs[cnt][key].__last__) {
+                    lastFuncs.push(this.allFuncs[cnt]);
+                } else {
+                    rest.push(this.allFuncs[cnt]);
+                }
+            }
+        }
+        this.allFuncs = rest.concat(lastFuncs);
+    }
+
+    private transferIntoNewPromise(val: any) {
+        for (var cnt = 0; cnt < this.allFuncs.length; cnt++) {
+            for (let key in this.allFuncs[cnt]) {
+                val[key](this.allFuncs[cnt][key]);
             }
         }
     }
@@ -264,9 +254,6 @@ export class Promise implements IPromise {
  * operation reacts to a cancel order.
  */
 export class CancellablePromise extends Promise {
-
-    private cancellator = () => {
-    };
 
     /**
      * @param executor asynchronous callback operation which triggers the callback
@@ -284,18 +271,20 @@ export class CancellablePromise extends Promise {
         this.allFuncs = [];
     }
 
-
     then(executorFunc: (val?: any) => any, catchfunc?: (val?: any) => any): CancellablePromise {
-        return <CancellablePromise> super.then(executorFunc, catchfunc);
+        return <CancellablePromise>super.then(executorFunc, catchfunc);
     }
 
     catch(executorFunc: (val?: any) => void): CancellablePromise {
-        return <CancellablePromise> super.catch(executorFunc);
+        return <CancellablePromise>super.catch(executorFunc);
     }
 
     finally(executorFunc: () => void): CancellablePromise {
-        return <CancellablePromise> super.finally(executorFunc);
+        return <CancellablePromise>super.finally(executorFunc);
     }
+
+    private cancellator = () => {
+    };
 }
 
 

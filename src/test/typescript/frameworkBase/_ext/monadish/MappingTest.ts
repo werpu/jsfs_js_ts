@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-
 import {Probe1, Probe1Impl, Probe2, Probe2Impl} from "./MappingProbes";
 
-import { expect } from 'chai';
-import { describe, it } from 'mocha';
+import {expect} from 'chai';
+import {describe, it} from 'mocha';
 
 describe('mapping tests', () => {
     it('must map correctly', () => {
@@ -33,16 +32,12 @@ describe('mapping tests', () => {
             val6: "something",
         };
 
-
         let probe1Impl = new Probe1Impl(probe1);
-
-
 
         expect(probe1Impl.val1).to.be.eq(probe1.val1);
         expect(probe1Impl.val4[1] instanceof Probe2Impl).to.be.eq(true);
         expect(probe1Impl.val5 instanceof Probe2Impl).to.be.eq(true);
         expect(probe1Impl.val3["hello"] instanceof Probe2Impl).to.be.eq(true);
     });
-
 
 });

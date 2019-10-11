@@ -67,10 +67,14 @@ export interface IValueHolder<T> {
  * value state
  */
 export class Monad<T> implements IMonad<T, Monad<any>>, IValueHolder<T> {
-    protected _value: T;
-
     constructor(value: T) {
         this._value = value;
+    }
+
+    protected _value: T;
+
+    get value(): T {
+        return this._value;
     }
 
     map<R>(fn?: (data: T) => R): Monad<R> {
@@ -89,30 +93,26 @@ export class Monad<T> implements IMonad<T, Monad<any>>, IValueHolder<T> {
         return mapped;
     }
 
-
-    get value(): T {
-        return this._value;
-    }
-
 }
 
 /*
  * A small stream implementation
  */
-export class Stream<T> implements IMonad<T, Stream<any>>, IValueHolder<Array<T>>{
-
-    static of<T>(... data: Array<T>): Stream<T> {
-        return new Stream<T>(... data);
-    }
+export class Stream<T> implements IMonad<T, Stream<any>>, IValueHolder<Array<T>> {
 
     value: Array<T>;
-    constructor(...value: T[]){
+
+    constructor(...value: T[]) {
         this.value = value;
     }
 
-    each(fn: (data: T, pos ?: number) => void | boolean) {
-        for(let cnt = 0; cnt < this.value.length ; cnt++) {
-            if(fn(this.value[cnt], cnt) === false) {
+    static of<T>(...data: Array<T>): Stream<T> {
+        return new Stream<T>(...data);
+    }
+
+    each(fn: (data: T, pos ?: number) => void | boolean) {
+        for (let cnt = 0; cnt < this.value.length; cnt++) {
+            if (fn(this.value[cnt], cnt) === false) {
                 break;
             }
         }
@@ -136,7 +136,7 @@ export class Stream<T> implements IMonad<T, Stream<any>>, IValueHolder<Array<T>>
      * all values are flattened when accessed anyway, so there is no need to call this methiod
      */
     flatMap<R>(fn?: (data: T) => R): Stream<any> {
-        let mapped:Stream<R> = this.map(fn);
+        let mapped: Stream<R> = this.map(fn);
         let res = this.mapStreams(mapped);
         return new Stream(...res);
     }
@@ -144,18 +144,18 @@ export class Stream<T> implements IMonad<T, Stream<any>>, IValueHolder<Array<T>>
     filter(fn?: (data: T) => boolean): Stream<T> {
         let res: Array<T> = [];
         this.each((data) => {
-            if(fn(data)) {
+            if (fn(data)) {
                 res.push(data);
             }
         });
         return new Stream<T>(...res);
     }
 
-    reduce(fn: (val1: T, val2:T) => T, startVal: T = null): Optional<T> {
+    reduce(fn: (val1: T, val2: T) => T, startVal: T = null): Optional<T> {
         let offset = startVal != null ? 0 : 1;
         let val1 = startVal != null ? startVal : this.value.length ? this.value[0] : null;
 
-        for(let cnt = offset; cnt < this.value.length; cnt++) {
+        for (let cnt = offset; cnt < this.value.length; cnt++) {
             val1 = fn(val1, this.value[cnt]);
         }
         return Optional.fromNullable(val1);
@@ -165,15 +165,14 @@ export class Stream<T> implements IMonad<T, Stream<any>>, IValueHolder<Array<T>>
         return this.value && this.value.length ? Optional.fromNullable(this.value[0]) : Optional.absent;
     }
 
-
     last(): Optional<T> {
         //could be done via reduce, but is faster this way
-        return Optional.fromNullable(this.value.length ? this.value[this.value.length -1] : null);
+        return Optional.fromNullable(this.value.length ? this.value[this.value.length - 1] : null);
     }
 
     anyMatch(fn: (data: T) => boolean): boolean {
-        for(let cnt = 0; cnt < this.value.length; cnt++) {
-            if(fn(this.value[cnt])) {
+        for (let cnt = 0; cnt < this.value.length; cnt++) {
+            if (fn(this.value[cnt])) {
                 return true;
             }
         }
@@ -181,12 +180,12 @@ export class Stream<T> implements IMonad<T, Stream<any>>, IValueHolder<Array<T>>
     }
 
     allMatch(fn: (data: T) => boolean): boolean {
-        if(!this.value.length) {
+        if (!this.value.length) {
             return false;
         }
         let matches = 0;
-        for(let cnt = 0; cnt < this.value.length; cnt++) {
-            if(fn(this.value[cnt])) {
+        for (let cnt = 0; cnt < this.value.length; cnt++) {
+            if (fn(this.value[cnt])) {
                 matches++;
             }
         }
@@ -195,8 +194,8 @@ export class Stream<T> implements IMonad<T, Stream<any>>, IValueHolder<Array<T>>
 
     noneMatch(fn: (data: T) => boolean): boolean {
         let matches = 0;
-        for(let cnt = 0; cnt < this.value.length; cnt++) {
-            if(fn(this.value[cnt])) {
+        for (let cnt = 0; cnt < this.value.length; cnt++) {
+            if (fn(this.value[cnt])) {
                 matches++;
             }
         }
@@ -223,17 +222,23 @@ export class Stream<T> implements IMonad<T, Stream<any>>, IValueHolder<Array<T>>
  * */
 export class Optional<T> extends Monad<T> {
 
+    /*default value for absent*/
+    static absent = Optional.fromNullable(null);
 
     constructor(value: T) {
         super(value);
     }
 
+    get value(): T {
+        if (this._value instanceof Monad) {
+            return this._value.flatMap().value
+        }
+        return this._value;
+    }
+
     static fromNullable<T>(value?: T): Optional<T> {
         return new Optional(value);
     }
-
-    /*default value for absent*/
-    static absent = Optional.fromNullable(null);
 
     /*syntactic sugar for absent and present checks*/
     isAbsent(): boolean {
@@ -249,7 +254,7 @@ export class Optional<T> extends Monad<T> {
             return this;
         } else {
             //shortcut
-            if(elseValue == null) {
+            if (elseValue == null) {
                 return Optional.absent;
             }
             return this.flatMap(() => elseValue);
@@ -279,21 +284,8 @@ export class Optional<T> extends Monad<T> {
             return Optional.fromNullable(val.value);
         }
 
-        return <Optional<any>> val.flatMap();
+        return <Optional<any>>val.flatMap();
     }
-
-    /**
-     * additional syntactic sugar which is not part of the usual optional implementation
-     * but makes life easier, if you want to sacrifice typesafety and refactoring
-     * capabilities in typescript
-     */
-    private getIfPresent<R>(key: string): Optional<R> {
-        if (this.isAbsent()) {
-            return this.getClass().absent;
-        }
-        return this.getClass().fromNullable(this.value[key]).flatMap();
-    }
-
 
     /*
      * elvis operation, take care, if you use this you lose typesafety and refactoring
@@ -307,7 +299,7 @@ export class Optional<T> extends Monad<T> {
             let arrPos = this.arrayIndex(key[cnt]);
 
             if (currKey === "" && arrPos >= 0) {
-                currentPos = this.getClass().fromNullable(!(currentPos.value instanceof Array ) ? null : (currentPos.value.length < arrPos ? null : currentPos.value[arrPos]));
+                currentPos = this.getClass().fromNullable(!(currentPos.value instanceof Array) ? null : (currentPos.value.length < arrPos ? null : currentPos.value[arrPos]));
                 if (currentPos.isAbsent()) {
                     return currentPos;
                 }
@@ -336,13 +328,6 @@ export class Optional<T> extends Monad<T> {
         return retVal;
     }
 
-    get value(): T {
-        if (this._value instanceof Monad) {
-            return this._value.flatMap().value
-        }
-        return this._value;
-    }
-
     /**
      * simple match, if the first order function call returns
      * true then there is a match, if the value is not present
@@ -351,7 +336,7 @@ export class Optional<T> extends Monad<T> {
      * @param fn the first order function performing the match
      */
     match(fn: (item: T) => boolean): boolean {
-        if(this.isAbsent()) {
+        if (this.isAbsent()) {
             return false
         }
         return fn(this.value);
@@ -372,6 +357,10 @@ export class Optional<T> extends Monad<T> {
         return this.getClass().fromNullable(this.value).flatMap();
     }
 
+    toJson(): string {
+        return JSON.stringify(this.value);
+    }
+
     /**
      * helper to override several implementations in a more fluent way
      * by having a getClass operation we can avoid direct calls into the constructor or
@@ -381,10 +370,6 @@ export class Optional<T> extends Monad<T> {
      */
     protected getClass(): any {
         return Optional;
-    }
-
-    toJson(): string {
-        return JSON.stringify(this.value);
     }
 
     /*helper method for getIf with array access aka <name>[<indexPos>]*/
@@ -409,9 +394,19 @@ export class Optional<T> extends Monad<T> {
         }
     }
 
+    /**
+     * additional syntactic sugar which is not part of the usual optional implementation
+     * but makes life easier, if you want to sacrifice typesafety and refactoring
+     * capabilities in typescript
+     */
+    private getIfPresent<R>(key: string): Optional<R> {
+        if (this.isAbsent()) {
+            return this.getClass().absent;
+        }
+        return this.getClass().fromNullable(this.value[key]).flatMap();
+    }
 
 }
-
 
 /**
  * helper class to allow write access to the config
@@ -421,7 +416,6 @@ class ConfigEntry<T> implements IValueHolder<T> {
     rootElem: any;
     key: any;
     arrPos: number;
-
 
     constructor(rootElem: any, key: any, arrPos?: number) {
         this.rootElem = rootElem;
@@ -461,6 +455,10 @@ export class Config extends Optional<any> {
         super(root);
     }
 
+    get shallowCopy(): Config {
+        return new Config(Lang.instance.mergeMaps([{}, this.value || {}]));
+    }
+
     static fromNullable<T>(value?: any): Config {
         return new Config(value);
     }
@@ -481,12 +479,9 @@ export class Config extends Optional<any> {
         return retVal;
     }
 
-
-    applyIf(condition: boolean,...keys: Array<any>): IValueHolder<any> {
-        return  condition ? this.apply(keys) : {value: null};
+    applyIf(condition: boolean, ...keys: Array<any>): IValueHolder<any> {
+        return condition ? this.apply(keys) : {value: null};
     }
-
-
 
     getIf(...keys: Array<string>): Config {
         return this.getClass().fromNullable(super.getIf.apply(this, keys).value);
@@ -498,7 +493,7 @@ export class Config extends Optional<any> {
 
     //empties the current config entry
     delete(key: string): Config {
-        if(key in this.value) {
+        if (key in this.value) {
             delete this.value[key];
         }
         return this;
@@ -506,10 +501,6 @@ export class Config extends Optional<any> {
 
     toJson(): any {
         return JSON.stringify(this.value);
-    }
-
-    get shallowCopy(): Config {
-        return new Config(Lang.instance.mergeMaps([{}, this.value || {}]));
     }
 
     protected getClass(): any {
@@ -532,7 +523,6 @@ export class Config extends Optional<any> {
             }
         };
 
-
         for (let cnt = 0; cnt < keys.length; cnt++) {
             let currKey = this.keyVal(keys[cnt]);
             let arrPos = this.arrayIndex(keys[cnt]);
@@ -550,10 +540,10 @@ export class Config extends Optional<any> {
                 continue;
             }
 
-            let tempVal = <Config> val.getIf(currKey);
+            let tempVal = <Config>val.getIf(currKey);
             if (arrPos == -1) {
                 if (tempVal.isAbsent()) {
-                    tempVal = <Config> this.getClass().fromNullable(val.value[currKey] = {});
+                    tempVal = <Config>this.getClass().fromNullable(val.value[currKey] = {});
                 } else {
                     val = <any>tempVal;
                 }
@@ -571,8 +561,6 @@ export class Config extends Optional<any> {
         return this;
     }
 }
-
-
 
 /*we do not implenent array, maps etc.. monads there are libraries like lodash which have been doing that for ages*/
 

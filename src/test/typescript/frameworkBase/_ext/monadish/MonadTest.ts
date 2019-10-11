@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-
-import { expect } from 'chai';
-import { describe, it } from 'mocha';
+import {expect} from 'chai';
+import {describe, it} from 'mocha';
 import {Config, Optional} from "../../../../../main/typescript/_ext/monadish/Monad";
-
 
 //TODO saveResolveTest
 describe('optional tests', () => {
@@ -69,9 +67,8 @@ describe('optional tests', () => {
     });
 });
 
-
 describe('Config tests', () => {
-    var setup = function ():Config {
+    var setup = function (): Config {
         return new Config({
             data: {
                 value: 1,

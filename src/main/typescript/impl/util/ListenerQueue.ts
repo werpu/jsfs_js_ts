@@ -14,11 +14,9 @@ export class ErrorData extends EventData {
     serverErrorMessage: string;
 }
 
-
 export interface IListener<T> {
     (data: T): void;
 }
-
 
 export class ListenerQueue<T> extends Queue<IListener<T>> {
 

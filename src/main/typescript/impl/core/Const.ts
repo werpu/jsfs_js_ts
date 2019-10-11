@@ -34,7 +34,6 @@ export class Const {
     static COMPLETE = "complete";
     static SUCCESS = "success";
 
-
     static SOURCE = "source";
     static STATUS = "status";
     static RESPONSE_TEXT = "responseText";
@@ -50,8 +49,6 @@ export class Const {
 
     static CTX_PARAM_MF_INTERNAL = "_mfInternal";
 
-
-
     static CTX_PARAM_SRC_FRM_ID = "_mfSourceFormId";
     static CTX_PARAM_SRC_CTL_ID = "_mfSourceControlId";
     static CTX_PARAM_TR_TYPE = "_mfTransportType";
@@ -59,7 +56,6 @@ export class Const {
     static CTX_PARAM_DELAY = "delay";
     static CTX_PARAM_RST = "resetValues";
     static CTX_PARAM_EXECUTE = "execute";
-
 
     static STAGE_DEVELOPMENT = "Development";
 

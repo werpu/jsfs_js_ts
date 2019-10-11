@@ -8,23 +8,23 @@ export class AjaxUtils {
      * @param {Array} partialIds - ids fo PPS
      */
     static encodeSubmittableFields(targetBuf: any,
-                                       parentItem: HTMLFormElement, partialIds ?: string[]) {
+                                   parentItem: HTMLFormElement, partialIds ?: string[]) {
         if (!parentItem) throw "NO_PARITEM";
-        if (partialIds ) {
+        if (partialIds) {
             this.encodePartialSubmit(partialIds, targetBuf);
         } else {
             // add all nodes
             let eLen = parentItem.elements.length;
             for (let e = 0; e < eLen; e++) {
-                this.encodeElement(<HTMLFormElement> parentItem.elements[e], targetBuf);
+                this.encodeElement(<HTMLFormElement>parentItem.elements[e], targetBuf);
             } // end of for (formElements)
         }
     }
 
-    static encodePartialSubmit(partialIds: string[], targetBuf: {[key: string]: any}) {
-        for(let cnt = 0; cnt < partialIds.length; cnt++) {
-           let element:HTMLFormElement = <HTMLFormElement> DomQuery.byId(partialIds[cnt]).getAsElem(0).value;
-           this.encodeElement(element, targetBuf);
+    static encodePartialSubmit(partialIds: string[], targetBuf: { [key: string]: any }) {
+        for (let cnt = 0; cnt < partialIds.length; cnt++) {
+            let element: HTMLFormElement = <HTMLFormElement>DomQuery.byId(partialIds[cnt]).getAsElem(0).value;
+            this.encodeElement(element, targetBuf);
         }
     }
 
@@ -40,14 +40,13 @@ export class AjaxUtils {
         }
     }
 
-
     /**
      * encodes a single input element for submission
      *
      * @param {Node} element - to be encoded
      * @param {} targetBuf - a target array buffer receiving the encoded strings
      */
-    static encodeElement(element: HTMLFormElement, targetBuf: {[key: string]: any}) {
+    static encodeElement(element: HTMLFormElement, targetBuf: { [key: string]: any }) {
 
         //browser behavior no element name no encoding (normal submit fails in that case)
         //https://issues.apache.org/jira/browse/MYFACES-2847

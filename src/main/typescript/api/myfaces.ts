@@ -27,7 +27,7 @@ export module myfaces {
 
     export var config = new ConfigHolder();
 
-    if("undefined" == typeof window.myfaces) {
+    if ("undefined" == typeof window.myfaces) {
         window.myfaces = myfaces;
     }
 }

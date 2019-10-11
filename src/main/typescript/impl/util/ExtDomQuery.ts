@@ -15,6 +15,14 @@ declare let window: any;
  */
 export class ExtDomQuery extends DomQuery {
 
+    static get windowId() {
+        return new ExtDomQuery(document.body).windowId;
+    }
+
+    static get nonce(): string {
+        return new ExtDomQuery(document.body).nonce;
+    }
+
     get windowId() {
 
         const fetchWindowIdFromURL = function () {
@@ -49,7 +57,7 @@ export class ExtDomQuery extends DomQuery {
         let myfacesConfig = new Config(window.myfaces);
         let nonce: IValueHolder<string> = myfacesConfig.apply("config", "cspMeta", "nonce");
         if (nonce.value) {
-            return <string> nonce.value;
+            return <string>nonce.value;
         }
 
         let curScript = new DomQuery(document.currentScript);
@@ -66,11 +74,15 @@ export class ExtDomQuery extends DomQuery {
         if (nonceScript.isPresent()) {
             nonce.value = nonceScript.attr("nonce").value;
         }
-        return <string> nonce.value;
+        return <string>nonce.value;
+    }
+
+    static searchJsfJsFor(item: RegExp): Optional<String> {
+        return new ExtDomQuery(document).searchJsfJsFor(item);
     }
 
     searchJsfJsFor(rexp: RegExp): Optional<string> {
-        let res:string = null;
+        let res: string = null;
         DomQuery.querySelectorAll("script").filter(item => {
             return item.attr("src", "").value.search(/\/javax\.faces\.resource.*\/jsf\.js.*separator/) != -1;
         }).first((item: DomQuery) => {
@@ -81,19 +93,7 @@ export class ExtDomQuery extends DomQuery {
         return Optional.fromNullable(res);
     }
 
-    globalEval(code: string, nonce ?:string): DomQuery {
+    globalEval(code: string, nonce ?: string): DomQuery {
         return super.globalEval(code, nonce || this.nonce);
-    }
-
-    static get windowId() {
-        return new ExtDomQuery(document.body).windowId;
-    }
-
-    static get nonce(): string {
-        return new ExtDomQuery(document.body).nonce;
-    }
-
-    static searchJsfJsFor(item: RegExp): Optional<String> {
-        return new ExtDomQuery(document).searchJsfJsFor(item);
     }
 }

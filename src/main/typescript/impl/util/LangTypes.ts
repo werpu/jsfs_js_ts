@@ -14,10 +14,7 @@
  * limitations under the License.
  */
 
-
 export module LangTypes {
-
-
 
     export interface XMLParserError {
         errorCode: number;
@@ -39,7 +36,6 @@ export module LangTypes {
         };
     }
 
-
     export class MyFacesErrorData {
 
         constructor(public name: string, public title: string, public caller: string, public callFunc: string) {
@@ -56,7 +52,6 @@ export module LangTypes {
     export class FormDataDecorator {
         protected _valBuf: string[];
         protected _idx: { [key: string]: boolean } = {};
-
 
         constructor(valBuf?: string[]) {
             this._valBuf = valBuf || [];
@@ -75,7 +70,6 @@ export module LangTypes {
             return this._valBuf.join("&");
         }
     }
-
 
     export class FormDataDecoratorArray extends FormDataDecorator {
     }
@@ -101,7 +95,6 @@ export module LangTypes {
     export class FormDataDecoratorOther extends FormDataDecoratorArray {
 
         private _preprocessedData: string;
-
 
         append(key: string, val: string) {
             this._valBuf.push(key, val);

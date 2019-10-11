@@ -7,11 +7,9 @@
  *
  */
 
-
 import {Lang} from "../util/Lang";
 import {LangTypes} from "../util/LangTypes";
 import {AjaxUtils} from "./AjaxUtils";
-
 
 import FormDataDecorator = LangTypes.FormDataDecorator;
 import {AsyncRunnable} from "../util/AsyncRunnable";
@@ -25,25 +23,20 @@ type PROMISE_FUNC = (any?) => void;
 
 export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
 
-    pXhr: Promise<XMLHttpRequest>;
-    xhrObject: XMLHttpRequest;
-
     /** predefined method */
     static CONTENT_TYPE: "Content-Type";
     static HEAD_FACES_REQ: "Faces-Request";
     static VAL_AJAX: "partial/ajax";
     static ENCODED_URL: "javax.faces.encodedURL";
-
     static REQ_TYPE_GET = "GET";
     static REQ_TYPE_POST = "POST";
-
     static STATE_EVT_BEGIN = "BEGIN";
     static STATE_EVT_TIMEOUT = "TIMEOUT_EVENT";
     static STATE_EVT_COMPLETE = "COMPLETE";
-
     static URL_ENCODED = "application/x-www-form-urlencoded";
-
     static NO_TIMEOUT = 0;
+    pXhr: Promise<XMLHttpRequest>;
+    xhrObject: XMLHttpRequest;
 
     constructor(
         private source: DomQuery,
@@ -59,21 +52,25 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         this.pXhr = this.createPromise()
     }
 
+    get $promise(): Promise<XMLHttpRequest> {
+        return this.pXhr;
+    }
+
     start(): Promise<XMLHttpRequest> {
         let xhr = this.xhrObject;
         let _Lang = Lang.instance;
         try {
-            let srcFormElement: HTMLFormElement = <HTMLFormElement> this.sourceForm.getAsElem(0).value;
+            let srcFormElement: HTMLFormElement = <HTMLFormElement>this.sourceForm.getAsElem(0).value;
             let sourceForm = this.sourceForm,
                 targetURL = (typeof srcFormElement.elements[XhrRequest.ENCODED_URL] == 'undefined') ?
                     srcFormElement.action :
                     srcFormElement.elements[XhrRequest.ENCODED_URL].value,
                 formData: FormDataDecorator | { [key: string]: any } = this.getFormData();
 
-            formData =  _Lang.mixMaps(<any>formData, this.requestContext.getIf("passThrgh").value, true);
+            formData = _Lang.mixMaps(<any>formData, this.requestContext.getIf("passThrgh").value, true);
 
             this.xhrObject.open(this.ajaxType, targetURL +
-                ((this.ajaxType == XhrRequest.REQ_TYPE_GET) ? "?" + this.formDataToURI(<FormDataDecorator> formData) : "")
+                ((this.ajaxType == XhrRequest.REQ_TYPE_GET) ? "?" + this.formDataToURI(<FormDataDecorator>formData) : "")
                 , true);
 
             xhr.timeout = this.timeout;
@@ -99,6 +96,46 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             this.handleError(e);
         }
         return this.pXhr;
+    }
+
+    onAbort(resolve: PROMISE_FUNC, reject: PROMISE_FUNC) {
+        reject();
+    }
+
+    onTimeout(resolve: PROMISE_FUNC, reject: PROMISE_FUNC) {
+        this.sendEvent(XhrRequest.STATE_EVT_TIMEOUT);
+        reject();
+    }
+
+    onSuccess(data: any, resolve: PROMISE_FUNC, reject: PROMISE_FUNC) {
+        this.sendEvent(XhrRequest.STATE_EVT_COMPLETE);
+        this.requestContext.apply("_mfInternal").value = this.requestContext.getIf("_mfInternal").get({}).value;
+        (<any>window).jsf.ajax.response(this.xhrObject, this.requestContext);
+    }
+
+    onDone(data: any, resolve: PROMISE_FUNC, reject: PROMISE_FUNC) {
+        resolve(data);
+    }
+
+    onError(errorData: any, resolve: PROMISE_FUNC, reject: PROMISE_FUNC) {
+        this.handleError(errorData);
+        reject();
+    }
+
+    catch(func: (data: any) => any): AsyncRunnable<XMLHttpRequest> {
+        this.pXhr.catch(func);
+        return this;
+    }
+
+    finally(func: () => void): AsyncRunnable<XMLHttpRequest> {
+        //no ie11 support we probably are going to revert to shims for that one
+        (<any>this.pXhr).finally(func);
+        return this;
+    }
+
+    then(func: (data: any) => any): AsyncRunnable<XMLHttpRequest> {
+        this.pXhr.then(func);
+        return this;
     }
 
     private createPromise() {
@@ -131,7 +168,6 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         xhr.setRequestHeader(XhrRequest.CONTENT_TYPE, contentType);
     }
 
-
     /**
      * Spec. 13.3.1
      * Collect and encode input elements.
@@ -145,13 +181,13 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         let ret: FormDataDecorator = null;
 
         if (!this.partialIdsArray || !this.partialIdsArray.length) {
-             return Lang.instance.createFormDataDecorator((<any>window).jsf.getViewState(this.sourceForm));
+            return Lang.instance.createFormDataDecorator((<any>window).jsf.getViewState(this.sourceForm));
         } else {
             //now this is less performant but we have to call it to allow viewstate decoration
-            ret = Lang.instance.createFormDataDecorator(new Array());
-            AjaxUtils.encodeSubmittableFields(ret,<HTMLFormElement> this.sourceForm.getAsElem(0).value, this.partialIdsArray);
+            ret = Lang.instance.createFormDataDecorator([]);
+            AjaxUtils.encodeSubmittableFields(ret, <HTMLFormElement>this.sourceForm.getAsElem(0).value, this.partialIdsArray);
             //TODO myfaces options still needed?
-            if (this.source && this.requestContext.getIf("myfaces","form").isPresent())
+            if (this.source && this.requestContext.getIf("myfaces", "form").isPresent())
                 AjaxUtils.appendIssuingItem(this.source, ret);
 
         }
@@ -166,58 +202,12 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         return formData;
     }
 
-
-    onAbort(resolve: PROMISE_FUNC, reject: PROMISE_FUNC) {
-        reject();
-    }
-
-    onTimeout(resolve: PROMISE_FUNC, reject: PROMISE_FUNC) {
-        this.sendEvent(XhrRequest.STATE_EVT_TIMEOUT);
-        reject();
-    }
-
-
-    onSuccess(data: any, resolve: PROMISE_FUNC, reject: PROMISE_FUNC) {
-        this.sendEvent(XhrRequest.STATE_EVT_COMPLETE);
-        this.requestContext.apply("_mfInternal").value = this.requestContext.getIf("_mfInternal").get({}).value;
-        (<any>window).jsf.ajax.response(this.xhrObject, this.requestContext);
-    }
-
-    onDone(data: any, resolve: PROMISE_FUNC, reject: PROMISE_FUNC) {
-        resolve(data);
-    }
-
-    onError(errorData: any, resolve: PROMISE_FUNC, reject: PROMISE_FUNC) {
-        this.handleError(errorData);
-        reject();
-    }
-
     private sendEvent(evtType: string) {
         Implementation.instance.sendEvent(this.xhrObject, this.requestContext, Implementation[evtType]);
     }
 
     private handleError(exception) {
         Implementation.instance.stdErrorHandler(this.xhrObject, this.requestContext, exception, true);
-    }
-
-    get $promise(): Promise<XMLHttpRequest> {
-        return this.pXhr;
-    }
-
-    catch(func: (data: any) => any): AsyncRunnable<XMLHttpRequest> {
-        this.pXhr.catch(func);
-        return this;
-    }
-
-    finally(func: () => void): AsyncRunnable<XMLHttpRequest> {
-        //no ie11 support we probably are going to revert to shims for that one
-        (<any>this.pXhr).finally(func);
-        return this;
-    }
-
-    then(func: (data: any) => any): AsyncRunnable<XMLHttpRequest> {
-        this.pXhr.then(func);
-        return this;
     }
 
 }

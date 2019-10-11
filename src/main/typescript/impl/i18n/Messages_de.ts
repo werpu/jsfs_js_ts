@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 import {Messages} from "./Messages";
 
 export class Messages_de extends Messages {

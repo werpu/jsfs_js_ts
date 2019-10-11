@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 export interface Probe1 {
     val1: string;
     val2: Date;
@@ -30,12 +29,10 @@ export interface Probe2 {
 
 class ArrType {
 
-
     constructor(public clazz: any) {
 
     }
 }
-
 
 class DtoUils {
 
@@ -46,7 +43,7 @@ class DtoUils {
             }
 
             let newVal = src[key];
-            if (mappings[key]  &&
+            if (mappings[key] &&
                 mappings[key] instanceof ArrType) {
                 //do the array here
                 (<any>target)[key] = {};
@@ -84,7 +81,6 @@ class BaseDto<T> {
         }
     }
 
-
     mapIt(target: any, src: any): any {
         for (let key in src) {
             if (!src.hasOwnProperty(key)) {
@@ -93,14 +89,14 @@ class BaseDto<T> {
 
             let newVal = src[key];
             if (target[this.TYPES] &&
-                target[this.TYPES][key]  &&
+                target[this.TYPES][key] &&
                 target[this.TYPES][key] instanceof ArrType) {
                 //do the array here
                 (<any>target)[key] = {};
 
                 for (let key2 in newVal) {
                     let subTarget = new target[this.TYPES][key].clazz(newVal[key2]);
-                 //   subTarget = this.mapIt(subTarget, <any> newVal[key2]);
+                    //   subTarget = this.mapIt(subTarget, <any> newVal[key2]);
                     (<any>target)[key][key2] = subTarget;
                 }
             } else if (target[this.TYPES] && target[this.TYPES][key]) {
@@ -128,13 +124,13 @@ export class Probe2Impl implements Probe2 {
 }
 
 function mixMaps(target: any, src: any): any {
-    for(var key in src) {
+    for (var key in src) {
         target[key] = src[key];
     }
     return target;
 }
 
-export class Probe1Impl  implements Probe1 {
+export class Probe1Impl implements Probe1 {
 
     val1: string;
     val2: Date;

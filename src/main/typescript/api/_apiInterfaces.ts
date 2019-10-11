@@ -18,7 +18,7 @@ module _apiInterfaces {
      */
     export interface ErrorData {
         type: any;
-        status : string;
+        status: string;
         serverErrorName: string;
         serverErrorMessage: string;
         source: any;

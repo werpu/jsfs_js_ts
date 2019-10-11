@@ -40,7 +40,6 @@ describe('promise tests', () => {
             done();
         });
 
-
     });
 
     it('simple promise failure', (done) => {
@@ -62,7 +61,6 @@ describe('promise tests', () => {
             expect(finallyCalled).to.be.true;
             done();
         });
-
 
     });
 

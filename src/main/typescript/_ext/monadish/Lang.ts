@@ -31,13 +31,43 @@ export class Lang {
         return Lang._instance;
     }
 
+    //should be in lang, but for now here to avoid recursive imports, not sure if typescript still has a problem with those
+    /**
+     * helper function to savely resolve anything
+     * this is not an elvis operator, it resolves
+     * a value without exception in a tree and if
+     * it is not resolvable then an optional of
+     * a default value is restored or Optional.empty
+     * if none is given
+     *
+     * usage
+     * <code>
+     *     let var: Optiona<string> = saveResolve(() => a.b.c.d.e, "foobaz")
+     * </code>
+     *
+     * @param resolverProducer a lambda which can produce the value
+     * @param defaultValue an optional default value if the producer failes to produce anything
+     * @returns an Optional of the produced value
+     */
+    static saveResolve<T>(resolverProducer: () => T, defaultValue: T = null): Optional<T> {
+        try {
+            let result = resolverProducer();
+            if ("undefined" == typeof result || null == result) {
+                return Optional.fromNullable(defaultValue);
+            }
+            return Optional.fromNullable(result);
+        } catch (e) {
+            return Optional.absent;
+        }
+    }
+
     /**
      * String to array function performs a string to array transformation
      * @param {String} it the string which has to be changed into an array
      * @param {RegExp} splitter our splitter reglar expression
      * @return an array of the splitted string
      */
-    strToArray(it: string, splitter: string | RegExp = /\./gi): Array<string> {
+    strToArray(it: string, splitter: string | RegExp = /\./gi): Array<string> {
         //	summary:
         //		Return true if it is a String
 
@@ -48,7 +78,7 @@ export class Lang {
         return retArr;
     }
 
-    arrToMap(arr:any[], offset: number = 0) {
+    arrToMap(arr: any[], offset: number = 0) {
         var ret = new Array(arr.length);
         var len = arr.length;
         offset = (offset) ? offset : 0;
@@ -73,7 +103,6 @@ export class Lang {
         return str.slice(0, i + 1);
     }
 
-
     /**
      * Backported from dojo
      * a failsafe string determination method
@@ -88,7 +117,7 @@ export class Lang {
     }
 
     isFunc(it: any): boolean {
-        return it instanceof  Function || typeof it === "function";
+        return it instanceof Function || typeof it === "function";
     }
 
     /**
@@ -116,9 +145,9 @@ export class Lang {
      * the function is sideffect free
      * @param maps
      */
-    mergeMaps(maps: {[key:string]:any}[], overwrite: boolean = true, blockFilter?: Function, whitelistFilter?: Function): {[key:string]:any} {
+    mergeMaps(maps: { [key: string]: any }[], overwrite: boolean = true, blockFilter?: Function, whitelistFilter?: Function): { [key: string]: any } {
         let retVal = {};
-        this.arrForEach(maps, (item:{[key:string]:any})  => {
+        this.arrForEach(maps, (item: { [key: string]: any }) => {
             this.mixMaps(retVal, item, overwrite)
         });
         return retVal;
@@ -171,7 +200,7 @@ export class Lang {
         }
         //since offset is numeric we cannot use the shortcut due to 0 being false
         //special condition array delivered no offset no pack
-        if (obj instanceof Array && !offset && !pack)  return obj;
+        if (obj instanceof Array && !offset && !pack) return obj;
         let finalOffset = ('undefined' != typeof offset || null != offset) ? offset : 0;
         let finalPack = pack || [];
         try {
@@ -344,8 +373,6 @@ export class Lang {
         });
     }
 
-
-
     interval(timeout: number): CancellablePromise {
         let handler: any = null;
         return new CancellablePromise((apply: Function, reject: Function) => {
@@ -367,37 +394,7 @@ export class Lang {
      * @param theType the type to be tested for
      */
     public assertType(probe: any, theType: any): boolean {
-        return this.isString(theType) ? typeof probe ==  theType : probe instanceof theType;
-    }
-
-    //should be in lang, but for now here to avoid recursive imports, not sure if typescript still has a problem with those
-    /**
-     * helper function to savely resolve anything
-     * this is not an elvis operator, it resolves
-     * a value without exception in a tree and if
-     * it is not resolvable then an optional of
-     * a default value is restored or Optional.empty
-     * if none is given
-     *
-     * usage
-     * <code>
-     *     let var: Optiona<string> = saveResolve(() => a.b.c.d.e, "foobaz")
-     * </code>
-     *
-     * @param resolverProducer a lambda which can produce the value
-     * @param defaultValue an optional default value if the producer failes to produce anything
-     * @returns an Optional of the produced value
-     */
-    static saveResolve<T>(resolverProducer: () => T, defaultValue:T = null): Optional<T> {
-        try {
-            let result = resolverProducer();
-            if("undefined" == typeof result || null == result) {
-                return Optional.fromNullable(defaultValue);
-            }
-            return Optional.fromNullable(result);
-        } catch (e) {
-            return Optional.absent;
-        }
+        return this.isString(theType) ? typeof probe == theType : probe instanceof theType;
     }
 
 }

@@ -18,20 +18,9 @@ import {Lang} from "./Lang";
 import {IValueHolder, Optional} from "./Monad";
 import {XMLQuery} from "./XmlQuery";
 
-
 export class ElementAttribute implements IValueHolder<string> {
 
-    constructor(private element: DomQuery, private attributeName: string, private defaultVal:string = null) {
-    }
-
-    set value(value: string) {
-
-        let val: Element[] = this.element.get(0).orElse(...[]).values;
-
-        for(let cnt = 0; cnt < val.length; cnt++) {
-            val[cnt].setAttribute(this.attributeName, value);
-        }
-        val[0].setAttribute(this.attributeName, value);
+    constructor(private element: DomQuery, private attributeName: string, private defaultVal: string = null) {
     }
 
     get value(): string {
@@ -42,7 +31,29 @@ export class ElementAttribute implements IValueHolder<string> {
 
         return val[0].getAttribute(this.attributeName);
     }
+
+    set value(value: string) {
+
+        let val: Element[] = this.element.get(0).orElse(...[]).values;
+
+        for (let cnt = 0; cnt < val.length; cnt++) {
+            val[cnt].setAttribute(this.attributeName, value);
+        }
+        val[0].setAttribute(this.attributeName, value);
+    }
 }
+
+/**
+ * small helper for the specialized jsf case
+ * @param src
+ * @constructor
+ */
+const DEFAULT_JSF_WHITELIST = (src: string) => {
+    return (src.indexOf("ln=scripts") == -1 &&
+        src.indexOf("ln=javax.faces") == -1) ||
+        (src.indexOf("/jsf.js") == -1 &&
+            src.indexOf("/jsf-uncompressed.js") == -1);
+};
 
 /**
  * Monadic DomNode representation, ala jquery
@@ -66,6 +77,7 @@ export class ElementAttribute implements IValueHolder<string> {
  */
 export class DomQuery {
 
+    static absent = new DomQuery();
     private rootNode: Array<Element> = [];
 
     constructor(...rootNode: Array<Element | DomQuery | Document | Array<any> | string>) {
@@ -92,261 +104,6 @@ export class DomQuery {
                 }
             }
         }
-    }
-
-    /**
-     * returns the nth element as domquery
-     * from the internal elements
-     * note if you try to reach a non existing element position
-     * you will get back an absent entry
-     *
-     * @param index the nth index
-     */
-    get(index: number): DomQuery {
-        return (index < this.rootNode.length) ? new DomQuery(this.rootNode[index]) : DomQuery.absent;
-    }
-
-    /**
-     * returns the nth element as optional of an Element object
-     * @param index
-     */
-    getAsElem(index: number, defaults?: Optional<any>): Optional<Element> {
-        return (index < this.rootNode.length) ? Optional.fromNullable(this.rootNode[index]) : (defaults) ? defaults : Optional.absent;
-    }
-
-    /**
-     * returns the value array< of all elements
-     */
-    allElems(): Array<Element> {
-        return this.rootNode;
-    }
-
-    /**
-     * absent no values reached?
-     */
-    isAbsent(): boolean {
-        return this.length == 0;
-    }
-
-    /**
-     * any value present
-     */
-    isPresent(): boolean {
-        return !this.isAbsent();
-    }
-
-    /**
-     * remove all affected nodes from this query object from the dom tree
-     */
-    delete() {
-        this.eachElem((node: Element) => {
-            if (node.parentNode) {
-                node.parentNode.removeChild(node);
-            }
-        });
-    }
-
-    /**
-     * easy query selector all producer
-     *
-     * @param selector the selector
-     * @returns a results dom query object
-     */
-    static querySelectorAll(selector: string): DomQuery {
-        return new DomQuery(document).querySelectorAll(selector);
-    }
-
-    /**
-     * query selector all on the existing dom query object
-     *
-     * @param selector the standard selector
-     * @return a DomQuery with the results
-     */
-    querySelectorAll(selector): DomQuery {
-        if (this.rootNode.length == 0) {
-            return this;
-        }
-        let nodes = [];
-        let nodeIdx = {};
-        for (let cnt = 0; cnt < this.rootNode.length; cnt++) {
-            if (!this.rootNode[cnt].querySelectorAll) {
-                continue;
-            }
-            let res = this.rootNode[cnt].querySelectorAll(selector);
-            nodes = nodes.concat(Lang.instance.objToArray(res));
-        }
-
-        return new DomQuery(...nodes);
-    }
-
-    /**
-     * byId producer
-     *
-     * @param selector id
-     * @return a DomQuery containing the found elements
-     */
-    static byId(selector: string | DomQuery | Element): DomQuery {
-        if (Lang.instance.isString(selector)) {
-            return new DomQuery(document).byId( <string> selector);
-        } else {
-            return new DomQuery(<any>selector);
-        }
-    }
-
-    /**
-     * byTagName producer
-     *
-     * @param selector name
-     * @return a DomQuery containing the found elements
-     */
-    static byTagName(selector: string | DomQuery | Element): DomQuery {
-        if (Lang.instance.isString(selector)) {
-            return new DomQuery(document).byTagName(<string>selector);
-        } else {
-            return new DomQuery(<any>selector);
-        }
-    }
-
-    /**
-     * core byId method
-     * @param id the id to search for
-     * @param includeRoot also match the root element?
-     */
-    byId(id: string, includeRoot?:boolean): DomQuery {
-        let res: Array<DomQuery> =  [];
-        for (let cnt = 0; includeRoot && cnt < this.rootNode.length; cnt++) {
-            if (this.rootNode[cnt].id == id) {
-                res.push(new DomQuery(this.rootNode[cnt]));
-            }
-        }
-        res = res.concat(this.querySelectorAll("#" + id));
-        return new DomQuery(...res);
-    }
-
-    /**
-     * same as byId just for the tag name
-     * @param tagName
-     * @param includeRoot
-     */
-    byTagName(tagName: string, includeRoot ?: boolean): DomQuery {
-        let res = [];
-        for (let cnt = 0;includeRoot && cnt < this.rootNode.length; cnt++) {
-            if (this.rootNode[cnt].tagName == tagName) {
-                res.push(new DomQuery(this.rootNode[cnt]));
-            }
-        }
-        res = res.concat(this.querySelectorAll(tagName));
-        return new DomQuery(...res);
-    }
-
-    /**
-     * attr accessor, usage myQuery.attr("class").value = "bla"
-     * or let value myQuery.attr("class").value
-     * @param attr
-     */
-    attr(attr: string, noneGetValue: string = null): ElementAttribute {
-        return new ElementAttribute(this, attr, noneGetValue);
-    }
-
-    /**
-     * hasclass, checks for an existing class in the class attributes
-     *
-     * @param clazz the class to search for
-     */
-    hasClass(clazz: string) {
-        let hasIt = false;
-
-        this.each((item) => {
-            let oldClass = item.attr("class").value || "";
-            if(oldClass.toLowerCase().indexOf(clazz.toLowerCase()) == -1) {
-                return;
-            } else {
-                let oldClasses = oldClass.split(/\s+/gi);
-                let found = false;
-                for(let cnt = 0; cnt < oldClasses.length && !found; cnt++) {
-                    found = oldClasses[cnt].toLowerCase() == clazz.toLowerCase();
-                }
-                hasIt = hasIt || found;
-                if(hasIt) {
-                    return false;
-                }
-            }
-        });
-        return hasIt;
-    }
-
-    /**
-     * appends a class string if not already in the element(s)
-     *
-     * @param clazz the style class to append
-     */
-    addClass(clazz: string): DomQuery {
-        this.each((item) => {
-            let oldClass = item.attr("class").value || "";
-            if(!this.hasClass(clazz)) {
-                item.attr("class").value = Lang.instance.trim(oldClass + " " + clazz);
-                return;
-            }
-        });
-        return this;
-    }
-
-    /**
-     * remove the style class if in the class definitions
-     *
-     * @param clazz
-     */
-    removeClass(clazz: string): DomQuery {
-        this.each((item) => {
-            if(this.hasClass(clazz)) {
-                let oldClass = item.attr("class").value || "";
-                let newClasses = [];
-                let oldClasses = oldClass.split(/\s+/gi);
-                for(let cnt = 0; cnt < oldClasses.length; cnt++) {
-                    if(oldClasses[cnt].toLowerCase() != clazz.toLowerCase()) {
-                        newClasses.push(oldClasses[cnt]);
-                    }
-                }
-                item.attr("class").value = newClasses.join(" ");
-            }
-        });
-        return this;
-    }
-
-    /**
-     * checks whether we have a multipart element in our children
-     */
-    isMultipartCandidate(): boolean {
-        let found = false;
-        return this.querySelectorAll("input[type='file']").firstElem().isPresent();
-    }
-
-    /**
-     * innerHtml equivalkent
-     * equivalent to jqueries html
-     * as setter the html is set and the
-     * DomQuery is given back
-     * as getter the html string is returned
-     *
-     * @param inval
-     */
-    html(inval?: string): DomQuery | Optional<string> {
-        if (Optional.fromNullable(inval).isAbsent()) {
-            return this.getAsElem(0).isPresent() ? Optional.fromNullable(this.getAsElem(0).value.innerHTML) : Optional.absent;
-        }
-        if (this.getAsElem(0).isPresent()) {
-            this.getAsElem(0).value.innerHTML = inval;
-        }
-        return this;
-    }
-
-    /**
-     * easy node traversal, you can pass
-     * a set of node selectors which are joined as direct childs
-     * @param nodeSelector
-     */
-    getIf(...nodeSelector: Array<string>): DomQuery {
-        return this.querySelectorAll(" > " + nodeSelector.join(">"));
     }
 
     /**
@@ -389,6 +146,296 @@ export class DomQuery {
         return Optional.fromNullable(this.get(0).attr("type").value);
     }
 
+    get childNodes(): DomQuery {
+        let childNodeArr: Array<Element> = [];
+        this.eachElem((item: Element) => {
+            childNodeArr = childNodeArr.concat(Lang.instance.objToArray(item.childNodes));
+        });
+        return new DomQuery(...childNodeArr);
+    }
+
+    /**
+     * easy query selector all producer
+     *
+     * @param selector the selector
+     * @returns a results dom query object
+     */
+    static querySelectorAll(selector: string): DomQuery {
+        return new DomQuery(document).querySelectorAll(selector);
+    }
+
+    /**
+     * byId producer
+     *
+     * @param selector id
+     * @return a DomQuery containing the found elements
+     */
+    static byId(selector: string | DomQuery | Element): DomQuery {
+        if (Lang.instance.isString(selector)) {
+            return new DomQuery(document).byId(<string>selector);
+        } else {
+            return new DomQuery(<any>selector);
+        }
+    }
+
+    /**
+     * byTagName producer
+     *
+     * @param selector name
+     * @return a DomQuery containing the found elements
+     */
+    static byTagName(selector: string | DomQuery | Element): DomQuery {
+        if (Lang.instance.isString(selector)) {
+            return new DomQuery(document).byTagName(<string>selector);
+        } else {
+            return new DomQuery(<any>selector);
+        }
+    }
+
+    static globalEval(code: string): DomQuery {
+        return new DomQuery(document).globalEval(code);
+    }
+
+    /**
+     * builds the ie nodes properly in a placeholder
+     * and bypasses a non script insert bug that way
+     * @param markup the marku code
+     */
+    static fromMarkup(markup: string): DomQuery {
+        //TODO check if ie8 still has this problem, probably not we probably
+        //can drop this code in favor of html
+
+        //now to the non w3c compliant browsers
+        //http://blogs.perl.org/users/clinton_gormley/2010/02/forcing-ie-to-accept-script-tags-in-innerhtml.html
+        //we have to cope with deficiencies between ie and its simulations in this case
+        let dummyPlaceHolder = new DomQuery(document.createElement("div"));
+
+        //fortunately a table element also works which is less critical than form elements regarding
+        //the inner content
+        dummyPlaceHolder.html("<table><tbody><tr><td>" + markup + "</td></tr></tbody></table>");
+        let childs = dummyPlaceHolder.querySelectorAll("td").get(0).childNodes;
+        childs.detach();
+        dummyPlaceHolder.html("");
+        return childs;
+    }
+
+    /**
+     * returns the nth element as domquery
+     * from the internal elements
+     * note if you try to reach a non existing element position
+     * you will get back an absent entry
+     *
+     * @param index the nth index
+     */
+    get(index: number): DomQuery {
+        return (index < this.rootNode.length) ? new DomQuery(this.rootNode[index]) : DomQuery.absent;
+    }
+
+    /**
+     * returns the nth element as optional of an Element object
+     * @param index the number from the index
+     * @param defaults the default value if the index is overrun default Optional.absent
+     */
+    getAsElem(index: number, defaults: Optional<any> = Optional.absent): Optional<Element> {
+        return (index < this.rootNode.length) ? Optional.fromNullable(this.rootNode[index]) : defaults;
+    }
+
+    /**
+     * returns the value array< of all elements
+     */
+    allElems(): Array<Element> {
+        return this.rootNode;
+    }
+
+    /**
+     * absent no values reached?
+     */
+    isAbsent(): boolean {
+        return this.length == 0;
+    }
+
+    /**
+     * any value present
+     */
+    isPresent(): boolean {
+        return !this.isAbsent();
+    }
+
+    /**
+     * remove all affected nodes from this query object from the dom tree
+     */
+    delete() {
+        this.eachElem((node: Element) => {
+            if (node.parentNode) {
+                node.parentNode.removeChild(node);
+            }
+        });
+    }
+
+    /**
+     * query selector all on the existing dom query object
+     *
+     * @param selector the standard selector
+     * @return a DomQuery with the results
+     */
+    querySelectorAll(selector): DomQuery {
+        if (this.rootNode.length == 0) {
+            return this;
+        }
+        let nodes = [];
+        for (let cnt = 0; cnt < this.rootNode.length; cnt++) {
+            if (!this.rootNode[cnt].querySelectorAll) {
+                continue;
+            }
+            let res = this.rootNode[cnt].querySelectorAll(selector);
+            nodes = nodes.concat(Lang.instance.objToArray(res));
+        }
+
+        return new DomQuery(...nodes);
+    }
+
+    /**
+     * core byId method
+     * @param id the id to search for
+     * @param includeRoot also match the root element?
+     */
+    byId(id: string, includeRoot?: boolean): DomQuery {
+        let res: Array<DomQuery> = [];
+        for (let cnt = 0; includeRoot && cnt < this.rootNode.length; cnt++) {
+            if (this.rootNode[cnt].id == id) {
+                res.push(new DomQuery(this.rootNode[cnt]));
+            }
+        }
+        res = res.concat(this.querySelectorAll("#" + id));
+        return new DomQuery(...res);
+    }
+
+    /**
+     * same as byId just for the tag name
+     * @param tagName
+     * @param includeRoot
+     */
+    byTagName(tagName: string, includeRoot ?: boolean): DomQuery {
+        let res = [];
+        for (let cnt = 0; includeRoot && cnt < this.rootNode.length; cnt++) {
+            if (this.rootNode[cnt].tagName == tagName) {
+                res.push(new DomQuery(this.rootNode[cnt]));
+            }
+        }
+        res = res.concat(this.querySelectorAll(tagName));
+        return new DomQuery(...res);
+    }
+
+    /**
+     * attr accessor, usage myQuery.attr("class").value = "bla"
+     * or let value myQuery.attr("class").value
+     * @param attr the attribute to set
+     * @param defaultValue the default value in case nothing is presented (defaults to null)
+     */
+    attr(attr: string, defaultValue: string = null): ElementAttribute {
+        return new ElementAttribute(this, attr, defaultValue);
+    }
+
+    /**
+     * hasclass, checks for an existing class in the class attributes
+     *
+     * @param clazz the class to search for
+     */
+    hasClass(clazz: string) {
+        let hasIt = false;
+
+        this.each((item) => {
+            let oldClass = item.attr("class").value || "";
+            if (oldClass.toLowerCase().indexOf(clazz.toLowerCase()) == -1) {
+                return;
+            } else {
+                let oldClasses = oldClass.split(/\s+/gi);
+                let found = false;
+                for (let cnt = 0; cnt < oldClasses.length && !found; cnt++) {
+                    found = oldClasses[cnt].toLowerCase() == clazz.toLowerCase();
+                }
+                hasIt = hasIt || found;
+                if (hasIt) {
+                    return false;
+                }
+            }
+        });
+        return hasIt;
+    }
+
+    /**
+     * appends a class string if not already in the element(s)
+     *
+     * @param clazz the style class to append
+     */
+    addClass(clazz: string): DomQuery {
+        this.each((item) => {
+            let oldClass = item.attr("class").value || "";
+            if (!this.hasClass(clazz)) {
+                item.attr("class").value = Lang.instance.trim(oldClass + " " + clazz);
+                return;
+            }
+        });
+        return this;
+    }
+
+    /**
+     * remove the style class if in the class definitions
+     *
+     * @param clazz
+     */
+    removeClass(clazz: string): DomQuery {
+        this.each((item) => {
+            if (this.hasClass(clazz)) {
+                let oldClass = item.attr("class").value || "";
+                let newClasses = [];
+                let oldClasses = oldClass.split(/\s+/gi);
+                for (let cnt = 0; cnt < oldClasses.length; cnt++) {
+                    if (oldClasses[cnt].toLowerCase() != clazz.toLowerCase()) {
+                        newClasses.push(oldClasses[cnt]);
+                    }
+                }
+                item.attr("class").value = newClasses.join(" ");
+            }
+        });
+        return this;
+    }
+
+    /**
+     * checks whether we have a multipart element in our children
+     */
+    isMultipartCandidate(): boolean {
+        return this.querySelectorAll("input[type='file']").firstElem().isPresent();
+    }
+
+    /**
+     * innerHtml equivalkent
+     * equivalent to jqueries html
+     * as setter the html is set and the
+     * DomQuery is given back
+     * as getter the html string is returned
+     *
+     * @param inval
+     */
+    html(inval?: string): DomQuery | Optional<string> {
+        if (Optional.fromNullable(inval).isAbsent()) {
+            return this.getAsElem(0).isPresent() ? Optional.fromNullable(this.getAsElem(0).value.innerHTML) : Optional.absent;
+        }
+        if (this.getAsElem(0).isPresent()) {
+            this.getAsElem(0).value.innerHTML = inval;
+        }
+        return this;
+    }
+
+    /**
+     * easy node traversal, you can pass
+     * a set of node selectors which are joined as direct childs
+     * @param nodeSelector
+     */
+    getIf(...nodeSelector: Array<string>): DomQuery {
+        return this.querySelectorAll(" > " + nodeSelector.join(">"));
+    }
+
     eachElem(func: (item: Element, cnt?: number) => any): DomQuery {
         for (let cnt = 0, len = this.rootNode.length; cnt < len; cnt++) {
             if (func(this.rootNode[cnt], cnt) === false) {
@@ -404,7 +451,6 @@ export class DomQuery {
         }
         return this;
     }
-
 
     each(func: (item: DomQuery, cnt?: number) => any): DomQuery {
         for (let cnt = 0, len = this.rootNode.length; cnt < len; cnt++) {
@@ -428,7 +474,6 @@ export class DomQuery {
         return this;
     }
 
-
     /**
      * filter function which filters a subset
      *
@@ -442,15 +487,18 @@ export class DomQuery {
         return new DomQuery(...<any>reArr);
     }
 
+    //TODO append prepend
+
     /**
      * globa eval head appendix method
      * no other methods are supported anymore
-     * @param code
+     * @param code the code to be evaled
+     * @param  nonce optional  nonce key for higher security
      */
-    globalEval(code: string, nonce ?:string): DomQuery {
+    globalEval(code: string, nonce ?: string): DomQuery {
         let head = document.getElementsByTagName("head")[0] || document.documentElement;
         let script = document.createElement("script");
-        if(nonce) {
+        if (nonce) {
             script.setAttribute("nonce", nonce);
         }
         script.type = "text/javascript";
@@ -458,10 +506,6 @@ export class DomQuery {
         head.insertBefore(script, head.firstChild);
         head.removeChild(script);
         return this;
-    }
-
-    static globalEval(code: string): DomQuery {
-        return new DomQuery(document).globalEval(code);
     }
 
     /**
@@ -484,14 +528,22 @@ export class DomQuery {
      */
     appendTo(elem: DomQuery) {
         this.eachElem((item) => {
-            let value1: Element = <Element> elem.getAsElem(0).get(Optional.fromNullable({appendChild: (any) => {}})).value;
+            let value1: Element = <Element>elem.getAsElem(0).get(Optional.fromNullable({
+                appendChild: (theItem: any) => {
+                }
+            })).value;
             value1.appendChild(item);
         });
     }
 
-    //TODO append prepend
-
-    loadScriptEval(src, type, defer, charSet, async) {
+    /**
+     * loads and evals a script from a source uri
+     *
+     * @param src the source to be loaded and evaled
+     * @param defer in miliseconds execution default (0 == no defer)
+     * @param charSet
+     */
+    loadScriptEval(src: string, defer: number = 0, charSet: string) {
         let xhr = new XMLHttpRequest();
         xhr.open("GET", src, false);
 
@@ -516,7 +568,7 @@ export class DomQuery {
                     //but since it is not in use yet, it is ok
                     setTimeout(function () {
                         this.globalEval(xhr.responseText + "\r\n//@ sourceURL=" + src);
-                    }, 1);
+                    }, defer);
                 }
             } else {
                 throw Error(xhr.responseText);
@@ -548,7 +600,6 @@ export class DomQuery {
         }
         return this;
     }
-
 
     orElse(...elseValue: any): DomQuery {
         if (this.isPresent()) {
@@ -582,7 +633,7 @@ export class DomQuery {
                 item = <Element>item.parentNode;
                 resolveItem(item);
                 //nested forms not possible, performance shortcut
-                if(tagName == "form" && retArr.length) {
+                if (tagName == "form" && retArr.length) {
                     return false;
                 }
             }
@@ -590,16 +641,7 @@ export class DomQuery {
         return new DomQuery(...retArr);
     }
 
-    get childNodes(): DomQuery {
-        let childNodeArr: Array<Element> = [];
-        this.eachElem((item: Element) => {
-            childNodeArr = childNodeArr.concat(Lang.instance.objToArray(item.childNodes));
-        });
-        return new DomQuery(...childNodeArr);
-    }
-
-
-    copyAttrs(sourceItem: DomQuery | XMLQuery): DomQuery {
+    copyAttrs(sourceItem: DomQuery | XMLQuery): DomQuery {
         sourceItem.eachElem((sourceNode: Element) => {
             for (let cnt = 0; cnt < sourceNode.attributes.length; cnt++) {
                 let value = sourceNode.attributes[cnt].value;
@@ -609,13 +651,6 @@ export class DomQuery {
             }
         });
         return this;
-    }
-
-    private subNodes(from: number, to?: number): DomQuery {
-        if (Optional.fromNullable(to).isAbsent()) {
-            to = this.length;
-        }
-        return new DomQuery(...this.rootNode.slice(from, Math.min(to, this.length)));
     }
 
     /**
@@ -650,19 +685,12 @@ export class DomQuery {
         return this;
     }
 
-
     /**
-     * Run through the given Html item and execute the inline scripts
-     * (IE doesn't do this by itself)
-     * @param {Node} item
+     * Run through the given nodes in the DomQuery execute the inline scripts
      * @param whilteListed: optional whitelist function which can filter out script tags which are not processed
+     * defaults to the standard jsf.js exclusion (we use this code for myfaces)
      */
-    runScripts(whilteListed: (val: string) => boolean = (src: string) => {
-        return (src.indexOf("ln=scripts") == -1 &&
-            src.indexOf("ln=javax.faces") == -1) ||
-            (src.indexOf("/jsf.js") == -1 &&
-                src.indexOf("/jsf-uncompressed.js") == -1);
-    }): DomQuery {
+    runScripts(whilteListed: (val: string) => boolean = DEFAULT_JSF_WHITELIST): DomQuery {
         let _Lang = Lang.instance,
             finalScripts = [],
             execScrpt = (item) => {
@@ -689,7 +717,7 @@ export class DomQuery {
 
                                 finalScripts = [];
                             }
-                            this.loadScriptEval(src, item.getAttribute('type'), false, "UTF-8", false);
+                            this.loadScriptEval(src, 0, "UTF-8");
                         }
 
                     } else {
@@ -747,7 +775,6 @@ export class DomQuery {
         }
     }
 
-
     runCss(): DomQuery {
 
         const UDEF = "undefined",
@@ -767,7 +794,6 @@ export class DomQuery {
                 } else {
                     newSS.appendChild(document.createTextNode(style));
                 }
-
 
             },
 
@@ -794,14 +820,12 @@ export class DomQuery {
                 }
             };
 
-
         const scriptElements: DomQuery = this.querySelectorAll("link, style");
         if (scriptElements == null) return;
         for (let cnt = 0; cnt < scriptElements.length; cnt++) {
             let element: any = scriptElements.getAsElem(cnt);
             execCss(element.value);
         }
-
 
         return this;
     }
@@ -814,14 +838,14 @@ export class DomQuery {
         return this;
     }
 
-    addEventListener(type: string, listener: (evt: Event) => void, options?:  boolean | EventListenerOptions): DomQuery {
+    addEventListener(type: string, listener: (evt: Event) => void, options?: boolean | EventListenerOptions): DomQuery {
         this.eachElem((node: Element) => {
-           node.addEventListener(type, listener, options);
+            node.addEventListener(type, listener, options);
         });
         return this;
     }
 
-    removeEventListener(type: string, listener: (evt: Event) => void, options?:  boolean | EventListenerOptions): DomQuery {
+    removeEventListener(type: string, listener: (evt: Event) => void, options?: boolean | EventListenerOptions): DomQuery {
         this.eachElem((node: Element) => {
             node.removeEventListener(type, listener, options);
         });
@@ -836,7 +860,7 @@ export class DomQuery {
             var doc;
             if (node.ownerDocument) {
                 doc = node.ownerDocument;
-            } else if (node.nodeType == 9){
+            } else if (node.nodeType == 9) {
                 // the node may be the document itself, nodeType 9 = DOCUMENT_NODE
                 doc = node;
             } else {
@@ -874,7 +898,7 @@ export class DomQuery {
                 event.synthetic = true; // allow detection of synthetic events
                 // The second parameter says go ahead with the default action
                 node.dispatchEvent(event);
-            } else  if ((<any>node).fireEvent) {
+            } else if ((<any>node).fireEvent) {
                 // IE-old school style, you can drop this if you don't need to support IE8 and lower
                 var event = doc.createEventObject();
                 event.synthetic = true; // allow detection of synthetic events
@@ -883,30 +907,15 @@ export class DomQuery {
         })
     }
 
-    /**
-     * builds the ie nodes properly in a placeholder
-     * and bypasses a non script insert bug that way
-     * @param markup the marku code
-     */
-    static fromMarkup(markup: string): DomQuery {
-        //TODO check if ie8 still has this problem, probably not we probably
-        //can drop this code in favor of html
+    //TODO maybe move this out into a specialized domquery implementation
 
-        //now to the non w3c compliant browsers
-        //http://blogs.perl.org/users/clinton_gormley/2010/02/forcing-ie-to-accept-script-tags-in-innerhtml.html
-        //we have to cope with deficiencies between ie and its simulations in this case
-        let dummyPlaceHolder = new DomQuery(document.createElement("div"));
-
-        //fortunately a table element also works which is less critical than form elements regarding
-        //the inner content
-        dummyPlaceHolder.html("<table><tbody><tr><td>" + markup + "</td></tr></tbody></table>");
-        let childs = dummyPlaceHolder.querySelectorAll("td").get(0).childNodes;
-        childs.detach();
-        dummyPlaceHolder.html("");
-        return childs;
+    private subNodes(from: number, to?: number): DomQuery {
+        if (Optional.fromNullable(to).isAbsent()) {
+            to = this.length;
+        }
+        return new DomQuery(...this.rootNode.slice(from, Math.min(to, this.length)));
     }
 
-    //TODO maybe move this out into a specialized domquery implementation
     //in the myfaces project
     private encodeElement(element: HTMLInputElement | HTMLSelectElement, targetBuf: { [key: string]: any }) {
 
@@ -915,7 +924,6 @@ export class DomQuery {
         if (!element.name) {
             return;
         }
-
 
         let name = element.name;
         let tagName = element.tagName.toLowerCase();
@@ -973,8 +981,6 @@ export class DomQuery {
 
         }
     }
-
-    static absent = new DomQuery();
 }
 
 

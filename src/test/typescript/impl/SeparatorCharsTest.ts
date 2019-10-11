@@ -22,15 +22,12 @@ import {standardInits} from "../frameworkBase/_ext/shared/StandardInits";
 import defaultMyFaces = standardInits.defaultMyFaces;
 import defaultSeparatorChar = standardInits.defaultSeparatorChar;
 
-
 const jsdom = require("jsdom");
 const {JSDOM} = jsdom;
 sinon.reset();
 
-
 declare var jsf: any;
 declare var Implementation: any;
-
 
 describe('various tests for get separator char', () => {
 
@@ -48,7 +45,6 @@ describe('various tests for get separator char', () => {
             }
         })
     });
-
 
     it("should have a custom separator char", (done) => {
 

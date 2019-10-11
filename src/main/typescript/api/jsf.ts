@@ -15,6 +15,8 @@
  */
 
 ///<reference path='./_apiInterfaces.ts'/>
+///<reference types='../../Types/Types'/>
+
 import {Implementation} from "../impl/Impl";
 
 declare let window: any;

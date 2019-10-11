@@ -60,5 +60,19 @@ export class Const {
 
     static STAGE_DEVELOPMENT = "Development";
 
+
+
+    static CONTENT_TYPE: "Content-Type";
+    static HEAD_FACES_REQ: "Faces-Request";
+    static REQ_ACCEPT = "Accept";
+    static VAL_AJAX: "partial/ajax";
+    static ENCODED_URL: "javax.faces.encodedURL";
+    static REQ_TYPE_GET = "GET";
     static REQ_TYPE_POST = "POST";
+    static STATE_EVT_BEGIN = "BEGIN";
+    static STATE_EVT_TIMEOUT = "TIMEOUT_EVENT";
+    static STATE_EVT_COMPLETE = "COMPLETE";
+    static URL_ENCODED = "application/x-www-form-urlencoded";
+    static NO_TIMEOUT = 0;
+    static STD_ACCEPT = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
 }

@@ -22,7 +22,6 @@ import {Implementation} from "../Impl";
 import {DomQuery} from "../../_ext/monadish/DomQuery";
 import {Const} from "../core/Const";
 import {XhrFormData} from "./XhrFormData";
-import FormDataDecorator = LangTypes.FormDataDecorator;
 
 type PROMISE_FUNC = (any?) => void;
 

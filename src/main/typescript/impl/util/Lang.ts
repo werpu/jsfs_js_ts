@@ -30,10 +30,6 @@ import {Config, Optional} from "../../_ext/monadish/Monad";
 import {CancellablePromise} from "../../_ext/monadish/Promise";
 import JSFErrorData = LangTypes.JSFErrorData;
 import MyFacesErrorData = LangTypes.MyFacesErrorData;
-import FormDataDecorator = LangTypes.FormDataDecorator;
-import FormDataDecoratorArray = LangTypes.FormDataDecoratorArray;
-import FormDataDecoratorString = LangTypes.FormDataDecoratorString;
-import FormDataDecoratorOther = LangTypes.FormDataDecoratorOther;
 
 export class Lang {
 

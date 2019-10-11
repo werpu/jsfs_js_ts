@@ -40,6 +40,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     /** predefined method */
     static CONTENT_TYPE: "Content-Type";
     static HEAD_FACES_REQ: "Faces-Request";
+    static REQ_ACCEPT = "Accept";
     static VAL_AJAX: "partial/ajax";
     static ENCODED_URL: "javax.faces.encodedURL";
     static REQ_TYPE_GET = "GET";
@@ -49,8 +50,9 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     static STATE_EVT_COMPLETE = "COMPLETE";
     static URL_ENCODED = "application/x-www-form-urlencoded";
     static NO_TIMEOUT = 0;
+    static STD_ACCEPT = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
 
-    private _pXhr: Promise<XMLHttpRequest>;
+    private xhrPromise: Promise<XMLHttpRequest>;
 
     /**
      * Reqired Parameters
@@ -103,7 +105,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             //probably not needed anymore, will test this
             //some webkit based mobile browsers do not follow the w3c spec of
             // setting the accept headers automatically
-            Lang.saveExecute(() => this.xhrObject.setRequestHeader("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"));
+            Lang.saveExecute(() => this.xhrObject.setRequestHeader(XhrRequest.REQ_ACCEPT,XhrRequest.STD_ACCEPT));
 
             this.sendEvent(XhrRequest.STATE_EVT_BEGIN);
 
@@ -160,12 +162,12 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     }
 
     get $promise(): Promise<any> {
-        if (!this._pXhr) {
-            this._pXhr = new Lang.Promise((resolve: PROMISE_FUNC, reject: PROMISE_FUNC) => {
-                this.attachInternalCallbacks(resolve, reject);
+        if (!this.xhrPromise) {
+            this.xhrPromise = new Lang.Promise((resolve: PROMISE_FUNC, reject: PROMISE_FUNC) => {
+                this.registerXhrCallbacks(resolve, reject);
             });
         }
-        return this._pXhr;
+        return this.xhrPromise;
     }
 
     /**
@@ -174,7 +176,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
      * @param resolve
      * @param reject
      */
-    private attachInternalCallbacks(resolve: PROMISE_FUNC, reject: PROMISE_FUNC) {
+    private registerXhrCallbacks(resolve: PROMISE_FUNC, reject: PROMISE_FUNC) {
         this.xhrObject.onabort = () => {
             this.onAbort(resolve, reject);
         };

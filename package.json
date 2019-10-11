@@ -1,10 +1,10 @@
 {
-  "name": "jsf.js",
-  "version": "1.0.0",
-  "description": "My webpack project",
-  "main": "index.js",
+  "name": "jsf.js_ts",
+  "version": "0.0.1",
+  "description": "A typescript reimplementation of jsf.js",
+  "main": "dist/window/jsf.js",
   "scripts": {
-    "test": "mocha -r ts-node/register ./test/typescript/**/**/*Test*.ts",
+    "test": "mocha -r ts-node/register ./**/test/typescript/**/**/*Test*.ts",
     "build": "webpack"
   },
   "keywords": [

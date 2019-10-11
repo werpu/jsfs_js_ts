@@ -1,12 +1,13 @@
-const webpack = require('webpack');
-const path = require('path');
+import * as webpack from 'webpack';
+import * as path from 'path'
 
-module.exports = {
+
+const config: webpack.Configuration =  {
     context: __dirname,
     entry: "./main/typescript/api/jsf.ts",
     output: {
         path: path.resolve(__dirname, '../targets'),
-        libraryTarget: "window",
+        libraryTarget: process.env.TARGET_TYPE || "window",
         filename: "jsf.js"
     },
     resolve: {
@@ -19,4 +20,6 @@ module.exports = {
         ]
     }
 }
+
+export default config;
 

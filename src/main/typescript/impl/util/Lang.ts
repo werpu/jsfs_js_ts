@@ -100,7 +100,7 @@ export class Lang {
         return LangBase.saveResolve(resolverProducer, defaultValue);
     }
 
-    static failSaveExecute<T>(resolverProducer: () => T, defaultValue: T = null): void {
+    static failSaveExecute<T>(resolverProducer: () => any, defaultValue: T = null): void {
         LangBase.saveResolve(resolverProducer, defaultValue);
     }
 

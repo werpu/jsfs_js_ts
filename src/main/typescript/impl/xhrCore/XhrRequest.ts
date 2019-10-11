@@ -99,13 +99,13 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             //a bug in the xhr stub library prevents the setRequestHeader to be properly executed on fake xhr objects
             //normal browsers should resolve this
             //tests can quietly fail on this one
-            Lang.saveExecute(() => this.xhrObject.setRequestHeader(XhrRequest.CONTENT_TYPE, `${this.contentType}; charset=utf-8"`));
-            Lang.saveExecute(() => this.xhrObject.setRequestHeader(XhrRequest.HEAD_FACES_REQ, XhrRequest.VAL_AJAX));
+            Lang.faileSaveExecute(() => this.xhrObject.setRequestHeader(XhrRequest.CONTENT_TYPE, `${this.contentType}; charset=utf-8"`));
+            Lang.faileSaveExecute(() => this.xhrObject.setRequestHeader(XhrRequest.HEAD_FACES_REQ, XhrRequest.VAL_AJAX));
 
             //probably not needed anymore, will test this
             //some webkit based mobile browsers do not follow the w3c spec of
             // setting the accept headers automatically
-            Lang.saveExecute(() => this.xhrObject.setRequestHeader(XhrRequest.REQ_ACCEPT,XhrRequest.STD_ACCEPT));
+            Lang.faileSaveExecute(() => this.xhrObject.setRequestHeader(XhrRequest.REQ_ACCEPT,XhrRequest.STD_ACCEPT));
 
             this.sendEvent(XhrRequest.STATE_EVT_BEGIN);
 

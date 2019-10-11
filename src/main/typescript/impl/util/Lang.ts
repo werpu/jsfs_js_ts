@@ -69,7 +69,7 @@ export class Lang {
      * @constructor
      */
     static get Promise(): any {
-        return this.saveResolve<any>(
+        return this.failSaveResolve<any>(
             () => Promise.prototype.then ? Promise : CancellablePromise,
             CancellablePromise).value
     }
@@ -100,11 +100,11 @@ export class Lang {
      * @param defaultValue an optional default value if the producer failes to produce anything
      * @returns an Optional of the produced value
      */
-    static saveResolve<T>(resolverProducer: () => T, defaultValue: T = null): Optional<T> {
+    static failSaveResolve<T>(resolverProducer: () => T, defaultValue: T = null): Optional<T> {
         return LangBase.saveResolve(resolverProducer, defaultValue);
     }
 
-    static saveExecute<T>(resolverProducer: () => T, defaultValue: T = null): void {
+    static faileSaveExecute<T>(resolverProducer: () => T, defaultValue: T = null): void {
         LangBase.saveResolve(resolverProducer, defaultValue);
     }
 

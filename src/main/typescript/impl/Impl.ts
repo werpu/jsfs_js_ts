@@ -176,7 +176,7 @@ export class Implementation {
         this.applyWindowId(options);
 
         ctx.apply(Const.CTX_PARAM_PASS_THR).value = _Lang.mergeMaps([{}, <any>options.value], true, <any>this.BLOCK_FILTER);
-        ctx.applyIf(!!event, Const.CTX_PARAM_PASS_THR, Const.P_EVT).value = Lang.saveResolve(() => event.type);
+        ctx.applyIf(!!event, Const.CTX_PARAM_PASS_THR, Const.P_EVT).value = Lang.failSaveResolve(() => event.type);
 
         /**
          * ajax pass through context with the source

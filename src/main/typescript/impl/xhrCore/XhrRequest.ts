@@ -1,26 +1,40 @@
+/* Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import {Lang} from "../util/Lang";
+import {LangTypes} from "../util/LangTypes";
+import {AsyncRunnable} from "../util/AsyncRunnable";
+import {Config} from "../../_ext/monadish/Monad";
+import {Implementation} from "../Impl";
+import {DomQuery} from "../../_ext/monadish/DomQuery";
+import {Const} from "../core/Const";
+import {XhrFormData} from "./XhrFormData";
+import FormDataDecorator = LangTypes.FormDataDecorator;
+
+type PROMISE_FUNC = (any?) => void;
+
 /**
- * an xmlhttp request approach with a promise
+ * JSFed XHR Request Wrapper
+ * as Asyncrunnable for our Asynchronous queue
  *
  * The idea is that we basically just enqueue
  * a single ajax request into our queue
  * and let the queue do the processing.
  *
  */
-
-import {Lang} from "../util/Lang";
-import {LangTypes} from "../util/LangTypes";
-import {AjaxUtils} from "./AjaxUtils";
-
-import FormDataDecorator = LangTypes.FormDataDecorator;
-import {AsyncRunnable} from "../util/AsyncRunnable";
-import {Config} from "../../_ext/monadish/Monad";
-
-import {Promise as ShimPromise} from "../../_ext/monadish/Promise";
-import {Implementation} from "../Impl";
-import {DomQuery} from "../../_ext/monadish/DomQuery";
-
-type PROMISE_FUNC = (any?) => void;
-
 export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
 
     /** predefined method */
@@ -35,67 +49,95 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     static STATE_EVT_COMPLETE = "COMPLETE";
     static URL_ENCODED = "application/x-www-form-urlencoded";
     static NO_TIMEOUT = 0;
-    pXhr: Promise<XMLHttpRequest>;
-    xhrObject: XMLHttpRequest;
+    _pXhr: Promise<XMLHttpRequest>;
 
+    /**
+     * Reqired Parameters
+     *
+     * @param source the issuing element
+     * @param sourceForm the form which is related to the issuing element
+     * @param requestContext the request context with allö pass through values
+     *
+     * Optional Parameters
+     *
+     * @param partialIdsArray an optional restricting partial ids array for encoding
+     * @param timeout optional xhr timeout
+     * @param ajaxType optional request type, default "POST"
+     * @param contentType optional content type, default "application/x-www-form-urlencoded"
+     * @param xhrObject optional xhr object which must fullfill the XMLHTTPRequest api, default XMLHttpRequest
+     */
     constructor(
         private source: DomQuery,
         private sourceForm: DomQuery,
         private requestContext: Config,
         private partialIdsArray = [],
+        private timeout = XhrRequest.NO_TIMEOUT,
         private ajaxType = XhrRequest.REQ_TYPE_POST,
         private contentType = XhrRequest.URL_ENCODED,
-        private timeout = XhrRequest.NO_TIMEOUT
+        private xhrObject = new XMLHttpRequest()
     ) {
-        //node fallback for standalone tests
-        this.xhrObject = new XMLHttpRequest();
-        this.pXhr = this.createPromise()
-    }
-
-    get $promise(): Promise<XMLHttpRequest> {
-        return this.pXhr;
     }
 
     start(): Promise<XMLHttpRequest> {
-        let xhr = this.xhrObject;
         let _Lang = Lang.instance;
         try {
             let srcFormElement: HTMLFormElement = <HTMLFormElement>this.sourceForm.getAsElem(0).value;
-            let sourceForm = this.sourceForm,
-                targetURL = (typeof srcFormElement.elements[XhrRequest.ENCODED_URL] == 'undefined') ?
-                    srcFormElement.action :
-                    srcFormElement.elements[XhrRequest.ENCODED_URL].value,
-                formData: FormDataDecorator | { [key: string]: any } = this.getFormData();
+            let sourceForm = this.sourceForm;
 
-            formData = _Lang.mixMaps(<any>formData, this.requestContext.getIf("passThrgh").value, true);
+            let formData: XhrFormData = new XhrFormData(this.sourceForm, this.source);
 
-            this.xhrObject.open(this.ajaxType, targetURL +
-                ((this.ajaxType == XhrRequest.REQ_TYPE_GET) ? "?" + this.formDataToURI(<FormDataDecorator>formData) : "")
-                , true);
+            //next step the pass through parameters are merged in for post params
+            formData.shallowMerge(this.requestContext.getIf(Const.CTX_PARAM_PASS_THR));
 
-            xhr.timeout = this.timeout;
+            this.xhrObject.open(this.ajaxType, this.resolveFinalUrl(formData), true);
 
-            this.applyContentType(xhr);
-            xhr.setRequestHeader(XhrRequest.HEAD_FACES_REQ, XhrRequest.VAL_AJAX);
+            //adding timeout
+            if (this.timeout) {
+                this.xhrObject.timeout = this.timeout;
+            }
 
+            //a bug in the xhr stub library prevents the setRequestHeader to be properly executed on fake xhr objects
+            //normal browsers should resolve this
+            //tests can quietly fail on this one
+            Lang.saveResolve(() => this.xhrObject.setRequestHeader(XhrRequest.CONTENT_TYPE, `${this.contentType}; charset=utf-8"`));
+            Lang.saveResolve(() => this.xhrObject.setRequestHeader(XhrRequest.HEAD_FACES_REQ, XhrRequest.VAL_AJAX));
+
+            //probably not needed anymore, will test this
             //some webkit based mobile browsers do not follow the w3c spec of
             // setting the accept headers automatically
             //if(this._RT.browser.isWebKit) {
             //    xhr.setRequestHeader("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
             //}
             this.sendEvent(XhrRequest.STATE_EVT_BEGIN);
-            //Check if it is a custom form data object
-            //if yes we use makefinal for the final handling
-            let finalFormData: string = <string>((formData && formData.makeFinal) ? formData.makeFinal() : formData);
 
-            xhr.send((this.ajaxType != XhrRequest.REQ_TYPE_GET) ? finalFormData : null);
+            this.sendRequest(formData);
 
         } catch (e) {
             //_onError//_onError
             e = (e._mfInternal) ? e : _Lang.makeException(new Error(), "sendError", "sendError", "XHRPromise", "send", e.message);
             this.handleError(e);
         }
-        return this.pXhr;
+        return this.$promise;
+    }
+
+    private resolveTargetUrl(srcFormElement: HTMLFormElement) {
+        return (typeof srcFormElement.elements[XhrRequest.ENCODED_URL] == 'undefined') ?
+            srcFormElement.action :
+            srcFormElement.elements[XhrRequest.ENCODED_URL].value;
+    }
+
+    protected sendRequest(formData: XhrFormData) {
+        this.xhrObject.send((this.ajaxType != XhrRequest.REQ_TYPE_GET) ? formData.toString() : null);
+    }
+
+    private resolveFinalUrl(formData: XhrFormData) {
+        let targetUrl =  this.resolveTargetUrl(<HTMLFormElement>this.sourceForm.getAsElem(0).value);
+
+        return targetUrl + (this.isGetRequest() ? "?" + formData.toString() : "");
+    }
+
+    private isGetRequest() {
+        return this.ajaxType == XhrRequest.REQ_TYPE_GET;
     }
 
     onAbort(resolve: PROMISE_FUNC, reject: PROMISE_FUNC) {
@@ -123,76 +165,42 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     }
 
     catch(func: (data: any) => any): AsyncRunnable<XMLHttpRequest> {
-        this.pXhr.catch(func);
+        this.$promise.catch(func);
         return this;
     }
 
     finally(func: () => void): AsyncRunnable<XMLHttpRequest> {
         //no ie11 support we probably are going to revert to shims for that one
-        (<any>this.pXhr).finally(func);
+        (<any>this.$promise).finally(func);
         return this;
     }
 
     then(func: (data: any) => any): AsyncRunnable<XMLHttpRequest> {
-        this.pXhr.then(func);
+        this.$promise.then(func);
         return this;
     }
 
-    private createPromise() {
-        return new Lang.Promise((resolve: PROMISE_FUNC, reject: PROMISE_FUNC) => {
-            this.xhrObject.onabort = () => {
-                this.onAbort(resolve, reject);
-            };
-            this.xhrObject.ontimeout = () => {
-                this.onTimeout(resolve, reject);
-            };
-            this.xhrObject.onload = () => {
-                this.onSuccess(this.xhrObject, resolve, reject)
-            };
-            this.xhrObject.onloadend = () => {
-                this.onDone(this.xhrObject, resolve, reject);
-            };
-            this.xhrObject.onerror = (errorData: any) => {
-                this.onError(errorData, resolve, reject);
-            };
-        });
-    }
-
-    /**
-     * helper, in multipart situations we might alter the content type
-     * from the urlencoded one
-     */
-
-    private applyContentType(xhr: XMLHttpRequest) {
-        let contentType = this.contentType + "; charset=utf-8";
-        xhr.setRequestHeader(XhrRequest.CONTENT_TYPE, contentType);
-    }
-
-    /**
-     * Spec. 13.3.1
-     * Collect and encode input elements.
-     * Additionally the hidden element javax.faces.ViewState
-     * Enhancement partial page submit
-     *
-     * @return  an element of formDataWrapper
-     * which keeps the final Send Representation of the
-     */
-    private getFormData(): FormDataDecorator {
-        let ret: FormDataDecorator = null;
-
-        if (!this.partialIdsArray || !this.partialIdsArray.length) {
-            return Lang.instance.createFormDataDecorator((<any>window).jsf.getViewState(this.sourceForm));
-        } else {
-            //now this is less performant but we have to call it to allow viewstate decoration
-            ret = Lang.instance.createFormDataDecorator([]);
-            AjaxUtils.encodeSubmittableFields(ret, <HTMLFormElement>this.sourceForm.getAsElem(0).value, this.partialIdsArray);
-            //TODO myfaces options still needed?
-            if (this.source && this.requestContext.getIf("myfaces", "form").isPresent())
-                AjaxUtils.appendIssuingItem(this.source, ret);
-
+    get $promise(): Promise<any> {
+        if (!this._pXhr) {
+            this._pXhr = new Lang.Promise((resolve: PROMISE_FUNC, reject: PROMISE_FUNC) => {
+                this.xhrObject.onabort = () => {
+                    this.onAbort(resolve, reject);
+                };
+                this.xhrObject.ontimeout = () => {
+                    this.onTimeout(resolve, reject);
+                };
+                this.xhrObject.onload = () => {
+                    this.onSuccess(this.xhrObject, resolve, reject)
+                };
+                this.xhrObject.onloadend = () => {
+                    this.onDone(this.xhrObject, resolve, reject);
+                };
+                this.xhrObject.onerror = (errorData: any) => {
+                    this.onError(errorData, resolve, reject);
+                };
+            });
         }
-        return ret;
-
+        return this._pXhr;
     }
 
     private formDataToURI(formData: FormDataDecorator): string | FormDataDecorator {

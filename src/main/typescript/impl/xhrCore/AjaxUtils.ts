@@ -10,7 +10,7 @@ export class AjaxUtils {
     static encodeSubmittableFields(targetBuf: any,
                                    parentItem: HTMLFormElement, partialIds ?: string[]) {
         if (!parentItem) throw "NO_PARITEM";
-        if (partialIds) {
+        if (partialIds && partialIds.length) {
             this.encodePartialSubmit(partialIds, targetBuf);
         } else {
             // add all nodes
@@ -32,6 +32,7 @@ export class AjaxUtils {
      * appends the issuing item if not given already
      * @param item
      * @param targetBuf
+     * TODO change params target alwyays to the left
      */
     static appendIssuingItem(item, targetBuf) {
         // if triggered by a Button send it along

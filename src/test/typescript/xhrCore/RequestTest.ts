@@ -64,7 +64,12 @@ describe('Tests on the xhr core when it starts to call the request', function ()
             }
         });
 
+        let send = sinon.spy(XMLHttpRequest.prototype,"send");
+
         expect(this.requests.length).to.eq(1);
+        expect(this.requests[0].method).to.eq("POST");
+        expect(this.requests[0].async).to.be.true;
+        expect(send.called).to.be.true;
         done();
     });
 

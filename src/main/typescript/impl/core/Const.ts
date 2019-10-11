@@ -54,6 +54,7 @@ export class Const {
     static CTX_PARAM_TR_TYPE = "_mfTransportType";
     static CTX_PARAM_PASS_THR = "passThrgh";
     static CTX_PARAM_DELAY = "delay";
+    static CTX_PARAM_TIMEOUT = "timeout";
     static CTX_PARAM_RST = "resetValues";
     static CTX_PARAM_EXECUTE = "execute";
 

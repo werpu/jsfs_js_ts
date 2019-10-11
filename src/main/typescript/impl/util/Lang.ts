@@ -399,28 +399,6 @@ export class Lang {
     }
 
     /**
-     * creates a neutral form data wrapper over an existing form Data element
-     * the wrapper delegates following methods, append
-     * and adds makeFinal as finalizing method which returns the final
-     * send representation of the element
-     *
-     * @param formData an array
-     */
-    createFormDataDecorator(formData: any): FormDataDecorator {
-        //we simulate the dom level 2 form element here
-        let bufInstance: FormDataDecorator = null;
-
-        if (formData instanceof Array) {
-            bufInstance = new FormDataDecoratorArray(formData);
-        } else if (this.isString(formData)) {
-            bufInstance = new FormDataDecoratorString(<string>formData);
-        } else {
-            bufInstance = new FormDataDecoratorOther(formData);
-        }
-        return bufInstance;
-    }
-
-    /**
      * creates an exeption with additional internal parameters
      * for extra information
      *

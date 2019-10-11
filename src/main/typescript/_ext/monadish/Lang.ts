@@ -166,10 +166,10 @@ export class Lang {
         let UNDEF = "undefined";
         for (let key in src) {
             if (!src.hasOwnProperty(key)) continue;
-            if (blockFilter && blockFilter[key]) {
+            if (blockFilter && blockFilter(key)) {
                 continue;
             }
-            if (whitelistFilter && !whitelistFilter[key]) {
+            if (whitelistFilter && !whitelistFilter(key)) {
                 continue;
             }
             if (!overwrite) {

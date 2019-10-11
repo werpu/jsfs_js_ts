@@ -463,6 +463,19 @@ export class Config extends Optional<any> {
         return new Config(value);
     }
 
+    /**
+     * simple merge for the root configs
+     */
+    shallowMerge(other: Config, overwrite = true) {
+        for(let key in other.value) {
+            if(overwrite  && key in this.value) {
+                this.apply(key).value = other.getIf(key).value;
+            } else if(!(key in this.value)) {
+                this.apply(key).value = other.getIf(key).value;
+            }
+        }
+    }
+
     apply(...keys: Array<any>): IValueHolder<any> {
         if (keys.length < 1) {
             return;

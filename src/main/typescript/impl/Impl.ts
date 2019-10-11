@@ -45,7 +45,7 @@ export class Implementation {
 
     /*blockfilter for the passthrough filtering; the attributes given here
      * will not be transmitted from the options into the passthrough*/
-    private BLOCK_FILTER = {onerror: 1, onevent: 1, render: 1, execute: 1, myfaces: 1, delay: 1, windowId: 1};
+    private BLOCK_FILTER = {onerror: 1, onevent: 1, render: 1, execute: 1, myfaces: 1, delay: 1, timedOut: 1, windowId: 1};
     private projectStage: string = null;
     private separator: string = null;
     private eventQueue = new ListenerQueue<EventData>();
@@ -251,14 +251,19 @@ export class Implementation {
             .orElseLazy(() => _Lang.getLocalOrGlobalConfig(ctx.value, Const.CTX_PARAM_DELAY, 0))
             .value;
 
-        this.addRequestToQueue(elem, form, ctx, delay);
+        let timeout: number = options.getIf(Const.CTX_PARAM_TIMEOUT)
+            .orElseLazy(() => _Lang.getLocalOrGlobalConfig(ctx.value, Const.CTX_PARAM_TIMEOUT, 0))
+            .value;
+
+        this.addRequestToQueue(elem, form, ctx, delay, timeout);
     }
 
     /**
      * public to make it shimmable for tests
      */
-    addRequestToQueue(elem: DomQuery, form: DomQuery, ctx: Config, delay = 0) {
-        this.requestQueue.enqueue(new XhrRequest(elem, form, ctx), delay);
+    addRequestToQueue(elem: DomQuery, form: DomQuery, ctx: Config, delay = 0, timeout = 0) {
+        //TODO multipart handling via its own adapted xhr derviate
+        this.requestQueue.enqueue(new XhrRequest(elem, form, ctx, [], timeout), delay);
     }
 
     /**

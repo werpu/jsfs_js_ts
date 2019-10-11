@@ -47,7 +47,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         private contentType = XhrRequest.URL_ENCODED,
         private timeout = XhrRequest.NO_TIMEOUT
     ) {
-
+        //node fallback for standalone tests
         this.xhrObject = new XMLHttpRequest();
         this.pXhr = this.createPromise()
     }

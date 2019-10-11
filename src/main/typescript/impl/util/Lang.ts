@@ -70,7 +70,7 @@ export class Lang {
      */
     static get Promise(): any {
         return this.saveResolve<any>(
-            () => window.Promise.prototype.then ? window.Promise : CancellablePromise,
+            () => Promise.prototype.then ? Promise : CancellablePromise,
             CancellablePromise).value
     }
 

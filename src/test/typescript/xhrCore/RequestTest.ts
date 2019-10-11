@@ -1,11 +1,70 @@
 import {describe, it} from "mocha";
+import * as sinon from "sinon";
+import { expect } from "chai";
+import {standardInits} from "../frameworkBase/_ext/shared/StandardInits";
+import defaultMyFaces = standardInits.defaultMyFaces;
+import {DomQuery} from "../../../main/typescript/_ext/monadish";
+
+
+declare var jsf: any;
+declare var Implementation: any;
 
 /**
  * specialized tests testing the xhr core behavior when it hits the xmlHttpRequest object
  */
 describe('Tests on the xhr core when it starts to call the request', function () {
 
+    beforeEach(function () {
+
+
+
+        let waitForResult = defaultMyFaces();
+
+        return waitForResult.then((close) => {
+            this.server = sinon.fakeServer.create();
+            this.xhr = sinon.useFakeXMLHttpRequest();
+            this.requests = [];
+            this.xhr.onCreate = (xhr) => {
+                this.requests.push(xhr);
+            };
+            (<any>global).XMLHttpRequest = this.xhr = sinon.useFakeXMLHttpRequest();
+            (<any>window).XMLHttpRequest = this.xhr = sinon.useFakeXMLHttpRequest();
+
+            this.jsfAjaxResponse = sinon.stub((<any>global).jsf.ajax, "response");
+
+
+            this.closeIt = () => {
+                (<any>global).XMLHttpRequest = (<any>window).XMLHttpRequest = this.xhr.restore();
+                this.jsfAjaxResponse.restore();
+                Implementation.reset();
+                close();
+            }
+        });
+    });
+
+    afterEach(function () {
+
+        this.closeIt();
+    });
+
     it('must have the standard parameters all in', function (done) {
+        //issue a standard jsf.ajax.request upon the standard simple form case and check the passed parameters
+        //and whether send was called
+        let element = DomQuery.byId("input_2").getAsElem(0).value;
+        jsf.ajax.request(element, null, {
+            execute: "input_1",
+            render: "@form",
+            pass1: "pass1",
+            pass2: "pass2",
+            onEvent: (event: any) => {
+                if(event.status == "success") {
+                    debugger;
+                    done();
+                }
+            }
+        });
+
+        expect(this.requests.length).to.eq(1);
         done();
     });
 

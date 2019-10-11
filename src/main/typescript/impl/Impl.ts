@@ -433,7 +433,7 @@ export class Implementation {
         /*now we serve the queue as well*/
         this.errorQueue.broadcastEvent(eventData);
 
-        if ((<any>window).getProjectStage() === Const.STAGE_DEVELOPMENT && !this.errorQueue.length && ctx.getIf(Const.ON_ERROR).isAbsent()) {
+        if ((<any>window).jsf.getProjectStage() === Const.STAGE_DEVELOPMENT && !this.errorQueue.length && ctx.getIf(Const.ON_ERROR).isAbsent()) {
 
             let errTpl = `
                     --------------------------------------------------------

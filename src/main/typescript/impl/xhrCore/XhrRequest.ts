@@ -15,15 +15,12 @@
  */
 
 import {Lang} from "../util/Lang";
-import {LangTypes} from "../util/LangTypes";
 import {AsyncRunnable} from "../util/AsyncRunnable";
 import {Config} from "../../_ext/monadish/Monad";
 import {Implementation} from "../Impl";
 import {DomQuery} from "../../_ext/monadish/DomQuery";
 import {Const} from "../core/Const";
 import {XhrFormData} from "./XhrFormData";
-
-type PROMISE_FUNC = (any?) => void;
 
 /**
  * JSFed XHR Request Wrapper
@@ -108,26 +105,26 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
 
 
 
-    onAbort(resolve: PROMISE_FUNC, reject: PROMISE_FUNC) {
+    onAbort(resolve: Consumer<any>, reject: Consumer<any>) {
         reject();
     }
 
-    onTimeout(resolve: PROMISE_FUNC, reject: PROMISE_FUNC) {
+    onTimeout(resolve: Consumer<any>, reject: Consumer<any>) {
         this.sendEvent(Const.STATE_EVT_TIMEOUT);
         reject();
     }
 
-    onSuccess(data: any, resolve: PROMISE_FUNC, reject: PROMISE_FUNC) {
+    onSuccess(data: any, resolve: Consumer<any>, reject: Consumer<any>) {
         this.sendEvent(Const.STATE_EVT_COMPLETE);
         this.requestContext.apply("_mfInternal").value = this.requestContext.getIf("_mfInternal").get({}).value;
         (<any>window).jsf.ajax.response(this.xhrObject, this.requestContext);
     }
 
-    onDone(data: any, resolve: PROMISE_FUNC, reject: PROMISE_FUNC) {
+    onDone(data: any, resolve: Consumer<any>, reject: Consumer<any>) {
         resolve(data);
     }
 
-    onError(errorData: any, resolve: PROMISE_FUNC, reject: PROMISE_FUNC) {
+    onError(errorData: any, resolve: Consumer<any>, reject: Consumer<any>) {
         this.handleError(errorData);
         reject();
     }
@@ -150,7 +147,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
 
     get $promise(): Promise<any> {
         if (!this.xhrPromise) {
-            this.xhrPromise = new Lang.Promise((resolve: PROMISE_FUNC, reject: PROMISE_FUNC) => {
+            this.xhrPromise = new Lang.Promise((resolve: Consumer<any>, reject: Consumer<any>) => {
                 this.registerXhrCallbacks(resolve, reject);
             });
         }
@@ -163,7 +160,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
      * @param resolve
      * @param reject
      */
-    private registerXhrCallbacks(resolve: PROMISE_FUNC, reject: PROMISE_FUNC) {
+    private registerXhrCallbacks(resolve: Consumer<any>, reject: Consumer<any>) {
         this.xhrObject.onabort = () => {
             this.onAbort(resolve, reject);
         };

@@ -1,8 +1,6 @@
 import {expect} from 'chai';
 import {describe, it} from 'mocha';
 import {Lang} from "../../../main/typescript/impl/util/Lang";
-import {LangTypes} from "../../../main/typescript/impl/util/LangTypes";
-import FormDataDecorator = LangTypes.FormDataDecorator;
 
 const jsdom = require("jsdom");
 const {JSDOM} = jsdom;
@@ -174,7 +172,7 @@ describe('Lang tests', () => {
 
     });
 
-    it('form data test', () => {
+    /*it('form data test', () => {
         const lang = Lang.instance;
         let sourceData: any = [1, 2, 3];
         let formData: FormDataDecorator = lang.createFormDataDecorator(sourceData);
@@ -183,6 +181,6 @@ describe('Lang tests', () => {
 
         formData.append("bla", "arg");
         expect(formData.makeFinal()).to.eq("1&2&3&bla=arg");
-    });
+    });*/
 });
 

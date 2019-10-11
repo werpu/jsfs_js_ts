@@ -26,12 +26,8 @@ import {DomQuery} from "../_ext/monadish/DomQuery";
 import {ExtDomQuery} from "./util/ExtDomQuery";
 import {Const} from "./core/Const";
 
-let globalConfig = myfacesConfig.myfaces.config;
 
-type EvalFuncs = Array<Function | string>;
-type Options = { [key: string]: string | Function | { [key: string]: string | Function } };
-type Context = { [key: string]: any };
-type ElemDef = Element | string;
+
 
 /**
  * Core Implementation
@@ -43,6 +39,7 @@ type ElemDef = Element | string;
  */
 export class Implementation {
 
+    private  globalConfig = myfacesConfig.myfaces.config;
     /*blockfilter for the passthrough filtering; the attributes given here
      * will not be transmitted from the options into the passthrough*/
     private BLOCK_FILTER = {onerror: 1, onevent: 1, render: 1, execute: 1, myfaces: 1, delay: 1, timedOut: 1, windowId: 1};
@@ -78,7 +75,7 @@ export class Implementation {
      * @return {char} the separator char for the given script tags
      */
     get separatorChar(): string {
-        return Optional.fromNullable(globalConfig.separator)
+        return Optional.fromNullable(this.globalConfig.separator)
             .orElse(this.separator)
             .orElseLazy(() => {
                 this.separator = ExtDomQuery.searchJsfJsFor(/separator=([^&;]*)/).orElse(":").value;
@@ -97,7 +94,7 @@ export class Implementation {
      * The value for it comes from the requestInternal parameter of the jsf.js script called "stage".
      */
     getProjectStage(): string {
-        return Optional.fromNullable(globalConfig.projectStage)
+        return Optional.fromNullable(this.globalConfig.projectStage)
             .orElse(this.projectStage)
             .orElseLazy(() => {
                 let projectStages = {"Production": 1, "Development": 1, "SystemTest": 1, "UnitTest": 1};

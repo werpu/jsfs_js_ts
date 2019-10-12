@@ -139,11 +139,20 @@ export class DomQuery {
         return <Optional<string>>this.getAsElem(0).getIf("tagName");
     }
 
+
     /**
      * convenience method for type
      */
     get type(): Optional<string> {
         return Optional.fromNullable(this.get(0).attr("type").value);
+    }
+
+    get name(): Optional<string> {
+        return Optional.fromNullable(this.get(0).attr("name").value);
+    }
+
+    get disabled(): boolean {
+        return !!this.attr("disabled").value;
     }
 
     get childNodes(): DomQuery {

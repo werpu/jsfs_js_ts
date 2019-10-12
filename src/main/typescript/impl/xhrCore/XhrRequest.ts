@@ -205,4 +205,5 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     private isGetRequest() {
         return this.ajaxType == Const.REQ_TYPE_GET;
     }
+
 }

@@ -936,71 +936,7 @@ export class DomQuery {
         return new DomQuery(...this.rootNode.slice(from, Math.min(to, this.length)));
     }
 
-    //in the myfaces project
-    private encodeElement(element: HTMLInputElement | HTMLSelectElement, targetBuf: { [key: string]: any }) {
 
-        //browser behavior no element name no encoding (normal submit fails in that case)
-        //https://issues.apache.org/jira/browse/MYFACES-2847
-        if (!element.name) {
-            return;
-        }
-
-        let name = element.name;
-        let tagName = element.tagName.toLowerCase();
-        let elemType = element.type;
-        if (elemType != null) {
-            elemType = elemType.toLowerCase();
-        }
-
-        // routine for all elements
-        // rules:
-        // - process only inputs, textareas and selects
-        // - elements muest have attribute "name"
-        // - elements must not be disabled
-        if (((tagName == "input" || tagName == "textarea" || tagName == "select") &&
-            (name != null && name != "")) && !element.disabled) {
-
-            // routine for select elements
-            // rules:
-            // - if select-one and value-Attribute exist => "name=value"
-            // (also if value empty => "name=")
-            // - if select-one and value-Attribute don't exist =>
-            // "name=DisplayValue"
-            // - if select multi and multple selected => "name=value1&name=value2"
-            // - if select and selectedIndex=-1 don't submit
-            if (tagName == "select") {
-                // selectedIndex must be >= 0 sein to be submittet
-                if ((<HTMLSelectElement>element).selectedIndex >= 0) {
-                    let uLen = (<HTMLSelectElement>element).options.length;
-                    for (let u = 0; u < uLen; u++) {
-                        // find all selected options
-                        //let subBuf = [];
-                        if ((<any>(<HTMLSelectElement>element).options[u]).selected) {
-                            let elementOption = (<HTMLSelectElement>element).options[u];
-                            targetBuf[name] = (elementOption.getAttribute("value") != null) ?
-                                elementOption.getAttribute("value") : elementOption.getAttribute("text");
-                        }
-                    }
-                }
-            }
-
-            // routine for remaining elements
-            // rules:
-            // - don't submit no selects (processed above), buttons, reset buttons, submit buttons,
-            // - submit checkboxes and radio inputs only if checked
-            if ((tagName != "select" && elemType != "button"
-                && elemType != "reset" && elemType != "submit" && elemType != "image")
-                && ((elemType != "checkbox" && elemType != "radio") || (<HTMLInputElement>element).checked)) {
-                if ('undefined' != typeof (<HTMLInputElement>element).files && (<HTMLInputElement>element).files != null && (<HTMLInputElement>element).files.length) {
-                    //xhr level2
-                    targetBuf[name] = (<HTMLInputElement>element).files[0];
-                } else {
-                    targetBuf[name] = element.value;
-                }
-            }
-
-        }
-    }
 }
 
 

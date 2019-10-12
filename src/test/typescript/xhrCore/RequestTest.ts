@@ -57,13 +57,7 @@ describe('Tests on the xhr core when it starts to call the request', function ()
             execute: "input_1",
             render: "@form",
             pass1: "pass1",
-            pass2: "pass2",
-            onEvent: (event: any) => {
-                if(event.status == "success") {
-                    debugger;
-                    done();
-                }
-            }
+            pass2: "pass2"
         });
 
 

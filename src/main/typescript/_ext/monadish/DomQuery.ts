@@ -15,7 +15,7 @@
  */
 
 import {Lang} from "./Lang";
-import {IValueHolder, Optional} from "./Monad";
+import {IValueHolder, Optional, Stream} from "./Monad";
 import {XMLQuery} from "./XmlQuery";
 
 export class ElementAttribute implements IValueHolder<string> {
@@ -152,6 +152,14 @@ export class DomQuery {
             childNodeArr = childNodeArr.concat(Lang.instance.objToArray(item.childNodes));
         });
         return new DomQuery(...childNodeArr);
+    }
+
+    map<T>(mapFunction: (item: DomQuery) => T): Stream<T>  {
+        let ret: Array<T> = [];
+        this.each((item) => {
+            ret.push(mapFunction(item));
+        });
+        return new Stream<T>(...ret);
     }
 
     /**

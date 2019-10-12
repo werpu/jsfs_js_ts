@@ -26,7 +26,7 @@ import {DomQuery} from "../_ext/monadish/DomQuery";
 import {ExtDomQuery} from "./util/ExtDomQuery";
 import {Const} from "./core/Const";
 
-
+declare var jsf: any;
 
 
 /**
@@ -417,7 +417,7 @@ export class Implementation {
             // silently ignore: user can find out by examining the event data
         }
         //extended error message only in dev mode
-        if ((<any>window).jsf.getProjectStage() === Const.STAGE_DEVELOPMENT) {
+        if (jsf.getProjectStage() === Const.STAGE_DEVELOPMENT) {
             let errTpl = `
                     Error:
                     Server Error Message: ${eventData.serverErrorMessage || ''}
@@ -435,7 +435,7 @@ export class Implementation {
         /*now we serve the queue as well*/
         this.errorQueue.broadcastEvent(eventData);
 
-        if ((<any>window).jsf.getProjectStage() === Const.STAGE_DEVELOPMENT && !this.errorQueue.length && ctx.getIf(Const.ON_ERROR).isAbsent()) {
+        if (jsf.getProjectStage() === Const.STAGE_DEVELOPMENT && !this.errorQueue.length && ctx.getIf(Const.ON_ERROR).isAbsent()) {
 
             let errTpl = `
                     --------------------------------------------------------
@@ -458,6 +458,67 @@ export class Implementation {
             let displayError: (string) => void = _Lang.getGlobalConfig("defaultErrorOutput", (console ? console.error : alert));
             displayError(errTpl);
         }
+    }
+
+
+    /**
+     * @return the client window id of the current window, if one is given
+     */
+    getClientWindow(node?: Element | string) {
+        const ALTERED = "___mf_id_altered__";
+        const INIT = "___init____";
+
+        /**
+         * the search root for the dom element search
+         */
+        let searchRoot = new DomQuery(node || document.body);
+
+        /**
+         * a set of input elements holding the window id over the entire document
+         */
+        let windowIdHolders = searchRoot.querySelectorAll(`form #${Const.P_WIN_ID}` );
+
+        /**
+         * lazy helper to fetch the window id from the window url
+         */
+        let fetchWindowIdFromUrl = () => ExtDomQuery.searchJsfJsFor(/jfwid=([^&;]*)/).orElse(":").value;
+
+        /**
+         * functional double check based on stream reduction
+         * the values should be identical or on INIT value which is a premise to
+         * skip the first check
+         *
+         * @param value1
+         * @param value2
+         */
+        let doubleCheck = (value1: string, value2: string) => {
+            if(value1 == ALTERED) {
+                return value1;
+            } else if(value1 == INIT) {
+                return value2;
+            } else if(value1 != value2) {
+                return ALTERED;
+            }
+            return value2;
+        };
+
+        /**
+         * fetch the window id from the forms
+         * window ids must be present in all forms
+         * or non existent. If they exist all of them must be the same
+         */
+        let formWindowId: Optional<string> = searchRoot.map<string>((item: DomQuery) =>  item.attr("value").value).reduce(doubleCheck, INIT);
+
+        //if the resulting window id is set on altered then we have an unresolvable problem
+        if(formWindowId.value == ALTERED) {
+            throw Error("Multiple different windowIds found in document");
+        }
+
+        /**
+         * return the window id or null
+         * prio, forms under node/document and if not given then from the url
+         */
+        return formWindowId.orElseLazy(fetchWindowIdFromUrl).value;
     }
 
     private applyWindowId(options: Config) {
@@ -502,7 +563,7 @@ export class Implementation {
      * probably deprecated in favor of windowId need to check the specs
      */
     private applyClientWindowId(form: DomQuery, ctx: Config) {
-        let clientWindow = (<any>window).jsf.getClientWindow(form.getAsElem(0).value);
+        let clientWindow = jsf.getClientWindow(form.getAsElem(0).value);
         if (clientWindow) {
             if (form.querySelectorAll("[name='" + Const.P_CLIENTWINDOW + "']").length == 0) {
                 ctx.apply(Const.CTX_PARAM_MF_INTERNAL, "_clientWindow").value = clientWindow;

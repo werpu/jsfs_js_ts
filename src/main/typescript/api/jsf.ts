@@ -94,8 +94,8 @@ export module jsf {
      * @param {optional String | DomNode}  the node for which the client identifier has to be determined
      * @return the window identifier or null if none is found
      */
-    export function getClientWindow(rootNode?: Element | String): string {
-        return null;
+    export function getClientWindow(rootNode?: Element | string): string {
+        return Impl.getClientWindow(rootNode);
     }
 
     //private helper functions

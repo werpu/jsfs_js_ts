@@ -85,7 +85,7 @@ export module jsf {
      * @throws an exception in case of the given element not being of type form!
      * https://issues.apache.org/jira/browse/MYFACES-2110
      */
-    export function getViewState(formElement: any): string {
+    export function getViewState(formElement: Element | string): string {
         return null;
     }
 

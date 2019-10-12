@@ -42,11 +42,9 @@ export class XhrFormData extends Config {
          * Enhancement partial page submit
          *
          */
-        AjaxUtils.encodeSubmittableFields(this.value, <HTMLFormElement>this.sourceForm.getAsElem(0).value, this.partialIdsArray);
-        if (!(partialIdsArray || partialIdsArray.length == 0) && this.issuingItem) {
-            AjaxUtils.appendIssuingItem(issuingItem.getAsElem(0).value, this.value);
-        }
-        this.apply(Const.P_VIEWSTATE, jsf.getViewState(this.sourceForm.getAsElem(0).value))
+        AjaxUtils.encodeSubmittableFields(this, <HTMLFormElement>this.sourceForm.getAsElem(0).value, this.partialIdsArray);
+
+        this.apply(Const.P_VIEWSTATE).value = jsf.getViewState(this.sourceForm.getAsElem(0).value);
     }
 
     toFormData(): FormData {

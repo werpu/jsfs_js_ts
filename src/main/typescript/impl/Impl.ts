@@ -303,12 +303,10 @@ export class Implementation {
                 eventData.responseCode = req.getIf(Const.STATUS).value;
                 eventData.responseText = req.getIf(Const.RESPONSE_TEXT).value;
                 eventData.responseXML = req.getIf(Const.RESPONSE_XML).value;
-
             } catch (e) {
                 let impl = _Lang.getGlobalConfig("jsfAjaxImpl", this);
                 this.sendError(request, context, Const.CLIENT_ERROR, "ErrorRetrievingResponse",
                     _Lang.getMessage("ERR_CONSTRUCT", e.toString()));
-
                 //client errors are not swallowed
                 throw e;
             }

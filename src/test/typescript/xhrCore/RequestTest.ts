@@ -50,6 +50,8 @@ describe('Tests on the xhr core when it starts to call the request', function ()
     it('must have the standard parameters all in', function (done) {
         //issue a standard jsf.ajax.request upon the standard simple form case and check the passed parameters
         //and whether send was called
+        let send = sinon.spy(XMLHttpRequest.prototype,"send");
+
         let element = DomQuery.byId("input_2").getAsElem(0).value;
         jsf.ajax.request(element, null, {
             execute: "input_1",
@@ -64,7 +66,6 @@ describe('Tests on the xhr core when it starts to call the request', function ()
             }
         });
 
-        let send = sinon.spy(XMLHttpRequest.prototype,"send");
 
         expect(this.requests.length).to.eq(1);
         expect(this.requests[0].method).to.eq("POST");

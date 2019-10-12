@@ -1,4 +1,5 @@
 import {DomQuery} from "../../_ext/monadish/DomQuery";
+import {Config} from "../../_ext/monadish";
 
 export class AjaxUtils {
     /**
@@ -7,7 +8,7 @@ export class AjaxUtils {
      * @param {Node} parentItem - form element item is nested in
      * @param {Array} partialIds - ids fo PPS
      */
-    static encodeSubmittableFields(targetBuf: any,
+    static encodeSubmittableFields(targetBuf: Config,
                                    parentItem: HTMLFormElement, partialIds ?: string[]) {
         if (!parentItem) throw "NO_PARITEM";
         if (partialIds && partialIds.length) {
@@ -21,7 +22,7 @@ export class AjaxUtils {
         }
     }
 
-    static encodePartialSubmit(partialIds: string[], targetBuf: { [key: string]: any }) {
+    static encodePartialSubmit(partialIds: string[], targetBuf:Config) {
         for (let cnt = 0; cnt < partialIds.length; cnt++) {
             let element: HTMLFormElement = <HTMLFormElement>DomQuery.byId(partialIds[cnt]).getAsElem(0).value;
             this.encodeElement(element, targetBuf);
@@ -34,10 +35,10 @@ export class AjaxUtils {
      * @param targetBuf
      * TODO change params target alwyays to the left
      */
-    static appendIssuingItem(item, targetBuf) {
+    static appendIssuingItem(item: HTMLFormElement, targetBuf: Config) {
         // if triggered by a Button send it along
         if (item && item.type && item.type.toLowerCase() == "submit") {
-            targetBuf.append(item.name, item.value);
+            targetBuf.apply(item.name).value = item.value;
         }
     }
 
@@ -47,7 +48,7 @@ export class AjaxUtils {
      * @param {Node} element - to be encoded
      * @param {} targetBuf - a target array buffer receiving the encoded strings
      */
-    static encodeElement(element: HTMLFormElement, targetBuf: { [key: string]: any }) {
+    static encodeElement(element: HTMLFormElement, targetBuf: Config) {
 
         //browser behavior no element name no encoding (normal submit fails in that case)
         //https://issues.apache.org/jira/browse/MYFACES-2847
@@ -87,8 +88,8 @@ export class AjaxUtils {
                         //let subBuf = [];
                         if (element.options[u].selected) {
                             let elementOption = element.options[u];
-                            targetBuf.append(name, (elementOption.getAttribute("value") != null) ?
-                                elementOption.value : elementOption.text);
+                            targetBuf.apply(name).value = (elementOption.getAttribute("value") != null) ?
+                                elementOption.value : elementOption.text;
                         }
                     }
                 }
@@ -103,9 +104,9 @@ export class AjaxUtils {
                 && ((elemType != "checkbox" && elemType != "radio") || element.checked)) {
                 if ('undefined' != typeof element.files && element.files != null && element.files.length) {
                     //xhr level2
-                    targetBuf.append(name, element.files[0]);
+                    targetBuf.apply(name).value = element.files[0];
                 } else {
-                    targetBuf.append(name, element.value);
+                    targetBuf.apply(name).value = element.value;
                 }
             }
 

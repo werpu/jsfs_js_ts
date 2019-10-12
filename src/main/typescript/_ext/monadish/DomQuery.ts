@@ -154,12 +154,15 @@ export class DomQuery {
         return new DomQuery(...childNodeArr);
     }
 
-    map<T>(mapFunction: (item: DomQuery) => T): Stream<T>  {
-        let ret: Array<T> = [];
+    /**
+     * binding into stream
+     */
+    get stream(): Stream<DomQuery> {
+        let ret: Array<DomQuery> = [];
         this.each((item) => {
-            ret.push(mapFunction(item));
+            ret.push(item);
         });
-        return new Stream<T>(...ret);
+        return new Stream<DomQuery>(...ret);
     }
 
     /**

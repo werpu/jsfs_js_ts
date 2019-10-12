@@ -503,11 +503,17 @@ export class Implementation {
         };
 
         /**
+         * helper for cleaner code, maps the value from an item
+         *
+         * @param item
+         */
+        let getValue = (item: DomQuery) =>  item.attr("value").value;
+        /**
          * fetch the window id from the forms
          * window ids must be present in all forms
          * or non existent. If they exist all of them must be the same
          */
-        let formWindowId: Optional<string> = searchRoot.map<string>((item: DomQuery) =>  item.attr("value").value).reduce(doubleCheck, INIT);
+        let formWindowId: Optional<string> = searchRoot.stream.map<string>(getValue).reduce(doubleCheck, INIT);
 
         //if the resulting window id is set on altered then we have an unresolvable problem
         if(formWindowId.value == ALTERED) {

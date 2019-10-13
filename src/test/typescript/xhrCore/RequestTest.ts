@@ -182,9 +182,11 @@ describe('Tests after core when it hits response', function () {
             });
 
             let xhrReq = this.requests[0];
+            //xhrReq.responseType = 'document';
+            //xhrReq.overrideMimeType('text/xml');
+            //xhrReq.setResponseHeaders({  'Content-Type': 'text/xml; charset=utf-8' })
 
-
-            xhrReq.respond(200, { 'Content-Type': 'text/xml' }, STD_XML);
+            xhrReq.respond(200, {  'Content-Type': 'text/xml; charset=utf-8' }, STD_XML);
             expect(this.jsfAjaxResponse.callCount).to.eq(1);
             expect(globalCnt ==3).to.eq(true);
             expect(localCnt == 3).to.eq(true);

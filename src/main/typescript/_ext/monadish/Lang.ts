@@ -145,10 +145,13 @@ export class Lang {
      * the function is sideffect free
      * @param maps
      */
-    mergeMaps(maps: { [key: string]: any }[], overwrite: boolean = true, blockFilter?: Function, whitelistFilter?: Function): { [key: string]: any } {
+    mergeMaps(maps: { [key: string]: any }[],
+              overwrite: boolean = true,
+              blockFilter: Function = (item) => false,
+              whitelistFilter: Function = (item) => true): { [key: string]: any } {
         let retVal = {};
         this.arrForEach(maps, (item: { [key: string]: any }) => {
-            this.mixMaps(retVal, item, overwrite)
+            this.mixMaps(retVal, item, overwrite, blockFilter, whitelistFilter);
         });
         return retVal;
     }
@@ -162,7 +165,11 @@ export class Lang {
      * @param blockFilter
      * @param whitelistFilter
      **/
-    mixMaps<T>(dest: { [key: string]: T }, src: { [key: string]: T }, overwrite: boolean, blockFilter?: Function, whitelistFilter?: Function): { [key: string]: T } {
+    mixMaps<T>(dest: { [key: string]: T },
+               src: { [key: string]: T },
+               overwrite: boolean,
+               blockFilter?: Function,
+               whitelistFilter?: Function): { [key: string]: T } {
         let UNDEF = "undefined";
         for (let key in src) {
             if (!src.hasOwnProperty(key)) continue;

@@ -31,7 +31,7 @@ declare let jsf: any;
  */
 export class XhrFormData extends Config {
 
-    constructor(private sourceForm: DomQuery, private issuingItem?: DomQuery, private partialIdsArray?: string[]) {
+    constructor(private dataSource: DomQuery, private issuingItem?: DomQuery, private partialIdsArray?: string[]) {
         super({});
         //encode and append the issuing item if not a partial ids array of ids is passed
         /*
@@ -41,29 +41,42 @@ export class XhrFormData extends Config {
          * Enhancement partial page submit
          *
          */
-        this.encodeSubmittableFields(this, this.sourceForm, this.partialIdsArray);
+        this.encodeSubmittableFields(this, this.dataSource, this.partialIdsArray);
 
-        this.apply(Const.P_VIEWSTATE).value = jsf.getViewState(this.sourceForm.getAsElem(0).value);
+        this.apply(Const.P_VIEWSTATE).value = jsf.getViewState(this.dataSource.getAsElem(0).value);
     }
 
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     * @returns a Form data representation
+     */
     toFormData(): FormData {
         let ret: any = new FormData();
         for (let key in this.value) {
-            //Todo filename in multipart case
-            ret.append(key, this.value[key])
+            //TODO filename in multipart case
+            if (this.value.hasOwnProperty(key)) {
+                ret.append(key, this.value[key])
+            }
         }
         return ret;
     }
 
+    /**
+     * returns an encoded string representation of our xhr form data
+     *
+     * @param defaultStr optional default value if nothing is there to encode
+     */
     toString(defaultStr = ""): string {
         if (this.isAbsent()) {
             return defaultStr;
         }
         let entries = [];
         for (let key in this.value) {
-            entries.push(`${encodeURIComponent(key)}=${encodeURIComponent(this.value[key])}`)
+            if (this.value.hasOwnProperty(key)) {
+                entries.push(`${encodeURIComponent(key)}=${encodeURIComponent(this.value[key])}`)
+            }
         }
-        return entries.join("=")
+        return entries.join("&")
     }
 
     /**
@@ -73,16 +86,19 @@ export class XhrFormData extends Config {
      * @param {Array} partialIds - ids fo PPS
      */
     private encodeSubmittableFields(targetBuf: Config,
-                                   parentItem: DomQuery, partialIds ?: string[]) {
+                                    parentItem: DomQuery, partialIds ?: string[]) {
 
         if (this.partialIdsArray && this.partialIdsArray.length) {
             this.encodePartialSubmit();
         } else {
             if (parentItem.isAbsent()) throw "NO_PARITEM";
-            parentItem.each( (element) => this.encodeElement(element))
+            parentItem.querySelectorAll("input, textarea, select").each((element) => this.encodeElement(element))
         }
     }
 
+    /**
+     * encode the partial array instead of the full ne
+     */
     private encodePartialSubmit() {
         let partials = new DomQuery(...this.partialIdsArray);
         partials.each((element: DomQuery) => this.encodeElement(element));
@@ -91,23 +107,21 @@ export class XhrFormData extends Config {
     /**
      * encodes a single input element for submission
      *
-     * @param {Node} element - to be encoded
-     * @param {} targetBuf - a target array buffer receiving the encoded strings
+     * @param {DomQuery} element - to be encoded
      */
     private encodeElement(element: DomQuery) {
 
         //browser behavior no element name no encoding (normal submit fails in that case)
         //https://issues.apache.org/jira/browse/MYFACES-2847
-        if (!element.name) {
+        if (element.name.isAbsent()) {
             return;
         }
 
         let name = element.name.value;
         let tagName = element.tagName.value.toLowerCase();
-        let elemType = element.type.value;
-        if (elemType != null) {
-            elemType = elemType.toLowerCase();
-        }
+        let elemType = element.type.orElse("__none__").value.toLowerCase();
+
+        elemType = elemType.toLowerCase();
 
         // routine for all elements
         // rules:
@@ -149,12 +163,12 @@ export class XhrFormData extends Config {
             if ((tagName != "select" && elemType != "button"
                 && elemType != "reset" && elemType != "submit" && elemType != "image")
                 && ((elemType != "checkbox" && elemType != "radio") || (<any>element).checked)) {
-                let files: any = (<any>element).files;
+                let files: any = (<any>element.value).files;
                 if (files && files.length) {
                     //xhr level2
                     this.apply(name).value = files[0];
                 } else {
-                    this.apply(name).value = element.value;
+                    this.apply(name).value = element.inputValue.value;
                 }
             }
 

@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import {Implementation} from "../../../../../main/typescript/impl/Impl";
+
 /**
  * helpers with various init and html patterns
  *
@@ -52,8 +54,8 @@ export module standardInits {
 </head>
 <body>
 <form id="blarg">
-    <input type="text" id="input_1" name="input_1"></input>
-    <input type="button" id="input_2" name="input_2"></input>
+    <input type="text" id="input_1" name="input_1" value="input_1_val"></input>
+    <input type="button" id="input_2" name="input_2" value="input_1_val"></input>
 </form>
 </body>
 </html>
@@ -118,6 +120,7 @@ export module standardInits {
         if (withJsf) {
             delete (<any>global).jsf;
             delete (<any>global).Implementation;
+            Implementation.reset();
 
             // @ts-ignore
             await import('jsdom-global').then((domIt) => {

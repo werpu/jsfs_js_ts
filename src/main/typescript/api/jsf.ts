@@ -21,7 +21,7 @@ import {Implementation} from "../impl/Impl";
 
 declare let window: any;
 declare type Context = {[key: string]: any};
-const Impl = Implementation.instance;
+
 
 
 export module jsf {
@@ -74,7 +74,7 @@ export module jsf {
      * <i>javax.faces.application.Application.getProjectStage()</i>
      */
     export function getProjectStage(): string {
-        return Impl.getProjectStage();
+        return Implementation.instance.getProjectStage();
     }
 
     /**
@@ -95,12 +95,12 @@ export module jsf {
      * @return the window identifier or null if none is found
      */
     export function getClientWindow(rootNode?: Element | string): string {
-        return Impl.getClientWindow(rootNode);
+        return Implementation.instance.getClientWindow(rootNode);
     }
 
     //private helper functions
     function getSeparatorChar() {
-        return Impl.separatorChar;
+        return Implementation.instance.separatorChar;
     }
 
     //We hook the old namespace system into our npm system
@@ -127,7 +127,7 @@ export module jsf {
          * @param {Map} options : map of options being pushed into the ajax cycle
          */
         export function request(element: Element, event?: Event, options?: Context | {[key: string]: any}) {
-            Impl.request(element, event, options)
+            Implementation.instance.request(element, event, options)
              //Implementation.getInstance().requestInternal(element, event, options);
         }
 
@@ -139,7 +139,7 @@ export module jsf {
          * TODO add info on what can be in the context
          */
         export function response(request: XMLHttpRequest, context?: Context  | {[key: string]: any}) {
-            Impl.response(request, response);
+            Implementation.instance.response(request, response);
         }
 
         /**
@@ -160,7 +160,7 @@ export module jsf {
          * @param {function} errorListener error handler must be of the format <i>function errorListener(&lt;errorData&gt;)</i>
          */
         export function addOnError( errorFunc: (data: _apiInterfaces.ErrorData) => void) {
-            Impl.addOnError(<any> errorFunc);
+            Implementation.instance.addOnError(<any> errorFunc);
         }
 
         /**
@@ -170,7 +170,7 @@ export module jsf {
          * @param {function} eventListener event must be of the format <i>function eventListener(&lt;eventData&gt;)</i>
          */
         export function addOnEvent( eventFunc: (data: _apiInterfaces.EventData) => void) {
-            Impl.addOnEvent(<any> eventFunc);
+            Implementation.instance.addOnEvent(<any> eventFunc);
         }
     }
 
@@ -188,7 +188,7 @@ export module jsf {
          *
          */
         static chain(source, event, ...funcs : Array<Function | string>): boolean {
-            return Impl.chain(source, event, ...funcs);
+            return Implementation.instance.chain(source, event, ...funcs);
         }
     }
 }

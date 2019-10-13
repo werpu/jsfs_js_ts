@@ -28,7 +28,6 @@ import {Const} from "./core/Const";
 
 declare var jsf: any;
 
-
 /**
  * Core Implementation
  * to distinct between api and impl
@@ -39,10 +38,19 @@ declare var jsf: any;
  */
 export class Implementation {
 
-    private  globalConfig = myfacesConfig.myfaces.config;
+    private globalConfig = myfacesConfig.myfaces.config;
     /*blockfilter for the passthrough filtering; the attributes given here
      * will not be transmitted from the options into the passthrough*/
-    private BLOCK_FILTER = {onerror: 1, onevent: 1, render: 1, execute: 1, myfaces: 1, delay: 1, timedOut: 1, windowId: 1};
+    private BLOCK_FILTER = {
+        onerror: 1,
+        onevent: 1,
+        render: 1,
+        execute: 1,
+        myfaces: 1,
+        delay: 1,
+        timedOut: 1,
+        windowId: 1
+    };
     private projectStage: string = null;
     private separator: string = null;
     private eventQueue = new ListenerQueue<EventData>();
@@ -172,7 +180,7 @@ export class Implementation {
 
         this.applyWindowId(options);
 
-        ctx.apply(Const.CTX_PARAM_PASS_THR).value = _Lang.mergeMaps([{}, <any>options.value], true, <any>this.BLOCK_FILTER);
+        ctx.apply(Const.CTX_PARAM_PASS_THR).value = _Lang.mergeMaps([{}, <any>options.value], true, (key) => key in this.BLOCK_FILTER);
         ctx.applyIf(!!event, Const.CTX_PARAM_PASS_THR, Const.P_EVT).value = Lang.failSaveResolve(() => event.type);
 
         /**
@@ -458,7 +466,6 @@ export class Implementation {
         }
     }
 
-
     /**
      * @return the client window id of the current window, if one is given
      */
@@ -474,7 +481,7 @@ export class Implementation {
         /**
          * a set of input elements holding the window id over the entire document
          */
-        let windowIdHolders = searchRoot.querySelectorAll(`form #${Const.P_WIN_ID}` );
+        let windowIdHolders = searchRoot.querySelectorAll(`form #${Const.P_WIN_ID}`);
 
         /**
          * lazy helper to fetch the window id from the window url
@@ -490,11 +497,11 @@ export class Implementation {
          * @param value2
          */
         let doubleCheck = (value1: string, value2: string) => {
-            if(value1 == ALTERED) {
+            if (value1 == ALTERED) {
                 return value1;
-            } else if(value1 == INIT) {
+            } else if (value1 == INIT) {
                 return value2;
-            } else if(value1 != value2) {
+            } else if (value1 != value2) {
                 return ALTERED;
             }
             return value2;
@@ -505,7 +512,7 @@ export class Implementation {
          *
          * @param item
          */
-        let getValue = (item: DomQuery) =>  item.attr("value").value;
+        let getValue = (item: DomQuery) => item.attr("value").value;
         /**
          * fetch the window id from the forms
          * window ids must be present in all forms
@@ -514,7 +521,7 @@ export class Implementation {
         let formWindowId: Optional<string> = searchRoot.stream.map<string>(getValue).reduce(doubleCheck, INIT);
 
         //if the resulting window id is set on altered then we have an unresolvable problem
-        if(formWindowId.value == ALTERED) {
+        if (formWindowId.value == ALTERED) {
             throw Error("Multiple different windowIds found in document");
         }
 

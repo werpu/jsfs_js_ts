@@ -1,10 +1,10 @@
 import {describe, it} from "mocha";
 import * as sinon from "sinon";
-import { expect } from "chai";
+import {expect} from "chai";
 import {standardInits} from "../frameworkBase/_ext/shared/StandardInits";
 import defaultMyFaces = standardInits.defaultMyFaces;
 import {DomQuery} from "../../../main/typescript/_ext/monadish";
-
+import {Const} from "../../../main/typescript/impl/core/Const";
 
 declare var jsf: any;
 declare var Implementation: any;
@@ -14,9 +14,7 @@ declare var Implementation: any;
  */
 describe('Tests on the xhr core when it starts to call the request', function () {
 
-    beforeEach(function () {
-
-
+    beforeEach(async function () {
 
         let waitForResult = defaultMyFaces();
 
@@ -31,7 +29,6 @@ describe('Tests on the xhr core when it starts to call the request', function ()
             (<any>window).XMLHttpRequest = this.xhr = sinon.useFakeXMLHttpRequest();
 
             this.jsfAjaxResponse = sinon.stub((<any>global).jsf.ajax, "response");
-
 
             this.closeIt = () => {
                 (<any>global).XMLHttpRequest = (<any>window).XMLHttpRequest = this.xhr.restore();
@@ -50,25 +47,70 @@ describe('Tests on the xhr core when it starts to call the request', function ()
     it('must have the standard parameters all in', function (done) {
         //issue a standard jsf.ajax.request upon the standard simple form case and check the passed parameters
         //and whether send was called
-        let send = sinon.spy(XMLHttpRequest.prototype,"send");
+        let send = sinon.spy(XMLHttpRequest.prototype, "send");
 
-        let element = DomQuery.byId("input_2").getAsElem(0).value;
-        jsf.ajax.request(element, null, {
-            execute: "input_1",
-            render: "@form",
-            pass1: "pass1",
-            pass2: "pass2"
-        });
+        try {
+            let element = DomQuery.byId("input_2").getAsElem(0).value;
+            jsf.ajax.request(element, null, {
+                execute: "input_1",
+                render: "@form",
+                pass1: "pass1",
+                pass2: "pass2"
+            });
 
+            expect(this.requests.length).to.eq(1);
+            expect(this.requests[0].method).to.eq("POST");
+            expect(this.requests[0].async).to.be.true;
+            expect(send.called).to.be.true;
+            expect(send.callCount).to.eq(1);
 
-        expect(this.requests.length).to.eq(1);
-        expect(this.requests[0].method).to.eq("POST");
-        expect(this.requests[0].async).to.be.true;
-        expect(send.called).to.be.true;
+            //sent params javax.faces.ViewState=null&execute=input_1&render=%40form&pass1=pass1&pass2=pass2&javax.faces.windowId=null&javax.faces.source=input_2&javax.faces.partial.ajax=input_2&blarg=blarg&javax.faces.partial.execute=input_1%20input_2&javax.faces.partial.render=blarg
+
+        } finally {
+
+            send.restore();
+        }
+
         done();
     });
 
     it('it must have the pass through values properly passed', function (done) {
+
+        let send = sinon.spy(XMLHttpRequest.prototype, "send");
+        try {
+            let element = DomQuery.byId("input_2").getAsElem(0).value;
+            jsf.ajax.request(element, null, {
+                execute: "input_1",
+                render: "@form",
+                pass1: "pass1",
+                pass2: "pass2"
+            });
+
+            expect(send.called).to.be.true;
+            let argsVal:any = send.args[0][0];
+            let arsArr  = argsVal.split("&");
+            let resultsMap = {};
+            for(let val of arsArr) {
+                let keyVal = val.split("=");
+                resultsMap[keyVal[0]] = keyVal[1];
+            }
+
+            expect(resultsMap["pass1"]).to.eq("pass1");
+            expect(resultsMap["pass2"]).to.eq("pass2");
+            expect(!!resultsMap["render"]).to.be.false;
+            expect(!!resultsMap["execute"]).to.be.false;
+            expect(Const.P_WINDOW_ID  in resultsMap).to.be.true;
+            expect(Const.P_VIEWSTATE  in resultsMap).to.be.true;
+            expect(resultsMap[Const.P_PARTIAL_SOURCE ]).to.eq("input_2");
+            expect( resultsMap[Const.P_AJAX]).to.eq("input_2");
+            expect(resultsMap[Const.P_RENDER]).to.eq("blarg");
+            expect(resultsMap[Const.P_EXECUTE]).to.eq("input_1%20input_2");
+
+        } finally {
+            send.restore();
+
+        }
+
         done();
     });
 

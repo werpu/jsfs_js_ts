@@ -144,11 +144,15 @@ export class DomQuery {
      * convenience method for type
      */
     get type(): Optional<string> {
-        return Optional.fromNullable(this.get(0).attr("type").value);
+        return this.getAsElem(0).getIf("type");
     }
 
     get name(): Optional<string> {
-        return Optional.fromNullable(this.get(0).attr("name").value);
+        return this.getAsElem(0).getIf("name");
+    }
+
+    get inputValue(): Optional<string> {
+        return this.getAsElem(0).getIf("value");
     }
 
     get disabled(): boolean {

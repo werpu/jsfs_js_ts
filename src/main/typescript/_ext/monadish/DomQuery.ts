@@ -155,6 +155,21 @@ export class DomQuery {
         return this.getAsElem(0).getIf("value");
     }
 
+
+    get elements(): DomQuery {
+        let elements: Array<DomQuery> = this.each((item: DomQuery) => {
+            let formElement:HTMLFormElement = <HTMLFormElement> item.value.value;
+            return formElement.elements ? formElement.elements : null;
+        }).stream
+            .filter(item => !!item).value;
+
+        let res = new DomQuery(...elements);
+
+        return res
+            .orElseLazy(() => this.querySelectorAll("form").elements)
+            .orElseLazy(() => this.querySelectorAll("input, select, textarea"));
+    }
+
     get disabled(): boolean {
         return !!this.attr("disabled").value;
     }

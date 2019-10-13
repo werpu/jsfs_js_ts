@@ -22,6 +22,7 @@
     "chai": "^4.2.0",
     "html-webpack-plugin": "^3.2.0",
     "jsdom": "^15.1.1",
+    "jsdom-global": "^3.0.2",
     "mocha": "^6.2.1",
     "sinon": "^7.5.0",
     "ts-loader": "^6.2.0",
@@ -31,7 +32,5 @@
     "webpack-cli": "^3.3.9",
     "webpack-dev-server": "^3.8.2"
   },
-  "dependencies": {
-    "jsdom-global": "^3.0.2"
-  }
+  "dependencies": {}
 }

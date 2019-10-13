@@ -31,12 +31,18 @@ import {XhrFormData} from "./XhrFormData";
  * and let the queue do the processing.
  *
  */
+
+declare let jsf: any;
+
 export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
 
     /** predefined method */
 
 
     private xhrPromise: Promise<XMLHttpRequest>;
+
+    private _onEvent: Function;
+    private _onError: Function;
 
     /**
      * Reqired Parameters
@@ -63,6 +69,8 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         private contentType = Const.URL_ENCODED,
         private xhrObject = new XMLHttpRequest()
     ) {
+        this._onEvent = requestContext.getIf(Const.CTX_PARAM_MF_INTERNAL, Const.ON_EVENT).orElse(()=>{}).value;
+        this._onError = requestContext.getIf(Const.CTX_PARAM_MF_INTERNAL, Const.ON_ERROR).orElse(()=>{}).value;
     }
 
     start(): Promise<XMLHttpRequest> {
@@ -91,7 +99,9 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             // setting the accept headers automatically
             Lang.failSaveExecute(() => this.xhrObject.setRequestHeader(Const.REQ_ACCEPT,Const.STD_ACCEPT));
 
-            this.sendEvent(Const.STATE_EVT_BEGIN);
+
+
+            this.sendEvent(Const.BEGIN);
 
             this.sendRequest(formData);
 
@@ -115,12 +125,13 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     }
 
     onSuccess(data: any, resolve: Consumer<any>, reject: Consumer<any>) {
-        this.sendEvent(Const.STATE_EVT_COMPLETE);
+        this.sendEvent(Const.COMPLETE);
         this.requestContext.apply("_mfInternal").value = this.requestContext.getIf("_mfInternal").get({}).value;
-        (<any>window).jsf.ajax.response(this.xhrObject, this.requestContext);
+        jsf.ajax.response(this.xhrObject, this.requestContext);
     }
 
     onDone(data: any, resolve: Consumer<any>, reject: Consumer<any>) {
+        this.sendEvent(Const.SUCCESS);
         resolve(data);
     }
 
@@ -179,10 +190,15 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     }
 
     private sendEvent(evtType: string) {
-        Implementation.instance.sendEvent(this.xhrObject, this.requestContext, Implementation[evtType]);
+        let eventData = Implementation.instance.createEventData(this.xhrObject, this.requestContext, evtType);
+        this._onEvent(eventData);
+        Implementation.instance.sendEvent(eventData);
     }
 
     private handleError(exception) {
+        let errorData = Implementation.instance.createErrorData(this.xhrObject, this.requestContext, exception);
+        this._onError(errorData);
+        // TODO
         Implementation.instance.stdErrorHandler(this.xhrObject, this.requestContext, exception, true);
     }
 

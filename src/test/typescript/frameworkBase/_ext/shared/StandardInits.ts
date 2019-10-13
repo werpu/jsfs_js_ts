@@ -15,6 +15,7 @@
  */
 
 import {Implementation} from "../../../../../main/typescript/impl/Impl";
+import {DomQuery, XMLQuery} from "../../../../../main/typescript/_ext/monadish";
 
 /**
  * helpers with various init and html patterns
@@ -31,7 +32,7 @@ import {Implementation} from "../../../../../main/typescript/impl/Impl";
  */
 export module standardInits {
 
-    const HTML_DEFAULT = `<!DOCTYPE html>
+    export const HTML_DEFAULT = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -62,6 +63,10 @@ export module standardInits {
     
     `;
 
+    export const STD_XML = "<?xml version=\"1.0\" encoding=\"utf-8\"?>" +
+            "<partial-response><changes><update id=\"value_1\"><![CDATA[<span id=\"out1\">2</span>]]></update><update id" +
+            "=\"javax.faces.ViewState\"><![CDATA[j_id1:j_id3]]></update></changes></partial-response>";
+
     function HTML_DEFAULT_SEPARATOR_CHAR(separatorChar: string) {
         return `<!DOCTYPE html>
 <html lang="en">
@@ -80,6 +85,10 @@ export module standardInits {
 </html>
     
     `;
+    }
+
+    export function basicXML(): Document {
+        return  new window.DOMParser().parseFromString(STD_XML, "text/xml");
     }
 
     export function standardInit(scope: any, initFunc: (boolean) => Promise<() => void> = defaultHtml): Promise<any> {

@@ -25,6 +25,7 @@ import {Config, Optional} from "../_ext/monadish/Monad";
 import {DomQuery} from "../_ext/monadish/DomQuery";
 import {ExtDomQuery} from "./util/ExtDomQuery";
 import {Const} from "./core/Const";
+import {XMLQuery} from "../_ext/monadish";
 
 declare var jsf: any;
 
@@ -235,6 +236,8 @@ export class Implementation {
         ctx.apply(Const.CTX_PARAM_MF_INTERNAL, Const.CTX_PARAM_SRC_FRM_ID).value = form.id.value;
         ctx.apply(Const.CTX_PARAM_MF_INTERNAL, Const.CTX_PARAM_SRC_CTL_ID).value = elementId.value;
         ctx.apply(Const.CTX_PARAM_MF_INTERNAL, Const.CTX_PARAM_TR_TYPE).value = Const.REQ_TYPE_POST;
+        ctx.applyIf(options.getIf(Const.ON_EVENT).isPresent(), Const.CTX_PARAM_MF_INTERNAL, Const.ON_EVENT).value = options.getIf(Const.ON_EVENT).value;
+        ctx.applyIf(options.getIf(Const.ON_ERROR).isPresent(), Const.CTX_PARAM_MF_INTERNAL, Const.ON_EVENT).value = options.getIf(Const.ON_ERROR).value;
 
         //mojarra compatibility, mojarra is sending the form id as well
         //this is not documented behavior but can be determined by running
@@ -291,43 +294,46 @@ export class Implementation {
         this.eventQueue.enqueue(eventListener);
     }
 
-    /**
-     * sends an event
-     */
-    sendEvent(/*Object*/request: XMLHttpRequest, /*Object*/ context: Context, /*event name*/ name: string) {
+    createEventData(request: XMLHttpRequest, /*Object*/ context: Config, /*event name*/ name: string): EventData {
         let _Lang = Lang.instance;
         let eventData = new EventData();
         let UNKNOWN = _Lang.getMessage("UNKNOWN");
 
-        let req = new Config(request);
-
         eventData.type = Const.EVENT;
 
         eventData.status = name;
-        eventData.source = context.source;
+        eventData.source = context.getIf(Const.P_PARTIAL_SOURCE).value;
 
         if (name !== Const.BEGIN) {
             try {
-                eventData.responseCode = req.getIf(Const.STATUS).value;
-                eventData.responseText = req.getIf(Const.RESPONSE_TEXT).value;
-                eventData.responseXML = req.getIf(Const.RESPONSE_XML).value;
+                eventData.responseCode = request.status.toString();
+                eventData.responseText = request.responseText;
+
+                eventData.responseXML = request.responseText;
             } catch (e) {
                 let impl = _Lang.getGlobalConfig("jsfAjaxImpl", this);
-                this.sendError(request, context, Const.CLIENT_ERROR, "ErrorRetrievingResponse",
-                    _Lang.getMessage("ERR_CONSTRUCT", e.toString()));
+                this.sendError(
+                    this.createErrorData(request, context, Const.CLIENT_ERROR,
+                        "ErrorRetrievingResponse",
+                        _Lang.getMessage("ERR_CONSTRUCT"),
+                        e.toString())
+                );
                 //client errors are not swallowed
                 throw e;
             }
 
         }
-        /**/
-        if (context.onevent) {
-            /*calling null to preserve the original scope*/
-            context.onevent.call(null, eventData);
-        }
+        return eventData;
+    }
+
+    /**
+     * sends an event
+     */
+    sendEvent(data: EventData) {
+        let _Lang = Lang.instance;
 
         /*now we serve the queue as well*/
-        this.eventQueue.broadcastEvent(eventData);
+        this.eventQueue.broadcastEvent(data);
     }
 
     /**
@@ -343,29 +349,69 @@ export class Implementation {
      * @param clearRequestQueue if set to true, clears the request queue of all pending requests
      */
     stdErrorHandler(request: XMLHttpRequest,
-                    context: Context,
+                    context: Config,
                     exception: any,
                     clearRequestQueue = false) {
         //newer browsers do not allow to hold additional values on native objects like exceptions
         //we hence capsule it into the request, which is gced automatically
         //on ie as well, since the stdErrorHandler usually is called between requests
         //this is a valid approach
+        let errorData = this.createErrorData(request, context, exception);
         try {
             if (this.threshold == "ERROR") {
-                let mfInternal = new Config(exception._mfInternal || {});
 
-                this.sendError(request, context,
-                    mfInternal.getIf("title").orElse(Const.CLIENT_ERROR).value,
-                    mfInternal.getIf("name").orElse(exception.name).value,
-                    exception.message || "",
-                    mfInternal.getIf("caller").value,
-                    mfInternal.getIf("callFunc").value);
+                this.sendError(errorData);
             }
         } finally {
             if (clearRequestQueue) {
                 this.requestQueue.cleanup();
             }
         }
+    }
+
+    createErrorData(request: XMLHttpRequest,
+                    context: Config,
+                    name: string,
+                    serverErrorName?: string,
+                    serverErrorMessage?: string,
+                    caller?: string,
+                    callFunc?: string): ErrorData {
+        let _Lang = Lang.instance;
+        let UNKNOWN = _Lang.getMessage("UNKNOWN");
+
+        let eventData = new ErrorData();
+        //we keep this in a closure because we might reuse it for our serverErrorMessage
+        let malFormedMessage = function () {
+            return (name && name === this.MALFORMEDXML) ? _Lang.getMessage("ERR_MALFORMEDXML") : "";
+        };
+
+        //by setting unknown values to unknown we can handle cases
+        //better where a simulated context is pushed into the system
+        eventData.type = Const.ERROR;
+
+        eventData.status = name || UNKNOWN;
+        eventData.serverErrorName = serverErrorName || UNKNOWN;
+        eventData.serverErrorMessage = serverErrorMessage || UNKNOWN;
+
+        try {
+            eventData.source = context.getIf(Const.SOURCE).orElse(UNKNOWN).value;
+            eventData.responseCode = context.getIf(Const.STATUS).orElse(UNKNOWN).value;
+            eventData.responseText = context.getIf(Const.RESPONSE_TEXT).orElse(UNKNOWN).value;
+            eventData.responseXML = context.getIf(Const.RESPONSE_XML).orElse(UNKNOWN).value;
+        } catch (e) {
+            // silently ignore: user can find out by examining the event data
+        }
+        //extended error message only in dev mode
+        if (jsf.getProjectStage() === Const.STAGE_DEVELOPMENT) {
+            let errTpl = `
+                    Error:
+                    Server Error Message: ${eventData.serverErrorMessage || ''}
+                    Calling class: ${caller || ''}
+                    Calling function: ${callFunc || ''}
+            `;
+            eventData.serverErrorMessage = errTpl;
+        }
+        return eventData;
     }
 
     /**
@@ -388,88 +434,16 @@ export class Implementation {
      *
      *
      */
-    sendError(request: XMLHttpRequest,
-              context: Context,
-              name: string,
-              serverErrorName?: string,
-              serverErrorMessage?: string,
-              caller?: string,
-              callFunc?: string) {
+    sendError(errorData: EventData) {
 
-        let _Lang = Lang.instance;
-        let UNKNOWN = _Lang.getMessage("UNKNOWN");
-
-        let eventData = new ErrorData();
-        //we keep this in a closure because we might reuse it for our serverErrorMessage
-        let malFormedMessage = function () {
-            return (name && name === this.MALFORMEDXML) ? _Lang.getMessage("ERR_MALFORMEDXML") : "";
-        };
-        let ctx = new Config(context);
-
-        //by setting unknown values to unknown we can handle cases
-        //better where a simulated context is pushed into the system
-        eventData.type = Const.ERROR;
-
-        eventData.status = name || UNKNOWN;
-        eventData.serverErrorName = serverErrorName || UNKNOWN;
-        eventData.serverErrorMessage = serverErrorMessage || UNKNOWN;
-
-        try {
-            eventData.source = ctx.getIf(Const.SOURCE).orElse(UNKNOWN).value;
-            eventData.responseCode = ctx.getIf(Const.STATUS).orElse(UNKNOWN).value;
-            eventData.responseText = ctx.getIf(Const.RESPONSE_TEXT).orElse(UNKNOWN).value;
-            eventData.responseXML = ctx.getIf(Const.RESPONSE_XML).orElse(UNKNOWN).value;
-        } catch (e) {
-            // silently ignore: user can find out by examining the event data
-        }
-        //extended error message only in dev mode
-        if (jsf.getProjectStage() === Const.STAGE_DEVELOPMENT) {
-            let errTpl = `
-                    Error:
-                    Server Error Message: ${eventData.serverErrorMessage || ''}
-                    Calling class: ${caller || ''}
-                    Calling function: ${callFunc || ''}
-            `;
-            eventData.serverErrorMessage = errTpl;
-        }
-
-        /**/
-        if (ctx.getIf(Const.ON_ERROR).isPresent()) {
-            context.onerror(eventData);
-        }
-
-        /*now we serve the queue as well*/
-        this.errorQueue.broadcastEvent(eventData);
-
-        if (jsf.getProjectStage() === Const.STAGE_DEVELOPMENT && !this.errorQueue.length && ctx.getIf(Const.ON_ERROR).isAbsent()) {
-
-            let errTpl = `
-                    --------------------------------------------------------
-                    Error:
-                    Server Error Message: ${serverErrorMessage || ''}
-                    Calling class: ${caller || ''}
-                    Calling function: ${callFunc || ''}
-                    Error Name: ${_Lang.getMessage("MSG_ERROR_NAME") + (name || "")}
-                    Server Error Name: ${serverErrorName || ''}
-                    
-                    ${malFormedMessage()}
-                    
-                    --------------------------------------------------------
-                    
-                    ${_Lang.getMessage("MSG_DEV_MODE")}
-                    
-                    --------------------------------------------------------
-            `;
-
-            let displayError: (string) => void = _Lang.getGlobalConfig("defaultErrorOutput", (console ? console.error : alert));
-            displayError(errTpl);
-        }
+        let displayError: (string) => void = Lang.instance.getGlobalConfig("defaultErrorOutput", (console ? console.error : alert));
+        displayError(errorData);
     }
 
     /**
      * @return the client window id of the current window, if one is given
      */
-    getClientWindow(node?: Element | string) {
+    getClientWindow(node ?: Element | string) {
         const ALTERED = "___mf_id_altered__";
         const INIT = "___init____";
 
@@ -653,7 +627,8 @@ export class Implementation {
      * @param elem
      * @param event
      */
-    private getForm(elem: Element, event?: Event): DomQuery {
+    private getForm(elem: Element, event ?: Event):
+        DomQuery {
         const _Lang = Lang.instance;
         const FORM = "form";
 

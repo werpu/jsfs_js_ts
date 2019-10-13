@@ -5,10 +5,20 @@ import {standardInits} from "../frameworkBase/_ext/shared/StandardInits";
 import defaultMyFaces = standardInits.defaultMyFaces;
 import {DomQuery} from "../../../main/typescript/_ext/monadish";
 import {Const} from "../../../main/typescript/impl/core/Const";
+import basicXML = standardInits.basicXML;
+import STD_XML = standardInits.STD_XML;
 
 declare var jsf: any;
 declare var Implementation: any;
 
+let issueStdReq = function (element) {
+    jsf.ajax.request(element, null, {
+        execute: "input_1",
+        render: "@form",
+        pass1: "pass1",
+        pass2: "pass2"
+    });
+};
 /**
  * specialized tests testing the xhr core behavior when it hits the xmlHttpRequest object
  */
@@ -51,12 +61,7 @@ describe('Tests on the xhr core when it starts to call the request', function ()
 
         try {
             let element = DomQuery.byId("input_2").getAsElem(0).value;
-            jsf.ajax.request(element, null, {
-                execute: "input_1",
-                render: "@form",
-                pass1: "pass1",
-                pass2: "pass2"
-            });
+            issueStdReq(element);
 
             expect(this.requests.length).to.eq(1);
             expect(this.requests[0].method).to.eq("POST");
@@ -79,18 +84,13 @@ describe('Tests on the xhr core when it starts to call the request', function ()
         let send = sinon.spy(XMLHttpRequest.prototype, "send");
         try {
             let element = DomQuery.byId("input_2").getAsElem(0).value;
-            jsf.ajax.request(element, null, {
-                execute: "input_1",
-                render: "@form",
-                pass1: "pass1",
-                pass2: "pass2"
-            });
+            issueStdReq(element);
 
             expect(send.called).to.be.true;
-            let argsVal:any = send.args[0][0];
-            let arsArr  = argsVal.split("&");
+            let argsVal: any = send.args[0][0];
+            let arsArr = argsVal.split("&");
             let resultsMap = {};
-            for(let val of arsArr) {
+            for (let val of arsArr) {
                 let keyVal = val.split("=");
                 resultsMap[keyVal[0]] = keyVal[1];
             }
@@ -99,22 +99,30 @@ describe('Tests on the xhr core when it starts to call the request', function ()
             expect(resultsMap["pass2"]).to.eq("pass2");
             expect(!!resultsMap["render"]).to.be.false;
             expect(!!resultsMap["execute"]).to.be.false;
-            expect(Const.P_WINDOW_ID  in resultsMap).to.be.true;
-            expect(Const.P_VIEWSTATE  in resultsMap).to.be.true;
-            expect(resultsMap[Const.P_PARTIAL_SOURCE ]).to.eq("input_2");
-            expect( resultsMap[Const.P_AJAX]).to.eq("input_2");
+            expect(Const.P_WINDOW_ID in resultsMap).to.be.true;
+            expect(Const.P_VIEWSTATE in resultsMap).to.be.true;
+            expect(resultsMap[Const.P_PARTIAL_SOURCE]).to.eq("input_2");
+            expect(resultsMap[Const.P_AJAX]).to.eq("input_2");
             expect(resultsMap[Const.P_RENDER]).to.eq("blarg");
             expect(resultsMap[Const.P_EXECUTE]).to.eq("input_1%20input_2");
 
         } finally {
             send.restore();
-
         }
-
         done();
     });
 
     it('it must have the proper target type', function (done) {
+        let send = sinon.spy(XMLHttpRequest.prototype, "send");
+        try {
+            let element = DomQuery.byId("input_2").getAsElem(0).value;
+            issueStdReq(element);
+
+            expect(this.requests[0].requestHeaders.Accept.indexOf("application/xml") != -1).to.be.true;
+
+        } finally {
+            send.restore();
+        }
         done();
     });
 
@@ -122,8 +130,72 @@ describe('Tests on the xhr core when it starts to call the request', function ()
 
 describe('Tests after core when it hits response', function () {
 
+    beforeEach(async function () {
+
+        let waitForResult = defaultMyFaces();
+
+        return waitForResult.then((close) => {
+            this.server = sinon.fakeServer.create();
+            this.xhr = sinon.useFakeXMLHttpRequest();
+            this.requests = [];
+            this.xhr.onCreate = (xhr) => {
+                this.requests.push(xhr);
+            };
+            (<any>global).XMLHttpRequest = this.xhr = sinon.useFakeXMLHttpRequest();
+            (<any>window).XMLHttpRequest = this.xhr = sinon.useFakeXMLHttpRequest();
+
+            this.jsfAjaxResponse = sinon.stub((<any>global).jsf.ajax, "response");
+
+            this.closeIt = () => {
+                (<any>global).XMLHttpRequest = (<any>window).XMLHttpRequest = this.xhr.restore();
+                this.jsfAjaxResponse.restore();
+                Implementation.reset();
+                close();
+            }
+        });
+    });
+
+    afterEach(function () {
+        this.closeIt();
+    });
+
+
     it('must have passed all ajax phase events', function (done) {
-        done();
+
+
+        let send = sinon.spy(XMLHttpRequest.prototype, "send");
+        let globalCnt = 0;
+        let localCnt = 0;
+        try {
+            let element = DomQuery.byId("input_2").getAsElem(0).value;
+            jsf.ajax.addOnEvent(() => {
+                globalCnt++;
+            });
+            jsf.ajax.request(element, null, {
+                execute: "input_1",
+                render: "@form",
+                pass1: "pass1",
+                pass2: "pass2",
+                onevent: (evt: any) => {
+                    localCnt++;
+                }
+            });
+
+            let xhrReq = this.requests[0];
+
+
+            xhrReq.respond(200, { 'Content-Type': 'text/xml' }, STD_XML);
+            expect(this.jsfAjaxResponse.callCount).to.eq(1);
+            expect(globalCnt ==3).to.eq(true);
+            expect(localCnt == 3).to.eq(true);
+            done();
+        } catch(e) {
+            console.error(e);
+
+        } finally {
+            send.restore();
+        }
+
     });
 
     it('it must have called request and the pass through values must be properly transferred into the context', function (done) {

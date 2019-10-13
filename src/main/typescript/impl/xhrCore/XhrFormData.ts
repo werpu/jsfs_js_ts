@@ -87,21 +87,15 @@ export class XhrFormData extends Config {
      */
     private encodeSubmittableFields(targetBuf: Config,
                                     parentItem: DomQuery, partialIds ?: string[]) {
-
+        let toEncode = null;
         if (this.partialIdsArray && this.partialIdsArray.length) {
-            this.encodePartialSubmit();
+            toEncode = new DomQuery(...this.partialIdsArray);
+
         } else {
             if (parentItem.isAbsent()) throw "NO_PARITEM";
-            parentItem.querySelectorAll("input, textarea, select").each((element) => this.encodeElement(element))
+            toEncode = parentItem;
         }
-    }
-
-    /**
-     * encode the partial array instead of the full ne
-     */
-    private encodePartialSubmit() {
-        let partials = new DomQuery(...this.partialIdsArray);
-        partials.each((element: DomQuery) => this.encodeElement(element));
+        toEncode.elements.each((element: DomQuery) => this.encodeElement(element));
     }
 
     /**

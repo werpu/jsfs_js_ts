@@ -493,7 +493,7 @@ export class Config extends Optional<any> {
     }
 
     applyIf(condition: boolean, ...keys: Array<any>): IValueHolder<any> {
-        return condition ? this.apply(keys) : {value: null};
+        return condition ? this.apply(...keys) : {value: null};
     }
 
     getIf(...keys: Array<string>): Config {

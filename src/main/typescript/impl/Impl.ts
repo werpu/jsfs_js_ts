@@ -443,7 +443,7 @@ export class Implementation {
     /**
      * @return the client window id of the current window, if one is given
      */
-    getClientWindow(node ?: Element | string) {
+    getClientWindow(node ?: Element | string): string {
         const ALTERED = "___mf_id_altered__";
         const INIT = "___init____";
 
@@ -460,7 +460,7 @@ export class Implementation {
         /**
          * lazy helper to fetch the window id from the window url
          */
-        let fetchWindowIdFromUrl = () => ExtDomQuery.searchJsfJsFor(/jfwid=([^&;]*)/).orElse(":").value;
+        let fetchWindowIdFromUrl = () => ExtDomQuery.searchJsfJsFor(/jfwid=([^&;]*)/).orElse(null).value;
 
         /**
          * functional double check based on stream reduction

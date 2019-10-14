@@ -116,10 +116,6 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
         return this.runnableQueue.dequeue();
     }
 
-    read(): T {
-        return this.runnableQueue.read();
-    }
-
     cleanup() {
         this.currentlyRunning = null;
         this.runnableQueue.cleanup();

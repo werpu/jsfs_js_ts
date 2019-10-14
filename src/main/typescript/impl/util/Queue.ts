@@ -119,11 +119,11 @@ export class Queue<T> {
     }
 
     read(): T {
-        let element = null;
 
         // check whether the queue is empty
-        let qLen = this.q.length;
-        let queue: any = this.q;
+        let element = null,
+            qLen = this.q.length,
+            queue: any = this.q;
 
         if (qLen) {
             // fetch the oldest element in the queue
@@ -191,15 +191,16 @@ class DomEventDispatcher {
             capture: true
         });
     }
+
     removeEventListener(theName: string, listener?: (Event) => void) {
-        if(listener) {
-            this.shadowElement.removeEventListener(theName, listener,{
+        if (listener) {
+            this.shadowElement.removeEventListener(theName, listener, {
                 capture: true
             });
-            this.listeners  = Lang.instance.arrFilter(this.listeners, (item) => item != listener);
+            this.listeners = Lang.instance.arrFilter(this.listeners, (item) => item != listener);
         } else {
-            for(let currListener of this.listeners) {
-                this.shadowElement.removeEventListener(theName, currListener,{
+            for (let currListener of this.listeners) {
+                this.shadowElement.removeEventListener(theName, currListener, {
                     capture: true
                 });
             }
@@ -228,8 +229,6 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
     private _queue = new Queue<T>();
     private _delayTimeout: number;
 
-
-
     static EVT_NEXT = "__mf_queue_next__";
 
     private eventDispatcher = new DomEventDispatcher();
@@ -245,6 +244,7 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
         return this._queue.isEmpty;
     }
 
+    // noinspection JSUnusedLocalSymbols
     private set queueSize(newSize: number) {
         this._queue.queueSize = newSize;
     }
@@ -286,7 +286,7 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
         let empty = this.isEmpty;
 
         //only if the first element is added we start with a trigger
-        //othwise a process already is running and not finished yet at that
+        //otherwise a process already is running and not finished yet at that
         //time
         this._queue.enqueue(element);
         if (empty) {
@@ -301,6 +301,8 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
         let element = this.read();
         element
             .catch((e) => {
+                //in case of an error we always clean up the remaining calls
+                //to allow a clean recovery of the application
                 this.cleanup();
                 throw e;
             })
@@ -308,8 +310,9 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
                 //the idea is to trigger the next over an event to reduce
                 //the number of recursive calls (stacks might be limited
                 //compared to ram)
-                //natually give we have a dom, the dom is the natural event dispatch system
-                //which we can use
+                //naturally give we have a DOM, the DOM is the natural event dispatch system
+                //which we can use, to decouple the calls from a recursive stack call
+                //(the browser engine will take care of that)
                 () => this.eventDispatcher.dispatchEvent(AsynchronouseQueue.EVT_NEXT)
             ).start();
     }

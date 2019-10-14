@@ -69,8 +69,10 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         private contentType = Const.URL_ENCODED,
         private xhrObject = new XMLHttpRequest()
     ) {
-        this._onEvent = requestContext.getIf(Const.CTX_PARAM_MF_INTERNAL, Const.ON_EVENT).orElse(()=>{}).value;
-        this._onError = requestContext.getIf(Const.CTX_PARAM_MF_INTERNAL, Const.ON_ERROR).orElse(()=>{}).value;
+        this._onEvent = requestContext.getIf(Const.CTX_PARAM_MF_INTERNAL, Const.ON_EVENT).orElse(() => {
+        }).value;
+        this._onError = requestContext.getIf(Const.CTX_PARAM_MF_INTERNAL, Const.ON_ERROR).orElse(() => {
+        }).value;
     }
 
     start(): Promise<XMLHttpRequest> {
@@ -97,9 +99,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             //probably not needed anymore, will test this
             //some webkit based mobile browsers do not follow the w3c spec of
             // setting the accept headers automatically
-            Lang.failSaveExecute(() => this.xhrObject.setRequestHeader(Const.REQ_ACCEPT,Const.STD_ACCEPT));
-
-
+            Lang.failSaveExecute(() => this.xhrObject.setRequestHeader(Const.REQ_ACCEPT, Const.STD_ACCEPT));
 
             this.sendEvent(Const.BEGIN);
 
@@ -112,8 +112,6 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         }
         return this.$promise;
     }
-
-
 
     onAbort(resolve: Consumer<any>, reject: Consumer<any>) {
         reject();
@@ -213,7 +211,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     }
 
     private resolveFinalUrl(formData: XhrFormData) {
-        let targetUrl =  this.resolveTargetUrl(<HTMLFormElement>this.sourceForm.getAsElem(0).value);
+        let targetUrl = this.resolveTargetUrl(<HTMLFormElement>this.sourceForm.getAsElem(0).value);
 
         return targetUrl + (this.isGetRequest() ? "?" + formData.toString() : "");
     }

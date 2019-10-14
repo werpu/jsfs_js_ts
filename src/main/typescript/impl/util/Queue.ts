@@ -15,6 +15,7 @@
  */
 
 import {AsyncRunnable} from "./AsyncRunnable";
+import {Lang} from "./Lang";
 
 /**
  * classical queue implementation
@@ -164,6 +165,52 @@ export class Queue<T> {
 }
 
 /**
+ * we use the dom to decouple the next processing
+ * from the calls,
+ *
+ * that way we do not have any recursive calls within out async
+ * queue.
+ *
+ * The downside is the queue now is bound to the document
+ * singleton and hence only one queue
+ * at a given time is allowed
+ */
+class DomEventDispatcher {
+
+    static listeners: any = [];
+
+    static addEventListener(theName: string, listener: (Event) => void) {
+        this.listeners.push(listener);
+        document.addEventListener(theName, listener, {
+            capture: true
+        });
+    }
+    static removeEventListener(theName: string, listener?: (Event) => void) {
+        if(listener) {
+            document.removeEventListener(theName, listener,{
+                capture: true
+            });
+            this.listeners  = Lang.instance.arrFilter(this.listeners, (item) => item != listener);
+        } else {
+            for(let currListener of this.listeners) {
+                document.removeEventListener(theName, currListener,{
+                    capture: true
+                });
+            }
+            this.listeners = [];
+        }
+    }
+
+    static dispatchEvent(theName, data: EventInit = {
+        bubbles: false,
+        cancelable: true,
+        composed: false
+    }) {
+        document.dispatchEvent(new Event(theName, data))
+    }
+}
+
+/**
  * Asynchronouse queue which starts to work through the callbacks until the queue is empty
  *
  * The idea is to trigger a promise returning callback whenever
@@ -175,7 +222,16 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
     private _queue = new Queue<T>();
     private _delayTimeout: number;
 
+    private eventDispatcher = DomEventDispatcher;
+
+    static EVT_NEXT = "__mf_queue_next__";
+
     constructor() {
+        //only one Async queue allowed for now!!!!
+        DomEventDispatcher.removeEventListener(AsynchronouseQueue.EVT_NEXT);
+        this.eventDispatcher.addEventListener(AsynchronouseQueue.EVT_NEXT, () => {
+            this.runNext();
+        })
     }
 
     get isEmpty(): boolean {
@@ -241,7 +297,14 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
                 this.cleanup();
                 throw e;
             })
-            .then(() => this.runNext()).start();
+            .then(
+                //the idea is to trigger the next over an event to reduce
+                //the number of recursive calls (stacks might be limited
+                //compared to ram)
+                //naturally the event queue in our system always is the dom
+                //which we can use for custom events
+                () => DomEventDispatcher.dispatchEvent(AsynchronouseQueue.EVT_NEXT, new Event(AsynchronouseQueue.EVT_NEXT))
+            ).start();
     }
 
     private runNext() {

@@ -16,14 +16,50 @@
 
 /**
  * Asynchronous queue member for our asynchronous queue
- * Ever object in the Asynchronoues queue needs to implement this interface
+ * Ever object in the asynchronous queue needs to implement this interface
+ *
+ * the usage should be similar as a Promise from the outside.
+ * but with a dedicated start point
+ *
+ * from the implementation side it is mostly registering callbacks
+ * and calling them at the appropriate time.
  */
 export interface AsyncRunnable<T> {
+    /**
+     * starts the runnable
+     */
     start();
 
+    /**
+     * callback for then functinality
+     * triggered when the asynch run is complete
+     *
+     * the async runnable must register the passed function
+     * and then triggers all the registered thens
+     * when it is complete
+     *
+     * @param func
+     */
     then(func: (data: any) => any): AsyncRunnable<T>;
 
+    /**
+     * callback for catch functinality
+     * triggered when the asynch run is complete
+     *
+     * the async runnable must register the passed function
+     * and then triggers all the registered catchs
+     * when an error has occurred
+     *
+     * @param func
+     */
     catch(func: (data: any) => any): AsyncRunnable<T>;
 
+
+    /**
+     * finally called when all then and catches are performed
+     * same this is a registere function
+     * and once the finally time for the promise has
+     * come the finally functions must be performed
+     */
     finally(func: () => void): AsyncRunnable<T>;
 }

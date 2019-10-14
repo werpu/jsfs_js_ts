@@ -19,8 +19,42 @@ import {expect} from 'chai';
 import * as sinon from 'sinon';
 import {ProbeClass} from "./AsynchronousProbe";
 import {AsynchronouseQueue} from "../../../main/typescript/impl/util/Queue";
+import {standardInits} from "../frameworkBase/_ext/shared/StandardInits";
+import defaultMyFaces = standardInits.defaultMyFaces;
+import {Implementation} from "../../../main/typescript/impl/Impl";
 
 describe('Asynchronous Queue tests', () => {
+
+
+    beforeEach(async function () {
+
+        let waitForResult = defaultMyFaces();
+
+        return waitForResult.then((close) => {
+            this.server = sinon.fakeServer.create();
+            this.xhr = sinon.useFakeXMLHttpRequest();
+            this.requests = [];
+            this.xhr.onCreate = (xhr) => {
+                this.requests.push(xhr);
+            };
+            (<any>global).XMLHttpRequest = this.xhr;
+            (<any>window).XMLHttpRequest = this.xhr;
+
+            this.jsfAjaxResponse = sinon.stub((<any>global).jsf.ajax, "response");
+
+            this.closeIt = () => {
+                (<any>global).XMLHttpRequest = (<any>window).XMLHttpRequest = this.xhr.restore();
+                this.jsfAjaxResponse.restore();
+                Implementation.reset();
+                close();
+            }
+        });
+    });
+
+    afterEach(function () {
+
+        this.closeIt();
+    });
 
     it('one entry', (done) => {
 

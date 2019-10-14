@@ -308,11 +308,8 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
                 //the idea is to trigger the next over an event to reduce
                 //the number of recursive calls (stacks might be limited
                 //compared to ram)
-                //naturally the event queue in our system always is the dom
-                //which we can use for custom events,
-                //not sure yet but we also just might reuse a cusatom isolated
-                //shadow dom for that, that way we can move out from the dom singleton
-                //pattern
+                //natually give we have a dom, the dom is the natural event dispatch system
+                //which we can use
                 () => this.eventDispatcher.dispatchEvent(AsynchronouseQueue.EVT_NEXT, new Event(AsynchronouseQueue.EVT_NEXT))
             ).start();
     }

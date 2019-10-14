@@ -86,9 +86,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             this.xhrObject.open(this.ajaxType, this.resolveFinalUrl(formData), true);
 
             //adding timeout
-            if (this.timeout) {
-                this.xhrObject.timeout = this.timeout;
-            }
+            this.timeout ? this.xhrObject.timeout = this.timeout : null;
 
             //a bug in the xhr stub library prevents the setRequestHeader to be properly executed on fake xhr objects
             //normal browsers should resolve this

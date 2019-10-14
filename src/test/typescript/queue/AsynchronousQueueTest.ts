@@ -18,7 +18,7 @@ import {describe, it} from 'mocha';
 import {expect} from 'chai';
 import * as sinon from 'sinon';
 import {ProbeClass} from "./AsynchronousProbe";
-import {AsynchronouseQueue} from "../../../main/typescript/impl/util/Queue";
+import {AsynchronouseQueue} from "../../../main/typescript/impl/util/AsyncQueue";
 import {standardInits} from "../frameworkBase/_ext/shared/StandardInits";
 import defaultMyFaces = standardInits.defaultMyFaces;
 import {Implementation} from "../../../main/typescript/impl/Impl";

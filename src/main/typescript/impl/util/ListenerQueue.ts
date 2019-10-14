@@ -6,7 +6,7 @@ export class EventData {
     source: string;
     responseCode: string;
     responseText: string;
-    responseXML: string;
+    responseXML: Document;
 }
 
 export class ErrorData extends EventData {

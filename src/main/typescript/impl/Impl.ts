@@ -309,7 +309,7 @@ export class Implementation {
                 eventData.responseCode = request.status.toString();
                 eventData.responseText = request.responseText;
 
-                eventData.responseXML = request.responseText;
+                eventData.responseXML = request.responseXML;
             } catch (e) {
                 let impl = _Lang.getGlobalConfig("jsfAjaxImpl", this);
                 this.sendError(

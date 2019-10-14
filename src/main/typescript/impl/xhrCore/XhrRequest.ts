@@ -21,6 +21,7 @@ import {Implementation} from "../Impl";
 import {DomQuery} from "../../_ext/monadish/DomQuery";
 import {Const} from "../core/Const";
 import {XhrFormData} from "./XhrFormData";
+import {XMLQuery} from "../../_ext/monadish";
 
 /**
  * JSFed XHR Request Wrapper
@@ -203,6 +204,16 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
 
     protected onSuccess(data: any, resolve: Consumer<any>, reject: Consumer<any>) {
         this.sendEvent(Const.COMPLETE);
+        //bypass a bug in some testing libraries
+        //normally the attribute is reasdonly but the testing shims make it writable
+        //but in my case do not generate the response xml document object
+        Lang.failSaveExecute(() => {
+            if(!this.xhrObject.responseXML) {
+                (<any>this.xhrObject)["responseXML"] = <any> XMLQuery.parseXML(this.xhrObject.responseText).getAsElem(0).value;
+            }
+
+        });
+
         this.requestContext.apply("_mfInternal").value = this.requestContext.getIf("_mfInternal").get({}).value;
         jsf.ajax.response(this.xhrObject, this.requestContext);
     }

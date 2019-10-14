@@ -237,7 +237,7 @@ export class Implementation {
         ctx.apply(Const.CTX_PARAM_MF_INTERNAL, Const.CTX_PARAM_SRC_CTL_ID).value = elementId.value;
         ctx.apply(Const.CTX_PARAM_MF_INTERNAL, Const.CTX_PARAM_TR_TYPE).value = Const.REQ_TYPE_POST;
         ctx.applyIf(options.getIf(Const.ON_EVENT).isPresent(), Const.CTX_PARAM_MF_INTERNAL, Const.ON_EVENT).value = options.getIf(Const.ON_EVENT).value;
-        ctx.applyIf(options.getIf(Const.ON_ERROR).isPresent(), Const.CTX_PARAM_MF_INTERNAL, Const.ON_EVENT).value = options.getIf(Const.ON_ERROR).value;
+        ctx.applyIf(options.getIf(Const.ON_ERROR).isPresent(), Const.CTX_PARAM_MF_INTERNAL, Const.ON_ERROR).value = options.getIf(Const.ON_ERROR).value;
 
         //mojarra compatibility, mojarra is sending the form id as well
         //this is not documented behavior but can be determined by running
@@ -351,15 +351,14 @@ export class Implementation {
     stdErrorHandler(request: XMLHttpRequest,
                     context: Config,
                     exception: any,
-                    clearRequestQueue = false) {
+                    clearRequestQueue = false){
         //newer browsers do not allow to hold additional values on native objects like exceptions
         //we hence capsule it into the request, which is gced automatically
         //on ie as well, since the stdErrorHandler usually is called between requests
         //this is a valid approach
-        let errorData = this.createErrorData(request, context, exception);
         try {
             if (this.threshold == "ERROR") {
-
+                let errorData = this.createErrorFromException(request, context, exception);
                 this.sendError(errorData);
             }
         } finally {
@@ -367,6 +366,16 @@ export class Implementation {
                 this.requestQueue.cleanup();
             }
         }
+    }
+
+    createErrorFromException(request: XMLHttpRequest,
+                             context: Config,
+                             exception: any): ErrorData  {
+        let errorData = this.createErrorData(request, context,"Client Exception");
+        errorData.message = exception.message;
+        errorData.stacktrace = exception.stack;
+        return errorData;
+
     }
 
     createErrorData(request: XMLHttpRequest,

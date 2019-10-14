@@ -10,8 +10,10 @@ export class EventData {
 }
 
 export class ErrorData extends EventData {
-    serverErrorName: string;
-    serverErrorMessage: string;
+    message?: string;
+    stacktrace ?: string;
+    serverErrorName?: string;
+    serverErrorMessage?: string;
 }
 
 export interface IListener<T> {

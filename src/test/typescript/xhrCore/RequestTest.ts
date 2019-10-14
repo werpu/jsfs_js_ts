@@ -181,9 +181,6 @@ describe('Tests after core when it hits response', function () {
             });
 
             let xhrReq = this.requests[0];
-            //xhrReq.responseType = 'document';
-            //xhrReq.overrideMimeType('text/xml');
-            //xhrReq.setResponseHeaders({  'Content-Type': 'text/xml; charset=utf-8' })
 
             xhrReq.respond(200, {'Content-Type': 'text/xml; charset=utf-8'}, STD_XML);
             expect(this.jsfAjaxResponse.callCount).to.eq(1);
@@ -218,10 +215,10 @@ describe('Tests after core when it hits response', function () {
                 pass2: "pass2",
                 onevent: (evt: any) => {
                     localCnt++;
-                    if(evt.status == Const.COMPLETE) {
+                    if (evt.status == Const.COMPLETE) {
                         expect(!!xhrReq.responseXML).to.be.true;
                     }
-                    if(evt.status == Const.SUCCESS) {
+                    if (evt.status == Const.SUCCESS) {
                         expect(this.jsfAjaxResponse.callCount).to.eq(1);
 
                         expect(this.jsfAjaxResponse.firstCall.args[0] instanceof XMLHttpRequest).to.be.true;
@@ -241,22 +238,14 @@ describe('Tests after core when it hits response', function () {
                         expect(globalCnt == 2).to.eq(true); //local before global
                         expect(localCnt == 3).to.eq(true);
 
-
-
                         done();
                     }
                 }
             });
 
             xhrReq = this.requests[0];
-            //xhrReq.responseType = 'document';
-            //xhrReq.overrideMimeType('text/xml');
-            //xhrReq.setResponseHeaders({  'Content-Type': 'text/xml; charset=utf-8' })
-            // bypass a bug or whatever, the responsexml is not set
-            // despite having everything done like in the docs
             xhrReq.responsetype = "text/xml";
             xhrReq.respond(200, {'Content-Type': 'text/xml'}, STD_XML);
-
 
         } catch (e) {
             console.error(e);
@@ -269,7 +258,45 @@ describe('Tests after core when it hits response', function () {
     it('it must have called onError in the error case', function (done) {
         //on hold until it is clear why sinon is not giving me the response XML as expected
 
-        done();
+        let send = sinon.spy(XMLHttpRequest.prototype, "send");
+        let xhrReq = null;
+
+        try {
+            let errorCnt = 0;
+            let element = DomQuery.byId("input_2").getAsElem(0).value;
+            jsf.ajax.request(element, null, {
+                execute: "input_1",
+                render: "@form",
+                pass1: "pass1",
+                pass2: "pass2",
+                onerror: (error: any) => {
+                    expect(error.type).to.eq("error");
+                    expect(!!error.status).to.eq(true);
+                    expect(!!error.message).to.eq(true);
+                    expect(!!error.source).to.eq(true);
+                    expect(!!error.responseCode).to.eq(true);
+                    expect(!!error.responseText).to.eq(true);
+                    expect(!!error.responseXML).to.eq(true);
+                    done();
+                },
+                onevent: (evt: any) => {
+                    if (evt.status == Const.COMPLETE) {
+                        throw Error("This error is wanted, ignore the log");
+                    }
+                }
+            });
+
+            xhrReq = this.requests[0];
+            xhrReq.responsetype = "text/xml";
+            xhrReq.respond(200, {'Content-Type': 'text/xml'}, STD_XML);
+
+        } catch (e) {
+            console.error(e);
+
+        } finally {
+            send.restore();
+        }
+
     });
 
     it('it must have proper error parameters in the onError case', function (done) {

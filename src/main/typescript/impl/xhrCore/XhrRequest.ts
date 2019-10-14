@@ -240,15 +240,24 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
      */
     private sendEvent(evtType: string) {
         let eventData = Implementation.instance.createEventData(this.xhrObject, this.requestContext, evtType);
-        this._onEvent(eventData);
-        Implementation.instance.sendEvent(eventData);
+        try {
+            //user code error, we might cover
+            //this in onError but also we cannot swallow it
+            this._onEvent(eventData);
+            Implementation.instance.sendEvent(eventData);
+        } catch(e) {
+            this.handleError(e);
+            throw e;
+        }
     }
 
     private handleError(exception) {
-        let errorData = Implementation.instance.createErrorData(this.xhrObject, this.requestContext, exception);
-        this._onError(errorData);
-        // TODO
-        Implementation.instance.stdErrorHandler(this.xhrObject, this.requestContext, exception, true);
+        let errorData = Implementation.instance.createErrorFromException(this.xhrObject, this.requestContext, exception);
+        try {
+            this._onError(errorData);
+        } finally {
+            Implementation.instance.stdErrorHandler(this.xhrObject, this.requestContext, exception, true);
+        }
     }
 
     private resolveTargetUrl(srcFormElement: HTMLFormElement) {

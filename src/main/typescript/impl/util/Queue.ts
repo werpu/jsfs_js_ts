@@ -310,7 +310,7 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
                 //compared to ram)
                 //natually give we have a dom, the dom is the natural event dispatch system
                 //which we can use
-                () => this.eventDispatcher.dispatchEvent(AsynchronouseQueue.EVT_NEXT, new Event(AsynchronouseQueue.EVT_NEXT))
+                () => this.eventDispatcher.dispatchEvent(AsynchronouseQueue.EVT_NEXT)
             ).start();
     }
 

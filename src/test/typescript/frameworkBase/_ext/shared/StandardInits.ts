@@ -72,6 +72,7 @@ export module standardInits {
         </changes>
     </partial-response>
     `;
+
     function HTML_DEFAULT_SEPARATOR_CHAR(separatorChar: string) {
         return `<!DOCTYPE html>
 <html lang="en">
@@ -92,8 +93,68 @@ export module standardInits {
     `;
     }
 
+    export const PROTOCOL_PAGE = `<h2>protocol testcase1</h2>
+
+<div id="centerDiv">
+    <h1>Selenium Testprobe for insert update delete and attribute change</h1>
+
+    <h2>This test tests all aspects of the protocol, under xhr and iframe conditions</h2>
+
+    <div id="testResults">
+        <h3>Test Results</h3>
+
+        <div id="evalarea1">eval area 1 triggered by eval</div>
+        <div id="evalarea2">eval area 2 triggered by update</div>
+        <div id="evalarea3">eval area 3 triggered by insert</div>
+        <div id="evalarea4">eval area 4 triggered by a click on the changed attributes area</div>
+
+        <div id="changesArea">update insert area</div>
+        <div id="deleteable">delete area will be deleted once you press the delete button</div>
+        <div id="attributeChange">attributes changes area</div>
+    </div>
+
+    <h2>Call actions via normal ppr</h2>
+
+    <form id="form1" action="boog.html">
+        <input type="button" id="cmd_eval" value="eval"
+               onclick="emitPPR(this, ('undefined' == typeof event)? null: event, 'eval1');"/>
+        <input type="button" id="cmd_update_insert" value="update insert"
+               onclick="emitPPR(this, ('undefined' == typeof event)? null: event, 'updateinsert1');"/>
+        <input type="button" id="cmd_update_insert2" value="update insert second protocol path"
+               onclick="emitPPR(this, ('undefined' == typeof event)? null: event, 'updateinsert2');"/>
+
+        <input type="button" id="cmd_delete" value="delete"
+               onclick="emitPPR(this, ('undefined' == typeof event)? null: event, 'delete1');"/>
+        <input type="button" id="cmd_attributeschange" value="change attributes"
+               onclick="emitPPR(this, ('undefined' == typeof event)? null: event, 'attributes');"/>
+        <input type="button" id="cmd_illegalresponse" value="illegal response, error trigger"
+               onclick="emitPPR(this, ('undefined' == typeof event)? null: event, 'illegalResponse');"/>
+
+        <input type="button" id="cmd_error" value="Server error with error response"
+               onclick="emitPPR(this, ('undefined' == typeof event)? null: event, 'errors');"/>
+
+        <input type="button" id="cmd_error_component" value="Error: no component given"
+               onclick="jsf.ajax.request(null, event, {}); return false"/>
+
+    </form>
+    
+    <script type="text/javascript">
+        document.getElementById("evalarea1").innerHTML = "booga";
+        var target = "./test.mockup";
+
+        function emitPPR(source, event, action, useIframe, formName) {
+            var Lang = myfaces._impl._util._Lang;
+            document.getElementById(formName || "form1").action = target;
+
+            jsf.ajax.request(/*String|Dom Node*/ source, /*|EVENT|*/ (window.event) ? window.event : event, /*{|OPTIONS|}*/ {op: action});
+        }
+
+    </script>
+</div>
+    `;
+
     export function basicXML(): Document {
-        return  new window.DOMParser().parseFromString(STD_XML, "text/xml");
+        return new window.DOMParser().parseFromString(STD_XML, "text/xml");
     }
 
     export function standardInit(scope: any, initFunc: (boolean) => Promise<() => void> = defaultHtml): Promise<any> {

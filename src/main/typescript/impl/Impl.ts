@@ -169,7 +169,8 @@ export class Implementation {
         const options = new Config(opts).shallowCopy;
         const elem = DomQuery.byId(el || <Element>event.target);
         const elementId = elem.id;
-        const ctx = new Config({});
+        const requestCtx = new Config({});
+        const internalCtx = new Config({});
 
         /*assert if the onerror is set and once if it is set it must be of type function*/
 
@@ -181,18 +182,18 @@ export class Implementation {
 
         this.applyWindowId(options);
 
-        ctx.apply(Const.CTX_PARAM_PASS_THR).value = _Lang.mergeMaps([{}, <any>options.value], true, (key) => key in this.BLOCK_FILTER);
-        ctx.applyIf(!!event, Const.CTX_PARAM_PASS_THR, Const.P_EVT).value = Lang.failSaveResolve(() => event.type);
+        requestCtx.apply(Const.CTX_PARAM_PASS_THR).value = _Lang.mergeMaps([{}, <any>options.value], true, (key) => key in this.BLOCK_FILTER);
+        requestCtx.applyIf(!!event, Const.CTX_PARAM_PASS_THR, Const.P_EVT).value = Lang.failSaveResolve(() => event.type);
 
         /**
          * ajax pass through context with the source
          * onevent and onerror
          */
-        ctx.apply(Const.SOURCE).value = elementId.value;
-        ctx.apply(Const.ON_EVENT).value = options.getIf(Const.ON_EVENT).value;
-        ctx.apply(Const.ON_ERROR).value = options.getIf(Const.ON_ERROR).value;
+        requestCtx.apply(Const.SOURCE).value = elementId.value;
+        requestCtx.apply(Const.ON_EVENT).value = options.getIf(Const.ON_EVENT).value;
+        requestCtx.apply(Const.ON_ERROR).value = options.getIf(Const.ON_ERROR).value;
 
-        ctx.apply(MYFACES).value = options.getIf(MYFACES).value;
+        requestCtx.apply(MYFACES).value = options.getIf(MYFACES).value;
         /**
          * fetch the parent form
          *
@@ -200,7 +201,7 @@ export class Implementation {
          * so that people can use dummy forms and work
          * with detached objects
          */
-        const configId = ctx.getIf(MYFACES, "form").orElse("__mf_none__").value;
+        const configId = requestCtx.getIf(MYFACES, "form").orElse("__mf_none__").value;
         let form: DomQuery = DomQuery
             .byId(configId)
             .orElseLazy(() => this.getForm(elem.getAsElem(0).value, event));
@@ -208,18 +209,18 @@ export class Implementation {
         /**
          * binding contract the javax.faces.source must be set
          */
-        ctx.apply(Const.CTX_PARAM_PASS_THR, Const.P_PARTIAL_SOURCE).value = elementId.value;
+        requestCtx.apply(Const.CTX_PARAM_PASS_THR, Const.P_PARTIAL_SOURCE).value = elementId.value;
 
         /**
          * javax.faces.partial.ajax must be set to true
          * TODO error?
          */
-        ctx.apply(Const.CTX_PARAM_PASS_THR, Const.P_AJAX).value = elementId.value;
+        requestCtx.apply(Const.CTX_PARAM_PASS_THR, Const.P_AJAX).value = elementId.value;
 
         /**
          * binding contract the javax.faces.source must be set
          */
-        ctx.apply(Const.CTX_PARAM_PASS_THR, Const.P_PARTIAL_SOURCE).value = elementId.value;
+        requestCtx.apply(Const.CTX_PARAM_PASS_THR, Const.P_PARTIAL_SOURCE).value = elementId.value;
 
         /**
          * if resetValues is set to true
@@ -228,50 +229,49 @@ export class Implementation {
          * the value has to be explicitly true, according to
          * the specs jsdoc
          */
-        ctx.applyIf(true === options.getIf(Const.CTX_PARAM_RST).get(false).value,
+        requestCtx.applyIf(true === options.getIf(Const.CTX_PARAM_RST).get(false).value,
             Const.CTX_PARAM_PASS_THR, Const.P_RESET_VALUES).value = true;
 
         //additional meta information to speed things up, note internal non jsf
         //pass through options are stored under _mfInternal in the context
-        ctx.apply(Const.CTX_PARAM_MF_INTERNAL, Const.CTX_PARAM_SRC_FRM_ID).value = form.id.value;
-        ctx.apply(Const.CTX_PARAM_MF_INTERNAL, Const.CTX_PARAM_SRC_CTL_ID).value = elementId.value;
-        ctx.apply(Const.CTX_PARAM_MF_INTERNAL, Const.CTX_PARAM_TR_TYPE).value = Const.REQ_TYPE_POST;
-        ctx.applyIf(options.getIf(Const.ON_EVENT).isPresent(), Const.CTX_PARAM_MF_INTERNAL, Const.ON_EVENT).value = options.getIf(Const.ON_EVENT).value;
-        ctx.applyIf(options.getIf(Const.ON_ERROR).isPresent(), Const.CTX_PARAM_MF_INTERNAL, Const.ON_ERROR).value = options.getIf(Const.ON_ERROR).value;
+        internalCtx.apply(Const.CTX_PARAM_SRC_FRM_ID).value = form.id.value;
+        internalCtx.apply(Const.CTX_PARAM_SRC_CTL_ID).value = elementId.value;
+        internalCtx.apply(Const.CTX_PARAM_TR_TYPE).value = Const.REQ_TYPE_POST;
 
         //mojarra compatibility, mojarra is sending the form id as well
         //this is not documented behavior but can be determined by running
         //mojarra under blackbox conditions
         //i assume it does the same as our formId_submit=1 so leaving it out
         //wont hurt but for the sake of compatibility we are going to add it
-        ctx.apply(Const.CTX_PARAM_PASS_THR, form.id.value).value = form.id.value;
+        requestCtx.apply(Const.CTX_PARAM_PASS_THR, form.id.value).value = form.id.value;
 
         //todo partial id handling from config
 
         //now we enqueue the request as asynchronous runnable into our request
         //queue and let the queue take over the rest
 
-        this.applyClientWindowId(form, ctx);
-        this.applyExecute(options, ctx, form, elementId.value);
-        this.applyRender(options, ctx, form, elementId.value);
+        this.applyClientWindowId(form, requestCtx);
+
+        this.applyExecute(options, requestCtx, form, elementId.value);
+        this.applyRender(options, requestCtx, form, elementId.value);
 
         let delay: number = options.getIf(Const.CTX_PARAM_DELAY)
-            .orElseLazy(() => _Lang.getLocalOrGlobalConfig(ctx.value, Const.CTX_PARAM_DELAY, 0))
+            .orElseLazy(() => _Lang.getLocalOrGlobalConfig(requestCtx.value, Const.CTX_PARAM_DELAY, 0))
             .value;
 
         let timeout: number = options.getIf(Const.CTX_PARAM_TIMEOUT)
-            .orElseLazy(() => _Lang.getLocalOrGlobalConfig(ctx.value, Const.CTX_PARAM_TIMEOUT, 0))
+            .orElseLazy(() => _Lang.getLocalOrGlobalConfig(requestCtx.value, Const.CTX_PARAM_TIMEOUT, 0))
             .value;
 
-        this.addRequestToQueue(elem, form, ctx, delay, timeout);
+        this.addRequestToQueue(elem, form, requestCtx, internalCtx, delay, timeout);
     }
 
     /**
      * public to make it shimmable for tests
      */
-    addRequestToQueue(elem: DomQuery, form: DomQuery, ctx: Config, delay = 0, timeout = 0) {
+    addRequestToQueue(elem: DomQuery, form: DomQuery, reqCtx: Config, respPassThr: Config, delay = 0, timeout = 0) {
         //TODO multipart handling via its own adapted xhr derviate
-        this.requestQueue.enqueue(new XhrRequest(elem, form, ctx, [], timeout), delay);
+        this.requestQueue.enqueue(new XhrRequest(elem, form, reqCtx, respPassThr, [], timeout), delay);
     }
 
     /**
@@ -351,7 +351,7 @@ export class Implementation {
     stdErrorHandler(request: XMLHttpRequest,
                     context: Config,
                     exception: any,
-                    clearRequestQueue = false){
+                    clearRequestQueue = false) {
         //newer browsers do not allow to hold additional values on native objects like exceptions
         //we hence capsule it into the request, which is gced automatically
         //on ie as well, since the stdErrorHandler usually is called between requests
@@ -370,8 +370,8 @@ export class Implementation {
 
     createErrorFromException(request: XMLHttpRequest,
                              context: Config,
-                             exception: any): ErrorData  {
-        let errorData = this.createErrorData(request, context,"Client Exception");
+                             exception: any): ErrorData {
+        let errorData = this.createErrorData(request, context, "Client Exception");
         errorData.message = exception.message;
         errorData.stacktrace = exception.stack;
         return errorData;
@@ -553,17 +553,11 @@ export class Implementation {
         }
     }
 
-    /**
-     * probably deprecated in favor of windowId need to check the specs
-     */
+
     private applyClientWindowId(form: DomQuery, ctx: Config) {
         let clientWindow = jsf.getClientWindow(form.getAsElem(0).value);
         if (clientWindow) {
-            if (form.querySelectorAll("[name='" + Const.P_CLIENTWINDOW + "']").length == 0) {
-                ctx.apply(Const.CTX_PARAM_MF_INTERNAL, "_clientWindow").value = clientWindow;
-            } else {
-                ctx.apply(Const.CTX_PARAM_PASS_THR, Const.P_CLIENTWINDOW).value = clientWindow;
-            }
+            ctx.apply(Const.CTX_PARAM_PASS_THR, Const.P_CLIENTWINDOW).value = clientWindow;
         }
     }
 

@@ -233,10 +233,12 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
 
     private eventDispatcher = new DomEventDispatcher();
 
+    curRunnable: AsyncRunnable<any>;
+
     constructor() {
         //only one Async queue allowed for now!!!!
         this.eventDispatcher.addEventListener(AsynchronouseQueue.EVT_NEXT, () => {
-            this.runNext();
+            this.processNextElement();
         })
     }
 
@@ -279,17 +281,16 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
     }
 
     cleanup() {
+        this.curRunnable = null;
         this._queue.cleanup();
     }
 
     private appendElement(element: T) {
-        let empty = this.isEmpty;
-
         //only if the first element is added we start with a trigger
         //otherwise a process already is running and not finished yet at that
         //time
         this._queue.enqueue(element);
-        if (empty) {
+        if (this._queue.length === 1) {
             this.runEntry();
         }
     }
@@ -313,11 +314,24 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
                 //naturally give we have a DOM, the DOM is the natural event dispatch system
                 //which we can use, to decouple the calls from a recursive stack call
                 //(the browser engine will take care of that)
-                () => this.eventDispatcher.dispatchEvent(AsynchronouseQueue.EVT_NEXT)
+                () => this.callForNextElementToProcess()
             ).start();
     }
 
-    private runNext() {
+    cancel() {
+        if(this.curRunnable) {
+            this.curRunnable.cancel();
+            this.curRunnable = null;
+        }
+        this.cleanup();
+    }
+
+    private callForNextElementToProcess() {
+        this.curRunnable = null;
+        this.eventDispatcher.dispatchEvent(AsynchronouseQueue.EVT_NEXT);
+    }
+
+    private processNextElement() {
         this._queue.dequeue();
         if (!this.isEmpty) {
             this.runEntry();

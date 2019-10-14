@@ -84,6 +84,10 @@ export class ProbeClass implements AsyncRunnable<Promise<any>>, IValueHolder<Pro
         }
     }
 
+    cancel() {
+        //TODO do something with it
+    }
+
     then(func: (data: any) => any): AsyncRunnable<boolean> {
 
         let thenFunc = (data: any) => {

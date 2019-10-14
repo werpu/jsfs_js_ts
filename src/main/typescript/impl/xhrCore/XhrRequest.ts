@@ -111,6 +111,16 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         return this.$promise;
     }
 
+    cancel() {
+        try {
+            this.xhrObject.abort();
+        } catch (e) {
+            e = (e._mfInternal) ? e : Lang.instance.makeException(new Error(), "sendError", "sendError", "XHRPromise", "send", e.message);
+            this.handleError(e);
+        }
+    }
+
+
     onAbort(resolve: Consumer<any>, reject: Consumer<any>) {
         reject();
     }

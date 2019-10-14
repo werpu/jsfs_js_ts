@@ -31,6 +31,11 @@ export interface AsyncRunnable<T> {
     start();
 
     /**
+     * cancel the current ongoing op if possible
+     */
+    cancel();
+
+    /**
      * callback for then functinality
      * triggered when the asynch run is complete
      *

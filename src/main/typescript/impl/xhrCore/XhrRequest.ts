@@ -75,7 +75,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         }).value;
     }
 
-    start(): Promise<XMLHttpRequest> {
+    start(): AsyncRunnable<XMLHttpRequest> {
         let _Lang = Lang.instance;
         try {
             let formData: XhrFormData = new XhrFormData(this.sourceForm, this.source);
@@ -91,7 +91,8 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             //a bug in the xhr stub library prevents the setRequestHeader to be properly executed on fake xhr objects
             //normal browsers should resolve this
             //tests can quietly fail on this one
-            Lang.failSaveExecute(() => this.xhrObject.setRequestHeader(Const.CONTENT_TYPE, `${this.contentType}; charset=utf-8`));
+            Lang.failSaveExecute(() => this.xhrObject.setRequestHeader(Const.CONTENT_TYPE, `${this.
+                contentType}; charset=utf-8`));
             Lang.failSaveExecute(() => this.xhrObject.setRequestHeader(Const.HEAD_FACES_REQ, Const.VAL_AJAX));
 
             //probably not needed anymore, will test this
@@ -108,7 +109,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             e = (e._mfInternal) ? e : _Lang.makeException(new Error(), "sendError", "sendError", "XHRPromise", "send", e.message);
             this.handleError(e);
         }
-        return this.$promise;
+        return this;
     }
 
     cancel() {
@@ -121,29 +122,25 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     }
 
 
-    onAbort(resolve: Consumer<any>, reject: Consumer<any>) {
-        reject();
-    }
+    /*
+     * Promise bindings
+     *
+     * We have to delegate a few calls to our promise
+     * to make the callback from the outside and inside work with our
+     * xhr promise
+     *
+     */
 
-    onTimeout(resolve: Consumer<any>, reject: Consumer<any>) {
-        this.sendEvent(Const.STATE_EVT_TIMEOUT);
-        reject();
-    }
-
-    onSuccess(data: any, resolve: Consumer<any>, reject: Consumer<any>) {
-        this.sendEvent(Const.COMPLETE);
-        this.requestContext.apply("_mfInternal").value = this.requestContext.getIf("_mfInternal").get({}).value;
-        jsf.ajax.response(this.xhrObject, this.requestContext);
-    }
-
-    onDone(data: any, resolve: Consumer<any>, reject: Consumer<any>) {
-        this.sendEvent(Const.SUCCESS);
-        resolve(data);
-    }
-
-    onError(errorData: any, resolve: Consumer<any>, reject: Consumer<any>) {
-        this.handleError(errorData);
-        reject();
+    protected get $promise(): Promise<any> {
+        if (!this.xhrPromise) {
+            this.xhrPromise = new Lang.Promise((resolve: Consumer<any>, reject: Consumer<any>) => {
+                //to allow callback into xhr over promises
+                //we have to register the callbacks
+                //accordingly
+                this.registerXhrCallbacks(resolve, reject);
+            });
+        }
+        return this.xhrPromise;
     }
 
     catch(func: (data: any) => any): AsyncRunnable<XMLHttpRequest> {
@@ -162,22 +159,15 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         return this;
     }
 
-    get $promise(): Promise<any> {
-        if (!this.xhrPromise) {
-            this.xhrPromise = new Lang.Promise((resolve: Consumer<any>, reject: Consumer<any>) => {
-                this.registerXhrCallbacks(resolve, reject);
-            });
-        }
-        return this.xhrPromise;
-    }
 
     /**
      * attaches the internal event and processing
      * callback within the promise to our xhr object
+     *
      * @param resolve
      * @param reject
      */
-    private registerXhrCallbacks(resolve: Consumer<any>, reject: Consumer<any>) {
+    protected registerXhrCallbacks(resolve: Consumer<any>, reject: Consumer<any>) {
         this.xhrObject.onabort = () => {
             this.onAbort(resolve, reject);
         };
@@ -195,6 +185,42 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         };
     }
 
+    /*
+     * xhr processing callbacks
+     *
+     * Those methods are the callbacks called by
+     * the xhr object depending on its own state
+     */
+
+    protected onAbort(resolve: Consumer<any>, reject: Consumer<any>) {
+        reject();
+    }
+
+    protected onTimeout(resolve: Consumer<any>, reject: Consumer<any>) {
+        this.sendEvent(Const.STATE_EVT_TIMEOUT);
+        reject();
+    }
+
+    protected onSuccess(data: any, resolve: Consumer<any>, reject: Consumer<any>) {
+        this.sendEvent(Const.COMPLETE);
+        this.requestContext.apply("_mfInternal").value = this.requestContext.getIf("_mfInternal").get({}).value;
+        jsf.ajax.response(this.xhrObject, this.requestContext);
+    }
+
+    protected onDone(data: any, resolve: Consumer<any>, reject: Consumer<any>) {
+        this.sendEvent(Const.SUCCESS);
+        resolve(data);
+    }
+
+    protected onError(errorData: any, resolve: Consumer<any>, reject: Consumer<any>) {
+        this.handleError(errorData);
+        reject();
+    }
+
+
+    /*
+     * other helpers
+     */
     private sendEvent(evtType: string) {
         let eventData = Implementation.instance.createEventData(this.xhrObject, this.requestContext, evtType);
         this._onEvent(eventData);

@@ -177,23 +177,28 @@ export class Queue<T> {
  */
 class DomEventDispatcher {
 
-    static listeners: any = [];
+    listeners: any = [];
+    shadowElement: HTMLElement;
 
-    static addEventListener(theName: string, listener: (Event) => void) {
+    constructor() {
+        this.shadowElement = document.createElement("div");
+    }
+
+    addEventListener(theName: string, listener: (Event) => void) {
         this.listeners.push(listener);
-        document.addEventListener(theName, listener, {
+        this.shadowElement.addEventListener(theName, listener, {
             capture: true
         });
     }
-    static removeEventListener(theName: string, listener?: (Event) => void) {
+    removeEventListener(theName: string, listener?: (Event) => void) {
         if(listener) {
-            document.removeEventListener(theName, listener,{
+            this.shadowElement.removeEventListener(theName, listener,{
                 capture: true
             });
             this.listeners  = Lang.instance.arrFilter(this.listeners, (item) => item != listener);
         } else {
             for(let currListener of this.listeners) {
-                document.removeEventListener(theName, currListener,{
+                this.shadowElement.removeEventListener(theName, currListener,{
                     capture: true
                 });
             }
@@ -201,12 +206,12 @@ class DomEventDispatcher {
         }
     }
 
-    static dispatchEvent(theName, data: EventInit = {
+    dispatchEvent(theName, data: EventInit = {
         bubbles: false,
         cancelable: true,
         composed: false
     }) {
-        document.dispatchEvent(new Event(theName, data))
+        this.shadowElement.dispatchEvent(new Event(theName, data))
     }
 }
 
@@ -222,13 +227,14 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
     private _queue = new Queue<T>();
     private _delayTimeout: number;
 
-    private eventDispatcher = DomEventDispatcher;
+
 
     static EVT_NEXT = "__mf_queue_next__";
 
+    private eventDispatcher = new DomEventDispatcher();
+
     constructor() {
         //only one Async queue allowed for now!!!!
-        DomEventDispatcher.removeEventListener(AsynchronouseQueue.EVT_NEXT);
         this.eventDispatcher.addEventListener(AsynchronouseQueue.EVT_NEXT, () => {
             this.runNext();
         })
@@ -302,8 +308,11 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
                 //the number of recursive calls (stacks might be limited
                 //compared to ram)
                 //naturally the event queue in our system always is the dom
-                //which we can use for custom events
-                () => DomEventDispatcher.dispatchEvent(AsynchronouseQueue.EVT_NEXT, new Event(AsynchronouseQueue.EVT_NEXT))
+                //which we can use for custom events,
+                //not sure yet but we also just might reuse a cusatom isolated
+                //shadow dom for that, that way we can move out from the dom singleton
+                //pattern
+                () => this.eventDispatcher.dispatchEvent(AsynchronouseQueue.EVT_NEXT, new Event(AsynchronouseQueue.EVT_NEXT))
             ).start();
     }
 

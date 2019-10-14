@@ -83,6 +83,13 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
 
             //next step the pass through parameters are merged in for post params
             formData.shallowMerge(this.requestContext.getIf(Const.CTX_PARAM_PASS_THR));
+            //drag back in the onError amd onEvent functions
+            //per spec the request context must have the on event and on error request functions in the main namespace
+            this.requestContext.apply(Const.CTX_PARAM_PASS_THR, Const.ON_ERROR).value  = this.requestContext.getIf(Const.CTX_PARAM_MF_INTERNAL, Const.ON_ERROR).value;
+            this.requestContext.apply(Const.CTX_PARAM_PASS_THR, Const.ON_EVENT).value  = this.requestContext.getIf(Const.CTX_PARAM_MF_INTERNAL, Const.ON_EVENT).value;
+
+            //we have to shift the internal passthroughs around to build up our response context
+            this.requestContext.apply(Const.CTX_PARAM_PASS_THR, Const.CTX_PARAM_MF_INTERNAL).value = this.requestContext.getIf(Const.CTX_PARAM_MF_INTERNAL).orElse({}).value;
 
             this.xhrObject.open(this.ajaxType, this.resolveFinalUrl(formData), true);
 
@@ -203,7 +210,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     }
 
     protected onSuccess(data: any, resolve: Consumer<any>, reject: Consumer<any>) {
-        this.sendEvent(Const.COMPLETE);
+
         //bypass a bug in some testing libraries
         //normally the attribute is reasdonly but the testing shims make it writable
         //but in my case do not generate the response xml document object
@@ -211,11 +218,10 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             if(!this.xhrObject.responseXML) {
                 (<any>this.xhrObject)["responseXML"] = <any> XMLQuery.parseXML(this.xhrObject.responseText).getAsElem(0).value;
             }
-
         });
+        this.sendEvent(Const.COMPLETE);
 
-        this.requestContext.apply("_mfInternal").value = this.requestContext.getIf("_mfInternal").get({}).value;
-        jsf.ajax.response(this.xhrObject, this.requestContext);
+        jsf.ajax.response(this.xhrObject, this.requestContext.getIf(Const.CTX_PARAM_PASS_THR).orElse({}).value);
     }
 
     protected onDone(data: any, resolve: Consumer<any>, reject: Consumer<any>) {

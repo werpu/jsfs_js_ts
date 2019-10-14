@@ -3,10 +3,11 @@ import * as sinon from "sinon";
 import {expect} from "chai";
 import {standardInits} from "../frameworkBase/_ext/shared/StandardInits";
 import defaultMyFaces = standardInits.defaultMyFaces;
-import {DomQuery} from "../../../main/typescript/_ext/monadish";
+import {DomQuery, XMLQuery} from "../../../main/typescript/_ext/monadish";
 import {Const} from "../../../main/typescript/impl/core/Const";
 import basicXML = standardInits.basicXML;
 import STD_XML = standardInits.STD_XML;
+import {Lang} from "../../../main/typescript/impl/util/Lang";
 
 declare var jsf: any;
 declare var Implementation: any;
@@ -202,11 +203,14 @@ describe('Tests after core when it hits response', function () {
         let send = sinon.spy(XMLHttpRequest.prototype, "send");
         let globalCnt = 0;
         let localCnt = 0;
+        let xhrReq = null;
+
         try {
             let element = DomQuery.byId("input_2").getAsElem(0).value;
             jsf.ajax.addOnEvent(() => {
                 globalCnt++;
             });
+
             jsf.ajax.request(element, null, {
                 execute: "input_1",
                 render: "@form",
@@ -214,24 +218,46 @@ describe('Tests after core when it hits response', function () {
                 pass2: "pass2",
                 onevent: (evt: any) => {
                     localCnt++;
+                    if(evt.status == Const.COMPLETE) {
+                        expect(!!xhrReq.responseXML).to.be.true;
+                    }
+                    if(evt.status == Const.SUCCESS) {
+                        expect(this.jsfAjaxResponse.callCount).to.eq(1);
+
+                        expect(this.jsfAjaxResponse.firstCall.args[0] instanceof XMLHttpRequest).to.be.true;
+                        let lastArg = this.jsfAjaxResponse.firstCall.args[1];
+                        expect(lastArg.onevent != null).to.be.true;
+                        expect(lastArg.onevent instanceof Function).to.be.true;
+                        expect(!!lastArg.onError).to.be.false;
+                        expect(lastArg.pass1 == "pass1").to.be.true;
+                        expect(lastArg.pass2 == "pass2").to.be.true;
+                        expect(!!lastArg[Const.P_PARTIAL_SOURCE]).to.be.true;
+                        expect(!!lastArg[Const.P_AJAX]).to.be.true;
+                        expect(!!lastArg[Const.P_EXECUTE]).to.be.true;
+                        expect(!!lastArg[Const.P_RENDER]).to.be.true;
+
+                        expect(this.jsfAjaxResponse.firstCall.args.length).to.eq(2);
+
+                        expect(globalCnt == 2).to.eq(true); //local before global
+                        expect(localCnt == 3).to.eq(true);
+
+
+
+                        done();
+                    }
                 }
             });
 
-            let xhrReq = this.requests[0];
+            xhrReq = this.requests[0];
             //xhrReq.responseType = 'document';
             //xhrReq.overrideMimeType('text/xml');
             //xhrReq.setResponseHeaders({  'Content-Type': 'text/xml; charset=utf-8' })
             // bypass a bug or whatever, the responsexml is not set
             // despite having everything done like in the docs
-
-            xhrReq.responseXML = new window.DOMParser().parseFromString(STD_XML, "text/xml");
-
+            xhrReq.responsetype = "text/xml";
             xhrReq.respond(200, {'Content-Type': 'text/xml'}, STD_XML);
 
-            expect(this.jsfAjaxResponse.callCount).to.eq(1);
-            expect(globalCnt == 3).to.eq(true);
-            expect(localCnt == 3).to.eq(true);
-            done();
+
         } catch (e) {
             console.error(e);
 

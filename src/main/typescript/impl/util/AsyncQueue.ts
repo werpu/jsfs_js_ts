@@ -130,7 +130,7 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
         //otherwise a process already is running and not finished yet at that
         //time
         this.runnableQueue.enqueue(element);
-        if (this.runnableQueue.length === 1) {
+        if (!this.currentlyRunning) {
             this.runEntry();
         }
     }
@@ -139,7 +139,7 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
         if (this.isEmpty) {
             return;
         }
-        this.currentlyRunning = this.read();
+        this.currentlyRunning = this.dequeue();
         this.currentlyRunning
             .catch((e) => {
                 //in case of an error we always clean up the remaining calls
@@ -164,18 +164,16 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
                 this.currentlyRunning.cancel();
             }
         } finally {
-            this.currentlyRunning = null;
             this.cleanup();
         }
     }
 
     private callForNextElementToProcess() {
-        this.currentlyRunning = null;
         this.eventDispatcher.dispatchEvent(AsynchronouseQueue.EVT_NEXT);
     }
 
     private processNextElement() {
-        this.runnableQueue.dequeue();
+        this.currentlyRunning = null;
         if (!this.isEmpty) {
             this.runEntry();
         }

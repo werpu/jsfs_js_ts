@@ -218,11 +218,15 @@ class DomEventDispatcher {
 }
 
 /**
- * Asynchronouse queue which starts to work through the callbacks until the queue is empty
+ * Asynchronous queue which starts to work
+ * through the callbacks until the queue is empty
  *
- * The idea is to trigger a promise returning callback whenever
- * an element is added...
- * The callback must be static
+ * Every callback must be of async runnable
+ * which is sort of an extended promise which has
+ * added a decicated cancel and start point
+ *
+ * This interface can be used as wrapper contract
+ * for normal promises if needed.
  */
 export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
 

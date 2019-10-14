@@ -298,20 +298,10 @@ describe('Tests after core when it hits response', function () {
         }
 
     });
-
-    it('it must have proper error parameters in the onError case', function (done) {
-        done();
-    });
-
-    it('error listeners must have been triggered in the onError case', function (done) {
-        done();
-    });
 });
 
-describe('Tests after core when errors out', function () {
 
-});
-
+/*
 describe('Myfaces specialized tests', function () {
 
     it('must have the _mf passthroughs in and out after the request succeeded', function (done) {
@@ -323,3 +313,4 @@ describe('Myfaces specialized tests', function () {
     });
 
 });
+*/

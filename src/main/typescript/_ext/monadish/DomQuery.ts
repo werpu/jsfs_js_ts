@@ -41,6 +41,14 @@ export class ElementAttribute implements IValueHolder<string> {
         }
         val[0].setAttribute(this.attributeName, value);
     }
+
+    isPresent() {
+        return Optional.fromNullable(this.value).isPresent();
+    }
+
+    isAbsent() {
+        return Optional.fromNullable(this.value).isAbsent();
+    }
 }
 
 /**
@@ -472,7 +480,7 @@ export class DomQuery {
      * @param nodeSelector
      */
     getIf(...nodeSelector: Array<string>): DomQuery {
-        return this.querySelectorAll(" > " + nodeSelector.join(">"));
+        return this.querySelectorAll(":scope > " + nodeSelector.join(">"));
     }
 
     eachElem(func: (item: Element, cnt?: number) => any): DomQuery {
@@ -869,6 +877,18 @@ export class DomQuery {
         return this;
     }
 
+    get cDATAAsString(): string {
+        let cDataBlock = [];
+        // response may contain several blocks
+        this.each((item: DomQuery) => {
+            item.childNodes.eachElem((node: Node) => {
+                cDataBlock.push(<string>(<any>node).data);
+            });
+        });
+        return cDataBlock.join('');
+    }
+
+
     /**
      * fires a click event on the underlying dom elements
      */
@@ -946,7 +966,37 @@ export class DomQuery {
         })
     }
 
-    //TODO maybe move this out into a specialized domquery implementation
+    textContent(joinstr: string = ""): string {
+
+        return this.stream
+            .map((value: DomQuery) => {
+                let item = value.getAsElem(0).orElseLazy(() => {
+                    return <any> {
+                        textContent: ""
+                    };
+                }).value;
+                return (<any> item).textContent || "";
+            })
+            .reduce((text1, text2) => text1+joinstr+text2, "").value;
+
+
+    }
+
+    innerText(joinstr: string  = ""): string {
+
+        return this.stream
+            .map((value: DomQuery) => {
+                let item = value.getAsElem(0).orElseLazy(() => {
+                   return <any> {
+                       innerText: ""
+                   };
+                }).value;
+                return (<any> item).innerText || "";
+            })
+            .reduce((text1, text2) => text1+joinstr+text2, "").value;
+
+
+    }
 
     private subNodes(from: number, to?: number): DomQuery {
         if (Optional.fromNullable(to).isAbsent()) {

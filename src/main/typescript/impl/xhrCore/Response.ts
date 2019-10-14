@@ -16,7 +16,7 @@
 
 import {Lang} from "../util/Lang";
 
-import {Config} from "../../_ext/monadish/Monad";
+import {Config, Optional} from "../../_ext/monadish/Monad";
 import {XMLQuery} from "../../_ext/monadish/XmlQuery";
 import {DomQuery} from "../../_ext/monadish/DomQuery";
 import {Implementation} from "../Impl";
@@ -165,10 +165,10 @@ export class Response {
     }
 
     private static processRedirect(request: XMLHttpRequest, context: Config, node: XMLQuery) {
-        if (node.getAttribute("url").isAbsent()) {
+        if (node.attr("url").isAbsent()) {
             throw Response.raiseError(new Error(), Lang.instance.getMessage("ERR_RED_URL", null, "_AjaxResponse.processRedirect"), "processRedirect");
         }
-        let redirectUrl = Lang.instance.trim(node.getAttribute("url").value);
+        let redirectUrl = Lang.instance.trim(node.attr("url").value);
         if (redirectUrl == "") {
             return false;
         }
@@ -209,15 +209,15 @@ export class Response {
     }
 
     private static processAttributes(request: XMLHttpRequest, context: Config, node: XMLQuery) {
-        let id = node.getAttribute("id");
+        let id = node.attr("id");
         let elem = DomQuery.querySelectorAll("#" + id.value);
         node.byTagName("attribute").each((item: XMLQuery) => {
-            elem.attr(item.getAttribute("name").value).value = item.getAttribute("value").value;
+            elem.attr(item.attr("name").value).value = item.attr("value").value;
         });
     }
 
     private static processUpdate(request: XMLHttpRequest, context: Config, node: XMLQuery) {
-        if (node.getAttribute("id").value == Response.P_VIEWSTATE) {
+        if (node.attr("id").value == Response.P_VIEWSTATE) {
             context.apply(Response.MF_INTERNAL, "appliedViewState").value = node.textContent("");
 
             let elemId = context.getIf("_mfSourceControlId").orElse(context.getIf("source").isPresent() ? context.getIf("source", "id") : null);
@@ -239,7 +239,7 @@ export class Response {
             }
         } else {
             let cdataBlock = node.cDATAAsString;
-            switch (node.getAttribute("id").value) {
+            switch (node.attr("id").value) {
                 case Response.P_VIEWROOT :
                     Response.replaceViewRoot(context, XMLQuery.parseXML(cdataBlock.substring(cdataBlock.indexOf("<html"))));
                     break;
@@ -261,9 +261,9 @@ export class Response {
     }
 
     private static processInsert(request: XMLHttpRequest, context: Config, node: XMLQuery) {
-        let insertId = node.getAttribute("id");
-        let before = node.getAttribute("before");
-        let after = node.getAttribute("after");
+        let insertId = node.attr("id");
+        let before = node.attr("before");
+        let after = node.attr("after");
 
         let insertNodes = DomQuery.fromMarkup(node.cDATAAsString);
 
@@ -277,14 +277,14 @@ export class Response {
     }
 
     private static processDelete(request: XMLHttpRequest, context: Config, node: XMLQuery) {
-        let id = node.getAttribute("id");
+        let id = node.attr("id");
         DomQuery.querySelectorAll("#" + id.value).delete();
     }
 
     private static replaceViewRoot(context: Config, shadownResponse: XMLQuery) {
 
-        let head = shadownResponse.byTagName("head");
-        let body = shadownResponse.byTagName("body");
+        let head = new XMLQuery(shadownResponse.byTagName("head"));
+        let body = new XMLQuery(shadownResponse.byTagName("body"));
 
         if (head.isPresent()) {
             Response.replaceHead(context, head);
@@ -315,7 +315,7 @@ export class Response {
     }
 
     private static updateElement(context: Config, node: XMLQuery, cdataBlock: string) {
-        let result = DomQuery.querySelectorAll("#" + node.getAttribute("id").value).outerHTML(cdataBlock);
+        let result = DomQuery.querySelectorAll("#" + node.attr("id").value).outerHTML(cdataBlock);
         let sourceForm = result.parents("form").orElse(result.byTagName("form", true));
 
         context.apply(Response.MF_INTERNAL, Response.UPDATE_FORMS).value.push(sourceForm);

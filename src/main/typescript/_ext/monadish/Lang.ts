@@ -61,6 +61,18 @@ export class Lang {
         }
     }
 
+    static saveResolveLazy<T>(resolverProducer: () => T, defaultValue: () => T = null): Optional<T> {
+        try {
+            let result = resolverProducer();
+            if ("undefined" == typeof result || null == result) {
+                return Optional.fromNullable(defaultValue());
+            }
+            return Optional.fromNullable(result);
+        } catch (e) {
+            return Optional.absent;
+        }
+    }
+
     /**
      * String to array function performs a string to array transformation
      * @param {String} it the string which has to be changed into an array

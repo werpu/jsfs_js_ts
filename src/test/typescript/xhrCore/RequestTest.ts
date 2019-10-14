@@ -35,8 +35,8 @@ describe('Tests on the xhr core when it starts to call the request', function ()
             this.xhr.onCreate = (xhr) => {
                 this.requests.push(xhr);
             };
-            (<any>global).XMLHttpRequest = this.xhr = sinon.useFakeXMLHttpRequest();
-            (<any>window).XMLHttpRequest = this.xhr = sinon.useFakeXMLHttpRequest();
+            (<any>global).XMLHttpRequest = this.xhr;
+            (<any>window).XMLHttpRequest = this.xhr;
 
             this.jsfAjaxResponse = sinon.stub((<any>global).jsf.ajax, "response");
 
@@ -159,9 +159,7 @@ describe('Tests after core when it hits response', function () {
         this.closeIt();
     });
 
-
     it('must have passed all ajax phase events', function (done) {
-
 
         let send = sinon.spy(XMLHttpRequest.prototype, "send");
         let globalCnt = 0;
@@ -186,12 +184,12 @@ describe('Tests after core when it hits response', function () {
             //xhrReq.overrideMimeType('text/xml');
             //xhrReq.setResponseHeaders({  'Content-Type': 'text/xml; charset=utf-8' })
 
-            xhrReq.respond(200, {  'Content-Type': 'text/xml; charset=utf-8' }, STD_XML);
+            xhrReq.respond(200, {'Content-Type': 'text/xml; charset=utf-8'}, STD_XML);
             expect(this.jsfAjaxResponse.callCount).to.eq(1);
-            expect(globalCnt ==3).to.eq(true);
+            expect(globalCnt == 3).to.eq(true);
             expect(localCnt == 3).to.eq(true);
             done();
-        } catch(e) {
+        } catch (e) {
             console.error(e);
 
         } finally {
@@ -201,10 +199,50 @@ describe('Tests after core when it hits response', function () {
     });
 
     it('it must have called request and the pass through values must be properly transferred into the context', function (done) {
-        done();
+        let send = sinon.spy(XMLHttpRequest.prototype, "send");
+        let globalCnt = 0;
+        let localCnt = 0;
+        try {
+            let element = DomQuery.byId("input_2").getAsElem(0).value;
+            jsf.ajax.addOnEvent(() => {
+                globalCnt++;
+            });
+            jsf.ajax.request(element, null, {
+                execute: "input_1",
+                render: "@form",
+                pass1: "pass1",
+                pass2: "pass2",
+                onevent: (evt: any) => {
+                    localCnt++;
+                }
+            });
+
+            let xhrReq = this.requests[0];
+            //xhrReq.responseType = 'document';
+            //xhrReq.overrideMimeType('text/xml');
+            //xhrReq.setResponseHeaders({  'Content-Type': 'text/xml; charset=utf-8' })
+            // bypass a bug or whatever, the responsexml is not set
+            // despite having everything done like in the docs
+
+            xhrReq.responseXML = new window.DOMParser().parseFromString(STD_XML, "text/xml");
+
+            xhrReq.respond(200, {'Content-Type': 'text/xml'}, STD_XML);
+
+            expect(this.jsfAjaxResponse.callCount).to.eq(1);
+            expect(globalCnt == 3).to.eq(true);
+            expect(localCnt == 3).to.eq(true);
+            done();
+        } catch (e) {
+            console.error(e);
+
+        } finally {
+            send.restore();
+        }
     });
 
     it('it must have called onError in the error case', function (done) {
+        //on hold until it is clear why sinon is not giving me the response XML as expected
+
         done();
     });
 

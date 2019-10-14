@@ -63,10 +63,15 @@ export module standardInits {
     
     `;
 
-    export const STD_XML = "<?xml version=\"1.0\" encoding=\"utf-8\"?>" +
-            "<partial-response><changes><update id=\"value_1\"><![CDATA[<span id=\"out1\">2</span>]]></update><update id" +
-            "=\"javax.faces.ViewState\"><![CDATA[j_id1:j_id3]]></update></changes></partial-response>";
-
+    export const STD_XML = `
+    <?xml version="1.0" encoding="utf-8"?>
+    <partial-response>
+        <changes>
+            <update id="value_1"><![CDATA[<span id="out1">2</span>]]></update>
+            <update id="javax.faces.ViewState"><![CDATA[j_id1:j_id3]]></update>
+        </changes>
+    </partial-response>
+    `;
     function HTML_DEFAULT_SEPARATOR_CHAR(separatorChar: string) {
         return `<!DOCTYPE html>
 <html lang="en">

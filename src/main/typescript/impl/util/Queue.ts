@@ -171,9 +171,10 @@ export class Queue<T> {
  * that way we do not have any recursive calls within out async
  * queue.
  *
- * The downside is the queue now is bound to the document
- * singleton and hence only one queue
- * at a given time is allowed
+ * we use a shadow dom div as event dispatching element
+ * we cannot use the full shadow dom facilities
+ * due to ie11 but we at least can use a non attached div.
+ *
  */
 class DomEventDispatcher {
 

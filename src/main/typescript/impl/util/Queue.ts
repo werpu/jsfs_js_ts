@@ -229,15 +229,13 @@ class DomEventDispatcher {
  * for normal promises if needed.
  */
 export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
-
-    private _queue = new Queue<T>();
-    private _delayTimeout: number;
-
     static EVT_NEXT = "__mf_queue_next__";
 
+    private runnableQueue = new Queue<T>();
+    private delayTimeout: number;
     private eventDispatcher = new DomEventDispatcher();
 
-    curRunnable: AsyncRunnable<any>;
+    currentlyRunning: AsyncRunnable<any>;
 
     constructor() {
         //only one Async queue allowed for now!!!!
@@ -247,12 +245,12 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
     }
 
     get isEmpty(): boolean {
-        return this._queue.isEmpty;
+        return this.runnableQueue.isEmpty;
     }
 
     // noinspection JSUnusedLocalSymbols
     private set queueSize(newSize: number) {
-        this._queue.queueSize = newSize;
+        this.runnableQueue.queueSize = newSize;
     }
 
     /**
@@ -263,12 +261,12 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
      * @param delay possible delay after our usual process or drop if something newer is incoming algorithm
      */
     enqueue(element: T, delay = 0) {
-        if (this._delayTimeout) {
-            clearTimeout(this._delayTimeout);
-            this._delayTimeout = null;
+        if (this.delayTimeout) {
+            clearTimeout(this.delayTimeout);
+            this.delayTimeout = null;
         }
         if (delay) {
-            this._delayTimeout = setTimeout(() => {
+            this.delayTimeout = setTimeout(() => {
                 this.appendElement(element);
             });
         } else {
@@ -277,24 +275,24 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
     }
 
     dequeue(): T {
-        return this._queue.dequeue();
+        return this.runnableQueue.dequeue();
     }
 
     read(): T {
-        return this._queue.read();
+        return this.runnableQueue.read();
     }
 
     cleanup() {
-        this.curRunnable = null;
-        this._queue.cleanup();
+        this.currentlyRunning = null;
+        this.runnableQueue.cleanup();
     }
 
     private appendElement(element: T) {
         //only if the first element is added we start with a trigger
         //otherwise a process already is running and not finished yet at that
         //time
-        this._queue.enqueue(element);
-        if (this._queue.length === 1) {
+        this.runnableQueue.enqueue(element);
+        if (this.runnableQueue.length === 1) {
             this.runEntry();
         }
     }
@@ -323,20 +321,20 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
     }
 
     cancel() {
-        if(this.curRunnable) {
-            this.curRunnable.cancel();
-            this.curRunnable = null;
+        if (this.currentlyRunning) {
+            this.currentlyRunning.cancel();
+            this.currentlyRunning = null;
         }
         this.cleanup();
     }
 
     private callForNextElementToProcess() {
-        this.curRunnable = null;
+        this.currentlyRunning = null;
         this.eventDispatcher.dispatchEvent(AsynchronouseQueue.EVT_NEXT);
     }
 
     private processNextElement() {
-        this._queue.dequeue();
+        this.runnableQueue.dequeue();
         if (!this.isEmpty) {
             this.runEntry();
         }

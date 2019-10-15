@@ -15,6 +15,16 @@
  */
 
 import {describe} from "mocha";
+import {standardInits} from "../frameworkBase/_ext/shared/StandardInits";
+import protocolPage = standardInits.protocolPage;
+import * as sinon from "sinon";
+
+import {DomQuery} from "../../../main/typescript/_ext/monadish";
+import STD_XML = standardInits.STD_XML;
+import {XmlResponses} from "../frameworkBase/_ext/shared/XmlResponses";
+
+declare var jsf: any;
+declare var Implementation: any;
 
 /**
  * response test
@@ -24,8 +34,44 @@ import {describe} from "mocha";
  */
 describe('Tests of the various aspects of the response protocol functionality', function () {
 
-    it("must have a simple field updated as well as the viewstate", () => {
+    beforeEach(async function () {
+        let waitForResult = protocolPage();
+        return waitForResult.then((close) => {
+            this.server = sinon.fakeServer.create();
+            this.xhr = sinon.useFakeXMLHttpRequest();
+            this.requests = [];
+            this.xhr.onCreate = (xhr) => {
+                this.requests.push(xhr);
+            };
+            (<any>global).XMLHttpRequest = this.xhr;
+            (<any>window).XMLHttpRequest = this.xhr;
 
+            this.jsfAjaxResponse = sinon.stub((<any>global).jsf.ajax, "response");
+
+            this.closeIt = () => {
+                (<any>global).XMLHttpRequest = (<any>window).XMLHttpRequest = this.xhr.restore();
+                this.jsfAjaxResponse.restore();
+                Implementation.reset();
+                close();
+            }
+        });
+    });
+
+    afterEach(function () {
+        this.closeIt();
+    });
+
+    it("must have a simple field updated as well as the viewstate", function(done) {
+        //DomQuery.byId("cmd_update_insert").click();
+        let issuer = DomQuery.byId("cmd_update_insert").getAsElem(0).value;
+        jsf.ajax.request(issuer,  {
+            target: issuer
+        }, {})
+        let xhrReq = this.requests[0];
+        xhrReq.responsetype = "text/xml";
+        xhrReq.respond(200, {'Content-Type': 'text/xml'}, XmlResponses.UPDATE_INSERT_1);
+
+        done();
     });
 
     it("must have a full body update", () => {

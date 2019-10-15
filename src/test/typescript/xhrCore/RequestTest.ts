@@ -67,7 +67,6 @@ describe('Tests on the xhr core when it starts to call the request', function ()
     });
 
     afterEach(function () {
-
         this.closeIt();
     });
 

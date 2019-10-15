@@ -951,7 +951,7 @@ export class DomQuery {
                         throw "fireEvent: Couldn't find an event class for event '" + eventName + "'.";
                         break;
                 }
-                var event = doc.createEvent(eventClass);
+                let event = doc.createEvent(eventClass);
                 event.initEvent(eventName, true, true); // All events created as bubbling and cancelable.
 
                 event.synthetic = true; // allow detection of synthetic events

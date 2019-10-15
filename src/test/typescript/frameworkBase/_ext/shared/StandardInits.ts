@@ -17,6 +17,8 @@
 import {Implementation} from "../../../../../main/typescript/impl/Impl";
 import {DomQuery, XMLQuery} from "../../../../../main/typescript/_ext/monadish";
 
+declare let jsf: any;
+
 /**
  * helpers with various init and html patterns
  *
@@ -93,7 +95,14 @@ export module standardInits {
     `;
     }
 
-    export const PROTOCOL_PAGE = `<h2>protocol testcase1</h2>
+    export const PROTOCOL_PAGE = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h2>protocol testcase1</h2>
 
 <div id="centerDiv">
     <h1>Selenium Testprobe for insert update delete and attribute change</h1>
@@ -137,13 +146,13 @@ export module standardInits {
                onclick="jsf.ajax.request(null, event, {}); return false"/>
 
     </form>
-    
+
     <script type="text/javascript">
         document.getElementById("evalarea1").innerHTML = "booga";
         var target = "./test.mockup";
 
         function emitPPR(source, event, action, useIframe, formName) {
-            var Lang = myfaces._impl._util._Lang;
+            console.debug("enitting;");
             document.getElementById(formName || "form1").action = target;
 
             jsf.ajax.request(/*String|Dom Node*/ source, /*|EVENT|*/ (window.event) ? window.event : event, /*{|OPTIONS|}*/ {op: action});
@@ -151,6 +160,7 @@ export module standardInits {
 
     </script>
 </div>
+</body>
     `;
 
     export function basicXML(): Document {
@@ -180,6 +190,11 @@ export module standardInits {
     export function defaultMyFaces(withJsf = true): Promise<() => void> {
         return init(HTML_FORM_DEFAULT, withJsf);
     }
+
+    export function protocolPage(withJsf = true): Promise<() => void> {
+        return <any> init(PROTOCOL_PAGE, withJsf);
+    }
+
 
     export function defaultSeparatorChar(separatorChar: string, withJsf = true): Promise<() => void> {
         let template = HTML_DEFAULT_SEPARATOR_CHAR(separatorChar);

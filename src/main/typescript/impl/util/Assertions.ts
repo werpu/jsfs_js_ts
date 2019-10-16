@@ -1,4 +1,4 @@
-import {XMLQuery} from "../../_ext/monadish";
+import {Config, DomQuery, XMLQuery} from "../../_ext/monadish";
 import {Const} from "../core/Const";
 import {Implementation} from "../Impl";
 import {Lang} from "../util/Lang";
@@ -10,10 +10,29 @@ import {Lang} from "../util/Lang";
  */
 export class Assertions {
 
+    static assertRequestIntegrity(options: Config, elem: DomQuery) {
+        /*assert if the onerror is set and once if it is set it must be of type function*/
+        Assertions.assertType(options.getIf(Const.ON_ERROR).value, "function");
+        /*assert if the onevent is set and once if it is set it must be of type function*/
+        Assertions.assertType(options.getIf(Const.ON_EVENT).value, "function");
+        //improve the error messages if an empty elem is passed
+        Assertions.assertElementExists(elem);
+    }
+
     static assertUrlExists(node: XMLQuery): void {
         if (node.attr(Const.ATTR_URL).isAbsent()) {
             throw Assertions.raiseError(new Error(), Lang.instance.getMessage("ERR_RED_URL", null, "_Ajaxthis.processRedirect"), "processRedirect");
         }
+    }
+
+    static assertElementExists(elem: DomQuery) {
+        if (elem.isAbsent()) {
+            throw Lang.instance.makeException(new Error(), "ArgNotSet", null, "Impl", "request", Lang.instance.getMessage("ERR_MUST_BE_PROVIDED1", "{0}: source  must be provided", "jsf.ajax.request", "source element id"));
+        }
+    }
+
+    static assertType(value: any,type: string) {
+        Lang.instance.assertType(value, type);
     }
 
     /**

@@ -21,7 +21,8 @@ import {XMLQuery} from "../../_ext/monadish/XmlQuery";
 import {DomQuery} from "../../_ext/monadish/DomQuery";
 import {Implementation} from "../Impl";
 import {Const} from "../core/Const";
-import {Assertions} from "./Assertions";
+import {Assertions} from "../util/Assertions";
+
 
 export class Response {
 

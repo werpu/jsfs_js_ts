@@ -15,7 +15,6 @@
  */
 
 import * as myfacesConfig from "../api/myfaces";
-import {myfaces} from "../api/myfaces";
 import {Lang} from "./util/Lang";
 import {ErrorData, EventData, IListener, ListenerQueue} from "./util/ListenerQueue";
 import {Response} from "./xhrCore/Response";
@@ -25,7 +24,7 @@ import {Config, Optional} from "../_ext/monadish/Monad";
 import {DomQuery} from "../_ext/monadish/DomQuery";
 import {ExtDomQuery} from "./util/ExtDomQuery";
 import {Const} from "./core/Const";
-import {XMLQuery} from "../_ext/monadish";
+import {Assertions} from "./util/Assertions";
 
 declare var jsf: any;
 
@@ -157,7 +156,7 @@ export class Implementation {
      */
     request(el: ElemDef, event?: Event, opts?: Options) {
         const _Lang = Lang.instance;
-        const MYFACES = "myfaces";
+
         /*
          *namespace remap for our local function context we mix the entire function namespace into
          *a local function variable so that we do not have to write the entire namespace
@@ -172,13 +171,7 @@ export class Implementation {
         const requestCtx = new Config({});
         const internalCtx = new Config({});
 
-        /*assert if the onerror is set and once if it is set it must be of type function*/
-
-        _Lang.assertType(options.getIf(Const.ON_ERROR).value, "function");
-        /*assert if the onevent is set and once if it is set it must be of type function*/
-        _Lang.assertType(options.getIf(Const.ON_EVENT).value, "function");
-        //improve the error messages if an empty elem is passed
-        this.assertElementExists(elem);
+        Assertions.assertRequestIntegrity(options, elem);
 
         this.applyWindowId(options);
 
@@ -193,7 +186,7 @@ export class Implementation {
         requestCtx.apply(Const.ON_EVENT).value = options.getIf(Const.ON_EVENT).value;
         requestCtx.apply(Const.ON_ERROR).value = options.getIf(Const.ON_ERROR).value;
 
-        requestCtx.apply(MYFACES).value = options.getIf(MYFACES).value;
+        requestCtx.apply(Const.MYFACES).value = options.getIf(Const.MYFACES).value;
         /**
          * fetch the parent form
          *
@@ -201,10 +194,8 @@ export class Implementation {
          * so that people can use dummy forms and work
          * with detached objects
          */
-        const configId = requestCtx.getIf(MYFACES, "form").orElse("__mf_none__").value;
-        let form: DomQuery = DomQuery
-            .byId(configId)
-            .orElseLazy(() => this.getForm(elem.getAsElem(0).value, event));
+        const configId = requestCtx.getIf(Const.MYFACES, "form").orElse("__mf_none__").value;
+        let form: DomQuery = this.resolveForm(requestCtx, elem, event);
 
         /**
          * binding contract the javax.faces.source must be set
@@ -243,6 +234,7 @@ export class Implementation {
         //mojarra under blackbox conditions
         //i assume it does the same as our formId_submit=1 so leaving it out
         //wont hurt but for the sake of compatibility we are going to add it
+
         requestCtx.apply(Const.CTX_PARAM_PASS_THR, form.id.value).value = form.id.value;
 
         //todo partial id handling from config
@@ -255,15 +247,34 @@ export class Implementation {
         this.applyExecute(options, requestCtx, form, elementId.value);
         this.applyRender(options, requestCtx, form, elementId.value);
 
-        let delay: number = options.getIf(Const.CTX_PARAM_DELAY)
-            .orElseLazy(() => _Lang.getLocalOrGlobalConfig(requestCtx.value, Const.CTX_PARAM_DELAY, 0))
-            .value;
+        let delay: number = this.resolveDelay(options, _Lang, requestCtx);
 
-        let timeout: number = options.getIf(Const.CTX_PARAM_TIMEOUT)
-            .orElseLazy(() => _Lang.getLocalOrGlobalConfig(requestCtx.value, Const.CTX_PARAM_TIMEOUT, 0))
-            .value;
+        let timeout: number = this.resolveTimeout(options, _Lang, requestCtx);
 
         this.addRequestToQueue(elem, form, requestCtx, internalCtx, delay, timeout);
+    }
+
+
+
+    private resolveForm(requestCtx: Config, elem: DomQuery, event: Event): DomQuery {
+        const configId = requestCtx.getIf(Const.MYFACES, "form").orElse("__mf_none__").value;
+        let form: DomQuery = DomQuery
+            .byId(configId)
+            .orElseLazy(() => this.getForm(elem.getAsElem(0).value, event));
+        return form
+    }
+
+
+    private resolveTimeout(options, _Lang, requestCtx) {
+        return options.getIf(Const.CTX_PARAM_TIMEOUT)
+            .orElseLazy(() => _Lang.getLocalOrGlobalConfig(requestCtx.value, Const.CTX_PARAM_TIMEOUT, 0))
+            .value;
+    }
+
+    private resolveDelay(options, _Lang, requestCtx) {
+        return options.getIf(Const.CTX_PARAM_DELAY)
+            .orElseLazy(() => _Lang.getLocalOrGlobalConfig(requestCtx.value, Const.CTX_PARAM_DELAY, 0))
+            .value;
     }
 
     /**
@@ -524,11 +535,6 @@ export class Implementation {
         options.delete("windowId");
     }
 
-    private assertElementExists(elem: DomQuery) {
-        if (elem.isAbsent()) {
-            throw Lang.instance.makeException(new Error(), "ArgNotSet", null, "Impl", "request", Lang.instance.getMessage("ERR_MUST_BE_PROVIDED1", "{0}: source  must be provided", "jsf.ajax.request", "source element id"));
-        }
-    }
 
     private applyRender(options: Config, ctx: Config, form: DomQuery, elementId: string) {
         if (options.getIf("render").isPresent()) {

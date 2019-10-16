@@ -121,4 +121,6 @@ export class Const {
     static UPDATE_FORMS = "_updateForms";
     static UPDATE_ELEMS = "_updateElems";
 
+    static MYFACES = "myfaces";
+
 }

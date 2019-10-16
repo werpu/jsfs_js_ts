@@ -135,11 +135,9 @@ describe('DOMQuery tests', function () {
         probe1.insertBefore(insert);
         probe1.insertAfter(insert2);
 
-
         expect(DomQuery.querySelectorAll("#insertedBefore").isPresent()).to.be.true;
         expect(DomQuery.querySelectorAll("#insertedBefore2").isPresent()).to.be.true;
         expect(DomQuery.querySelectorAll("#id_2").isPresent()).to.be.true;
-
         expect(DomQuery.querySelectorAll("#insertedAfter").isPresent()).to.be.true;
         expect(DomQuery.querySelectorAll("#insertedAfter2").isPresent()).to.be.true;
     });

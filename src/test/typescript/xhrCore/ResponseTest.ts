@@ -76,6 +76,22 @@ describe('Tests of the various aspects of the response protocol functionality', 
             .value.indexOf("update succeeded 1") != -1)
             .to.be.true;
 
+        let pos1 = (<string>DomQuery.byId(document.body).html()
+            .value).indexOf("insert before succeeded should display before test1");
+        let pos3 = (<string>DomQuery.byId(document.body).html()
+            .value).indexOf("insert after succeeded should display after test1");
+        let pos2 = (<string>DomQuery.byId(document.body).html()
+            .value).indexOf("update succeeded 1");
+        expect(pos1 != -1).to.be.true;
+
+        expect(pos1 < pos2 && pos2 < pos3).to.be.true;
+
+
+        let pos4 = (<string>DomQuery.byId(document.body).html()
+            .value).indexOf("embedded script at update succeed");
+
+        expect(pos4 != -1).to.be.true
+
         done();
     });
 

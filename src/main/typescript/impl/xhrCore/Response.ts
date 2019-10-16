@@ -40,38 +40,40 @@ export class Response {
         let {externalContext, internalContext} = ResonseDataResolver.resolveContexts(context);
         let responseXML: XMLQuery = ResonseDataResolver.resolveResponseXML(req);
 
+        let responseProcessor = new ResponseProcessor(req, externalContext, internalContext);
+
         //we now process the partial tags, or in none given raise an error
         responseXML.querySelectorAll(Const.RESP_PARTIAL)
-            .each(item => this.processPartialTag(item, request, externalContext, internalContext));
+            .each(item => this.processPartialTag(<XMLQuery> item, responseProcessor, internalContext));
 
         //we now process the viewstates and the evals deferred
         //the reason for this is that often it is better
         //to wait until the document has caught up before
         //doing any evals even on embedded scripts
-        ResponseProcessor.fixViewStates(externalContext, internalContext);
-        ResponseProcessor.globalEval(externalContext, internalContext);
+        responseProcessor.fixViewStates();
+        responseProcessor.globalEval();
     }
 
     /**
      *
      * highest node partia-response from there the main operations are triggered
      */
-    private static processPartialTag(item, request: XMLHttpRequest, externalContext, internalContext) {
+    private static processPartialTag(node: XMLQuery,  responseProcessor: ResponseProcessor,  internalContext) {
 
-        internalContext.apply(Const.PARTIAL_ID).value = item.id;
+        internalContext.apply(Const.PARTIAL_ID).value = node.id;
         const SEL_SUB_TAGS = [Const.CMD_ERROR, Const.CMD_REDIRECT, Const.CMD_CHANGES].join(",");
 
         //now we can process the main operations
-        item.getIf(SEL_SUB_TAGS).each((node: XMLQuery) => {
+        node.getIf(SEL_SUB_TAGS).each((node: XMLQuery) => {
             switch (node.tagName.value) {
                 case Const.CMD_ERROR:
-                    ResponseProcessor.processError(request, externalContext, internalContext, node);
+                    responseProcessor.processError(node);
                     break;
                 case Const.CMD_REDIRECT:
-                    ResponseProcessor.processRedirect(request, externalContext, internalContext, node);
+                    responseProcessor.processRedirect(node);
                     break;
                 case Const.CMD_CHANGES:
-                    this.processChangesTag(request, externalContext, internalContext, node);
+                    this.processChangesTag(node, responseProcessor);
                     break;
             }
         });
@@ -85,29 +87,29 @@ export class Response {
      * @param internalContext
      * @param node
      */
-    private static processChangesTag(request: XMLHttpRequest, context: Config, internalContext: Config, node: XMLQuery): boolean {
+    private static processChangesTag( node: XMLQuery, responseProcessor: ResponseProcessor): boolean {
         const ALLOWED_TAGS = [Const.CMD_UPDATE, Const.CMD_EVAL, Const.CMD_INSERT, Const.CMD_DELETE, Const.CMD_ATTRIBUTES, Const.CMD_EXTENSION].join(",");
         node.getIf(ALLOWED_TAGS).each(
             (node: XMLQuery) => {
                 switch (node.tagName.value) {
                     case Const.CMD_UPDATE:
-                        this.processUpdateTag(request, context, internalContext, node);
+                        this.processUpdateTag(node, responseProcessor);
                         break;
 
                     case Const.CMD_EVAL:
-                        ResponseProcessor.processEvalTag(node);
+                        responseProcessor.processEvalTag(node);
                         break;
 
                     case Const.CMD_INSERT:
-                        ResponseProcessor.processInsert(request, context, internalContext, node);
+                        responseProcessor.processInsert(node);
                         break;
 
                     case Const.CMD_DELETE:
-                        ResponseProcessor.processDeleteTag(request, context, internalContext, node);
+                        responseProcessor.processDeleteTag( node);
                         break;
 
                     case Const.CMD_ATTRIBUTES:
-                        ResponseProcessor.processAttributes(request, context, internalContext, node);
+                        responseProcessor.processAttributes( node);
                         break;
 
                     case Const.CMD_EXTENSION:
@@ -128,12 +130,12 @@ export class Response {
      * @param internalContext
      * @param node
      */
-    private static processUpdateTag(request: XMLHttpRequest, context: Config, internalContext: Config, node: XMLQuery) {
+    private static processUpdateTag(node: XMLQuery, responseProcessor: ResponseProcessor) {
         if (node.id.value == Const.P_VIEWSTATE) {
-            ResponseProcessor.processViewState(context, internalContext, node);
+            responseProcessor.processViewState(node);
         } else {
             //branch case we need to drill down further
-            this.handleElementUpdate(node, context, internalContext);
+            this.handleElementUpdate(node, responseProcessor);
         }
     }
 
@@ -143,23 +145,23 @@ export class Response {
      * @param context
      * @param internalContext
      */
-    private static handleElementUpdate(node: XMLQuery, context: Config, internalContext: Config) {
+    private static handleElementUpdate(node: XMLQuery, responseProcessor: ResponseProcessor) {
         let cdataBlock = node.cDATAAsString;
         switch (node.id.value) {
             case Const.P_VIEWROOT :
-                ResponseProcessor.replaceViewRoot(context, internalContext, XMLQuery.parseXML(cdataBlock.substring(cdataBlock.indexOf("<html"))));
+                responseProcessor.replaceViewRoot( XMLQuery.parseXML(cdataBlock.substring(cdataBlock.indexOf("<html"))));
                 break;
 
             case Const.P_VIEWHEAD:
-                ResponseProcessor.replaceHead(context, internalContext, XMLQuery.parseXML(cdataBlock));
+                responseProcessor.replaceHead( XMLQuery.parseXML(cdataBlock));
                 break;
 
             case Const.P_VIEWBODY:
-                ResponseProcessor.replaceBody(context, internalContext, XMLQuery.parseXML(cdataBlock));
+                responseProcessor.replaceBody( XMLQuery.parseXML(cdataBlock));
                 break;
 
             default://htmlItem replacement
-                ResponseProcessor.processUpdateElem(context, internalContext, node, cdataBlock);
+                responseProcessor.processUpdateElem( node, cdataBlock);
                 break;
 
         }

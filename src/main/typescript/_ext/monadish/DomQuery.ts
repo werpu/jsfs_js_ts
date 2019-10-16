@@ -746,7 +746,7 @@ export class DomQuery {
         const lowerTagName = tagName.toLowerCase();
         let resolveItem = (item: Element) => {
 
-            if (item.tagName.toLowerCase() == lowerTagName) {
+            if ((item.tagName || "").toLowerCase() == lowerTagName) {
                 retArr.push(item);
             }
 

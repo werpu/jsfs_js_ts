@@ -87,7 +87,7 @@ describe('DOMQuery tests', function () {
     it('outerhtml and eval tests', function () {
         let probe1 = new DomQuery(window.document.body);
         probe1.querySelectorAll("#id_1").outerHTML(`
-            <div id='barg'>
+            <<div id='barg'>
             
             </div>
             <script type="text/javascript">
@@ -113,7 +113,7 @@ describe('DOMQuery tests', function () {
         expect(nonexistent).to.be.eq(null);
     });
 
-    it('hasclass and addclass test', function () {
+    it('must perform addClass and hasClass correctly', function () {
         let probe1 = new DomQuery(document);
         let element = probe1.querySelectorAll("div#id_2");
         element.addClass("booga").addClass("Booga2");
@@ -126,5 +126,23 @@ describe('DOMQuery tests', function () {
         expect(element.hasClass("booga")).to.be.true;
 
     });
+
+    it('must perform insert before and insert after correctly', function () {
+        let probe1 = new DomQuery(document).querySelectorAll("#id_2");
+        let insert = DomQuery.fromMarkup("<div id='insertedBefore'></div><div id='insertedBefore2'></div>")
+        let insert2 = DomQuery.fromMarkup("<div id='insertedAfter'></div><div id='insertedAfter2'></div>")
+
+        probe1.insertBefore(insert);
+        probe1.insertAfter(insert2);
+
+
+        expect(DomQuery.querySelectorAll("#insertedBefore").isPresent()).to.be.true;
+        expect(DomQuery.querySelectorAll("#insertedBefore2").isPresent()).to.be.true;
+        expect(DomQuery.querySelectorAll("#id_2").isPresent()).to.be.true;
+
+        expect(DomQuery.querySelectorAll("#insertedAfter").isPresent()).to.be.true;
+        expect(DomQuery.querySelectorAll("#insertedAfter2").isPresent()).to.be.true;
+    });
+
 
 });

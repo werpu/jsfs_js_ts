@@ -19,19 +19,19 @@ import {XMLQuery} from "../../_ext/monadish/XmlQuery";
 import {Const} from "../core/Const";
 import {ResponseProcessor} from "./ResponseProcessor";
 import {ResonseDataResolver} from "./ResonseDataResolver";
+import {IResponseProcessor} from "./IResponseProcessor";
 
 export class Response {
 
     /**
-     * uses response to start Html element replacement
+     * Standardized jsf.js response
+     * this one is called straight from jsf.js.response
+     *
+     * The processing follows the spec by going for the responseXML
+     * and processing its tags
      *
      * @param {XMLHttpRequest} request (xhrRequest) - xhr request object
      * @param {[key: string]: any} context (Map) - AJAX context
-     *
-     * A special handling has to be added to the update cycle
-     * according to the JSDoc specs if the CDATA block contains html tags the outer rim must be stripped
-     * if the CDATA block contains a head section the document head must be replaced
-     * and if the CDATA block contains a body section the document body must be replaced!
      *
      */
     static processResponse(request: XMLHttpRequest, context: { [key: string]: any }) {
@@ -44,7 +44,7 @@ export class Response {
 
         //we now process the partial tags, or in none given raise an error
         responseXML.querySelectorAll(Const.RESP_PARTIAL)
-            .each(item => this.processPartialTag(<XMLQuery> item, responseProcessor, internalContext));
+            .each(item => this.processPartialTag(<XMLQuery>item, responseProcessor, internalContext));
 
         //we now process the viewstates and the evals deferred
         //the reason for this is that often it is better
@@ -55,10 +55,9 @@ export class Response {
     }
 
     /**
-     *
-     * highest node partia-response from there the main operations are triggered
+     * highest node partial-response from there the main operations are triggered
      */
-    private static processPartialTag(node: XMLQuery,  responseProcessor: ResponseProcessor,  internalContext) {
+    private static processPartialTag(node: XMLQuery, responseProcessor: IResponseProcessor, internalContext) {
 
         internalContext.apply(Const.PARTIAL_ID).value = node.id;
         const SEL_SUB_TAGS = [Const.CMD_ERROR, Const.CMD_REDIRECT, Const.CMD_CHANGES].join(",");
@@ -67,10 +66,10 @@ export class Response {
         node.getIf(SEL_SUB_TAGS).each((node: XMLQuery) => {
             switch (node.tagName.value) {
                 case Const.CMD_ERROR:
-                    responseProcessor.processError(node);
+                    responseProcessor.error(node);
                     break;
                 case Const.CMD_REDIRECT:
-                    responseProcessor.processRedirect(node);
+                    responseProcessor.redirect(node);
                     break;
                 case Const.CMD_CHANGES:
                     this.processChangesTag(node, responseProcessor);
@@ -87,7 +86,7 @@ export class Response {
      * @param internalContext
      * @param node
      */
-    private static processChangesTag( node: XMLQuery, responseProcessor: ResponseProcessor): boolean {
+    private static processChangesTag(node: XMLQuery, responseProcessor: IResponseProcessor): boolean {
         const ALLOWED_TAGS = [Const.CMD_UPDATE, Const.CMD_EVAL, Const.CMD_INSERT, Const.CMD_DELETE, Const.CMD_ATTRIBUTES, Const.CMD_EXTENSION].join(",");
         node.getIf(ALLOWED_TAGS).each(
             (node: XMLQuery) => {
@@ -97,19 +96,19 @@ export class Response {
                         break;
 
                     case Const.CMD_EVAL:
-                        responseProcessor.processEvalTag(node);
+                        responseProcessor.eval(node);
                         break;
 
                     case Const.CMD_INSERT:
-                        responseProcessor.processInsert(node);
+                        responseProcessor.insert(node);
                         break;
 
                     case Const.CMD_DELETE:
-                        responseProcessor.processDeleteTag( node);
+                        responseProcessor.delete(node);
                         break;
 
                     case Const.CMD_ATTRIBUTES:
-                        responseProcessor.processAttributes( node);
+                        responseProcessor.attributes(node);
                         break;
 
                     case Const.CMD_EXTENSION:
@@ -130,7 +129,7 @@ export class Response {
      * @param internalContext
      * @param node
      */
-    private static processUpdateTag(node: XMLQuery, responseProcessor: ResponseProcessor) {
+    private static processUpdateTag(node: XMLQuery, responseProcessor: IResponseProcessor) {
         if (node.id.value == Const.P_VIEWSTATE) {
             responseProcessor.processViewState(node);
         } else {
@@ -145,23 +144,23 @@ export class Response {
      * @param context
      * @param internalContext
      */
-    private static handleElementUpdate(node: XMLQuery, responseProcessor: ResponseProcessor) {
+    private static handleElementUpdate(node: XMLQuery, responseProcessor: IResponseProcessor) {
         let cdataBlock = node.cDATAAsString;
         switch (node.id.value) {
             case Const.P_VIEWROOT :
-                responseProcessor.replaceViewRoot( XMLQuery.parseXML(cdataBlock.substring(cdataBlock.indexOf("<html"))));
+                responseProcessor.replaceViewRoot(XMLQuery.parseXML(cdataBlock.substring(cdataBlock.indexOf("<html"))));
                 break;
 
             case Const.P_VIEWHEAD:
-                responseProcessor.replaceHead( XMLQuery.parseXML(cdataBlock));
+                responseProcessor.replaceHead(XMLQuery.parseXML(cdataBlock));
                 break;
 
             case Const.P_VIEWBODY:
-                responseProcessor.replaceBody( XMLQuery.parseXML(cdataBlock));
+                responseProcessor.replaceBody(XMLQuery.parseXML(cdataBlock));
                 break;
 
             default://htmlItem replacement
-                responseProcessor.processUpdateElem( node, cdataBlock);
+                responseProcessor.update(node, cdataBlock);
                 break;
 
         }

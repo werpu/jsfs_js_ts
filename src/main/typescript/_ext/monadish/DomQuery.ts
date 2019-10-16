@@ -50,7 +50,6 @@ export class ElementAttribute implements IValueHolder<string> {
         return Optional.fromNullable(this.value).isAbsent();
     }
 
-
 }
 
 /**
@@ -490,7 +489,7 @@ export class DomQuery {
                 }
                 return i > -1;
             };
-        return matchesSelector.call(toMatch,selector);
+        return matchesSelector.call(toMatch, selector);
         //return matchesSelector.call(toMatch, selector);
     }
 
@@ -504,7 +503,7 @@ export class DomQuery {
         let matched = [];
 
         this.eachElem(item => {
-            if(this._mozMatchesSelector(item, selector)) {
+            if (this._mozMatchesSelector(item, selector)) {
                 matched.push(item)
             }
         });
@@ -513,7 +512,7 @@ export class DomQuery {
 
     matchesSelector(selector: string): boolean {
         this.eachElem(item => {
-            if(!this._mozMatchesSelector(item, selector)) {
+            if (!this._mozMatchesSelector(item, selector)) {
                 return false;
             }
         });
@@ -530,10 +529,10 @@ export class DomQuery {
      */
     getIf(...nodeSelector: Array<string>): DomQuery {
 
-        let selectorStage:DomQuery = this.childNodes;
-        for(let cnt = 0; cnt < nodeSelector.length; cnt++) {
+        let selectorStage: DomQuery = this.childNodes;
+        for (let cnt = 0; cnt < nodeSelector.length; cnt++) {
             selectorStage = selectorStage.filterSelector(nodeSelector[cnt]);
-            if(selectorStage.isAbsent()) {
+            if (selectorStage.isAbsent()) {
                 return selectorStage;
             }
         }
@@ -633,7 +632,8 @@ export class DomQuery {
     appendTo(elem: DomQuery) {
         this.eachElem((item) => {
             let value1: Element = <Element>elem.orElseLazy(() => {
-                appendChild: (theItem: any) => {}
+                appendChild: (theItem: any) => {
+                }
             }).getAsElem(0).value;
             value1.appendChild(item);
         });
@@ -682,25 +682,36 @@ export class DomQuery {
         return this;
     }
 
-    insertAfter(...elem: Array<DomQuery>) {
-        let sibling = this.getAsElem(0).value;
-        for (let cnt = 0; cnt < elem.length; cnt++) {
-            elem[cnt].eachElem((myElem: Element) => {
-                sibling.parentNode.insertBefore(myElem, sibling.nextSibling);
-                sibling = <Element>sibling.nextSibling;
-                this.rootNode.push(myElem);
-            });
-        }
+    insertAfter(...toInsertParams: Array<DomQuery>) {
+
+        this.each(existingItem => {
+            let existingElement = existingItem.getAsElem(0).value;
+            let rootNode = existingElement.parentNode;
+            for (let cnt = 0; cnt < toInsertParams.length; cnt++) {
+                let nextSibling: Element = <any>existingElement.nextSibling;
+                toInsertParams[cnt].eachElem(insertElem => {
+                    if (nextSibling) {
+                        rootNode.insertBefore(insertElem, nextSibling);
+                        existingElement = nextSibling;
+                    } else {
+                        rootNode.appendChild(insertElem);
+                    }
+                });
+            }
+        });
         return this;
     }
 
-    insertBefore(...elem: Array<DomQuery>) {
-        for (let cnt = 0; cnt < elem.length; cnt++) {
-            elem[cnt].eachElem((myElem: Element) => {
-                this.getAsElem(0).value.parentNode.insertBefore(myElem, this.getAsElem(0).value);
-                this.rootNode.push(myElem);
-            });
-        }
+    insertBefore(...toInsertParams: Array<DomQuery>) {
+        this.each(existingItem => {
+            let existingElement = existingItem.getAsElem(0).value;
+            let rootNode = existingElement.parentNode;
+            for (let cnt = 0; cnt < toInsertParams.length; cnt++) {
+                toInsertParams[cnt].eachElem(insertElem => {
+                    rootNode.insertBefore(insertElem, existingElement);
+                });
+            }
+        });
         return this;
     }
 
@@ -769,7 +780,8 @@ export class DomQuery {
     outerHTML(markup: string, runEmbeddedScripts ?: boolean, runEmbeddedCss ?: boolean): DomQuery {
         let nodes = DomQuery.fromMarkup(markup);
 
-        this.getAsElem(0).value.parentNode.replaceChild(nodes.getAsElem(0).value, this.getAsElem(0).value);
+        let toReplace = this.getAsElem(0).value;
+        toReplace.parentNode.replaceChild(nodes.getAsElem(0).value, toReplace);
         this.rootNode = [];
         this.rootNode = this.rootNode.concat(nodes.values);
         // this.rootNode.push(nodes.value);

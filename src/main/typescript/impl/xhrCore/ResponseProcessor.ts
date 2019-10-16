@@ -20,6 +20,9 @@ import {Implementation} from "../Impl";
 import {Assertions} from "../util/Assertions";
 import {Lang} from "../util/Lang";
 import {ResonseDataResolver} from "./ResonseDataResolver";
+import {IResponseProcessor} from "./IResponseProcessor";
+
+
 
 /**
  * Response processor
@@ -27,12 +30,12 @@ import {ResonseDataResolver} from "./ResonseDataResolver";
  * Each  XML tag is either a node or a leaf
  * or both
  *
- * the progcessor provides a set of operations
- * which are executed on a single leafe node
+ * the processor provides a set of operations
+ * which are executed on a single leaf node per operation
  * and present the core functionality of our response
  *
  */
-export class ResponseProcessor {
+export class ResponseProcessor implements IResponseProcessor {
 
     constructor(private request: Config, private externalContext: Config, private internalContext: Config) {
 
@@ -68,7 +71,7 @@ export class ResponseProcessor {
      *
      * @param node
      */
-    processEvalTag(node: XMLQuery) {
+    eval(node: XMLQuery) {
         DomQuery.globalEval(node.cDATAAsString);
     }
 
@@ -79,7 +82,7 @@ export class ResponseProcessor {
      * @param context the contect object
      * @param node the node in the xml hosting the error message
      */
-    processError( node: XMLQuery) {
+    error(node: XMLQuery) {
         /**
          * <error>
          *      <error-name>String</error-name>
@@ -104,7 +107,7 @@ export class ResponseProcessor {
      * @param internalContext
      * @param node
      */
-    processRedirect( node: XMLQuery) {
+    redirect(node: XMLQuery) {
         Assertions.assertUrlExists(node);
 
         let redirectUrl = Lang.instance.trim(node.attr(Const.ATTR_URL).value);
@@ -120,14 +123,14 @@ export class ResponseProcessor {
      * @param node
      * @param cdataBlock
      */
-    processUpdateElem(node: XMLQuery, cdataBlock: string) {
-        let result = DomQuery.byId(node.attr("id").value).outerHTML(cdataBlock);
+    update(node: XMLQuery, cdataBlock: string) {
+        let result = DomQuery.byId(node.id.value).outerHTML(cdataBlock);
         let sourceForm = result.parents(Const.TAG_FORM).orElse(result.byTagName(Const.TAG_FORM, true));
 
         this.storeForLaterProcessing(sourceForm, result);
     }
 
-    processDeleteTag( node: XMLQuery) {
+    delete(node: XMLQuery) {
         DomQuery.byId(node.id.value).delete();
     }
 
@@ -139,7 +142,7 @@ export class ResponseProcessor {
      * @param internalContext
      * @param node
      */
-    processAttributes( node: XMLQuery) {
+    attributes(node: XMLQuery) {
         let elem = DomQuery.byId(node.id.value);
 
         node.byTagName("attribute").each((item: XMLQuery) => {
@@ -160,7 +163,7 @@ export class ResponseProcessor {
         }
     }
 
-    processInsert( node: XMLQuery) {
+    insert(node: XMLQuery) {
         //let insertId = node.id; //not used atm
 
         let before = node.attr(Const.TAG_BEFORE);

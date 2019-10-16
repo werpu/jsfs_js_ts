@@ -10,6 +10,7 @@ export class Const {
      */
 
     static P_PARTIAL_SOURCE = "javax.faces.source";
+    static PARTIAL_ID = "partialId";
     static P_VIEWSTATE = "javax.faces.ViewState";
     static P_CLIENTWINDOW = "javax.faces.ClientWindow";
     static P_AJAX = "javax.faces.partial.ajax";

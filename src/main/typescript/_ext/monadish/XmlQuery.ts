@@ -78,6 +78,7 @@ export class XMLQuery extends DomQuery {
     }
 
 
+
     parserErrorText(joinstr: string): string {
         return this.querySelectorAll("parsererror").textContent(joinstr);
     }

@@ -139,7 +139,7 @@ export module jsf {
          * TODO add info on what can be in the context
          */
         export function response(request: XMLHttpRequest, context?: Context  | {[key: string]: any}) {
-            Implementation.instance.response(request, response);
+            Implementation.instance.response(request, context);
         }
 
         /**

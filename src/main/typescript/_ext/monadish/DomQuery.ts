@@ -147,7 +147,6 @@ export class DomQuery {
         return <Optional<string>>this.getAsElem(0).getIf("tagName");
     }
 
-
     /**
      * convenience method for type
      */
@@ -163,10 +162,9 @@ export class DomQuery {
         return this.getAsElem(0).getIf("value");
     }
 
-
     get elements(): DomQuery {
         let elements: Array<DomQuery> = this.each((item: DomQuery) => {
-            let formElement:HTMLFormElement = <HTMLFormElement> item.value.value;
+            let formElement: HTMLFormElement = <HTMLFormElement>item.value.value;
             return formElement.elements ? formElement.elements : null;
         }).stream
             .filter(item => !!item).value;
@@ -474,13 +472,70 @@ export class DomQuery {
         return this;
     }
 
+    //source: https://developer.mozilla.org/en-US/docs/Web/API/Element/matches
+    //code snippet license: https://creativecommons.org/licenses/by-sa/2.5/
+    private _mozMatchesSelector(toMatch: Element, selector: string): boolean {
+        let prot: { [key: string]: Function } = (<any>toMatch);
+        let matchesSelector: Function = prot.matchesSelector ||
+            prot.mozMatchesSelector ||
+            prot.msMatchesSelector ||
+            prot.oMatchesSelector ||
+            prot.webkitMatchesSelector ||
+            function (s: string) {
+                let matches: NodeListOf<HTMLElement> = (document || (<any>window).ownerDocument).querySelectorAll(s),
+                    i = matches.length;
+                while (--i >= 0 && matches.item(i) !== toMatch) {
+                }
+                return i > -1;
+            };
+        return matchesSelector.call(toMatch,selector);
+        //return matchesSelector.call(toMatch, selector);
+    }
+
+    /**
+     * filters the current dom query elements
+     * upon a given selector
+     *
+     * @param selector
+     */
+    filterSelector(selector: string): DomQuery {
+        let matched = [];
+
+        this.eachElem(item => {
+            if(this._mozMatchesSelector(item, selector)) {
+                matched.push(item)
+            }
+        });
+        return new DomQuery(...matched);
+    }
+
+    matchesSelector(selector: string): boolean {
+        this.eachElem(item => {
+            if(!this._mozMatchesSelector(item, selector)) {
+                return false;
+            }
+        });
+        return true;
+    }
+
     /**
      * easy node traversal, you can pass
      * a set of node selectors which are joined as direct childs
+     *
+     * not the rootnodes are not in the getIf, those are always the child nodes
+     *
      * @param nodeSelector
      */
     getIf(...nodeSelector: Array<string>): DomQuery {
-        return this.querySelectorAll(":scope > " + nodeSelector.join(">"));
+
+        let selectorStage:DomQuery = this.childNodes;
+        for(let cnt = 0; cnt < nodeSelector.length; cnt++) {
+            selectorStage = selectorStage.filterSelector(nodeSelector[cnt]);
+            if(selectorStage.isAbsent()) {
+                return selectorStage;
+            }
+        }
+        return selectorStage;
     }
 
     eachElem(func: (item: Element, cnt?: number) => any): DomQuery {
@@ -888,7 +943,6 @@ export class DomQuery {
         return cDataBlock.join('');
     }
 
-
     /**
      * fires a click event on the underlying dom elements
      */
@@ -971,30 +1025,28 @@ export class DomQuery {
         return this.stream
             .map((value: DomQuery) => {
                 let item = value.getAsElem(0).orElseLazy(() => {
-                    return <any> {
+                    return <any>{
                         textContent: ""
                     };
                 }).value;
-                return (<any> item).textContent || "";
+                return (<any>item).textContent || "";
             })
-            .reduce((text1, text2) => text1+joinstr+text2, "").value;
-
+            .reduce((text1, text2) => text1 + joinstr + text2, "").value;
 
     }
 
-    innerText(joinstr: string  = ""): string {
+    innerText(joinstr: string = ""): string {
 
         return this.stream
             .map((value: DomQuery) => {
                 let item = value.getAsElem(0).orElseLazy(() => {
-                   return <any> {
-                       innerText: ""
-                   };
+                    return <any>{
+                        innerText: ""
+                    };
                 }).value;
-                return (<any> item).innerText || "";
+                return (<any>item).innerText || "";
             })
-            .reduce((text1, text2) => text1+joinstr+text2, "").value;
-
+            .reduce((text1, text2) => text1 + joinstr + text2, "").value;
 
     }
 
@@ -1004,7 +1056,6 @@ export class DomQuery {
         }
         return new DomQuery(...this.rootNode.slice(from, Math.min(to, this.length)));
     }
-
 
 }
 

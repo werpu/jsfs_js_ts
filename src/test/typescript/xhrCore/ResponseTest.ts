@@ -22,6 +22,7 @@ import * as sinon from "sinon";
 import {DomQuery} from "../../../main/typescript/_ext/monadish";
 import STD_XML = standardInits.STD_XML;
 import {XmlResponses} from "../frameworkBase/_ext/shared/XmlResponses";
+import { expect } from "chai";
 
 declare var jsf: any;
 declare var Implementation: any;
@@ -46,11 +47,10 @@ describe('Tests of the various aspects of the response protocol functionality', 
             (<any>global).XMLHttpRequest = this.xhr;
             (<any>window).XMLHttpRequest = this.xhr;
 
-            this.jsfAjaxResponse = sinon.stub((<any>global).jsf.ajax, "response");
+
 
             this.closeIt = () => {
                 (<any>global).XMLHttpRequest = (<any>window).XMLHttpRequest = this.xhr.restore();
-                this.jsfAjaxResponse.restore();
                 Implementation.reset();
                 close();
             }
@@ -70,6 +70,12 @@ describe('Tests of the various aspects of the response protocol functionality', 
         let xhrReq = this.requests[0];
         xhrReq.responsetype = "text/xml";
         xhrReq.respond(200, {'Content-Type': 'text/xml'}, XmlResponses.UPDATE_INSERT_1);
+
+        expect(DomQuery.byId("changesArea")
+            .html()
+            .orElse("fail")
+            .value.indexOf("update succeeded 1") != -1)
+            .to.be.true;
 
         done();
     });

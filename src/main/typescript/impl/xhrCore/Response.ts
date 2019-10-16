@@ -64,17 +64,26 @@ export class Response {
      *
      */
     static processResponse(request: XMLHttpRequest, context: { [key: string]: any }) {
-        let req = Config.fromNullable(request);
-        let ctx = Config.fromNullable(context);
-        let _Impl = Implementation.instance;
 
-        ctx.apply(Response.MF_INTERNAL, Response.UPDATE_FORMS).value = [];
-        ctx.apply(Response.MF_INTERNAL, Response.UPDATE_ELEMS).value = [];
+        let req = Config.fromNullable(request);
+        /**
+         * we split the context apart into the external one and
+         * some internal values
+         */
+        let externalCtx = Config.fromNullable(context);
+        let internalCtx = externalCtx.getIf(Response.MF_INTERNAL);
+        let Impl = Implementation.instance;
+
+        /**
+         * prepare storage for some deferred operations
+         */
+        internalCtx.apply(Response.UPDATE_FORMS).value = [];
+        internalCtx.apply(Response.UPDATE_ELEMS).value = [];
 
         if (req.getIf("responseXML").isAbsent()) {
             throw Lang.instance.makeException(new Error(), Const.EMPTY_RESPONSE, Const.EMPTY_RESPONSE, "Response", "processResponse", "");
         }
-        let responseXML = new XMLQuery(req.getIf("responseXML").value);
+        let responseXML: XMLQuery = new XMLQuery(req.getIf("responseXML").value);
 
         if (responseXML.isXMLParserError()) {
             throw Response.raiseError(new Error(), responseXML.parserErrorText(""), "processResponse");
@@ -85,27 +94,50 @@ export class Response {
             throw Response.raiseError(new Error(), "Partial response not set", "processResponse");
         }
 
-        partial.getIf([Response.CMD_ERROR, Response.CMD_REDIRECT, Response.CMD_CHANGES].join(",")).each(
-            (node: XMLQuery) => {
-                switch ((<any>node.value).tagName) {
-                    case Response.CMD_ERROR:
-                        Response.processError(request, ctx, node);
-                        break;
-                    case Response.CMD_REDIRECT:
-                        Response.processRedirect(request, ctx, node);
-                        break;
-                    case Response.CMD_CHANGES:
-                        Response.processChanges(request, ctx, node);
-                        break;
-                }
-            }
-        );
+        partial.each(item => {
+            //we cannot do a query selector all
+            //directly because we have to
+            //fetch the partialId for further processing
+            internalCtx.apply(Const.PARTIAL_ID).value = item.id;
+            const SUB_TAGS = [Response.CMD_ERROR, Response.CMD_REDIRECT, Response.CMD_CHANGES].join(",");
 
-        Response.fixViewStates(ctx);
-        Response.eval(ctx);
+            //now we can process the main operations
+            item.getIf(SUB_TAGS).each((node: XMLQuery) => {
+                this.handleMainOperations(node, request, externalCtx);
+            });
+        });
 
-        //TODO replace this with an api call
-        //Impl.Implementation.instance.sendEvent(request, context, _Impl.SUCCESS);
+        //we now process all the deferred operations
+        //TODO pass op functions instead of parameters
+        //makes more sense
+
+        Response.fixViewStates(externalCtx);
+        Response.eval(externalCtx);
+
+
+    }
+
+    /**
+     * handles the main operations on error, redirect, changes
+     * extension is not handled since we do not usxe it
+     *
+     * @param node
+     * @param request
+     * @param externalCtx
+     */
+    private static handleMainOperations(node: XMLQuery, request: XMLHttpRequest, externalCtx) {
+        switch (node.tagName.value) {
+            case Response.CMD_ERROR:
+                Response.processError(request, externalCtx, node);
+                break;
+            case Response.CMD_REDIRECT:
+                Response.processRedirect(request, externalCtx, node);
+                break;
+            case Response.CMD_CHANGES:
+                Response.processChanges(request, externalCtx, node);
+                break;
+        }
+
     }
 
     private static eval(context: Config) {

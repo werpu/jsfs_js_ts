@@ -123,4 +123,6 @@ export class Const {
 
     static MYFACES = "myfaces";
 
+    static SEL_SCRIPTS_STYLES = "script, style, link";C
+
 }

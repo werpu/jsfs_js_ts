@@ -96,4 +96,29 @@ export class Const {
 
 
     static ERR_NO_PARTIAL_RESPONSE = "Partial response not set";
+
+    static ATTR_URL = "url";
+
+    /*partial response types*/
+    static RESP_PARTIAL = "partial-response";
+    static RESP_TYPE_ERROR = "error";
+    static RESP_TYPE_REDIRECT = "redirect";
+    static RESP_TYPE_CHANGES = "changes";
+
+    /*partial commands*/
+    static CMD_CHANGES = "changes";
+    static CMD_UPDATE = "update";
+    static CMD_DELETE = "delete";
+    static CMD_INSERT = "insert";
+    static CMD_EVAL = "eval";
+    static CMD_ERROR = "error";
+    static CMD_ATTRIBUTES = "attributes";
+    static CMD_EXTENSION = "extension";
+    static CMD_REDIRECT = "redirect";
+
+    /*other constants*/
+
+    static UPDATE_FORMS = "_updateForms";
+    static UPDATE_ELEMS = "_updateElems";
+
 }

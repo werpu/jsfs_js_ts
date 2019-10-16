@@ -49,6 +49,8 @@ export class ElementAttribute implements IValueHolder<string> {
     isAbsent() {
         return Optional.fromNullable(this.value).isAbsent();
     }
+
+
 }
 
 /**

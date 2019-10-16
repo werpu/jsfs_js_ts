@@ -21,30 +21,9 @@ import {XMLQuery} from "../../_ext/monadish/XmlQuery";
 import {DomQuery} from "../../_ext/monadish/DomQuery";
 import {Implementation} from "../Impl";
 import {Const} from "../core/Const";
+import {Assertions} from "./Assertions";
 
 export class Response {
-
-    /*partial response types*/
-    static RESP_PARTIAL = "partial-response";
-    static RESP_TYPE_ERROR = "error";
-    static RESP_TYPE_REDIRECT = "redirect";
-    static RESP_TYPE_CHANGES = "changes";
-
-    /*partial commands*/
-    static CMD_CHANGES = "changes";
-    static CMD_UPDATE = "update";
-    static CMD_DELETE = "delete";
-    static CMD_INSERT = "insert";
-    static CMD_EVAL = "eval";
-    static CMD_ERROR = "error";
-    static CMD_ATTRIBUTES = "attributes";
-    static CMD_EXTENSION = "extension";
-    static CMD_REDIRECT = "redirect";
-
-    /*other constants*/
-
-    private static UPDATE_FORMS = "_updateForms";
-    private static UPDATE_ELEMS = "_updateElems";
 
     /**
      * uses response to start Html element replacement
@@ -65,11 +44,8 @@ export class Response {
         let responseXML: XMLQuery = this.resolveResponseXML(req);
 
         //we now process the partial tags, or in none given raise an error
-        responseXML.querySelectorAll(this.RESP_PARTIAL)
-            .each(item => this.processPartialTag(item, request, externalContext, internalContext))
-            .orElseLazy(() => {
-                throw this.raiseError(new Error(), Const.ERR_NO_PARTIAL_RESPONSE, Const.PHASE_PROCESS_RESPONSE);
-            });
+        responseXML.querySelectorAll(Const.RESP_PARTIAL)
+            .each(item => this.processPartialTag(item, request, externalContext, internalContext));
 
         //we now process the viewstates and the evals deferred
         //the reason for this is that often it is better
@@ -79,7 +55,6 @@ export class Response {
         this.eval(externalContext, internalContext);
     }
 
-
     /**
      *
      * highest node partia-response from there the main operations are triggered
@@ -87,18 +62,18 @@ export class Response {
     private static processPartialTag(item, request: XMLHttpRequest, externalContext, internalContext) {
 
         internalContext.apply(Const.PARTIAL_ID).value = item.id;
-        const SUB_TAGS = [this.CMD_ERROR, this.CMD_REDIRECT, this.CMD_CHANGES].join(",");
+        const SEL_SUB_TAGS = [Const.CMD_ERROR, Const.CMD_REDIRECT, Const.CMD_CHANGES].join(",");
 
         //now we can process the main operations
-        item.getIf(SUB_TAGS).each((node: XMLQuery) => {
+        item.getIf(SEL_SUB_TAGS).each((node: XMLQuery) => {
             switch (node.tagName.value) {
-                case this.CMD_ERROR:
+                case Const.CMD_ERROR:
                     this.processErrorTag(request, externalContext, internalContext, node);
                     break;
-                case this.CMD_REDIRECT:
+                case Const.CMD_REDIRECT:
                     this.processRedirectTag(request, externalContext, internalContext, node);
                     break;
-                case this.CMD_CHANGES:
+                case Const.CMD_CHANGES:
                     this.processChangesTag(request, externalContext, internalContext, node);
                     break;
             }
@@ -136,17 +111,15 @@ export class Response {
      * @param node
      */
     private static processRedirectTag(request: XMLHttpRequest, context: Config, internalContext: Config, node: XMLQuery) {
-        let ATTR_URL = "url";
-        if (node.attr(ATTR_URL).isAbsent()) {
-            throw this.raiseError(new Error(), Lang.instance.getMessage("ERR_RED_URL", null, "_Ajaxthis.processRedirect"), "processRedirect");
+        Assertions.assertUrlExists(node);
+
+        let redirectUrl = Lang.instance.trim(node.attr(Const.ATTR_URL).value);
+
+        if (redirectUrl != "") {
+            (<any>window).location.href = redirectUrl;
         }
-        let redirectUrl = Lang.instance.trim(node.attr(ATTR_URL).value);
-        if (redirectUrl == "") {
-            return false;
-        }
-        (<any>window).location = redirectUrl;
-        return true;
     }
+
 
     /**
      * next level changes tag
@@ -157,31 +130,31 @@ export class Response {
      * @param node
      */
     private static processChangesTag(request: XMLHttpRequest, context: Config, internalContext: Config, node: XMLQuery): boolean {
-        const ALLOWED_TAGS = [this.CMD_UPDATE, this.CMD_EVAL, this.CMD_INSERT, this.CMD_DELETE, this.CMD_ATTRIBUTES, this.CMD_EXTENSION].join(",");
+        const ALLOWED_TAGS = [Const.CMD_UPDATE, Const.CMD_EVAL, Const.CMD_INSERT, Const.CMD_DELETE, Const.CMD_ATTRIBUTES, Const.CMD_EXTENSION].join(",");
         node.getIf(ALLOWED_TAGS).each(
             (node: XMLQuery) => {
                 switch (node.tagName.value) {
-                    case this.CMD_UPDATE:
+                    case Const.CMD_UPDATE:
                         this.processUpdateTag(request, context, internalContext, node);
                         break;
 
-                    case this.CMD_EVAL:
+                    case Const.CMD_EVAL:
                         this.processEvalTag(node);
                         break;
 
-                    case this.CMD_INSERT:
+                    case Const.CMD_INSERT:
                         this.processInsertTag(request, context, internalContext, node);
                         break;
 
-                    case this.CMD_DELETE:
+                    case Const.CMD_DELETE:
                         this.processDeleteTag(request, context, internalContext, node);
                         break;
 
-                    case this.CMD_ATTRIBUTES:
+                    case Const.CMD_ATTRIBUTES:
                         this.processAttributesTag(request, context, internalContext, node);
                         break;
 
-                    case this.CMD_EXTENSION:
+                    case Const.CMD_EXTENSION:
                         break;
                 }
             }
@@ -189,10 +162,23 @@ export class Response {
         return true;
     }
 
+    /**
+     * Leaf Tag eval... process whatever is in the evals cdata block
+     *
+     * @param node
+     */
     private static processEvalTag(node: XMLQuery) {
         DomQuery.globalEval(node.cDATAAsString);
     }
 
+    /**
+     * attributes leaf tag... process the attributes
+     *
+     * @param request
+     * @param context
+     * @param internalContext
+     * @param node
+     */
     private static processAttributesTag(request: XMLHttpRequest, context: Config, internalContext: Config, node: XMLQuery) {
         let elem = DomQuery.byId(node.id.value);
 
@@ -201,14 +187,31 @@ export class Response {
         });
     }
 
+    /**
+     * branch tag update.. drill further down into the updates
+     * special case viewstate in that case it is a leaf
+     * and the viewstate must be processed
+     *
+     * @param request
+     * @param context
+     * @param internalContext
+     * @param node
+     */
     private static processUpdateTag(request: XMLHttpRequest, context: Config, internalContext: Config, node: XMLQuery) {
         if (node.id.value == Const.P_VIEWSTATE) {
-            this.handleViewState(context, internalContext, node);
+            this.handleViewStateUpdate(context, internalContext, node);
         } else {
+            //branch case we need to drill down further
             this.handleElementUpdate(node, context, internalContext);
         }
     }
 
+    /**
+     * element update
+     * @param node
+     * @param context
+     * @param internalContext
+     */
     private static handleElementUpdate(node: XMLQuery, context: Config, internalContext: Config) {
         let cdataBlock = node.cDATAAsString;
         switch (node.id.value) {
@@ -231,14 +234,19 @@ export class Response {
         }
     }
 
-    private static handleViewState(context: Config, internalContext: Config, node: XMLQuery) {
+    /**
+     * process the viewState update, update the affected
+     * forms with their respective new viewstate values
+     *
+     */
+    private static handleViewStateUpdate(context: Config, internalContext: Config, node: XMLQuery) {
         internalContext.apply("appliedViewState").value = node.textContent("");
 
         let elem = this.resolveSourceElement(context, internalContext);
         let sourceForm = this.resolveSourceForm(internalContext, elem);
 
         if (sourceForm.isPresent()) {
-            internalContext.apply(this.UPDATE_FORMS).value.push(sourceForm);
+            internalContext.apply(Const.UPDATE_FORMS).value.push(sourceForm);
         }
         //no source form found is not an error because
         //we might be able to recover one way or the other
@@ -246,9 +254,9 @@ export class Response {
     }
 
     private static eval(context: Config, internalContext: Config) {
-        let updateelems = new DomQuery(internalContext.getIf(this.UPDATE_ELEMS).value);
-        updateelems.runCss();
-        updateelems.runScripts();
+        let updateElems = new DomQuery(internalContext.getIf(Const.UPDATE_ELEMS).value);
+        updateElems.runCss();
+        updateElems.runScripts();
     }
 
     private static fixViewStates(context: Config, internalContext: Config) {
@@ -260,8 +268,8 @@ export class Response {
             let forms = DomQuery.querySelectorAll(Const.TAG_FORM);
             this.appendViewStateToForms(forms, viewState);
         } else {
-            let updateforms = new DomQuery(internalContext.getIf(this.UPDATE_FORMS).value);
-            this.appendViewStateToForms(updateforms, viewState);
+            let updateForms = new DomQuery(internalContext.getIf(Const.UPDATE_FORMS).value);
+            this.appendViewStateToForms(updateForms, viewState);
         }
     }
 
@@ -278,11 +286,10 @@ export class Response {
         });
     }
 
+    private static resolveResponseXML(request: Config) {
+        let ret = new XMLQuery(request.getIf(Const.SEL_RESPONSE_XML).value);
+        Assertions.assertValidXMLResponse(ret);
 
-    private static resolveResponseXML(req) {
-        let ret = new XMLQuery(req.getIf(Const.SEL_RESPONSE_XML)
-            .orElseLazy(this.raiseResponseXMLErr).value);
-        this.assertParserError(ret);
         return ret;
     }
 
@@ -297,11 +304,10 @@ export class Response {
         /**
          * prepare storage for some deferred operations
          */
-        internalContext.apply(this.UPDATE_FORMS).value = [];
-        internalContext.apply(this.UPDATE_ELEMS).value = [];
+        internalContext.apply(Const.UPDATE_FORMS).value = [];
+        internalContext.apply(Const.UPDATE_ELEMS).value = [];
         return {externalContext, internalContext};
     }
-
 
     /**
      * Helper to Create a new JSF ViewState Element
@@ -348,11 +354,12 @@ export class Response {
 
         if (before.isPresent()) {
             DomQuery.byId(before.value).insertBefore(insertNodes);
-        } else {
+        }
+        if (after.isPresent()) {
             DomQuery.byId(after.value).insertAfter(insertNodes);
         }
 
-        internalContext.apply(this.UPDATE_ELEMS).value.push(insertNodes);
+        internalContext.apply(Const.UPDATE_ELEMS).value.push(insertNodes);
     }
 
     private static processDeleteTag(request: XMLHttpRequest, context: Config, internalContext: Config, node: XMLQuery) {
@@ -387,8 +394,8 @@ export class Response {
         let resultb = <DomQuery>DomQuery.querySelectorAll(Const.TAG_BODY).html(shadowInnerHTML);
         let sourceFormb = resultb.querySelectorAll(Const.TAG_FORM);
 
-        internalContext.apply(this.UPDATE_FORMS).value.push(sourceFormb);
-        internalContext.apply(this.UPDATE_ELEMS).value.push(resultb);
+        internalContext.apply(Const.UPDATE_FORMS).value.push(sourceFormb);
+        internalContext.apply(Const.UPDATE_ELEMS).value.push(resultb);
 
         resultb.copyAttrs(shadowBody);
     }
@@ -397,37 +404,11 @@ export class Response {
         let result = DomQuery.byId(node.attr("id").value).outerHTML(cdataBlock);
         let sourceForm = result.parents(Const.TAG_FORM).orElse(result.byTagName(Const.TAG_FORM, true));
 
-        internalContext.apply(this.UPDATE_FORMS).value.push(sourceForm);
-        internalContext.apply(this.UPDATE_ELEMS).value.push(result);
+        internalContext.apply(Const.UPDATE_FORMS).value.push(sourceForm);
+        internalContext.apply(Const.UPDATE_ELEMS).value.push(result);
     }
 
+  
 
-    private static assertParserError(responseXML: XMLQuery) {
-        if (responseXML.isXMLParserError()) {
-            throw this.raiseError(new Error(), responseXML.parserErrorText(""), Const.PHASE_PROCESS_RESPONSE);
-        }
-    }
-
-    private static raiseResponseXMLErr() {
-        throw Lang.instance.makeException(new Error(),
-            Const.EMPTY_RESPONSE, Const.EMPTY_RESPONSE,
-            "Response", Const.PHASE_PROCESS_RESPONSE, "");
-    }
-
-    /**
-     * internal helper which raises an error in the
-     * format we need for further processing
-     *
-     * @param message the message
-     * @param title the title of the error (optional)
-     * @param name the name of the error (optional)
-     */
-    private static raiseError(error: any, message: string, caller ?: string, title ?: string, name ?: string) {
-        let _Impl = Implementation.instance;
-        let finalTitle = title || Const.MALFORMEDXML;
-        let finalName = name || Const.MALFORMEDXML;
-        let finalMessage = message || "";
-
-        return Lang.instance.makeException(error, finalTitle, finalName, "Response", caller || (((<any>arguments).caller) ? (<any>arguments).caller.toString() : "_raiseError"), finalMessage);
-    }
+   
 }

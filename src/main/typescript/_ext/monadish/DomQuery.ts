@@ -682,7 +682,9 @@ export class DomQuery {
         return this;
     }
 
-    insertAfter(...toInsertParams: Array<DomQuery>) {
+    insertAfter(...toInsertParams: Array<DomQuery>): DomQuery {
+
+        let processed = [];
 
         this.each(existingItem => {
             let existingElement = existingItem.getAsElem(0).value;
@@ -697,12 +699,17 @@ export class DomQuery {
                         rootNode.appendChild(insertElem);
                     }
                 });
+
             }
         });
-        return this;
+
+        let res = [];
+        res.push(this);
+        res.concat(toInsertParams);
+        return new DomQuery(...res);
     }
 
-    insertBefore(...toInsertParams: Array<DomQuery>) {
+    insertBefore(...toInsertParams: Array<DomQuery>): DomQuery {
         this.each(existingItem => {
             let existingElement = existingItem.getAsElem(0).value;
             let rootNode = existingElement.parentNode;
@@ -712,7 +719,10 @@ export class DomQuery {
                 });
             }
         });
-        return this;
+        let res = [];
+        res.push(this);
+        res.concat(toInsertParams);
+        return new DomQuery(...res);
     }
 
     orElse(...elseValue: any): DomQuery {
@@ -779,16 +789,22 @@ export class DomQuery {
      */
     outerHTML(markup: string, runEmbeddedScripts ?: boolean, runEmbeddedCss ?: boolean): DomQuery {
         let nodes = DomQuery.fromMarkup(markup);
-
+        let res = [];
         let toReplace = this.getAsElem(0).value;
-        toReplace.parentNode.replaceChild(nodes.getAsElem(0).value, toReplace);
-        this.rootNode = [];
-        this.rootNode = this.rootNode.concat(nodes.values);
-        // this.rootNode.push(nodes.value);
+        let firstInsert = nodes.get(0);
+        let parentNode = toReplace.parentNode;
+        let replaced = firstInsert.getAsElem(0).value;
+        parentNode.replaceChild(replaced, toReplace);
+        res.push(new DomQuery(replaced));
+
+        let insertAdditionalItems = [];
 
         for (let cnt = 1; cnt < nodes.length; cnt++) {
-            this.insertAfter(nodes.get(cnt));
+            insertAdditionalItems.push(nodes.get(cnt));
+            this.rootNode.push(nodes.get(cnt).getAsElem(0).value);
         }
+
+        res.push(DomQuery.byId(replaced).insertAfter(...insertAdditionalItems));
 
         if (runEmbeddedScripts) {
             this.runScripts();
@@ -797,7 +813,7 @@ export class DomQuery {
             this.runCss();
         }
 
-        return this;
+        return new DomQuery(...res);
     }
 
     /**

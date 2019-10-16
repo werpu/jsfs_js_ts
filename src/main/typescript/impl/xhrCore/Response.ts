@@ -61,30 +61,8 @@ export class Response {
     static processResponse(request: XMLHttpRequest, context: { [key: string]: any }) {
 
         let req = Config.fromNullable(request);
-        /**
-         * we split the context apart into the external one and
-         * some internal values
-         */
-        let externalContext = Config.fromNullable(context);
-        let internalContext = externalContext.getIf(Const.CTX_PARAM_MF_INTERNAL);
-        let Impl = Implementation.instance;
-
-        /**
-         * prepare storage for some deferred operations
-         */
-        internalContext.apply(this.UPDATE_FORMS).value = [];
-        internalContext.apply(this.UPDATE_ELEMS).value = [];
-
-        if (req.getIf(Const.SEL_RESPONSE_XML).isAbsent()) {
-            throw Lang.instance.makeException(new Error(),
-                Const.EMPTY_RESPONSE, Const.EMPTY_RESPONSE,
-                "Response", Const.PHASE_PROCESS_RESPONSE, "");
-        }
-        let responseXML: XMLQuery = new XMLQuery(req.getIf(Const.SEL_RESPONSE_XML).value);
-
-        if (responseXML.isXMLParserError()) {
-            throw this.raiseError(new Error(), responseXML.parserErrorText(""), Const.PHASE_PROCESS_RESPONSE);
-        }
+        let {externalContext, internalContext} = this.resolveContexts(context);
+        let responseXML: XMLQuery = this.resolveResponseXML(req);
 
         //we now process the partial tags, or in none given raise an error
         responseXML.querySelectorAll(this.RESP_PARTIAL)
@@ -100,6 +78,7 @@ export class Response {
         this.fixViewStates(externalContext, internalContext);
         this.eval(externalContext, internalContext);
     }
+
 
     /**
      *
@@ -299,6 +278,31 @@ export class Response {
         });
     }
 
+
+    private static resolveResponseXML(req) {
+        let ret = new XMLQuery(req.getIf(Const.SEL_RESPONSE_XML)
+            .orElseLazy(this.raiseResponseXMLErr).value);
+        this.assertParserError(ret);
+        return ret;
+    }
+
+    private static resolveContexts(context: { [p: string]: any }) {
+        /**
+         * we split the context apart into the external one and
+         * some internal values
+         */
+        let externalContext = Config.fromNullable(context);
+        let internalContext = externalContext.getIf(Const.CTX_PARAM_MF_INTERNAL);
+
+        /**
+         * prepare storage for some deferred operations
+         */
+        internalContext.apply(this.UPDATE_FORMS).value = [];
+        internalContext.apply(this.UPDATE_ELEMS).value = [];
+        return {externalContext, internalContext};
+    }
+
+
     /**
      * Helper to Create a new JSF ViewState Element
      *
@@ -395,6 +399,19 @@ export class Response {
 
         internalContext.apply(this.UPDATE_FORMS).value.push(sourceForm);
         internalContext.apply(this.UPDATE_ELEMS).value.push(result);
+    }
+
+
+    private static assertParserError(responseXML: XMLQuery) {
+        if (responseXML.isXMLParserError()) {
+            throw this.raiseError(new Error(), responseXML.parserErrorText(""), Const.PHASE_PROCESS_RESPONSE);
+        }
+    }
+
+    private static raiseResponseXMLErr() {
+        throw Lang.instance.makeException(new Error(),
+            Const.EMPTY_RESPONSE, Const.EMPTY_RESPONSE,
+            "Response", Const.PHASE_PROCESS_RESPONSE, "");
     }
 
     /**

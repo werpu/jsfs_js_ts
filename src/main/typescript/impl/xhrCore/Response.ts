@@ -42,12 +42,7 @@ export class Response {
     static CMD_REDIRECT = "redirect";
 
     /*other constants*/
-    static P_VIEWSTATE = "javax.faces.ViewState";
-    static P_VIEWROOT = "javax.faces.ViewRoot";
-    static P_VIEWHEAD = "javax.faces.ViewHead";
-    static P_VIEWBODY = "javax.faces.ViewBody";
 
-    private static MF_INTERNAL = "_mfInternal";
     private static UPDATE_FORMS = "_updateForms";
     private static UPDATE_ELEMS = "_updateElems";
 
@@ -70,106 +65,63 @@ export class Response {
          * we split the context apart into the external one and
          * some internal values
          */
-        let externalCtx = Config.fromNullable(context);
-        let internalCtx = externalCtx.getIf(Response.MF_INTERNAL);
+        let externalContext = Config.fromNullable(context);
+        let internalContext = externalContext.getIf(Const.CTX_PARAM_MF_INTERNAL);
         let Impl = Implementation.instance;
 
         /**
          * prepare storage for some deferred operations
          */
-        internalCtx.apply(Response.UPDATE_FORMS).value = [];
-        internalCtx.apply(Response.UPDATE_ELEMS).value = [];
+        internalContext.apply(this.UPDATE_FORMS).value = [];
+        internalContext.apply(this.UPDATE_ELEMS).value = [];
 
-        if (req.getIf("responseXML").isAbsent()) {
-            throw Lang.instance.makeException(new Error(), Const.EMPTY_RESPONSE, Const.EMPTY_RESPONSE, "Response", "processResponse", "");
+        if (req.getIf(Const.SEL_RESPONSE_XML).isAbsent()) {
+            throw Lang.instance.makeException(new Error(),
+                Const.EMPTY_RESPONSE, Const.EMPTY_RESPONSE,
+                "Response", Const.PHASE_PROCESS_RESPONSE, "");
         }
-        let responseXML: XMLQuery = new XMLQuery(req.getIf("responseXML").value);
+        let responseXML: XMLQuery = new XMLQuery(req.getIf(Const.SEL_RESPONSE_XML).value);
 
         if (responseXML.isXMLParserError()) {
-            throw Response.raiseError(new Error(), responseXML.parserErrorText(""), "processResponse");
+            throw this.raiseError(new Error(), responseXML.parserErrorText(""), Const.PHASE_PROCESS_RESPONSE);
         }
 
-        let partial = responseXML.getIf(Response.RESP_PARTIAL);
-        if (partial.isAbsent()) {
-            throw Response.raiseError(new Error(), "Partial response not set", "processResponse");
-        }
-
-        partial.each(item => {
-            //we cannot do a query selector all
-            //directly because we have to
-            //fetch the partialId for further processing
-            internalCtx.apply(Const.PARTIAL_ID).value = item.id;
-            const SUB_TAGS = [Response.CMD_ERROR, Response.CMD_REDIRECT, Response.CMD_CHANGES].join(",");
-
-            //now we can process the main operations
-            item.getIf(SUB_TAGS).each((node: XMLQuery) => {
-                this.handleMainOperations(node, request, externalCtx);
+        //we now process the partial tags, or in none given raise an error
+        responseXML.querySelectorAll(this.RESP_PARTIAL)
+            .each(item => this.processPartialTag(item, request, externalContext, internalContext))
+            .orElseLazy(() => {
+                throw this.raiseError(new Error(), Const.ERR_NO_PARTIAL_RESPONSE, Const.PHASE_PROCESS_RESPONSE);
             });
-        });
 
-        //we now process all the deferred operations
-        //TODO pass op functions instead of parameters
-        //makes more sense
-
-        Response.fixViewStates(externalCtx);
-        Response.eval(externalCtx);
-
-
+        //we now process the viewstates and the evals deferred
+        //the reason for this is that often it is better
+        //to wait until the document has caught up before
+        //doing any evals even on embedded scripts
+        this.fixViewStates(externalContext, internalContext);
+        this.eval(externalContext, internalContext);
     }
 
     /**
-     * handles the main operations on error, redirect, changes
-     * extension is not handled since we do not usxe it
      *
-     * @param node
-     * @param request
-     * @param externalCtx
+     * highest node partia-response from there the main operations are triggered
      */
-    private static handleMainOperations(node: XMLQuery, request: XMLHttpRequest, externalCtx) {
-        switch (node.tagName.value) {
-            case Response.CMD_ERROR:
-                Response.processError(request, externalCtx, node);
-                break;
-            case Response.CMD_REDIRECT:
-                Response.processRedirect(request, externalCtx, node);
-                break;
-            case Response.CMD_CHANGES:
-                Response.processChanges(request, externalCtx, node);
-                break;
-        }
+    private static processPartialTag(item, request: XMLHttpRequest, externalContext, internalContext) {
 
-    }
+        internalContext.apply(Const.PARTIAL_ID).value = item.id;
+        const SUB_TAGS = [this.CMD_ERROR, this.CMD_REDIRECT, this.CMD_CHANGES].join(",");
 
-    private static eval(context: Config) {
-        let updateelems = new DomQuery(context.getIf(Response.MF_INTERNAL, Response.UPDATE_ELEMS).value);
-        updateelems.runCss();
-        updateelems.runScripts();
-    }
-
-    private static fixViewStates(context: Config) {
-        if (context.getIf(Response.MF_INTERNAL, "appliedViewState").isAbsent()) {
-            return;
-        }
-        let viewState = context.getIf(Response.MF_INTERNAL, "appliedViewState").value;
-        if (Lang.instance.getLocalOrGlobalConfig(context, "no_portlet_env", false)) {
-            let forms = DomQuery.querySelectorAll("form");
-            this.appendViewStateToForms(forms, viewState);
-        } else {
-            let updateforms = new DomQuery(context.getIf(Response.MF_INTERNAL, Response.UPDATE_FORMS).value);
-            this.appendViewStateToForms(updateforms, viewState);
-        }
-    }
-
-    private static appendViewStateToForms(forms: DomQuery, viewState: any) {
-        forms.each((form: DomQuery) => {
-            let viewStates = forms.querySelectorAll("[name='" + Response.P_VIEWSTATE + "']");
-            if (viewStates.isAbsent()) {
-                let newViewState = DomQuery.fromMarkup(
-                    ["<input type='hidden'", "id='", Response.P_VIEWSTATE, "' name='", Response.P_VIEWSTATE, "' value='", viewState, "' />"].join("")
-                );
-                form.appendTo(newViewState);
-            } else {
-                viewStates.attr("value").value = viewState;
+        //now we can process the main operations
+        item.getIf(SUB_TAGS).each((node: XMLQuery) => {
+            switch (node.tagName.value) {
+                case this.CMD_ERROR:
+                    this.processErrorTag(request, externalContext, internalContext, node);
+                    break;
+                case this.CMD_REDIRECT:
+                    this.processRedirectTag(request, externalContext, internalContext, node);
+                    break;
+                case this.CMD_CHANGES:
+                    this.processChangesTag(request, externalContext, internalContext, node);
+                    break;
             }
         });
     }
@@ -181,7 +133,7 @@ export class Response {
      * @param context the contect object
      * @param node the node in the xml hosting the error message
      */
-    private static processError(request: XMLHttpRequest, context: Config, node: XMLQuery) {
+    private static processErrorTag(request: XMLHttpRequest, context: Config, internalContext: Config, node: XMLQuery) {
         /**
          * <error>
          *      <error-name>String</error-name>
@@ -192,15 +144,24 @@ export class Response {
         let errorName = node.getIf("error-name").textContent("");
         let errorMessage = node.getIf("error-message").cDATAAsString;
 
-        //TODO
-        //Impl.Implementation.instance.sendError(request, context, this.attr("impl").SERVER_ERROR, errorName, errorMessage, "Response", "processError");
+        let errorData = Implementation.instance.createErrorData(request, context, Const.SERVER_ERROR, errorName, errorMessage, "Response", "processError");
+        Implementation.instance.sendError(errorData);
     }
 
-    private static processRedirect(request: XMLHttpRequest, context: Config, node: XMLQuery) {
-        if (node.attr("url").isAbsent()) {
-            throw Response.raiseError(new Error(), Lang.instance.getMessage("ERR_RED_URL", null, "_AjaxResponse.processRedirect"), "processRedirect");
+    /**
+     * process the redirect operation
+     *
+     * @param request
+     * @param context
+     * @param internalContext
+     * @param node
+     */
+    private static processRedirectTag(request: XMLHttpRequest, context: Config, internalContext: Config, node: XMLQuery) {
+        let ATTR_URL = "url";
+        if (node.attr(ATTR_URL).isAbsent()) {
+            throw this.raiseError(new Error(), Lang.instance.getMessage("ERR_RED_URL", null, "_Ajaxthis.processRedirect"), "processRedirect");
         }
-        let redirectUrl = Lang.instance.trim(node.attr("url").value);
+        let redirectUrl = Lang.instance.trim(node.attr(ATTR_URL).value);
         if (redirectUrl == "") {
             return false;
         }
@@ -208,31 +169,40 @@ export class Response {
         return true;
     }
 
-    private static processChanges(request: XMLHttpRequest, context: Config, node: XMLQuery): boolean {
-        node.getIf([Response.CMD_UPDATE, Response.CMD_EVAL, Response.CMD_INSERT, Response.CMD_DELETE, Response.CMD_ATTRIBUTES, Response.CMD_EXTENSION].join(",")).each(
+    /**
+     * next level changes tag
+     *
+     * @param request
+     * @param context
+     * @param internalContext
+     * @param node
+     */
+    private static processChangesTag(request: XMLHttpRequest, context: Config, internalContext: Config, node: XMLQuery): boolean {
+        const ALLOWED_TAGS = [this.CMD_UPDATE, this.CMD_EVAL, this.CMD_INSERT, this.CMD_DELETE, this.CMD_ATTRIBUTES, this.CMD_EXTENSION].join(",");
+        node.getIf(ALLOWED_TAGS).each(
             (node: XMLQuery) => {
-                switch ((<any>node.value).tagName) {
-                    case Response.CMD_UPDATE:
-                        Response.processUpdate(request, context, node);
+                switch (node.tagName.value) {
+                    case this.CMD_UPDATE:
+                        this.processUpdateTag(request, context, internalContext, node);
                         break;
 
-                    case Response.CMD_EVAL:
-                        DomQuery.globalEval(node.cDATAAsString);
+                    case this.CMD_EVAL:
+                        this.processEvalTag(node);
                         break;
 
-                    case Response.CMD_INSERT:
-                        Response.processInsert(request, context, node);
+                    case this.CMD_INSERT:
+                        this.processInsertTag(request, context, internalContext, node);
                         break;
 
-                    case Response.CMD_DELETE:
-                        Response.processDelete(request, context, node);
+                    case this.CMD_DELETE:
+                        this.processDeleteTag(request, context, internalContext, node);
                         break;
 
-                    case Response.CMD_ATTRIBUTES:
-                        Response.processAttributes(request, context, node);
+                    case this.CMD_ATTRIBUTES:
+                        this.processAttributesTag(request, context, internalContext, node);
                         break;
 
-                    case Response.CMD_EXTENSION:
+                    case this.CMD_EXTENSION:
                         break;
                 }
             }
@@ -240,118 +210,191 @@ export class Response {
         return true;
     }
 
-    private static processAttributes(request: XMLHttpRequest, context: Config, node: XMLQuery) {
-        let id = node.attr("id");
-        let elem = DomQuery.querySelectorAll("#" + id.value);
+    private static processEvalTag(node: XMLQuery) {
+        DomQuery.globalEval(node.cDATAAsString);
+    }
+
+    private static processAttributesTag(request: XMLHttpRequest, context: Config, internalContext: Config, node: XMLQuery) {
+        let elem = DomQuery.byId(node.id.value);
+
         node.byTagName("attribute").each((item: XMLQuery) => {
             elem.attr(item.attr("name").value).value = item.attr("value").value;
         });
     }
 
-    private static processUpdate(request: XMLHttpRequest, context: Config, node: XMLQuery) {
-        if (node.attr("id").value == Response.P_VIEWSTATE) {
-            context.apply(Response.MF_INTERNAL, "appliedViewState").value = node.textContent("");
-
-            let elemId = context.getIf("_mfSourceControlId").orElse(context.getIf("source").isPresent() ? context.getIf("source", "id") : null);
-            let sourceFormId = context.getIf(Response.MF_INTERNAL, "_mfSourceFormId");
-
-            let sourceForm = new DomQuery(sourceFormId.isPresent() ? document.forms[sourceFormId.value] : null);
-
-            let elem = DomQuery.querySelectorAll("#" + elemId.value);
-            sourceForm = sourceForm.orElse(elem.parents("form"))
-                .orElse(elem.querySelectorAll("form"))
-                .orElse(DomQuery.querySelectorAll("form"));
-
-            if (sourceForm.isAbsent()) {
-                //no source form found is not an error because
-                //we might be able to recover one way or the other
-                return true;
-            } else {
-                context.apply(Response.MF_INTERNAL, Response.UPDATE_FORMS).value.push(sourceForm);
-            }
+    private static processUpdateTag(request: XMLHttpRequest, context: Config, internalContext: Config, node: XMLQuery) {
+        if (node.id.value == Const.P_VIEWSTATE) {
+            this.handleViewState(context, internalContext, node);
         } else {
-            let cdataBlock = node.cDATAAsString;
-            switch (node.attr("id").value) {
-                case Response.P_VIEWROOT :
-                    Response.replaceViewRoot(context, XMLQuery.parseXML(cdataBlock.substring(cdataBlock.indexOf("<html"))));
-                    break;
-
-                case Response.P_VIEWHEAD:
-                    Response.replaceHead(context, XMLQuery.parseXML(cdataBlock));
-                    break;
-
-                case Response.P_VIEWBODY:
-                    Response.replaceBody(context, XMLQuery.parseXML(cdataBlock));
-                    break;
-
-                default://htmlItem replacement
-                    Response.updateElement(context, node, cdataBlock);
-                    break;
-
-            }
+            this.handleElementUpdate(node, context, internalContext);
         }
     }
 
-    private static processInsert(request: XMLHttpRequest, context: Config, node: XMLQuery) {
-        let insertId = node.attr("id");
-        let before = node.attr("before");
-        let after = node.attr("after");
+    private static handleElementUpdate(node: XMLQuery, context: Config, internalContext: Config) {
+        let cdataBlock = node.cDATAAsString;
+        switch (node.id.value) {
+            case Const.P_VIEWROOT :
+                this.replaceViewRoot(context, internalContext, XMLQuery.parseXML(cdataBlock.substring(cdataBlock.indexOf("<html"))));
+                break;
+
+            case Const.P_VIEWHEAD:
+                this.replaceHead(context, internalContext, XMLQuery.parseXML(cdataBlock));
+                break;
+
+            case Const.P_VIEWBODY:
+                this.replaceBody(context, internalContext, XMLQuery.parseXML(cdataBlock));
+                break;
+
+            default://htmlItem replacement
+                this.updateElement(context, internalContext, node, cdataBlock);
+                break;
+
+        }
+    }
+
+    private static handleViewState(context: Config, internalContext: Config, node: XMLQuery) {
+        internalContext.apply("appliedViewState").value = node.textContent("");
+
+        let elem = this.resolveSourceElement(context, internalContext);
+        let sourceForm = this.resolveSourceForm(internalContext, elem);
+
+        if (sourceForm.isPresent()) {
+            internalContext.apply(this.UPDATE_FORMS).value.push(sourceForm);
+        }
+        //no source form found is not an error because
+        //we might be able to recover one way or the other
+        //TODO issue a warning for the no source form case
+    }
+
+    private static eval(context: Config, internalContext: Config) {
+        let updateelems = new DomQuery(internalContext.getIf(this.UPDATE_ELEMS).value);
+        updateelems.runCss();
+        updateelems.runScripts();
+    }
+
+    private static fixViewStates(context: Config, internalContext: Config) {
+        if (internalContext.getIf("appliedViewState").isAbsent()) {
+            return;
+        }
+        let viewState = internalContext.getIf("appliedViewState").value;
+        if (this.isAllFormResolution(context)) {
+            let forms = DomQuery.querySelectorAll(Const.TAG_FORM);
+            this.appendViewStateToForms(forms, viewState);
+        } else {
+            let updateforms = new DomQuery(internalContext.getIf(this.UPDATE_FORMS).value);
+            this.appendViewStateToForms(updateforms, viewState);
+        }
+    }
+
+    private static isAllFormResolution(context: Config) {
+        return Lang.instance.getLocalOrGlobalConfig(context, "no_portlet_env", false);
+    }
+
+    private static appendViewStateToForms(forms: DomQuery, viewState: string) {
+        forms.each((form: DomQuery) => {
+            let viewStateElems = form.querySelectorAll(Const.SEL_VIEWSTATE_ELEM)
+                .orElseLazy(() => this.newViewStateElement(form));
+
+            viewStateElems.attr("value").value = viewState;
+        });
+    }
+
+    /**
+     * Helper to Create a new JSF ViewState Element
+     *
+     * @param parent, the parent node to attach the viewstate element to
+     * (usually a form node)
+     */
+    private static newViewStateElement(parent: DomQuery): DomQuery {
+        let newViewState = DomQuery.fromMarkup(
+            ["<input type='hidden'", "id='", Const.P_VIEWSTATE, "' name='", Const.P_VIEWSTATE, "' value='' />"].join("")
+        );
+        newViewState.appendTo(parent);
+        return newViewState;
+    }
+
+    private static resolveSourceElement(context: Config, internalContext: Config) {
+        let elemId = this.resolveSourceElementId(context, internalContext);
+        let elem = DomQuery.byId(elemId.value);
+        return elem;
+    }
+
+    private static resolveSourceForm(internalContext: Config, elem: DomQuery) {
+        let sourceFormId = internalContext.getIf(Const.CTX_PARAM_SRC_FRM_ID);
+        let sourceForm = new DomQuery(sourceFormId.isPresent() ? document.forms[sourceFormId.value] : null);
+        sourceForm = sourceForm.orElse(elem.parents(Const.TAG_FORM))
+            .orElse(elem.querySelectorAll(Const.TAG_FORM))
+            .orElse(DomQuery.querySelectorAll(Const.TAG_FORM));
+        return sourceForm;
+    }
+
+    private static resolveSourceElementId(context: Config, internalContext: Config) {
+        //?internal context?? used to be external one
+        return internalContext.getIf(Const.CTX_PARAM_SRC_CTL_ID)
+            .orElseLazy(() => context.getIf(Const.SOURCE, "id").value);
+    }
+
+    private static processInsertTag(request: XMLHttpRequest, context: Config, internalContext: Config, node: XMLQuery) {
+        //let insertId = node.id; //not used atm
+
+        let before = node.attr(Const.TAG_BEFORE);
+        let after = node.attr(Const.TAG_AFTER);
 
         let insertNodes = DomQuery.fromMarkup(node.cDATAAsString);
 
         if (before.isPresent()) {
-            DomQuery.querySelectorAll("#" + before.value).insertBefore(insertNodes);
+            DomQuery.byId(before.value).insertBefore(insertNodes);
         } else {
-            DomQuery.querySelectorAll("#" + after.value).insertAfter(insertNodes);
+            DomQuery.byId(after.value).insertAfter(insertNodes);
         }
 
-        context.apply(Response.MF_INTERNAL, Response.UPDATE_ELEMS).value.push(insertNodes);
+        internalContext.apply(this.UPDATE_ELEMS).value.push(insertNodes);
     }
 
-    private static processDelete(request: XMLHttpRequest, context: Config, node: XMLQuery) {
-        let id = node.attr("id");
-        DomQuery.querySelectorAll("#" + id.value).delete();
+    private static processDeleteTag(request: XMLHttpRequest, context: Config, internalContext: Config, node: XMLQuery) {
+        DomQuery.byId(node.id.value).delete();
     }
 
-    private static replaceViewRoot(context: Config, shadownResponse: XMLQuery) {
+    private static replaceViewRoot(context: Config, internalContext: Config, shadownResponse: XMLQuery) {
 
-        let head = new XMLQuery(shadownResponse.byTagName("head"));
-        let body = new XMLQuery(shadownResponse.byTagName("body"));
+        let head = new XMLQuery(shadownResponse.byTagName(Const.TAG_HEAD));
+        let body = new XMLQuery(shadownResponse.byTagName(Const.TAG_BODY));
 
         if (head.isPresent()) {
-            Response.replaceHead(context, head);
+            this.replaceHead(context, internalContext, head);
         }
         if (body.isPresent()) {
-            Response.replaceBody(context, body);
+            this.replaceBody(context, internalContext, body);
         }
     }
 
-    private static replaceHead(context: Config, shadowHead: XMLQuery) {
+    private static replaceHead(context: Config, internalContext: Config, shadowHead: XMLQuery) {
         let shadowHTML = <DomQuery>DomQuery.fromMarkup("<head />").html(shadowHead.getIf("*").toString());
-        let oldHead = DomQuery.querySelectorAll("head");
+        let oldHead = DomQuery.querySelectorAll(Const.TAG_HEAD);
 
         oldHead.querySelectorAll("script, style, link").delete();
         shadowHTML.runCss();
         shadowHTML.runScripts();
     }
 
-    private static replaceBody(context: Config, shadowBody: XMLQuery) {
+    private static replaceBody(context: Config, internalContext: Config, shadowBody: XMLQuery) {
         let shadowInnerHTML = shadowBody.getIf("*").toString();
 
-        let resultb = <DomQuery>DomQuery.querySelectorAll("body").html(shadowInnerHTML);
-        let sourceFormb = resultb.querySelectorAll("form");
-        context.apply(Response.MF_INTERNAL, Response.UPDATE_FORMS).value.push(sourceFormb);
-        context.apply(Response.MF_INTERNAL, Response.UPDATE_ELEMS).value.push(resultb);
+        let resultb = <DomQuery>DomQuery.querySelectorAll(Const.TAG_BODY).html(shadowInnerHTML);
+        let sourceFormb = resultb.querySelectorAll(Const.TAG_FORM);
+
+        internalContext.apply(this.UPDATE_FORMS).value.push(sourceFormb);
+        internalContext.apply(this.UPDATE_ELEMS).value.push(resultb);
 
         resultb.copyAttrs(shadowBody);
     }
 
-    private static updateElement(context: Config, node: XMLQuery, cdataBlock: string) {
-        let result = DomQuery.querySelectorAll("#" + node.attr("id").value).outerHTML(cdataBlock);
-        let sourceForm = result.parents("form").orElse(result.byTagName("form", true));
+    private static updateElement(context: Config, internalContext: Config, node: XMLQuery, cdataBlock: string) {
+        let result = DomQuery.byId(node.attr("id").value).outerHTML(cdataBlock);
+        let sourceForm = result.parents(Const.TAG_FORM).orElse(result.byTagName(Const.TAG_FORM, true));
 
-        context.apply(Response.MF_INTERNAL, Response.UPDATE_FORMS).value.push(sourceForm);
-        context.apply(Response.MF_INTERNAL, Response.UPDATE_ELEMS).value.push(result);
+        internalContext.apply(this.UPDATE_FORMS).value.push(sourceForm);
+        internalContext.apply(this.UPDATE_ELEMS).value.push(result);
     }
 
     /**

@@ -630,10 +630,9 @@ export class DomQuery {
      */
     appendTo(elem: DomQuery) {
         this.eachElem((item) => {
-            let value1: Element = <Element>elem.getAsElem(0).get(Optional.fromNullable({
-                appendChild: (theItem: any) => {
-                }
-            })).value;
+            let value1: Element = <Element>elem.orElseLazy(() => {
+                appendChild: (theItem: any) => {}
+            }).getAsElem(0).value;
             value1.appendChild(item);
         });
     }

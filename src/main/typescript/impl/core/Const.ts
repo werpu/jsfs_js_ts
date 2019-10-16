@@ -12,6 +12,11 @@ export class Const {
     static P_PARTIAL_SOURCE = "javax.faces.source";
     static PARTIAL_ID = "partialId";
     static P_VIEWSTATE = "javax.faces.ViewState";
+    static P_VIEWROOT = "javax.faces.ViewRoot";
+    static P_VIEWHEAD = "javax.faces.ViewHead";
+    static P_VIEWBODY = "javax.faces.ViewBody";
+
+
     static P_CLIENTWINDOW = "javax.faces.ClientWindow";
     static P_AJAX = "javax.faces.partial.ajax";
     static P_EXECUTE = "javax.faces.partial.execute";
@@ -70,10 +75,25 @@ export class Const {
     static ENCODED_URL: "javax.faces.encodedURL";
     static REQ_TYPE_GET = "GET";
     static REQ_TYPE_POST = "POST";
-    static STATE_EVT_BEGIN = "begin";
+    static STATE_EVT_BEGIN = "begin"; //TODO remove this
     static STATE_EVT_TIMEOUT = "TIMEOUT_EVENT";
-    static STATE_EVT_COMPLETE = "complete";
+    static STATE_EVT_COMPLETE = "complete"; //TODO remove this
     static URL_ENCODED = "application/x-www-form-urlencoded";
     static NO_TIMEOUT = 0;
     static STD_ACCEPT = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
+
+    static TAG_HEAD = "head";
+    static TAG_FORM = "form";
+    static TAG_BODY = "body";
+    static TAG_BEFORE = "before";
+    static TAG_AFTER = "after";
+
+
+    static SEL_VIEWSTATE_ELEM = "[name='" + Const.P_VIEWSTATE + "']";
+    static SEL_RESPONSE_XML = "responseXML";
+
+    static PHASE_PROCESS_RESPONSE = "processResponse";
+
+
+    static ERR_NO_PARTIAL_RESPONSE = "Partial response not set";
 }

@@ -18,7 +18,6 @@ import {describe, it} from 'mocha';
 import {expect} from 'chai';
 import * as sinon from 'sinon';
 import {standardInits} from "../frameworkBase/_ext/shared/StandardInits";
-
 import defaultMyFaces = standardInits.defaultMyFaces;
 import defaultSeparatorChar = standardInits.defaultSeparatorChar;
 

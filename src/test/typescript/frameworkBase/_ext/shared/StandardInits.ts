@@ -15,7 +15,6 @@
  */
 
 import {Implementation} from "../../../../../main/typescript/impl/Impl";
-import {DomQuery, XMLQuery} from "../../../../../main/typescript/_ext/monadish";
 
 declare let jsf: any;
 

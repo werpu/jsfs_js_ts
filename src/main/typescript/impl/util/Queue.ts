@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 
-import {AsyncRunnable} from "./AsyncRunnable";
-import {Lang} from "./Lang";
-
 /**
  * classical queue implementation
  * but with a high speed mix to

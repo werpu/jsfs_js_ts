@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import {Optional} from "./Monad";
 import {Lang} from "./Lang";
 import {DomQuery} from "./DomQuery";
 

@@ -1,7 +1,6 @@
 import * as webpack from 'webpack';
 import * as path from 'path'
 
-
 let libraryTarget = process.env.TARGET_TYPE || "window";
 
 const config: webpack.Configuration =  {

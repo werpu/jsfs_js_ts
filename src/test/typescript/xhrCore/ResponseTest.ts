@@ -16,13 +16,12 @@
 
 import {describe} from "mocha";
 import {standardInits} from "../frameworkBase/_ext/shared/StandardInits";
-import protocolPage = standardInits.protocolPage;
 import * as sinon from "sinon";
 
 import {DomQuery} from "../../../main/typescript/_ext/monadish";
-import STD_XML = standardInits.STD_XML;
 import {XmlResponses} from "../frameworkBase/_ext/shared/XmlResponses";
-import { expect } from "chai";
+import {expect} from "chai";
+import protocolPage = standardInits.protocolPage;
 
 declare var jsf: any;
 declare var Implementation: any;

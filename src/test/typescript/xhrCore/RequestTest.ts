@@ -313,17 +313,3 @@ describe('Tests after core when it hits response', function () {
     });
 });
 
-
-/*
-describe('Myfaces specialized tests', function () {
-
-    it('must have the _mf passthroughs in and out after the request succeeded', function (done) {
-        done();
-    });
-
-    it('it must have proper _mf parameters in the onError case', function (done) {
-        done();
-    });
-
-});
-*/

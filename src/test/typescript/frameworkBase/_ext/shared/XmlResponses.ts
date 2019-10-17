@@ -54,7 +54,7 @@ export class XmlResponses {
     static VIEWSTATE_1 = `
     <partial-response>
     <changes>
-        <update id="javax.faces.ViewState"><![CDATA[<hello world]]></update>
+        <update id="javax.faces.ViewState"><![CDATA[hello world]]></update>
     </changes>
     </partial-response>
     `;

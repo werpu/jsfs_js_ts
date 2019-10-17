@@ -40,6 +40,14 @@ describe('Tests of the various aspects of the response protocol functionality', 
             this.server = sinon.fakeServer.create();
             this.xhr = sinon.useFakeXMLHttpRequest();
             this.requests = [];
+
+            this.respond = (response: string): XMLHttpRequest => {
+                let xhrReq = this.requests.shift();
+                xhrReq.responsetype = "text/xml";
+                xhrReq.respond(200, {'Content-Type': 'text/xml'}, response);
+                return xhrReq;
+            };
+
             this.xhr.onCreate = (xhr) => {
                 this.requests.push(xhr);
             };
@@ -62,9 +70,7 @@ describe('Tests of the various aspects of the response protocol functionality', 
         //DomQuery.byId("cmd_update_insert").click();
         let issuer = DomQuery.byId("cmd_update_insert").click();
 
-        let xhrReq = this.requests[0];
-        xhrReq.responsetype = "text/xml";
-        xhrReq.respond(200, {'Content-Type': 'text/xml'}, XmlResponses.UPDATE_INSERT_1);
+        this.respond( XmlResponses.UPDATE_INSERT_1);
 
         expect(DomQuery.byId("changesArea")
             .html()
@@ -95,12 +101,18 @@ describe('Tests of the various aspects of the response protocol functionality', 
 
     });
 
+    it("must have a viewstate uodate to be peformed", function () {
+        DomQuery.byId("cmd_viewstate").click();
+
+        this.respond(XmlResponses.EVAL_1)
+        let viewStateElem = DomQuery.byId('javax.faces.ViewState');
+        expect(viewStateElem.inputValue.value == "hello world").to.be.true;
+    });
+
     it("must have processed a proper delete", function () {
         DomQuery.byId("cmd_delete").click();
 
-        let xhrReq = this.requests[0];
-        xhrReq.responsetype = "text/xml";
-        xhrReq.respond(200, {'Content-Type': 'text/xml'}, XmlResponses.DELETE_1);
+        this.respond( XmlResponses.DELETE_1);
 
         expect(DomQuery.byId("deletable").isAbsent()).to.be.true;
 
@@ -109,9 +121,7 @@ describe('Tests of the various aspects of the response protocol functionality', 
     it("must have processed a proper eval of a script given in the eval tag", function () {
         let issuer = DomQuery.byId("cmd_eval").click();
 
-        let xhrReq = this.requests[0];
-        xhrReq.responsetype = "text/xml";
-        xhrReq.respond(200, {'Content-Type': 'text/xml'}, XmlResponses.EVAL_1);
+        this.respond( XmlResponses.EVAL_1);
 
         let resultHTML: string = <string>DomQuery.byId(document.body).html().value;
         expect(resultHTML.indexOf('eval test succeeded') != -1).to.be.true;

@@ -139,6 +139,9 @@ export module standardInits {
                onclick="emitPPR(this, ('undefined' == typeof event)? null: event, 'attributes');"/>
         <input type="button" id="cmd_illegalresponse" value="illegal response, error trigger"
                onclick="emitPPR(this, ('undefined' == typeof event)? null: event, 'illegalResponse');"/>
+        
+        <input type="button" id="cmd_viewstate" value="Viewstate only update trigger"
+               onclick="emitPPR(this, ('undefined' == typeof event)? null: event, 'viewstate');"/>
 
         <input type="button" id="cmd_error" value="Server error with error response"
                onclick="emitPPR(this, ('undefined' == typeof event)? null: event, 'errors');"/>

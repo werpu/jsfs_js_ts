@@ -25,9 +25,6 @@ import {Const} from "../../../main/typescript/impl/core/Const";
 import {standardInits} from "../frameworkBase/_ext/shared/StandardInits";
 import defaultMyFaces = standardInits.defaultMyFaces;
 
-const jsdom = require("jsdom");
-const {JSDOM} = jsdom;
-
 sinon.reset();
 
 declare var jsf: any;

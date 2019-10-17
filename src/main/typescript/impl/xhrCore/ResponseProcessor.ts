@@ -194,6 +194,8 @@ export class ResponseProcessor implements IResponseProcessor {
 
         if (sourceForm.isPresent()) {
             this.internalContext.apply(Const.UPDATE_FORMS).value.push(sourceForm);
+        } else {
+            this.newViewStateElement(sourceForm);
         }
         //no source form found is not an error because
         //we might be able to recover one way or the other

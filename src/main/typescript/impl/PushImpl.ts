@@ -2,6 +2,8 @@
  * Typescript port of the jsf.push part in the myfaces implementation
  */
 
+//TODO still work in progress
+//this is a 1:1 port for the time being
 export module PushImpl {
 
     const URL_PROTOCOL = window.location.protocol.replace("http", "ws") + "//";
@@ -16,6 +18,59 @@ export module PushImpl {
     /* client ids by token (share websocket connection) */
     let clientIdsByTokens = {};
 
+    /*
+     * Api implementations, exposed functions
+     */
+
+    /**
+     *
+     * @param {function} onopen The function to be invoked when the web socket is opened.
+     * @param {function} onmessage The function to be invoked when a message is received.
+     * @param {function} onclose The function to be invoked when the web socket is closed.
+     * @param {boolean} autoconnect Whether or not to immediately open the socket. Defaults to <code>false</code>.
+     */
+    export function init(socketClientId: string,
+                         uri: string,
+                         channel: string,
+                         onopen: Function,
+                         onmessage: Function,
+                         onclose: Function,
+                         behaviorScripts: any,
+                         autoconnect: boolean) {
+        onclose = resolveFunction(onclose);
+
+        if (!window.WebSocket) { // IE6-9.
+            onclose(-1, channel);
+            return;
+        }
+
+        let channelToken = uri.substr(uri.indexOf('?') + 1);
+
+        if (!components[socketClientId]) {
+            components[socketClientId] = {
+                'channelToken': channelToken,
+                'onopen': resolveFunction(onopen),
+                'onmessage': resolveFunction(onmessage),
+                'onclose': onclose,
+                'behaviors': behaviorScripts,
+                'autoconnect': autoconnect
+            };
+            if (!clientIdsByTokens[channelToken]) {
+                clientIdsByTokens[channelToken] = [];
+            }
+            clientIdsByTokens[channelToken].push(socketClientId);
+            if (!sockets[channelToken]) {
+                sockets[channelToken] = new Socket(channelToken,
+                    getBaseURL(uri), channel);
+            }
+        }
+
+        if (autoconnect) {
+            this.open(socketClientId);
+        }
+    }
+
+    // Private helper classes
     // Private classes functions ----------------------------------------------------------------------------------
     /**
      * Creates a reconnecting web socket. When the web socket successfully connects on first attempt, then it will
@@ -41,11 +96,7 @@ export module PushImpl {
             }
             this.socket = new WebSocket(this.url);
 
-            this.socket.onopen = (event: Event) => this.onopen(event);
-
-            this.socket.onmessage = (event: Event) => this.onmmessage(event);
-            
-            this.socket.onclose = (event: Event) => this.onclose(event);
+            this.bindCallbacks();
         }
 
         onopen(event: any) {
@@ -108,63 +159,25 @@ export module PushImpl {
 
         close() {
             if (this.socket) {
-                var s = this.socket;
+                let s = this.socket;
                 this.socket = null;
                 s.close();
             }
         }
-    }
 
-    /**
-     *
-     * @param {function} onopen The function to be invoked when the web socket is opened.
-     * @param {function} onmessage The function to be invoked when a message is received.
-     * @param {function} onclose The function to be invoked when the web socket is closed.
-     * @param {boolean} autoconnect Whether or not to immediately open the socket. Defaults to <code>false</code>.
-     */
-    export function init(socketClientId: string,
-                         uri: string,
-                         channel: string,
-                         onopen: Function,
-                         onmessage: Function,
-                         onclose: Function,
-                         behaviorScripts: any,
-                         autoconnect: boolean) {
-        onclose = resolveFunction(onclose);
-
-        if (!window.WebSocket) { // IE6-9.
-            onclose(-1, channel);
-            return;
-        }
-
-        var channelToken = uri.substr(uri.indexOf('?')+1);
-
-        if (!components[socketClientId]) {
-            components[socketClientId] = {
-                'channelToken': channelToken,
-                'onopen': resolveFunction(onopen),
-                'onmessage' : resolveFunction(onmessage),
-                'onclose': onclose,
-                'behaviors': behaviorScripts,
-                'autoconnect': autoconnect};
-            if (!clientIdsByTokens[channelToken]) {
-                clientIdsByTokens[channelToken] = [];
-            }
-            clientIdsByTokens[channelToken].push(socketClientId);
-            if (!sockets[channelToken]){
-                sockets[channelToken] = new Socket(channelToken,
-                    getBaseURL(uri), channel);
-            }
-        }
-
-        if (autoconnect) {
-            this.open(socketClientId);
+        /**
+         * bind the callbacks to the socket callbacks
+         */
+        private bindCallbacks() {
+            this.socket.onopen = (event: Event) => this.onopen(event);
+            this.socket.onmessage = (event: Event) => this.onmmessage(event);
+            this.socket.onclose = (event: Event) => this.onclose(event);
         }
     }
 
-    // Private static functions ---------------------------------------------------------------------------------------
 
     export function open(socketClientId: string) {
+
         getSocket(components[socketClientId]['channelToken']).open();
     }
 
@@ -172,17 +185,13 @@ export module PushImpl {
         getSocket(components[socketClientId]['channelToken']).close();
     }
 
+    // Private static functions ---------------------------------------------------------------------------------------
 
-    /**
-     *
-     */
-    function getBaseURL(url) {
-        if (url.indexOf("://") < 0)
-        {
-            var base = window.location.hostname+":"+window.location.port
+    function getBaseURL(url: string) {
+        if (url.indexOf("://") < 0) {
+            let base = window.location.hostname + ":" + window.location.port
             return URL_PROTOCOL + base + url;
-        }else
-        {
+        } else {
             return url;
         }
     }
@@ -194,7 +203,7 @@ export module PushImpl {
      * @throws {Error} When channelToken is unknown, you may need to initialize
      *                 it first via <code>init()</code> function.
      */
-    function getSocket(channelToken): Socket {
+    function getSocket(channelToken: string): Socket {
         let socket = sockets[channelToken];
         if (socket) {
             return socket;
@@ -203,8 +212,8 @@ export module PushImpl {
         }
     }
 
-    function resolveFunction(fn) {
-        return (typeof fn !== "function") && (fn = window[fn] || function(){}), fn;
+    function resolveFunction(fn: Function | string = () => {}): Function {
+        return <Function>((typeof fn !== "function") && (fn = window[fn]), fn);
     }
 
 }

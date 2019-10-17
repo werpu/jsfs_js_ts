@@ -16,7 +16,7 @@
 
 import {Config, DomQuery, XMLQuery} from "../../_ext/monadish";
 import {Const} from "../core/Const";
-import {Implementation} from "../Impl";
+import {Implementation} from "../AjaxImpl";
 import {Assertions} from "../util/Assertions";
 import {Lang} from "../util/Lang";
 import {ResonseDataResolver} from "./ResonseDataResolver";

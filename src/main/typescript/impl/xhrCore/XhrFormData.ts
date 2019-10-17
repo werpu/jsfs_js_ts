@@ -16,7 +16,7 @@
 
 import {Config, DomQuery} from "../../_ext/monadish";
 import {Const} from "../core/Const";
-import {Implementation} from "../Impl";
+import {Implementation} from "../AjaxImpl";
 import {Lang} from "../util/Lang";
 import {Stream} from "../../_ext/monadish/Monad";
 

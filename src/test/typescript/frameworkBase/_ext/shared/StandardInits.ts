@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Implementation} from "../../../../../main/typescript/impl/Impl";
+import {Implementation} from "../../../../../main/typescript/impl/AjaxImpl";
 
 
 declare let jsf: any;
@@ -226,7 +226,7 @@ export module standardInits {
 
             // @ts-ignore
             await import("../../../../../main/typescript/api/jsf").then((data) => {
-                let Implementation = require("../../../../../main/typescript/impl/Impl");
+                let Implementation = require("../../../../../main/typescript/impl/AjaxImpl");
                 (<any>global).jsf = data.jsf;
                 (<any>global).window.jsf = data.jsf;
                 (<any>global).Implementation = Implementation.Implementation;

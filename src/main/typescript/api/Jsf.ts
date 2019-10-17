@@ -14,21 +14,17 @@
  * limitations under the License.
  */
 
-///<reference path='./_apiInterfaces.ts'/>
+///<reference path='./ApiInterfaces.ts'/>
 ///<reference types='../../Types/Types'/>
 
-import {Implementation} from "../impl/Impl";
+import {Implementation} from "../impl/AjaxImpl";
+import {PushImpl} from "../impl/PushImpl";
 
 declare let window: any;
-declare type Context = {[key: string]: any};
-
-
+declare type Context = { [key: string]: any };
 
 export module jsf {
     "use strict";
-
-
-
 
     /*
      * Version of the implementation for the jsf.js.
@@ -85,7 +81,7 @@ export module jsf {
      * @throws an exception in case of the given element not being of type form!
      * https://issues.apache.org/jira/browse/MYFACES-2110
      */
-    export function getViewState(formElement: Element | string): string {
+    export function getViewState(formElement: Element | string): string {
         return Implementation.instance.getViewState(formElement);
     }
 
@@ -94,7 +90,7 @@ export module jsf {
      * @param {optional String | DomNode}  the node for which the client identifier has to be determined
      * @return the window identifier or null if none is found
      */
-    export function getClientWindow(rootNode?: Element | string): string {
+    export function getClientWindow(rootNode?: Element | string): string {
         return Implementation.instance.getClientWindow(rootNode);
     }
 
@@ -104,7 +100,7 @@ export module jsf {
     }
 
     //We hook the old namespace system into our npm system
-    if("undefined" == window.jsf) {
+    if ("undefined" == window.jsf) {
         window.jsf = jsf;
     }
 
@@ -126,9 +122,9 @@ export module jsf {
          * @param {EVENT} event: any javascript event supported by that object
          * @param {Map} options : map of options being pushed into the ajax cycle
          */
-        export function request(element: Element, event?: Event, options?: Context | {[key: string]: any}) {
+        export function request(element: Element, event?: Event, options?: Context) {
             Implementation.instance.request(element, event, options)
-             //Implementation.getInstance().requestInternal(element, event, options);
+            //Implementation.getInstance().requestInternal(element, event, options);
         }
 
         /**
@@ -138,7 +134,7 @@ export module jsf {
          *
          * TODO add info on what can be in the context
          */
-        export function response(request: XMLHttpRequest, context?: Context  | {[key: string]: any}) {
+        export function response(request: XMLHttpRequest, context?: Context) {
             Implementation.instance.response(request, context);
         }
 
@@ -159,8 +155,8 @@ export module jsf {
          *
          * @param {function} errorListener error handler must be of the format <i>function errorListener(&lt;errorData&gt;)</i>
          */
-        export function addOnError( errorFunc: (data: _apiInterfaces.ErrorData) => void) {
-            Implementation.instance.addOnError(<any> errorFunc);
+        export function addOnError(errorFunc: (data: _apiInterfaces.ErrorData) => void) {
+            Implementation.instance.addOnError(<any>errorFunc);
         }
 
         /**
@@ -169,13 +165,12 @@ export module jsf {
          *
          * @param {function} eventListener event must be of the format <i>function eventListener(&lt;eventData&gt;)</i>
          */
-        export function addOnEvent( eventFunc: (data: _apiInterfaces.EventData) => void) {
-            Implementation.instance.addOnEvent(<any> eventFunc);
+        export function addOnEvent(eventFunc: (data: _apiInterfaces.EventData) => void) {
+            Implementation.instance.addOnEvent(<any>eventFunc);
         }
     }
 
-    export class util {
-
+    export module util {
 
         /**
          * varargs function which executes a chain of code (functions or any other code)
@@ -187,16 +182,79 @@ export module jsf {
          * @param {Event} event, the event object of the callee event triggering this function
          *
          */
-        static chain(source, event, ...funcs : Array<Function | string>): boolean {
+        export function chain(source, event, ...funcs: Array<Function | string>): boolean {
             return Implementation.instance.chain(source, event, ...funcs);
         }
     }
+
+    export module push {
+        /**
+         * @param {function} onopen The function to be invoked when the web socket is opened.
+         * @param {function} onmessage The function to be invoked when a message is received.
+         * @param {function} onclose The function to be invoked when the web socket is closed.
+         * @param {boolean} autoconnect Whether or not to immediately open the socket. Defaults to <code>false</code>.
+         */
+        export function init(socketClientId: string,
+                    uri: string,
+                    channel: string,
+                    onopen: Function,
+                    onmessage: Function,
+                    onclose: Function,
+                    behaviorScripts: any,
+                    autoconnect: boolean) {
+            PushImpl.init(socketClientId, uri, channel, onopen, onmessage, onclose, behaviorScripts, autoconnect);
+        }
+
+        /**
+         * Open the web socket on the given channel.
+         * @param {string} channel The name of the web socket channel.
+         * @throws {Error} When channel is unknown.
+         */
+        export function open(socketClientId: string) {
+            PushImpl.open(socketClientId);
+        }
+
+        /**
+         * Close the web socket on the given channel.
+         * @param {string} channel The name of the web socket channel.
+         * @throws {Error} When channel is unknown.
+         */
+        export function close(socketClientId: string) {
+            PushImpl.close(socketClientId);
+        }
+
+    }
+
 }
 
 //fullfill the window contract
-if(!window.jsf) {
-    window.jsf = jsf;
-}
+export module myfaces {
 
+    /**
+     * AB function similar to mojarra and Primefaces
+     * not part of the spec but a convenience accesor method
+     * Code provided by Thomas Andraschko
+     *
+     * @param source the event source
+     * @param event the event
+     * @param eventName event name for java.javax.faces.behavior.evemnt
+     * @param execute execute list as passed down in jsf.ajax.request
+     * @param render
+     * @param options
+     */
+    export function ab(source: Element, event: Event, eventName: string, execute: string, render: string, options: Context = {}) {
+        if (eventName) {
+            options["javax.faces.behavior.event"] = eventName;
+        }
+        if (execute) {
+            options["execute"] = execute;
+        }
+        if (render) {
+            options["render"] = render;
+        }
+
+        jsf.ajax.request(source, event, options);
+    }
+}
 
 

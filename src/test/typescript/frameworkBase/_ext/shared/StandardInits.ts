@@ -16,6 +16,7 @@
 
 import {Implementation} from "../../../../../main/typescript/impl/Impl";
 
+
 declare let jsf: any;
 
 /**
@@ -214,13 +215,17 @@ export module standardInits {
 
             // @ts-ignore
             await import('jsdom-global').then((domIt) => {
-                clean = domIt(template);
+                clean = domIt(template, {
+                    contentType: "text/html",
+                    runScripts: "dangerously"
+                });
             });
 
             // @ts-ignore
             await import("../../../../../main/typescript/api/jsf").then((data) => {
                 let Implementation = require("../../../../../main/typescript/impl/Impl");
                 (<any>global).jsf = data.jsf;
+                (<any>global).window.jsf = data.jsf;
                 (<any>global).Implementation = Implementation.Implementation;
             });
         } else {

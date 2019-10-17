@@ -60,10 +60,8 @@ describe('Tests of the various aspects of the response protocol functionality', 
 
     it("must have a simple field updated as well as the viewstate", function (done) {
         //DomQuery.byId("cmd_update_insert").click();
-        let issuer = DomQuery.byId("cmd_update_insert").getAsElem(0).value;
-        jsf.ajax.request(issuer, {
-            target: issuer
-        }, {})
+        let issuer = DomQuery.byId("cmd_update_insert").click();
+
         let xhrReq = this.requests[0];
         xhrReq.responsetype = "text/xml";
         xhrReq.respond(200, {'Content-Type': 'text/xml'}, XmlResponses.UPDATE_INSERT_1);
@@ -97,24 +95,13 @@ describe('Tests of the various aspects of the response protocol functionality', 
 
     });
 
-    it("must have am embedded script properly executed", () => {
 
-    });
 
-    it("must have processed a proper insertBefore", () => {
 
-    });
-
-    it("must have processed a proper insertAfter", () => {
-
-    });
 
     it("must have processed a proper delete", function ()  {
-        //DomQuery.byId("cmd_update_insert").click();
-        let issuer = DomQuery.byId("cmd_delete").getAsElem(0).value;
-        jsf.ajax.request(issuer, {
-            target: issuer
-        }, {})
+        DomQuery.byId("cmd_delete").click();
+
         let xhrReq = this.requests[0];
         xhrReq.responsetype = "text/xml";
         xhrReq.respond(200, {'Content-Type': 'text/xml'}, XmlResponses.DELETE_1);
@@ -123,7 +110,15 @@ describe('Tests of the various aspects of the response protocol functionality', 
 
     });
 
-    it("must have processed a proper eval of a script given in the eval tag", () => {
+    it("must have processed a proper eval of a script given in the eval tag", function() {
+        let issuer = DomQuery.byId("cmd_eval").click();
+
+        let xhrReq = this.requests[0];
+        xhrReq.responsetype = "text/xml";
+        xhrReq.respond(200, {'Content-Type': 'text/xml'}, XmlResponses.EVAL_1);
+
+        let resultHTML: string = <string> DomQuery.byId(document.body).html().value;
+        expect(resultHTML.indexOf('eval test succeeded') != -1).to.be.true;
 
     });
 

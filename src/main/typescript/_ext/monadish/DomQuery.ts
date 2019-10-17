@@ -17,8 +17,7 @@
 import {Lang} from "./Lang";
 import {Config, IValueHolder, Optional, Stream} from "./Monad";
 import {XMLQuery} from "./XmlQuery";
-import {myfaces} from "../../api/myfaces";
-import config = myfaces.config;
+
 
 export class ElementAttribute implements IValueHolder<string> {
 
@@ -636,7 +635,7 @@ export class DomQuery {
     //TODO append prepend
 
     /**
-     * globa eval head appendix method
+     * global eval head appendix method
      * no other methods are supported anymore
      * @param code the code to be evaled
      * @param  nonce optional  nonce key for higher security
@@ -648,9 +647,9 @@ export class DomQuery {
             script.setAttribute("nonce", nonce);
         }
         script.type = "text/javascript";
-        script.text = code;
-        head.insertBefore(script, head.firstChild);
-        head.removeChild(script);
+        script.innerHTML = code;
+        let newScriptElement = head.appendChild(script);
+        head.removeChild(newScriptElement);
         return this;
     }
 
@@ -1124,12 +1123,14 @@ export class DomQuery {
 
     /**
      * encodes all input elements properly into respective
-     * config entries
+     * config entries, this can be used
+     * for legacy systems, for newer usecases, use the
+     * HTML5 Form class which all newer browsers provide
      *
      * @param toMerge optional config which can be merged in
      * @return a copy pf
      */
-     encodeFormElement(toMerge = new Config({})): Config {
+    encodeFormElement(toMerge = new Config({})): Config {
 
         //browser behavior no element name no encoding (normal submit fails in that case)
         //https://issues.apache.org/jira/browse/MYFACES-2847

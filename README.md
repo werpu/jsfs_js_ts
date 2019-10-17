@@ -2,7 +2,7 @@
 
 ## What is this?
 
-This project is a work in progress for a typescript based 
+This project is a work in progress for a next gen typescript based 
 reimplementation of jsf.js
 
 The main goal is maintainability. It omits legacy browsers

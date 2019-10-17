@@ -15,12 +15,14 @@
  */
 
 import {Lang} from "./Lang";
-import {IValueHolder, Optional, Stream} from "./Monad";
+import {Config, IValueHolder, Optional, Stream} from "./Monad";
 import {XMLQuery} from "./XmlQuery";
+import {myfaces} from "../../api/myfaces";
+import config = myfaces.config;
 
 export class ElementAttribute implements IValueHolder<string> {
 
-    constructor(private element: DomQuery, private attributeName: string, private defaultVal: string = null) {
+    constructor(private element: DomQuery, private name: string, private defaultVal: string = null) {
     }
 
     get value(): string {
@@ -29,7 +31,7 @@ export class ElementAttribute implements IValueHolder<string> {
             return this.defaultVal;
         }
 
-        return val[0].getAttribute(this.attributeName);
+        return val[0].getAttribute(this.name);
     }
 
     set value(value: string) {
@@ -37,9 +39,9 @@ export class ElementAttribute implements IValueHolder<string> {
         let val: Element[] = this.element.get(0).orElse(...[]).values;
 
         for (let cnt = 0; cnt < val.length; cnt++) {
-            val[cnt].setAttribute(this.attributeName, value);
+            val[cnt].setAttribute(this.name, value);
         }
-        val[0].setAttribute(this.attributeName, value);
+        val[0].setAttribute(this.name, value);
     }
 
     isPresent() {
@@ -51,6 +53,9 @@ export class ElementAttribute implements IValueHolder<string> {
     }
 
 }
+
+
+
 
 /**
  * small helper for the specialized jsf case
@@ -146,6 +151,22 @@ export class DomQuery {
      */
     get tagName(): Optional<string> {
         return <Optional<string>>this.getAsElem(0).getIf("tagName");
+    }
+
+    /**
+     * convenience method for nodeName
+     */
+    get nodeName(): Optional<string> {
+        return <Optional<string>>this.getAsElem(0).getIf("nodeName");
+    }
+
+    isTag(tagName: string): boolean {
+        return !this.isAbsent()
+            && (this.nodeName.orElse("__none___")
+                    .value.toLowerCase() == tagName.toLowerCase()
+                || this.tagName.orElse("__none___")
+                    .value.toLowerCase() == tagName.toLowerCase()
+            )
     }
 
     /**
@@ -301,10 +322,29 @@ export class DomQuery {
     }
 
     /**
-     * any value present
+     * should make the code clearer
+     * note if you pass a function
+     * this refers to the active dopmquery object
      */
-    isPresent(): boolean {
-        return !this.isAbsent();
+    isPresent(presentRunnable ?:(elem ?:DomQuery) => void) : boolean {
+        let absent = this.isAbsent();
+        if(!absent && presentRunnable) {
+            presentRunnable.call(this, this)
+        }
+        return !absent;
+    }
+
+    /**
+     * should make the code clearer
+     * note if you pass a function
+     * this refers to the active dopmquery object
+     *
+     *
+     * @param presentRunnable
+     */
+    ifPresentLazy(presentRunnable:(elem ?:DomQuery) => void = function(){}) :DomQuery {
+        this.isPresent.call(this, presentRunnable);
+        return this;
     }
 
     /**
@@ -352,7 +392,10 @@ export class DomQuery {
                 res.push(new DomQuery(this.rootNode[cnt]));
             }
         }
-        res = res.concat(this.querySelectorAll("#" + id));
+        //for some strange kind of reason the # selector fails
+        //on hidden elements we use the attributes match selector
+        //that works
+        res = res.concat(this.querySelectorAll(`[id="${id}"]`));
         return new DomQuery(...res);
     }
 
@@ -1079,12 +1122,98 @@ export class DomQuery {
 
     }
 
+    /**
+     * encodes all input elements properly into respective
+     * config entries
+     *
+     * @param toMerge optional config which can be merged in
+     * @return a copy pf
+     */
+     encodeFormElement(toMerge = new Config({})): Config {
+
+        //browser behavior no element name no encoding (normal submit fails in that case)
+        //https://issues.apache.org/jira/browse/MYFACES-2847
+        if (this.name.isAbsent()) {
+            return;
+        }
+
+        //lets keep it sideffects free
+        let target = toMerge.shallowCopy;
+
+        this.eachElem((element: HTMLFormElement) => {
+            if(!element.name) {//no name, no encoding
+                return;
+            }
+            let name = element.name;
+            let tagName = element.tagName.toLowerCase();
+            let elemType = element.type.orElse("__none__").value.toLowerCase();
+
+            elemType = elemType.toLowerCase();
+
+            // routine for all elements
+            // rules:
+            // - process only inputs, textareas and selects
+            // - elements muest have attribute "name"
+            // - elements must not be disabled
+            if (((tagName == "input" || tagName == "textarea" || tagName == "select") &&
+                (name != null && name != "")) && !element.disabled) {
+
+                // routine for select elements
+                // rules:
+                // - if select-one and value-Attribute exist => "name=value"
+                // (also if value empty => "name=")
+                // - if select-one and value-Attribute don't exist =>
+                // "name=DisplayValue"
+                // - if select multi and multple selected => "name=value1&name=value2"
+                // - if select and selectedIndex=-1 don't submit
+                if (tagName == "select") {
+                    // selectedIndex must be >= 0 sein to be submittet
+                    let selectElem: HTMLSelectElement = <HTMLSelectElement>element.getAsElem(0).value;
+                    if (selectElem.selectedIndex >= 0) {
+                        let uLen = selectElem.options.length;
+                        for (let u = 0; u < uLen; u++) {
+                            // find all selected options
+                            //let subBuf = [];
+                            if (selectElem.options[u].selected) {
+                                let elementOption = selectElem.options[u];
+                                target.apply(name).value = (elementOption.getAttribute("value") != null) ?
+                                    elementOption.value : elementOption.text;
+                            }
+                        }
+                    }
+                }
+
+                // routine for remaining elements
+                // rules:
+                // - don't submit no selects (processed above), buttons, reset buttons, submit buttons,
+                // - submit checkboxes and radio inputs only if checked
+                if ((tagName != "select" && elemType != "button"
+                    && elemType != "reset" && elemType != "submit" && elemType != "image")
+                    && ((elemType != "checkbox" && elemType != "radio") || (<any>element).checked)) {
+                    let files: any = (<any>element.value).files;
+                    if (files && files.length) {
+                        //xhr level2
+                        target.apply(name).value = files[0];
+                    } else {
+                        target.apply(name).value = element.inputValue.value;
+                    }
+                }
+
+            }
+        });
+
+        return target;
+
+    }
+
+
     private subNodes(from: number, to?: number): DomQuery {
         if (Optional.fromNullable(to).isAbsent()) {
             to = this.length;
         }
         return new DomQuery(...this.rootNode.slice(from, Math.min(to, this.length)));
     }
+
 
 }
 

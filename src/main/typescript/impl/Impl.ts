@@ -22,9 +22,11 @@ import {XhrRequest} from "./xhrCore/XhrRequest";
 import {AsynchronouseQueue} from "./util/AsyncQueue";
 import {Config, Optional} from "../_ext/monadish/Monad";
 import {DomQuery} from "../_ext/monadish/DomQuery";
-import {ExtDomQuery} from "./util/ExtDomQuery";
+
 import {Const} from "./core/Const";
 import {Assertions} from "./util/Assertions";
+import {XhrFormData} from "./xhrCore/XhrFormData";
+import {ExtDomQuery} from "./util/ExtDomQuery";
 
 declare var jsf: any;
 
@@ -260,7 +262,7 @@ export class Implementation {
         const configId = requestCtx.getIf(Const.MYFACES, "form").orElse("__mf_none__").value;
         let form: DomQuery = DomQuery
             .byId(configId)
-            .orElseLazy(() => this.getForm(elem.getAsElem(0).value, event));
+            .orElseLazy(() => Lang.getForm(elem.getAsElem(0).value, event));
         return form
     }
 
@@ -526,6 +528,31 @@ export class Implementation {
         return formWindowId.orElseLazy(fetchWindowIdFromUrl).value;
     }
 
+
+    /**
+     * collect and encode data for a given form element (must be of type form)
+     * find the javax.faces.ViewState element and encode its value as well!
+     * return a concatenated string of the encoded values!
+     *
+     * @throws Error in case of the given element not being of type form!
+     * https://issues.apache.org/jira/browse/MYFACES-2110
+     */
+    getViewState(form: Element | string) {
+        /**
+         *  typecheck assert!, we opt for strong typing here
+         *  because it makes it easier to detect bugs
+         */
+
+        let element:DomQuery = DomQuery.byId(form);
+        if (!element.isTag("form")) {
+            throw new Error(Lang.instance.getMessage("ERR_VIEWSTATE"));
+        }
+
+        let formData = new XhrFormData(element);
+        return formData.toString();
+    }
+
+
     private applyWindowId(options: Config) {
         /*preparations for jsf 2.2 windowid handling*/
         //pass the window id into the options if not set already
@@ -629,32 +656,6 @@ export class Implementation {
         return targetConfig;
     }
 
-    /**
-     * fetches the form in an unprecise manner depending
-     * on an element or event target
-     *
-     * @param elem
-     * @param event
-     */
-    private getForm(elem: Element, event ?: Event):
-        DomQuery {
-        const _Lang = Lang.instance;
-        const FORM = "form";
 
-        let queryElem = new DomQuery(elem);
-        let eventTarget = new DomQuery(_Lang.getEventTarget(event));
-
-        let form = queryElem.parents(FORM)
-            .orElseLazy(() => queryElem.byTagName(FORM, true))
-            .orElseLazy(() => eventTarget.parents(FORM))
-            .orElseLazy(() => eventTarget.byTagName(FORM))
-            .first();
-
-        if (form.isAbsent()) {
-            throw _Lang.makeException(new Error(), null, null, "Impl", "getForm", _Lang.getMessage("ERR_FORM"));
-        }
-
-        return form;
-    }
 
 }

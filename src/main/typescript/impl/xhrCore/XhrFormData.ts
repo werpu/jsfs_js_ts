@@ -16,6 +16,9 @@
 
 import {Config, DomQuery} from "../../_ext/monadish";
 import {Const} from "../core/Const";
+import {Implementation} from "../Impl";
+import {Lang} from "../util/Lang";
+import {Stream} from "../../_ext/monadish/Monad";
 
 declare let jsf: any;
 
@@ -31,9 +34,26 @@ declare let jsf: any;
  */
 export class XhrFormData extends Config {
 
-    constructor(private dataSource: DomQuery, private issuingItem?: DomQuery, private partialIdsArray?: string[]) {
+    /**
+     * by the time we hit this code, datasource alöready must be of type form
+     *
+     * @param dataSource either a form as domquery object or an encoded url string
+     * @param partialIdsArray partial ids to collect
+     */
+    constructor(private dataSource: DomQuery | string, private partialIdsArray?: string[]) {
         super({});
-        //encode and append the issuing item if not a partial ids array of ids is passed
+        //a call to getViewState before must pass the encoded line
+        //a call from getViewState passes the form element as datasource
+        //so we have two call points
+        if (Lang.instance.isString(dataSource)) {
+            this.handleStringSource();
+        } else {
+            this.handleFormSource();
+        }
+    }
+
+    private handleFormSource() {
+//encode and append the issuing item if not a partial ids array of ids is passed
         /*
          * Spec. 13.3.1
          * Collect and encode input elements.
@@ -41,9 +61,35 @@ export class XhrFormData extends Config {
          * Enhancement partial page submit
          *
          */
-        this.encodeSubmittableFields(this, this.dataSource, this.partialIdsArray);
 
-        this.apply(Const.P_VIEWSTATE).value = jsf.getViewState(this.dataSource.getAsElem(0).value);
+        this.encodeSubmittableFields(this, <DomQuery>this.dataSource, this.partialIdsArray);
+
+        if (this.getIf(Const.P_VIEWSTATE).isPresent()) {
+            return;
+        }
+
+        this.applyViewState(<DomQuery>this.dataSource);
+    }
+
+    private handleStringSource() {
+        this.mergeEncodedString(<string>this.dataSource);
+        return;
+    }
+
+    private applyViewState(form: DomQuery) {
+        form.byId(Const.P_VIEWSTATE)
+            .ifPresentLazy((elem: DomQuery) => {
+                this.apply(Const.P_VIEWSTATE).value = elem.getAsElem(0).value;
+            });
+    }
+
+    mergeEncodedString(encoded: string) {
+        let splittedEntries = encoded.split(/\&/gi);
+        Stream.of(...splittedEntries)
+            .map(line => line.split(/\=/gi))
+            .each(keyVal => {
+                this.apply(keyVal [0]).value = keyVal[1] || null;
+            })
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -89,83 +135,22 @@ export class XhrFormData extends Config {
                                     parentItem: DomQuery, partialIds ?: string[]) {
         let toEncode = null;
         if (this.partialIdsArray && this.partialIdsArray.length) {
+            //in case of our myfaces reduced ppr we only
+            //only submit the partials
+
+            //TODO maybe also the window id and other defaults lets see
+            //this is not a spec case anyway
+            this._value = {};
             toEncode = new DomQuery(...this.partialIdsArray);
 
         } else {
             if (parentItem.isAbsent()) throw "NO_PARITEM";
             toEncode = parentItem;
         }
-        toEncode.elements.each((element: DomQuery) => this.encodeElement(element));
+
+        //lets encode the form elements
+        let toMerge = toEncode.encodeFormElement();
+        this.shallowMerge(toMerge);
     }
 
-    /**
-     * encodes a single input element for submission
-     *
-     * @param {DomQuery} element - to be encoded
-     */
-    private encodeElement(element: DomQuery) {
-
-        //browser behavior no element name no encoding (normal submit fails in that case)
-        //https://issues.apache.org/jira/browse/MYFACES-2847
-        if (element.name.isAbsent()) {
-            return;
-        }
-
-        let name = element.name.value;
-        let tagName = element.tagName.value.toLowerCase();
-        let elemType = element.type.orElse("__none__").value.toLowerCase();
-
-        elemType = elemType.toLowerCase();
-
-        // routine for all elements
-        // rules:
-        // - process only inputs, textareas and selects
-        // - elements muest have attribute "name"
-        // - elements must not be disabled
-        if (((tagName == "input" || tagName == "textarea" || tagName == "select") &&
-            (name != null && name != "")) && !element.disabled) {
-
-            // routine for select elements
-            // rules:
-            // - if select-one and value-Attribute exist => "name=value"
-            // (also if value empty => "name=")
-            // - if select-one and value-Attribute don't exist =>
-            // "name=DisplayValue"
-            // - if select multi and multple selected => "name=value1&name=value2"
-            // - if select and selectedIndex=-1 don't submit
-            if (tagName == "select") {
-                // selectedIndex must be >= 0 sein to be submittet
-                let selectElem: HTMLSelectElement = <HTMLSelectElement>element.getAsElem(0).value;
-                if (selectElem.selectedIndex >= 0) {
-                    let uLen = selectElem.options.length;
-                    for (let u = 0; u < uLen; u++) {
-                        // find all selected options
-                        //let subBuf = [];
-                        if (selectElem.options[u].selected) {
-                            let elementOption = selectElem.options[u];
-                            this.apply(name).value = (elementOption.getAttribute("value") != null) ?
-                                elementOption.value : elementOption.text;
-                        }
-                    }
-                }
-            }
-
-            // routine for remaining elements
-            // rules:
-            // - don't submit no selects (processed above), buttons, reset buttons, submit buttons,
-            // - submit checkboxes and radio inputs only if checked
-            if ((tagName != "select" && elemType != "button"
-                && elemType != "reset" && elemType != "submit" && elemType != "image")
-                && ((elemType != "checkbox" && elemType != "radio") || (<any>element).checked)) {
-                let files: any = (<any>element.value).files;
-                if (files && files.length) {
-                    //xhr level2
-                    this.apply(name).value = files[0];
-                } else {
-                    this.apply(name).value = element.inputValue.value;
-                }
-            }
-
-        }
-    }
 }

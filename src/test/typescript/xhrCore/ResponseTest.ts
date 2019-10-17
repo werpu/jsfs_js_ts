@@ -46,8 +46,6 @@ describe('Tests of the various aspects of the response protocol functionality', 
             (<any>global).XMLHttpRequest = this.xhr;
             (<any>window).XMLHttpRequest = this.xhr;
 
-
-
             this.closeIt = () => {
                 (<any>global).XMLHttpRequest = (<any>window).XMLHttpRequest = this.xhr.restore();
                 Implementation.reset();
@@ -60,10 +58,10 @@ describe('Tests of the various aspects of the response protocol functionality', 
         this.closeIt();
     });
 
-    it("must have a simple field updated as well as the viewstate", function(done) {
+    it("must have a simple field updated as well as the viewstate", function (done) {
         //DomQuery.byId("cmd_update_insert").click();
         let issuer = DomQuery.byId("cmd_update_insert").getAsElem(0).value;
-        jsf.ajax.request(issuer,  {
+        jsf.ajax.request(issuer, {
             target: issuer
         }, {})
         let xhrReq = this.requests[0];
@@ -82,15 +80,15 @@ describe('Tests of the various aspects of the response protocol functionality', 
             .value).indexOf("insert after succeeded should display after test1");
         let pos2 = (<string>DomQuery.byId(document.body).html()
             .value).indexOf("update succeeded 1");
+
         expect(pos1 != -1).to.be.true;
 
         expect(pos1 < pos2 && pos2 < pos3).to.be.true;
 
-
         let pos4 = (<string>DomQuery.byId(document.body).html()
             .value).indexOf("embedded script at update succeed");
 
-        expect(pos4 != -1).to.be.true
+        expect(pos4 != -1).to.be.true;
 
         done();
     });
@@ -111,7 +109,17 @@ describe('Tests of the various aspects of the response protocol functionality', 
 
     });
 
-    it("must have processed a proper delete", () => {
+    it("must have processed a proper delete", function ()  {
+        //DomQuery.byId("cmd_update_insert").click();
+        let issuer = DomQuery.byId("cmd_delete").getAsElem(0).value;
+        jsf.ajax.request(issuer, {
+            target: issuer
+        }, {})
+        let xhrReq = this.requests[0];
+        xhrReq.responsetype = "text/xml";
+        xhrReq.respond(200, {'Content-Type': 'text/xml'}, XmlResponses.DELETE_1);
+
+        expect(DomQuery.byId("deletable").isAbsent()).to.be.true;
 
     });
 

@@ -245,9 +245,22 @@ export class Optional<T> extends Monad<T> {
         return "undefined" == typeof this.value || null == this.value;
     }
 
-    isPresent(): boolean {
-        return !this.isAbsent();
+    /**
+     * any value present
+     */
+    isPresent(presentRunnable ?:(val ?: Monad<T>) => void) : boolean {
+        let absent = this.isAbsent();
+        if(!absent && presentRunnable) {
+            presentRunnable.call(this, this)
+        }
+        return !absent;
     }
+
+    ifPresentLazy(presentRunnable:(val ?: Monad<T>) => void = () => {}): Monad<T> {
+        this.isPresent.call(this, presentRunnable);
+        return this;
+    }
+
 
     orElse(elseValue: any): Optional<any> {
         if (this.isPresent()) {

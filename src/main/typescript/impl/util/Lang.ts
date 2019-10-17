@@ -30,6 +30,7 @@ import {Config, Optional} from "../../_ext/monadish/Monad";
 import {CancellablePromise} from "../../_ext/monadish/Promise";
 import JSFErrorData = LangTypes.JSFErrorData;
 import MyFacesErrorData = LangTypes.MyFacesErrorData;
+import {DomQuery} from "../../_ext/monadish";
 
 export class Lang {
 
@@ -497,6 +498,46 @@ export class Lang {
         languageClass = (languageClass) ? languageClass : Messages;
 
         this.installedLocale = new languageClass();
+    }
+
+    /**
+     * fetches the form in an unprecise manner depending
+     * on an element or event target
+     *
+     * @param elem
+     * @param event
+     */
+    static getForm(elem: Element, event ?: Event): DomQuery {
+        const _Lang = Lang.instance;
+        const FORM = "form";
+
+        let queryElem = new DomQuery(elem);
+        let eventTarget = new DomQuery(_Lang.getEventTarget(event));
+
+        if(queryElem.isTag(FORM)) {
+            return queryElem;
+        }
+
+        //html 5 for handling
+        if(queryElem.attr(FORM).isPresent()) {
+            let formId = queryElem.attr(FORM).value;
+            let foundForm = DomQuery.byId(formId);
+            if(foundForm.isPresent()) {
+                return foundForm;
+            }
+        }
+
+        let form = queryElem.parents(FORM)
+            .orElseLazy(() => queryElem.byTagName(FORM, true))
+            .orElseLazy(() => eventTarget.parents(FORM))
+            .orElseLazy(() => eventTarget.byTagName(FORM))
+            .first();
+
+        if (form.isAbsent()) {
+            throw _Lang.makeException(new Error(), null, null, "Impl", "getForm", _Lang.getMessage("ERR_FORM"));
+        }
+
+        return form;
     }
 
 }

@@ -86,7 +86,7 @@ export module jsf {
      * https://issues.apache.org/jira/browse/MYFACES-2110
      */
     export function getViewState(formElement: Element | string): string {
-        return null;
+        return Implementation.instance.getViewState(formElement);
     }
 
     /**

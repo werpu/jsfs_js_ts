@@ -70,6 +70,15 @@ export module PushImpl {
         }
     }
 
+    export function open(socketClientId: string) {
+
+        getSocket(components[socketClientId]['channelToken']).open();
+    }
+
+    export function close(socketClientId: string) {
+        getSocket(components[socketClientId]['channelToken']).close();
+    }
+
     // Private helper classes
     // Private classes functions ----------------------------------------------------------------------------------
     /**
@@ -175,15 +184,6 @@ export module PushImpl {
         }
     }
 
-
-    export function open(socketClientId: string) {
-
-        getSocket(components[socketClientId]['channelToken']).open();
-    }
-
-    export function close(socketClientId: string) {
-        getSocket(components[socketClientId]['channelToken']).close();
-    }
 
     // Private static functions ---------------------------------------------------------------------------------------
 

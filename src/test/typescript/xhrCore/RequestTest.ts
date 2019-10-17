@@ -44,7 +44,7 @@ describe('Tests on the xhr core when it starts to call the request', function ()
         let waitForResult = defaultMyFaces();
 
         return waitForResult.then((close) => {
-            this.server = sinon.fakeServer.create();
+
             this.xhr = sinon.useFakeXMLHttpRequest();
             this.requests = [];
             this.xhr.onCreate = (xhr) => {
@@ -149,7 +149,7 @@ describe('Tests after core when it hits response', function () {
         let waitForResult = defaultMyFaces();
 
         return waitForResult.then((close) => {
-            this.server = sinon.fakeServer.create();
+
             this.xhr = sinon.useFakeXMLHttpRequest();
             this.requests = [];
             this.xhr.onCreate = (xhr) => {

@@ -37,7 +37,7 @@ describe('Tests of the various aspects of the response protocol functionality', 
     beforeEach(async function () {
         let waitForResult = protocolPage();
         return waitForResult.then((close) => {
-            this.server = sinon.fakeServer.create();
+
             this.xhr = sinon.useFakeXMLHttpRequest();
             this.requests = [];
 
@@ -101,7 +101,7 @@ describe('Tests of the various aspects of the response protocol functionality', 
 
     });
 
-    it("must have a viewstate uodate to be peformed", function () {
+    it("must have a viewstate update to be peformed", function () {
         DomQuery.byId("cmd_viewstate").click();
 
         this.respond(XmlResponses.EVAL_1)

@@ -31,7 +31,7 @@ describe('Asynchronous Queue tests', () => {
         let waitForResult = defaultMyFaces();
 
         return waitForResult.then((close) => {
-            this.server = sinon.fakeServer.create();
+
             this.xhr = sinon.useFakeXMLHttpRequest();
             this.requests = [];
             this.xhr.onCreate = (xhr) => {

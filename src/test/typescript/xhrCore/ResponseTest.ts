@@ -95,11 +95,7 @@ describe('Tests of the various aspects of the response protocol functionality', 
 
     });
 
-
-
-
-
-    it("must have processed a proper delete", function ()  {
+    it("must have processed a proper delete", function () {
         DomQuery.byId("cmd_delete").click();
 
         let xhrReq = this.requests[0];
@@ -110,14 +106,14 @@ describe('Tests of the various aspects of the response protocol functionality', 
 
     });
 
-    it("must have processed a proper eval of a script given in the eval tag", function() {
+    it("must have processed a proper eval of a script given in the eval tag", function () {
         let issuer = DomQuery.byId("cmd_eval").click();
 
         let xhrReq = this.requests[0];
         xhrReq.responsetype = "text/xml";
         xhrReq.respond(200, {'Content-Type': 'text/xml'}, XmlResponses.EVAL_1);
 
-        let resultHTML: string = <string> DomQuery.byId(document.body).html().value;
+        let resultHTML: string = <string>DomQuery.byId(document.body).html().value;
         expect(resultHTML.indexOf('eval test succeeded') != -1).to.be.true;
 
     });

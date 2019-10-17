@@ -1092,7 +1092,6 @@ export class DomQuery {
     }
 
     textContent(joinstr: string = ""): string {
-
         return this.stream
             .map((value: DomQuery) => {
                 let item = value.getAsElem(0).orElseLazy(() => {
@@ -1103,11 +1102,9 @@ export class DomQuery {
                 return (<any>item).textContent || "";
             })
             .reduce((text1, text2) => text1 + joinstr + text2, "").value;
-
     }
 
     innerText(joinstr: string = ""): string {
-
         return this.stream
             .map((value: DomQuery) => {
                 let item = value.getAsElem(0).orElseLazy(() => {

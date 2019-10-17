@@ -1,7 +1,7 @@
 {
-  "name": "jsf.js_ts",
+  "name": "jsf.js_next_gen",
   "version": "0.0.1",
-  "description": "A typescript reimplementation of jsf.js",
+  "description": "A next generation typescript reimplementation of jsf.js",
   "main": "dist/window/jsf.js",
   "scripts": {
     "test": "mocha -r ts-node/register ./**/test/typescript/**/**/*Test*.ts",

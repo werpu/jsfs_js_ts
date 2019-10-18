@@ -20,6 +20,7 @@ import {Const} from "../core/Const";
 import {ResponseProcessor} from "./ResponseProcessor";
 import {ResonseDataResolver} from "./ResonseDataResolver";
 import {IResponseProcessor} from "./IResponseProcessor";
+import {DomQuery} from "../../_ext/monadish";
 
 export class Response {
 
@@ -148,15 +149,15 @@ export class Response {
         let cdataBlock = node.cDATAAsString;
         switch (node.id.value) {
             case Const.P_VIEWROOT :
-                responseProcessor.replaceViewRoot(XMLQuery.parseHTML(cdataBlock.substring(cdataBlock.indexOf("<html"))));
+                responseProcessor.replaceViewRoot(DomQuery.fromMarkup(cdataBlock.substring(cdataBlock.indexOf("<html"))));
                 break;
 
             case Const.P_VIEWHEAD:
-                responseProcessor.replaceHead(XMLQuery.parseHTML(cdataBlock));
+                responseProcessor.replaceHead(DomQuery.fromMarkup(cdataBlock));
                 break;
 
             case Const.P_VIEWBODY:
-                responseProcessor.replaceBody(XMLQuery.parseHTML(cdataBlock));
+                responseProcessor.replaceBody(DomQuery.fromMarkup(cdataBlock));
                 break;
 
             default://htmlItem replacement

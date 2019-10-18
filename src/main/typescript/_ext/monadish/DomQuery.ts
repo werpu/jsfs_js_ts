@@ -46,7 +46,6 @@ export class ElementAttribute extends ValueEmbedder<string> {
         return ElementAttribute;
     }
 
-
     static fromNullable(value?: any, valueKey: string = "value"): ElementAttribute {
         return new ElementAttribute(value, valueKey);
     }
@@ -184,7 +183,6 @@ export class DomQuery {
         return new ValueEmbedder<string>(this.getAsElem(0).value, "name");
     }
 
-
     /**
      * convenience property for value
      *
@@ -192,10 +190,10 @@ export class DomQuery {
      * the value of the first element
      */
     get inputValue(): ValueEmbedder<string> {
-        if(this.getAsElem(0).getIf("value").isPresent()) {
+        if (this.getAsElem(0).getIf("value").isPresent()) {
             return new ValueEmbedder<string>(this.getAsElem(0).value);
         } else {
-            return <any> ValueEmbedder.absent;
+            return <any>ValueEmbedder.absent;
         }
     }
 
@@ -221,7 +219,7 @@ export class DomQuery {
     }
 
     set disabled(disabled: boolean) {
-        this.attr("disabled").value = disabled+"";
+        this.attr("disabled").value = disabled + "";
     }
 
     get childNodes(): DomQuery {
@@ -291,21 +289,27 @@ export class DomQuery {
      * @param markup the marku code
      */
     static fromMarkup(markup: string): DomQuery {
-        //TODO check if ie8 still has this problem, probably not we probably
-        //can drop this code in favor of html
+        let domParser: DOMParser = Lang.saveResolve(() => new DOMParser()).value;
+        if (domParser) {
+            let document = domParser.parseFromString(markup, "text/html");
+            return new DomQuery(document);
+        } else {
+            //https://developer.mozilla.org/de/docs/Web/API/DOMParser license creative commons
+            const doc = document.implementation.createHTMLDocument("");
+            markup = Lang.instance.trim(markup);
+            let lowerMarkup = markup.toLowerCase();
+            if (lowerMarkup.includes('<!doctype') ||
+                lowerMarkup.includes('<html')  ||
+                lowerMarkup.includes('<head')  ||
+                lowerMarkup.includes('<body')) {
+                doc.documentElement.innerHTML = markup;
+                return new DomQuery(doc.documentElement);
+            } else {
+                doc.body.innerHTML = markup;
+                return new DomQuery(... <Array<Element>> Lang.instance.objToArray(doc.body.childNodes));
+            }
 
-        //now to the non w3c compliant browsers
-        //http://blogs.perl.org/users/clinton_gormley/2010/02/forcing-ie-to-accept-script-tags-in-innerhtml.html
-        //we have to cope with deficiencies between ie and its simulations in this case
-        let dummyPlaceHolder = new DomQuery(document.createElement("div"));
-
-        //fortunately a table element also works which is less critical than form elements regarding
-        //the inner content
-        dummyPlaceHolder.html("<table><tbody><tr><td>" + markup + "</td></tr></tbody></table>");
-        let childs = dummyPlaceHolder.querySelectorAll("td").get(0).childNodes;
-        childs.detach();
-        dummyPlaceHolder.html("");
-        return childs;
+        }
     }
 
     /**
@@ -840,7 +844,7 @@ export class DomQuery {
                 let value: string = item.value;
                 let name: string = item.name;
 
-                switch(name) {
+                switch (name) {
                     case "id":
                         this.id.value = value;
                         break;
@@ -1265,13 +1269,10 @@ export class DomQuery {
     }
 }
 
-
 /**
  * Various collectors
  * which can be used in conjunction with Streams
  */
-
-
 
 /**
  * A collector which bundles a full dom query stream into a single dom query element
@@ -1280,7 +1281,7 @@ export class DomQuery {
  */
 export class DomQueryCollector implements ICollector<DomQuery, DomQuery> {
 
-    data: DomQuery[] =[];
+    data: DomQuery[] = [];
 
     collect(element: DomQuery) {
         this.data.push(element);
@@ -1294,7 +1295,7 @@ export class DomQueryCollector implements ICollector<DomQuery, DomQuery> {
 /**
  * Helper form data collector
  */
-export class FormDataCollector implements ICollector<{key: string, value: any}, FormData> {
+export class FormDataCollector implements ICollector<{ key: string, value: any }, FormData> {
     finalValue: FormData = new FormData();
 
     collect(element: { key: string; value: any }) {
@@ -1307,7 +1308,7 @@ export class QueryFormDataCollector implements ICollector<DomQuery, FormData> {
 
     collect(element: DomQuery) {
         let toMerge = element.encodeFormElement();
-        if(toMerge.isPresent()) {
+        if (toMerge.isPresent()) {
             this.finalValue.append(element.name.value, toMerge.get(element.name).value);
         }
     }
@@ -1315,18 +1316,18 @@ export class QueryFormDataCollector implements ICollector<DomQuery, FormData> {
 
 export class QueryFormStringCollector implements ICollector<DomQuery, string> {
 
-    formData: [[string, string]] = <any> [];
+    formData: [[string, string]] = <any>[];
 
     collect(element: DomQuery) {
         let toMerge = element.encodeFormElement();
-        if(toMerge.isPresent()) {
+        if (toMerge.isPresent()) {
             this.formData.push([element.name.value, toMerge.get(element.name).value]);
         }
     }
 
     get finalValue(): string {
         return Stream.of(...this.formData)
-            .map<string>(keyVal =>  keyVal.join("="))
+            .map<string>(keyVal => keyVal.join("="))
             .reduce((item1, item2) => [item1, item2].join("&"))
             .orElse("").value;
     }

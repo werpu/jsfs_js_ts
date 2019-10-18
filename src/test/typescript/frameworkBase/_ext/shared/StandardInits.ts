@@ -160,7 +160,7 @@ export module StandardInits {
         <input type="button" id="cmd_delete" value="delete"
                onclick="emitPPR(this, ('undefined' == typeof event)? null: event, 'delete1');"/>
 
-        <input type="button" id="cmd_body_replace" value="Replace Body"
+        <input type="button" id="cmd_replace" value="Replace Body"
                onclick="emitPPR(this, ('undefined' == typeof event)? null: event, 'body_replace1');"/>
 
         <input type="button" id="cmd_attributeschange" value="change attributes"

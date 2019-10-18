@@ -100,7 +100,7 @@ describe('Tests of the various aspects of the response protocol functionality', 
     });
 
     it("must have a full body update", function () {
-        DQ.byId("cmd_body_replace").click();
+        DQ.byId("cmd_replace").click();
         this.respond(XmlResponses.BODY_REPLACEMENT);
 
         //basic replacement
@@ -119,6 +119,23 @@ describe('Tests of the various aspects of the response protocol functionality', 
             "attributes must be updated").to.be.true;
         expect(newBody.id.value == "the_id",
             "id must be updated").to.be.true;
+    });
+
+
+    it("head replace", function () {
+        DQ.byId("cmd_replace").click();
+        this.respond(XmlResponses.HEAD_REPLACEMENT);
+
+        //basic replacement
+        let newHead = DQ.byId(document.head);
+        let newBody = DQ.byId(document.body);
+        let newContent = <string>newBody.html().value;
+
+        //standard replacement successful
+        //script eval
+        //modern browsers block head replacement but you still can eval
+        expect(newContent.indexOf(">hello from embedded script in replacement head") != -1,
+            "embedded scripts must be executed").to.be.true;
     });
 
     it("must have a viewstate update to be peformed", function () {

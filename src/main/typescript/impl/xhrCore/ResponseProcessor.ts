@@ -41,16 +41,26 @@ export class ResponseProcessor implements IResponseProcessor {
 
     }
 
-    replaceHead(shadowHead: XMLQuery) {
-        let shadowHTML = <DomQuery>DomQuery.fromMarkup("<head />").html(shadowHead.getIf("*").toString());
+    replaceHead(shadowDocument: XMLQuery | DomQuery) {
+        let shadowHead = shadowDocument.getIf(Const.TAG_HEAD);
+        let shadowInnerHTML: string = <string> shadowHead.html().value;
         let oldHead = DomQuery.querySelectorAll(Const.TAG_HEAD);
 
+        //delete all to avoid script and style overlays
         oldHead.querySelectorAll(Const.SEL_SCRIPTS_STYLES).delete();
-        shadowHTML.runCss();
-        shadowHTML.runScripts();
+
+        this.storeForEval(shadowHead);
     }
 
-    replaceBody(shadowDocument: XMLQuery) {
+    /**
+     * replaces the body in the expected manner
+     * which means the entire body content is refreshed
+     * however also the body attributes must be transferred
+     * keeping event handlers etc... in place
+     *
+     * @param shadowDocument .. an incoming shadow document hosting the new nodes
+     */
+    replaceBody(shadowDocument: XMLQuery | DomQuery) {
 
         let shadowBody = shadowDocument.getIf(Const.TAG_BODY);
         let shadowInnerHTML: string = <string> shadowBody.html().value;
@@ -60,12 +70,7 @@ export class ResponseProcessor implements IResponseProcessor {
 
         resultingBody.copyAttrs(shadowBody);
 
-        this.storeForLaterProcessing(updateForms, resultingBody);
-    }
-
-    private storeForLaterProcessing(updateForms: DomQuery, resultingBody: DomQuery) {
-        this.internalContext.apply(Const.UPDATE_FORMS).value.push(updateForms);
-        this.internalContext.apply(Const.UPDATE_ELEMS).value.push(resultingBody);
+        this.storeForPostProcessing(updateForms, resultingBody);
     }
 
     /**
@@ -129,7 +134,7 @@ export class ResponseProcessor implements IResponseProcessor {
         let result = DomQuery.byId(node.id.value).outerHTML(cdataBlock);
         let sourceForm = result.parents(Const.TAG_FORM).orElse(result.byTagName(Const.TAG_FORM, true));
 
-        this.storeForLaterProcessing(sourceForm, result);
+        this.storeForPostProcessing(sourceForm, result);
     }
 
     delete(node: XMLQuery) {
@@ -250,4 +255,24 @@ export class ResponseProcessor implements IResponseProcessor {
         newViewState.appendTo(parent);
         return newViewState;
     }
+
+    /**
+     * Stores certain aspects of the dom for later post processing
+     *
+     * @param updateForms the update forms which should receive standardized internal jsf data
+     * @param toBeEvaled the resulting elements which should be evaled
+     */
+    private storeForPostProcessing(updateForms: DomQuery, toBeEvaled: DomQuery) {
+        this.storeForUpdate(updateForms);
+        this.storeForEval(toBeEvaled);
+    }
+
+    private storeForUpdate(updateForms: DomQuery) {
+        this.internalContext.apply(Const.UPDATE_FORMS).value.push(updateForms);
+    }
+
+    private storeForEval(toBeEvaled: DomQuery) {
+        this.internalContext.apply(Const.UPDATE_ELEMS).value.push(toBeEvaled);
+    }
+
 }

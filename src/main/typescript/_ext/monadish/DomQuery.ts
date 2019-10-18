@@ -946,26 +946,28 @@ export class DomQuery {
 
                     } else {
                         // embedded script auto eval
-                        let test = item.text;
+                        //TODO this probably needs to be changed due to our new parsing structures
+                        //probably not needed anymore
+                        let evalText = item.text || item.innerText || item.innerHTML;
                         let go = true;
                         while (go) {
                             go = false;
-                            if (test.substring(0, 1) == " ") {
-                                test = test.substring(1);
+                            if (evalText.substring(0, 1) == " ") {
+                                evalText = evalText.substring(1);
                                 go = true;
                             }
-                            if (test.substring(0, 4) == "<!--") {
-                                test = test.substring(4);
+                            if (evalText.substring(0, 4) == "<!--") {
+                                evalText = evalText.substring(4);
                                 go = true;
                             }
-                            if (test.substring(0, 11) == "//<![CDATA[") {
-                                test = test.substring(11);
+                            if (evalText.substring(0, 11) == "//<![CDATA[") {
+                                evalText = evalText.substring(11);
                                 go = true;
                             }
                         }
                         // we have to run the script under a global context
                         //we store the script for less calls to eval
-                        finalScripts.push(test);
+                        finalScripts.push(evalText);
 
                     }
                 }

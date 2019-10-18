@@ -95,7 +95,7 @@ export class XmlResponses {
         <update id="javax.faces.ViewBody"><![CDATA[
             <body id="the_id" class="tundra">
             <div id='centerDiv'>
-                <h1>Selenium Test for body change done</h1>
+                <h1>Test for body change done</h1>
                 <h3>Body replacement test successful</h3>
                 <table>
                     <tbody>
@@ -114,7 +114,26 @@ export class XmlResponses {
         </update>
     </changes>
 </partial-response>
+
 `;
+
+
+    static HEAD_REPLACEMENT = `<partial-response>
+    <changes>
+        <update id="javax.faces.ViewHead"><![CDATA[
+            <head>
+                <meta blarg="blarg2"></meta>
+                <script type='text/javascript'>
+                    document.getElementById('evalarea1').innerHTML = 'hello from embedded script in replacement head';
+                </script>
+            </head>
+            ]]>
+        </update>
+    </changes>
+</partial-response>
+
+`;
+
 
     static ILLEGAL_RESP = `>>>> xxxx >YYYY-!->>>`;
 }

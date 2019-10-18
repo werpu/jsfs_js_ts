@@ -16,7 +16,6 @@
 
 import {Implementation} from "../../../../../main/typescript/impl/AjaxImpl";
 
-
 declare let jsf: any;
 
 /**
@@ -46,9 +45,11 @@ export module standardInits {
 <div id="id_3"></div>
 <div id="id_4"></div>
 </body>
-</html>
-    `;
+</html>`;
 
+    /**
+     * a page simulating basically a simple jsf form
+     */
     const HTML_FORM_DEFAULT = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -62,9 +63,7 @@ export module standardInits {
     <input type="button" id="input_2" name="input_2" value="input_1_val"></input>
 </form>
 </body>
-</html>
-    
-    `;
+</html>`;
 
     export const STD_XML = `
     <?xml version="1.0" encoding="utf-8"?>
@@ -76,6 +75,11 @@ export module standardInits {
     </partial-response>
     `;
 
+    /**
+     * a page containing a jsf.js input with a new separator char
+     * @param separatorChar
+     * @constructor
+     */
     function HTML_DEFAULT_SEPARATOR_CHAR(separatorChar: string) {
         return `<!DOCTYPE html>
 <html lang="en">
@@ -96,6 +100,13 @@ export module standardInits {
     `;
     }
 
+    /**
+     * This is a standardized small page mockup
+     * testing the various aspects of the protocol
+     * under pure html conditions
+     *
+     * We get the jsf out of the way and bascially simulate what the browser sees
+     */
     export const PROTOCOL_PAGE = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -106,40 +117,58 @@ export module standardInits {
 <h2>protocol testcase1</h2>
 
 <div id="centerDiv">
+
     <h1>Selenium Testprobe for insert update delete and attribute change</h1>
 
     <h2>This test tests all aspects of the protocol, under xhr and iframe conditions</h2>
 
     <div id="testResults">
+        
         <h3>Test Results</h3>
 
         <div id="evalarea1">eval area 1 triggered by eval</div>
+        
         <div id="evalarea2">eval area 2 triggered by update</div>
+        
         <div id="evalarea3">eval area 3 triggered by insert</div>
+        
         <div id="evalarea4">eval area 4 triggered by a click on the changed attributes area</div>
 
         <div id="changesArea">update insert area</div>
+        
         <div id="deleteable">delete area will be deleted once you press the delete button</div>
+        
         <div id="attributeChange">attributes changes area</div>
+    
     </div>
 
     <h2>Call actions via normal ppr</h2>
 
     <form id="form1" action="boog.html">
+    
+        <input type="hidden" id="javax.faces.ViewState" name="javax.faces.ViewState" value="blubbblubblubb"></input>
+    
         <input type="button" id="cmd_eval" value="eval"
                onclick="emitPPR(this, ('undefined' == typeof event)? null: event, 'eval1');"/>
+               
         <input type="button" id="cmd_update_insert" value="update insert"
                onclick="emitPPR(this, ('undefined' == typeof event)? null: event, 'updateinsert1');"/>
+               
         <input type="button" id="cmd_update_insert2" value="update insert second protocol path"
                onclick="emitPPR(this, ('undefined' == typeof event)? null: event, 'updateinsert2');"/>
 
         <input type="button" id="cmd_delete" value="delete"
                onclick="emitPPR(this, ('undefined' == typeof event)? null: event, 'delete1');"/>
+
+        <input type="button" id="cmd_body_replace" value="Replace Body"
+               onclick="emitPPR(this, ('undefined' == typeof event)? null: event, 'body_replace1');"/>
+
         <input type="button" id="cmd_attributeschange" value="change attributes"
                onclick="emitPPR(this, ('undefined' == typeof event)? null: event, 'attributes');"/>
+
         <input type="button" id="cmd_illegalresponse" value="illegal response, error trigger"
                onclick="emitPPR(this, ('undefined' == typeof event)? null: event, 'illegalResponse');"/>
-        
+
         <input type="button" id="cmd_viewstate" value="Viewstate only update trigger"
                onclick="emitPPR(this, ('undefined' == typeof event)? null: event, 'viewstate');"/>
 
@@ -153,6 +182,7 @@ export module standardInits {
 
     <script type="text/javascript">
         document.getElementById("evalarea1").innerHTML = "booga";
+
         var target = "./test.mockup";
 
         function emitPPR(source, event, action, useIframe, formName) {
@@ -161,11 +191,9 @@ export module standardInits {
 
             jsf.ajax.request(/*String|Dom Node*/ source, /*|EVENT|*/ (window.event) ? window.event : event, /*{|OPTIONS|}*/ {op: action});
         }
-
     </script>
 </div>
-</body>
-    `;
+</body>`;
 
     export function basicXML(): Document {
         return new window.DOMParser().parseFromString(STD_XML, "text/xml");
@@ -196,15 +224,73 @@ export module standardInits {
     }
 
     export function protocolPage(withJsf = true): Promise<() => void> {
-        return <any> init(PROTOCOL_PAGE, withJsf);
+        return <any>init(PROTOCOL_PAGE, withJsf);
     }
-
 
     export function defaultSeparatorChar(separatorChar: string, withJsf = true): Promise<() => void> {
         let template = HTML_DEFAULT_SEPARATOR_CHAR(separatorChar);
         return init(template, withJsf);
     }
 
+    /**
+     * we need to manually apply the jsf top the global namespace
+     *
+     * the reason simply is that
+     * we use our typescript dependency system on the tests
+     * which forfeits the global namespace.
+     *
+     * The global namespace is used after the build automatically
+     * by using the window build
+     *
+     * @param data
+     * @param Implementation
+     */
+    let applyJsfToGlobals = function (data, Implementation) {
+        (<any>global).jsf = data.jsf;
+        (<any>global).window.jsf = data.jsf;
+        (<any>global).Implementation = Implementation.Implementation;
+    };
+
+    /**
+     * init the jsdom global
+     * @param clean
+     * @param template
+     */
+    let initJSDOM = async function ( template: string) {
+        // @ts-ignore
+        return import('jsdom-global').then((domIt) => {
+            return domIt(template, {
+                contentType: "text/html",
+                runScripts: "dangerously"
+            });
+        });
+    };
+
+    /**
+     * init the jsf subsystem
+     */
+    let initJSF = async function () {
+        // @ts-ignore
+        return import("../../../../../main/typescript/api/jsf").then((data) => {
+            let Implementation = require("../../../../../main/typescript/impl/AjaxImpl");
+            applyJsfToGlobals(data, Implementation);
+        });
+    };
+
+    /**
+     * lets clean up some old data which might interfere
+     */
+    let resetGlobals = function () {
+        delete (<any>global).jsf;
+        delete (<any>global).Implementation;
+    };
+
+    /**
+     * entry point which initializes the test system with a template and with or without jsf
+     * 
+     * @param template 
+     * @param withJsf
+     */
     async function init(template: string, withJsf = true): Promise<() => void> {
         //let dom2 = new JSDOM(template)
         //return initMyFacesFromDom(dom2);
@@ -212,25 +298,11 @@ export module standardInits {
         //we use jsdom global to fullfill our requirements
         //we need to import dynamically and use awaits
         if (withJsf) {
-            delete (<any>global).jsf;
-            delete (<any>global).Implementation;
+            resetGlobals();
             Implementation.reset();
-
             // @ts-ignore
-            await import('jsdom-global').then((domIt) => {
-                clean = domIt(template, {
-                    contentType: "text/html",
-                    runScripts: "dangerously"
-                });
-            });
-
-            // @ts-ignore
-            await import("../../../../../main/typescript/api/jsf").then((data) => {
-                let Implementation = require("../../../../../main/typescript/impl/AjaxImpl");
-                (<any>global).jsf = data.jsf;
-                (<any>global).window.jsf = data.jsf;
-                (<any>global).Implementation = Implementation.Implementation;
-            });
+            await initJSDOM(template).then(data => clean = data);
+            await initJSF();
         } else {
             // @ts-ignore
             await import('jsdom-global').then((domIt) => {

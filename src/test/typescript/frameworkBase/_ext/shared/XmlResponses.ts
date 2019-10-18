@@ -10,7 +10,6 @@ export class XmlResponses {
     </partial-response>
     `;
 
-
     static UPDATE_INSERT_1 = `
     <partial-response>
     <changes>
@@ -91,6 +90,28 @@ export class XmlResponses {
     </changes>
     </partial-response>
     `;
+
+    static BODY_REPLACEMENT = `<body id="the_id" class="tundra">
+<div id='centerDiv'>
+    <h1>Selenium Test for body change done</h1>
+    <h3>Body replacement test successful</h3>
+    <table>
+        <tbody>
+        <td>
+            <div id="embed_target" class='embed-target'>booga</div>
+        </td>
+        <td></td>
+        </tbody>
+    </table>
+    <script type='text/javascript'>
+    //<![CDATA[
+    var testit = '<test ';  
+    document.getElementById('embed_target').innerHTML = 'hello from embedded script in replacement body'
+    //]]>
+    </script>
+</div>
+</div>
+</body>`;
 
     static ILLEGAL_RESP = `>>>> xxxx >YYYY-!->>>`;
 }

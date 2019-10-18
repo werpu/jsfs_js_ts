@@ -18,7 +18,7 @@ import {Config, DomQuery} from "../../_ext/monadish";
 import {Const} from "../core/Const";
 import {Implementation} from "../AjaxImpl";
 import {Lang} from "../util/Lang";
-import {Stream} from "../../_ext/monadish/Monad";
+import {Stream} from "../../_ext/monadish/Stream";
 
 declare let jsf: any;
 
@@ -31,6 +31,10 @@ declare let jsf: any;
  *
  * From outside we work on a single form configuration
  * which we can use like any other config
+ *
+ * TODO make this code smaller we might have
+ * enough leverage in the streams collectors
+ * api just to do that.
  */
 export class XhrFormData extends Config {
 
@@ -53,7 +57,7 @@ export class XhrFormData extends Config {
     }
 
     private handleFormSource() {
-//encode and append the issuing item if not a partial ids array of ids is passed
+        //encode and append the issuing item if not a partial ids array of ids is passed
         /*
          * Spec. 13.3.1
          * Collect and encode input elements.
@@ -89,7 +93,7 @@ export class XhrFormData extends Config {
             .map(line => line.split(/\=/gi))
             .each(keyVal => {
                 this.apply(keyVal [0]).value = keyVal[1] || null;
-            })
+            });
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -99,7 +103,6 @@ export class XhrFormData extends Config {
     toFormData(): FormData {
         let ret: any = new FormData();
         for (let key in this.value) {
-            //TODO filename in multipart case
             if (this.value.hasOwnProperty(key)) {
                 ret.append(key, this.value[key])
             }
@@ -149,8 +152,7 @@ export class XhrFormData extends Config {
         }
 
         //lets encode the form elements
-        let toMerge = toEncode.encodeFormElement();
-        this.shallowMerge(toMerge);
+        this.shallowMerge(toEncode.encodeFormElement());
     }
 
 }

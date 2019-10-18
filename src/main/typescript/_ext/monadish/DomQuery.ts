@@ -835,25 +835,24 @@ export class DomQuery {
 
     copyAttrs(sourceItem: DomQuery | XMLQuery): DomQuery {
         sourceItem.eachElem((sourceNode: Element) => {
-            for (let cnt = 0; cnt < sourceNode.attributes.length; cnt++) {
-                let value = sourceNode.attributes[cnt].value;
-                if (value) {
-                    this.attr(sourceNode.attributes[cnt].name).value = value;
-                }
+            let attrs: Array<Attr> = Lang.instance.objToArray(sourceNode.attributes);
+            for (let item of attrs) {
+                let value: string = item.value;
+                let name: string = item.name;
 
-                let formElement = <HTMLFormElement>sourceNode;
-
-                //those values are not part of the attributes
-                if ("value" in formElement) {
-                    this.resolveAttributeHolder().value = formElement.value;
+                switch(name) {
+                    case "id":
+                        this.id.value = value;
+                        break;
+                    case "disabled":
+                        this.resolveAttributeHolder("disabled").disabled = value;
+                        break;
+                    case "checked":
+                        this.resolveAttributeHolder("checked").checked = value;
+                        break;
+                    default:
+                        this.attr(name).value = value;
                 }
-                if ("checked" in formElement) {
-                    this.resolveAttributeHolder("checked").checked = formElement.checked || true;
-                }
-                if ("disabled" in formElement) {
-                    this.resolveAttributeHolder("disabled").disabled = formElement.checked || "disabled";
-                }
-
             }
         });
         return this;
@@ -1330,3 +1329,9 @@ export class QueryFormStringCollector implements ICollector<DomQuery, string> {
             .orElse("").value;
     }
 }
+
+/**
+ * abbreviation for DomQuery
+ */
+export const DQ = DomQuery;
+export type DQ = DomQuery;

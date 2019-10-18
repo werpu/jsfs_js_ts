@@ -31,7 +31,7 @@ declare let jsf: any;
  * This is a pattern pretty much for every test which iterates over
  * multiple doms
  */
-export module standardInits {
+export module StandardInits {
 
     export const HTML_DEFAULT = `<!DOCTYPE html>
 <html lang="en">

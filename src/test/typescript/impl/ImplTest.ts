@@ -22,8 +22,8 @@ import * as sinon from 'sinon';
 import {DomQuery} from "../../../main/typescript/_ext/monadish/DomQuery";
 
 import {Const} from "../../../main/typescript/impl/core/Const";
-import {standardInits} from "../frameworkBase/_ext/shared/StandardInits";
-import defaultMyFaces = standardInits.defaultMyFaces;
+import {StandardInits} from "../frameworkBase/_ext/shared/StandardInits";
+import defaultMyFaces = StandardInits.defaultMyFaces;
 
 sinon.reset();
 

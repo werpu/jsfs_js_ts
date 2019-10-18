@@ -15,13 +15,15 @@
  */
 
 import {describe} from "mocha";
-import {standardInits} from "../frameworkBase/_ext/shared/StandardInits";
+import {StandardInits} from "../frameworkBase/_ext/shared/StandardInits";
 import * as sinon from "sinon";
 
-import {DomQuery} from "../../../main/typescript/_ext/monadish";
+
 import {XmlResponses} from "../frameworkBase/_ext/shared/XmlResponses";
 import {expect} from "chai";
-import protocolPage = standardInits.protocolPage;
+import protocolPage = StandardInits.protocolPage;
+import {DQ} from "../../../main/typescript/_ext/monadish/DomQuery";
+import {Optional} from "../../../main/typescript/_ext/monadish";
 
 declare var jsf: any;
 declare var Implementation: any;
@@ -67,29 +69,29 @@ describe('Tests of the various aspects of the response protocol functionality', 
     });
 
     it("must have a simple field updated as well as the viewstate", function (done) {
-        //DomQuery.byId("cmd_update_insert").click();
-        let issuer = DomQuery.byId("cmd_update_insert").click();
+        //DQ.byId("cmd_update_insert").click();
+        let issuer = DQ.byId("cmd_update_insert").click();
 
         this.respond( XmlResponses.UPDATE_INSERT_1);
 
-        expect(DomQuery.byId("changesArea")
+        expect(DQ.byId("changesArea")
             .html()
             .orElse("fail")
             .value.indexOf("update succeeded 1") != -1)
             .to.be.true;
 
-        let pos1 = (<string>DomQuery.byId(document.body).html()
+        let pos1 = (<string>DQ.byId(document.body).html()
             .value).indexOf("insert before succeeded should display before test1");
-        let pos3 = (<string>DomQuery.byId(document.body).html()
+        let pos3 = (<string>DQ.byId(document.body).html()
             .value).indexOf("insert after succeeded should display after test1");
-        let pos2 = (<string>DomQuery.byId(document.body).html()
+        let pos2 = (<string>DQ.byId(document.body).html()
             .value).indexOf("update succeeded 1");
 
         expect(pos1 != -1).to.be.true;
 
         expect(pos1 < pos2 && pos2 < pos3).to.be.true;
 
-        let pos4 = (<string>DomQuery.byId(document.body).html()
+        let pos4 = (<string>DQ.byId(document.body).html()
             .value).indexOf("embedded script at update succeed");
 
         expect(pos4 != -1).to.be.true;
@@ -97,35 +99,51 @@ describe('Tests of the various aspects of the response protocol functionality', 
         done();
     });
 
-    it("must have a full body update", () => {
+    it("must have a full body update", function () {
+        DQ.byId("cmd_body_replace").click();
+        this.respond(XmlResponses.BODY_REPLACEMENT);
 
+        //basic replacement
+        let newBody = DQ.byId(document.body);
+        let newContent = <string>newBody.html().value;
 
+        //standard replacement successful
+        expect(newContent.indexOf("<h3>Body replacement test successful</h3>") != -1,
+            "elements must be updated").to.be.true;
+        //script eval
+        expect(newContent.indexOf(">hello from embedded script in replacement body<") != -1,
+            "embedded scripts must be executed").to.be.true;
 
+        //body attributes
+        expect(newBody.hasClass("tundra"),
+            "attributes must be updated").to.be.true;
+        expect(newBody.id.value == "the_id",
+            "id must be updated").to.be.true;
     });
 
     it("must have a viewstate update to be peformed", function () {
-        DomQuery.byId("cmd_viewstate").click();
+        DQ.byId("cmd_viewstate").click();
 
         this.respond(XmlResponses.VIEWSTATE_1)
-        let viewStateElem = DomQuery.byId('javax.faces.ViewState');
+        let viewStateElem = DQ.byId('javax.faces.ViewState');
         expect(viewStateElem.inputValue.value == "hello world").to.be.true;
     });
 
     it("must have processed a proper delete", function () {
-        DomQuery.byId("cmd_delete").click();
+        DQ.byId("cmd_delete").click();
 
         this.respond( XmlResponses.DELETE_1);
 
-        expect(DomQuery.byId("deletable").isAbsent()).to.be.true;
+        expect(DQ.byId("deletable").isAbsent()).to.be.true;
 
     });
 
     it("must have processed a proper eval of a script given in the eval tag", function () {
-        let issuer = DomQuery.byId("cmd_eval").click();
+        let issuer = DQ.byId("cmd_eval").click();
 
         this.respond( XmlResponses.EVAL_1);
 
-        let resultHTML: string = <string>DomQuery.byId(document.body).html().value;
+        let resultHTML: string = <string>DQ.byId(document.body).html().value;
         expect(resultHTML.indexOf('eval test succeeded') != -1).to.be.true;
 
     });

@@ -90,3 +90,6 @@ export class XMLQuery extends DomQuery {
         return new  XMLQuery(txt);
     }
 }
+
+export const XQ = XMLQuery;
+export type XQ = XMLQuery;

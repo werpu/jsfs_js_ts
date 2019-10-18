@@ -17,11 +17,11 @@
 import {describe, it} from "mocha";
 import * as sinon from "sinon";
 import {expect} from "chai";
-import {standardInits} from "../frameworkBase/_ext/shared/StandardInits";
+import {StandardInits} from "../frameworkBase/_ext/shared/StandardInits";
 import {DomQuery} from "../../../main/typescript/_ext/monadish";
 import {Const} from "../../../main/typescript/impl/core/Const";
-import defaultMyFaces = standardInits.defaultMyFaces;
-import STD_XML = standardInits.STD_XML;
+import defaultMyFaces = StandardInits.defaultMyFaces;
+import STD_XML = StandardInits.STD_XML;
 
 declare var jsf: any;
 declare var Implementation: any;

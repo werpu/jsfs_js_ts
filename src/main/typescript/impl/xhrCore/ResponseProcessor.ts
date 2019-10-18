@@ -50,15 +50,17 @@ export class ResponseProcessor implements IResponseProcessor {
         shadowHTML.runScripts();
     }
 
-    replaceBody(shadowBody: XMLQuery) {
-        let shadowInnerHTML = shadowBody.getIf("*").toString();
+    replaceBody(shadowDocument: XMLQuery) {
+
+        let shadowBody = shadowDocument.getIf(Const.TAG_BODY);
+        let shadowInnerHTML: string = <string> shadowBody.html().value;
 
         let resultingBody = <DomQuery>DomQuery.querySelectorAll(Const.TAG_BODY).html(shadowInnerHTML);
         let updateForms = resultingBody.querySelectorAll(Const.TAG_FORM);
 
-        this.storeForLaterProcessing(updateForms, resultingBody);
-
         resultingBody.copyAttrs(shadowBody);
+
+        this.storeForLaterProcessing(updateForms, resultingBody);
     }
 
     private storeForLaterProcessing(updateForms: DomQuery, resultingBody: DomQuery) {
@@ -203,7 +205,7 @@ export class ResponseProcessor implements IResponseProcessor {
     }
 
     globalEval() {
-        let updateElems = new DomQuery(this.internalContext.getIf(Const.UPDATE_ELEMS).value);
+        let updateElems = new DomQuery(...this.internalContext.getIf(Const.UPDATE_ELEMS).value);
         updateElems.runCss();
         updateElems.runScripts();
     }

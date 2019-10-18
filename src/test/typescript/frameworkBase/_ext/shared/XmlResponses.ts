@@ -75,7 +75,6 @@ export class XmlResponses {
     <changes>
         <error>
             <error-name>Error1</error-name>    
-            <error-message><![CDATA[Error1 Text]]></error-message>    
         </error>
     </changes>
     </partial-response>
@@ -91,27 +90,31 @@ export class XmlResponses {
     </partial-response>
     `;
 
-    static BODY_REPLACEMENT = `<body id="the_id" class="tundra">
-<div id='centerDiv'>
-    <h1>Selenium Test for body change done</h1>
-    <h3>Body replacement test successful</h3>
-    <table>
-        <tbody>
-        <td>
-            <div id="embed_target" class='embed-target'>booga</div>
-        </td>
-        <td></td>
-        </tbody>
-    </table>
-    <script type='text/javascript'>
-    //<![CDATA[
-    var testit = '<test ';  
-    document.getElementById('embed_target').innerHTML = 'hello from embedded script in replacement body'
-    //]]>
-    </script>
-</div>
-</div>
-</body>`;
+    static BODY_REPLACEMENT = `<partial-response>
+    <changes>
+        <update id="javax.faces.ViewBody"><![CDATA[
+            <body id="the_id" class="tundra">
+            <div id='centerDiv'>
+                <h1>Selenium Test for body change done</h1>
+                <h3>Body replacement test successful</h3>
+                <table>
+                    <tbody>
+                    <td>
+                        <div id="embed_target" class='embed-target'>booga</div>
+                    </td>
+                    <td></td>
+                    </tbody>
+                </table>
+                <script type='text/javascript'>
+                    document.getElementById('embed_target').innerHTML = 'hello from embedded script in replacement body';
+                </script>
+            </div>
+            </body>
+            ]]>
+        </update>
+    </changes>
+</partial-response>
+`;
 
     static ILLEGAL_RESP = `>>>> xxxx >YYYY-!->>>`;
 }

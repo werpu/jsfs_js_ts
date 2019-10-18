@@ -322,7 +322,7 @@ export class ValueEmbedder<T> extends Optional<T> implements IValueHolder<T> {
     }
 
     set value(newVal: T) {
-        if(this._value) {
+        if(!this._value) {
             return;
         }
         this._value[this.key] = newVal

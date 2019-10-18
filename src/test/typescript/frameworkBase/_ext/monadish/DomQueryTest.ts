@@ -17,10 +17,10 @@
 import {expect} from 'chai';
 import {describe, it} from 'mocha';
 import {DomQuery} from "../../../../../main/typescript/_ext/monadish/DomQuery";
-import {standardInits} from "../shared/StandardInits";
-import defaultHtml = standardInits.defaultHtml;
-import standardInit = standardInits.standardInit;
-import standardClose = standardInits.standardClose;
+import {StandardInits} from "../shared/StandardInits";
+import defaultHtml = StandardInits.defaultHtml;
+import standardInit = StandardInits.standardInit;
+import standardClose = StandardInits.standardClose;
 
 const jsdom = require("jsdom");
 const {JSDOM} = jsdom;

@@ -15,12 +15,14 @@
  */
 
 import {Lang} from "./Lang";
-import {Config, IValueHolder, Optional, Stream} from "./Monad";
+import {Config, IValueHolder, Optional, Stream, ValueEmbedder} from "./Monad";
 import {XMLQuery} from "./XmlQuery";
 
-export class ElementAttribute implements IValueHolder<string> {
+// @ts-ignore supression needed here due to fromnullable
+export class ElementAttribute extends ValueEmbedder<string> {
 
     constructor(private element: DomQuery, private name: string, private defaultVal: string = null) {
+        super(element, name);
     }
 
     get value(): string {
@@ -28,26 +30,24 @@ export class ElementAttribute implements IValueHolder<string> {
         if (!val.length) {
             return this.defaultVal;
         }
-
         return val[0].getAttribute(this.name);
     }
 
     set value(value: string) {
-
         let val: Element[] = this.element.get(0).orElse(...[]).values;
-
         for (let cnt = 0; cnt < val.length; cnt++) {
             val[cnt].setAttribute(this.name, value);
         }
         val[0].setAttribute(this.name, value);
     }
 
-    isPresent() {
-        return Optional.fromNullable(this.value).isPresent();
+    protected getClass(): any {
+        return ElementAttribute;
     }
 
-    isAbsent() {
-        return Optional.fromNullable(this.value).isAbsent();
+
+    static fromNullable(value?: any, valueKey: string = "value"): ElementAttribute {
+        return new ElementAttribute(value, valueKey);
     }
 
 }
@@ -129,8 +129,8 @@ export class DomQuery {
     /**
      * returns the id of the first element
      */
-    get id(): Optional<string> {
-        return <Optional<string>>this.getAsElem(0).getIf("id");
+    get id(): ValueEmbedder<string> {
+        return new ValueEmbedder<string>(this.getAsElem(0).value, "id");
     }
 
     /**
@@ -164,18 +164,38 @@ export class DomQuery {
     }
 
     /**
-     * convenience method for type
+     * convenience property for type
+     *
+     * returns null in case of no type existing otherwise
+     * the type of the first element
      */
     get type(): Optional<string> {
         return this.getAsElem(0).getIf("type");
     }
 
-    get name(): Optional<string> {
-        return this.getAsElem(0).getIf("name");
+    /**
+     * convenience property for name
+     *
+     * returns null in case of no type existing otherwise
+     * the name of the first element
+     */
+    get name(): ValueEmbedder<string> {
+        return new ValueEmbedder<string>(this.getAsElem(0).value, "name");
     }
 
-    get inputValue(): Optional<string> {
-        return this.getAsElem(0).getIf("value");
+
+    /**
+     * convenience property for value
+     *
+     * returns null in case of no type existing otherwise
+     * the value of the first element
+     */
+    get inputValue(): ValueEmbedder<string> {
+        if(this.getAsElem(0).getIf("value").isPresent()) {
+            return new ValueEmbedder<string>(this.getAsElem(0).value);
+        } else {
+            return <any> ValueEmbedder.absent;
+        }
     }
 
     get elements(): DomQuery {
@@ -192,8 +212,15 @@ export class DomQuery {
             .orElseLazy(() => this.querySelectorAll("input, select, textarea"));
     }
 
+    /**
+     * todo align this api with the rest of the apis
+     */
     get disabled(): boolean {
         return !!this.attr("disabled").value;
+    }
+
+    set disabled(disabled: boolean) {
+        this.attr("disabled").value = disabled+"";
     }
 
     get childNodes(): DomQuery {

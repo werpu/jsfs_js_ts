@@ -248,19 +248,19 @@ export class Optional<T> extends Monad<T> {
     /**
      * any value present
      */
-    isPresent(presentRunnable ?:(val ?: Monad<T>) => void) : boolean {
+    isPresent(presentRunnable ?: (val ?: Monad<T>) => void): boolean {
         let absent = this.isAbsent();
-        if(!absent && presentRunnable) {
+        if (!absent && presentRunnable) {
             presentRunnable.call(this, this)
         }
         return !absent;
     }
 
-    ifPresentLazy(presentRunnable:(val ?: Monad<T>) => void = () => {}): Monad<T> {
+    ifPresentLazy(presentRunnable: (val ?: Monad<T>) => void = () => {
+    }): Monad<T> {
         this.isPresent.call(this, presentRunnable);
         return this;
     }
-
 
     orElse(elseValue: any): Optional<any> {
         if (this.isPresent()) {
@@ -412,7 +412,7 @@ export class Optional<T> extends Monad<T> {
      * but makes life easier, if you want to sacrifice typesafety and refactoring
      * capabilities in typescript
      */
-    private getIfPresent<R>(key: string): Optional<R> {
+    getIfPresent<R>(key: string): Optional<R> {
         if (this.isAbsent()) {
             return this.getClass().absent;
         }
@@ -421,39 +421,98 @@ export class Optional<T> extends Monad<T> {
 
 }
 
+export class ValueEmbedder<T> extends Optional<T> implements IValueHolder<T> {
+
+    /*default value for absent*/
+    static absent =  ValueEmbedder.fromNullable(null);
+
+    protected key: string;
+
+    constructor(rootElem: any, valueKey: string = "value") {
+        super(rootElem);
+
+        this.key = valueKey;
+    }
+
+    get value(): T {
+        return this._value ? <T>this._value[this.key] : null;
+    }
+
+    set value(newVal: T) {
+        if(this._value) {
+            return;
+        }
+        this._value[this.key] = newVal
+    }
+
+    orElse(elseValue: any): Optional<any> {
+        let alternative = {};
+        alternative[this.key] = elseValue;
+        return this.isPresent() ? this : new ValueEmbedder(alternative, this.key);
+    }
+
+    orElseLazy(func: () => any): Optional<any> {
+        if (this.isPresent()) {
+            return this;
+        } else {
+            let alternative = {};
+            alternative[this.key] = func();
+            return new ValueEmbedder(alternative, this.key);
+        }
+    }
+
+    /**
+     * helper to override several implementations in a more fluent way
+     * by having a getClass operation we can avoid direct calls into the constructor or
+     * static methods and do not have to implement several methods which rely on the type
+     * of "this"
+     * @returns {Monadish.Optional}
+     */
+    protected getClass(): any {
+        return ValueEmbedder;
+    }
+
+    static fromNullable<T>(value?: any, valueKey: string = "value"): ValueEmbedder<T> {
+        return new ValueEmbedder(value, valueKey);
+    }
+
+}
+
 /**
  * helper class to allow write access to the config
  * in certain situations (after an apply call)
  */
-class ConfigEntry<T> implements IValueHolder<T> {
-    rootElem: any;
-    key: any;
+class ConfigEntry<T> extends ValueEmbedder<T> {
+
+    /*default value for absent*/
+    static absent = ConfigEntry.fromNullable(null);
+
     arrPos: number;
 
     constructor(rootElem: any, key: any, arrPos?: number) {
-        this.rootElem = rootElem;
-        this.key = key;
+        super(rootElem, key);
+
         this.arrPos = ("undefined" != typeof arrPos) ? arrPos : -1;
     }
 
     get value() {
         if (this.key == "" && this.arrPos >= 0) {
-            return this.rootElem[this.arrPos];
+            return this._value[this.arrPos];
         } else if (this.key && this.arrPos >= 0) {
-            return this.rootElem[this.key][this.arrPos];
+            return this._value[this.key][this.arrPos];
         }
-        return this.rootElem[this.key];
+        return this._value[this.key];
     }
 
     set value(val: T) {
         if (this.key == "" && this.arrPos >= 0) {
-            this.rootElem[this.arrPos] = val;
+            this._value[this.arrPos] = val;
             return;
         } else if (this.key && this.arrPos >= 0) {
-            this.rootElem[this.key][this.arrPos] = val;
+            this._value[this.key][this.arrPos] = val;
             return;
         }
-        this.rootElem[this.key] = val;
+        this._value[this.key] = val;
     }
 }
 
@@ -480,10 +539,10 @@ export class Config extends Optional<any> {
      * simple merge for the root configs
      */
     shallowMerge(other: Config, overwrite = true) {
-        for(let key in other.value) {
-            if(overwrite  && key in this.value) {
+        for (let key in other.value) {
+            if (overwrite && key in this.value) {
                 this.apply(key).value = other.getIf(key).value;
-            } else if(!(key in this.value)) {
+            } else if (!(key in this.value)) {
                 this.apply(key).value = other.getIf(key).value;
             }
         }

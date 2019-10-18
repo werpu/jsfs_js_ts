@@ -300,7 +300,7 @@ export class DomQuery {
             let lowerMarkup = markup.toLowerCase();
             if (lowerMarkup.includes('<!doctype') ||
                 lowerMarkup.includes('<html')  ||
-                lowerMarkup.includes('<head')  ||
+                lowerMarkup.includes('<head')  || //TODO proper regexps here to avoid embedded tags with same element names to be triggered
                 lowerMarkup.includes('<body')) {
                 doc.documentElement.innerHTML = markup;
                 return new DomQuery(doc.documentElement);
@@ -308,7 +308,6 @@ export class DomQuery {
                 doc.body.innerHTML = markup;
                 return new DomQuery(... <Array<Element>> Lang.instance.objToArray(doc.body.childNodes));
             }
-
         }
     }
 

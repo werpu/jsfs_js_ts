@@ -43,11 +43,11 @@ export class XMLQuery extends DomQuery {
             if(xml == null) {
                 return null;
             }
-            let xmlParser: DOMParser = Lang.saveResolveLazy<DOMParser>(
+            let domParser: DOMParser = Lang.saveResolveLazy<DOMParser>(
                 () => new window.DOMParser(),
                 (): DOMParser =>  createIe11DomQueryShim()
             ).value;
-            return xmlParser.parseFromString(xml, docType);
+            return domParser.parseFromString(xml, docType);
         };
 
         if(Lang.instance.isString(rootNode)) {

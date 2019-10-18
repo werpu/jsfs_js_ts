@@ -304,6 +304,18 @@ export class Optional<T> extends Monad<T> {
 
 }
 
+
+// --------------------- From here onwards we break out the sideffects free limits ------------
+
+
+/**
+ * ValueEmbedder is the writeable version
+ * of optional, it basically is a wrappber
+ * around a construct which has a state
+ * and can be written to.
+ *
+ * For the readonly version see Optional
+ */
 export class ValueEmbedder<T> extends Optional<T> implements IValueHolder<T> {
 
     /*default value for absent*/
@@ -362,8 +374,8 @@ export class ValueEmbedder<T> extends Optional<T> implements IValueHolder<T> {
 }
 
 /**
- * helper class to allow write access to the config
- * in certain situations (after an apply call)
+ * specialized value embedder
+ * for our Configuration
  */
 class ConfigEntry<T> extends ValueEmbedder<T> {
 
@@ -530,5 +542,4 @@ export class Config extends Optional<any> {
     }
 }
 
-/*we do not implenent array, maps etc.. monads there are libraries like lodash which have been doing that for ages*/
 

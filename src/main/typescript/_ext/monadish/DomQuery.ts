@@ -18,6 +18,7 @@ import {Lang} from "./Lang";
 import {Config, IValueHolder, Optional, ValueEmbedder} from "./Monad";
 import {XMLQuery} from "./XmlQuery";
 import {ICollector, Stream} from "./Stream";
+import {LazyStream} from "./LazyStream";
 
 // @ts-ignore supression needed here due to fromnullable
 export class ElementAttribute extends ValueEmbedder<string> {
@@ -87,6 +88,7 @@ const DEFAULT_JSF_WHITELIST = (src: string) => {
 export class DomQuery {
 
     static absent = new DomQuery();
+
     private rootNode: Array<Element> = [];
 
     constructor(...rootNode: Array<Element | DomQuery | Document | Array<any> | string>) {
@@ -234,11 +236,27 @@ export class DomQuery {
      * binding into stream
      */
     get stream(): Stream<DomQuery> {
+        return new Stream<DomQuery>(...this.asArray);
+    }
+
+    /**
+     * fetches a lazy stream representation
+     * lazy should be applied if you have some filters etc
+     * in between, this can reduce the number of post filter operations
+     * and ram usage
+     * significantly because the operations are done lazily and stop
+     * once they hit a dead end.
+     */
+    get lazyStream(): LazyStream<DomQuery> {
+        return LazyStream.of(...this.asArray);
+    }
+
+    get asArray(): Array<DomQuery> {
         let ret: Array<DomQuery> = [];
         this.each((item) => {
             ret.push(item);
         });
-        return new Stream<DomQuery>(...ret);
+        return ret;
     }
 
     /**
@@ -299,14 +317,14 @@ export class DomQuery {
             markup = Lang.instance.trim(markup);
             let lowerMarkup = markup.toLowerCase();
             if (lowerMarkup.includes('<!doctype') ||
-                lowerMarkup.includes('<html')  ||
-                lowerMarkup.includes('<head')  || //TODO proper regexps here to avoid embedded tags with same element names to be triggered
+                lowerMarkup.includes('<html') ||
+                lowerMarkup.includes('<head') || //TODO proper regexps here to avoid embedded tags with same element names to be triggered
                 lowerMarkup.includes('<body')) {
                 doc.documentElement.innerHTML = markup;
                 return new DomQuery(doc.documentElement);
             } else {
                 doc.body.innerHTML = markup;
-                return new DomQuery(... <Array<Element>> Lang.instance.objToArray(doc.body.childNodes));
+                return new DomQuery(...<Array<Element>>Lang.instance.objToArray(doc.body.childNodes));
             }
         }
     }

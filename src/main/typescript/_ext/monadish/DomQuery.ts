@@ -119,7 +119,6 @@ export class DomQuery {
      * returns the elements of this dom tree, always as array (keep that in mind)
      */
     get value(): Optional<Element> {
-
         return this.getAsElem(0);
     }
 
@@ -813,9 +812,35 @@ export class DomQuery {
                 if (value) {
                     this.attr(sourceNode.attributes[cnt].name).value = value;
                 }
+
+                let formElement = <HTMLFormElement>sourceNode;
+
+                //those values are not part of the attributes
+                if ("value" in formElement) {
+                    this.resolveAttributeHolder().value = formElement.value;
+                }
+                if ("checked" in formElement) {
+                    this.resolveAttributeHolder("checked").checked = formElement.checked || true;
+                }
+                if ("disabled" in formElement) {
+                    this.resolveAttributeHolder("disabled").disabled = formElement.checked || "disabled";
+                }
+
             }
         });
         return this;
+    }
+
+    /**
+     * resolves an attribute holder compared
+     * @param attr
+     */
+    private resolveAttributeHolder(attrName: string = "value"): HTMLFormElement | any {
+        let ret = [];
+        ret[attrName] = null;
+        return (attrName in this.getAsElem(0).value) ?
+            this.getAsElem(0).value :
+            ret;
     }
 
     /**

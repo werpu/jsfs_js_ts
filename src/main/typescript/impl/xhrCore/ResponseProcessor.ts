@@ -61,7 +61,7 @@ export class ResponseProcessor implements IResponseProcessor {
         resultingBody.copyAttrs(shadowBody);
     }
 
-    private storeForLaterProcessing(updateForms, resultingBody) {
+    private storeForLaterProcessing(updateForms: DomQuery, resultingBody: DomQuery) {
         this.internalContext.apply(Const.UPDATE_FORMS).value.push(updateForms);
         this.internalContext.apply(Const.UPDATE_ELEMS).value.push(resultingBody);
     }
@@ -217,7 +217,7 @@ export class ResponseProcessor implements IResponseProcessor {
             let forms = DomQuery.querySelectorAll(Const.TAG_FORM);
             this.appendViewStateToForms(forms, viewState);
         } else {
-            let updateForms = new DomQuery(this.internalContext.getIf(Const.UPDATE_FORMS).value);
+            let updateForms = new DomQuery(...this.internalContext.getIf(Const.UPDATE_FORMS).value);
             this.appendViewStateToForms(updateForms, viewState);
         }
     }

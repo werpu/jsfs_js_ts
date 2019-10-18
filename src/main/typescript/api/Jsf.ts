@@ -183,7 +183,7 @@ export module jsf {
          *
          */
         export function chain(source, event, ...funcs: Array<Function | string>): boolean {
-            return Implementation.instance.chain(source, event, ...funcs);
+            return Implementation.chain(source, event, ...funcs);
         }
     }
 

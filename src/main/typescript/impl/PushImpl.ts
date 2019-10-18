@@ -4,6 +4,11 @@
 
 //TODO still work in progress
 //this is a 1:1 port for the time being
+import {jsf} from "../api/Jsf";
+
+/**
+ * Implementation class for the push functionality
+ */
 export module PushImpl {
 
     const URL_PROTOCOL = window.location.protocol.replace("http", "ws") + "//";
@@ -47,31 +52,14 @@ export module PushImpl {
         let channelToken = uri.substr(uri.indexOf('?') + 1);
 
         if (!components[socketClientId]) {
-            components[socketClientId] = {
-                'channelToken': channelToken,
-                'onopen': resolveFunction(onopen),
-                'onmessage': resolveFunction(onmessage),
-                'onclose': onclose,
-                'behaviors': behaviorScripts,
-                'autoconnect': autoconnect
-            };
-            if (!clientIdsByTokens[channelToken]) {
-                clientIdsByTokens[channelToken] = [];
-            }
-            clientIdsByTokens[channelToken].push(socketClientId);
-            if (!sockets[channelToken]) {
-                sockets[channelToken] = new Socket(channelToken,
-                    getBaseURL(uri), channel);
-            }
-        }
+         }
 
         if (autoconnect) {
-            this.open(socketClientId);
+            jsf.push.open(socketClientId);
         }
     }
 
     export function open(socketClientId: string) {
-
         getSocket(components[socketClientId]['channelToken']).open();
     }
 
@@ -184,12 +172,11 @@ export module PushImpl {
         }
     }
 
-
     // Private static functions ---------------------------------------------------------------------------------------
 
     function getBaseURL(url: string) {
         if (url.indexOf("://") < 0) {
-            let base = window.location.hostname + ":" + window.location.port
+            let base = window.location.hostname + ":" + window.location.port;
             return URL_PROTOCOL + base + url;
         } else {
             return url;
@@ -212,7 +199,8 @@ export module PushImpl {
         }
     }
 
-    function resolveFunction(fn: Function | string = () => {}): Function {
+    function resolveFunction(fn: Function | string = () => {
+    }): Function {
         return <Function>((typeof fn !== "function") && (fn = window[fn]), fn);
     }
 

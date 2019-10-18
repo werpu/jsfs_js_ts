@@ -115,7 +115,7 @@ export class Implementation {
             }).value;
     }
 
-    chain(source: any, event: Event, ...funcs: EvalFuncs): boolean {
+    static chain(source: any, event: Event, ...funcs: EvalFuncs): boolean {
         for (let cnt = 0; funcs && cnt < funcs.length; cnt++) {
             let ret: any;
             if ("string" != typeof funcs[cnt]) {

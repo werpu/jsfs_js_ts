@@ -104,7 +104,7 @@ describe('Tests of the various aspects of the response protocol functionality', 
     it("must have a viewstate update to be peformed", function () {
         DomQuery.byId("cmd_viewstate").click();
 
-        this.respond(XmlResponses.EVAL_1)
+        this.respond(XmlResponses.VIEWSTATE_1)
         let viewStateElem = DomQuery.byId('javax.faces.ViewState');
         expect(viewStateElem.inputValue.value == "hello world").to.be.true;
     });

@@ -1,4 +1,4 @@
-import {XMLQuery} from "../../_ext/monadish";
+import {DomQuery, XMLQuery} from "../../_ext/monadish";
 
 /**
  * response processor interface
@@ -13,14 +13,14 @@ export interface IResponseProcessor {
      *
      * @param shadowHead
      */
-    replaceHead(shadowHead: XMLQuery): void;
+    replaceHead(shadowHead: XMLQuery | DomQuery): void;
 
     /**
      * replace the body
      *
      * @param shadowBody
      */
-    replaceBody(shadowBody: XMLQuery): void;
+    replaceBody(shadowBody: XMLQuery | DomQuery): void;
 
     /**
      * Leaf Tag eval... process whatever is in the evals cdata block
@@ -80,7 +80,7 @@ export interface IResponseProcessor {
      * with shadowResponse
      * @param shadownResponse
      */
-    replaceViewRoot(shadownResponse: XMLQuery): void;
+    replaceViewRoot(shadownResponse: XMLQuery | DomQuery): void;
 
     /**
      * jsf insert resolution

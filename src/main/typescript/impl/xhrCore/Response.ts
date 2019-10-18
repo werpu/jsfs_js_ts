@@ -148,15 +148,15 @@ export class Response {
         let cdataBlock = node.cDATAAsString;
         switch (node.id.value) {
             case Const.P_VIEWROOT :
-                responseProcessor.replaceViewRoot(XMLQuery.parseXML(cdataBlock.substring(cdataBlock.indexOf("<html"))));
+                responseProcessor.replaceViewRoot(XMLQuery.parseHTML(cdataBlock.substring(cdataBlock.indexOf("<html"))));
                 break;
 
             case Const.P_VIEWHEAD:
-                responseProcessor.replaceHead(XMLQuery.parseXML(cdataBlock));
+                responseProcessor.replaceHead(XMLQuery.parseHTML(cdataBlock));
                 break;
 
             case Const.P_VIEWBODY:
-                responseProcessor.replaceBody(XMLQuery.parseXML(cdataBlock));
+                responseProcessor.replaceBody(XMLQuery.parseHTML(cdataBlock));
                 break;
 
             default://htmlItem replacement

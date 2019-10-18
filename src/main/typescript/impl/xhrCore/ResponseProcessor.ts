@@ -22,8 +22,6 @@ import {Lang} from "../util/Lang";
 import {ResonseDataResolver} from "./ResonseDataResolver";
 import {IResponseProcessor} from "./IResponseProcessor";
 
-
-
 /**
  * Response processor
  *
@@ -42,8 +40,11 @@ export class ResponseProcessor implements IResponseProcessor {
     }
 
     replaceHead(shadowDocument: XMLQuery | DomQuery) {
-        let shadowHead = shadowDocument.getIf(Const.TAG_HEAD);
-        let shadowInnerHTML: string = <string> shadowHead.html().value;
+        let shadowHead = shadowDocument.querySelectorAll(Const.TAG_HEAD);
+        if (!shadowHead.isPresent()) {
+            return;
+        }
+        let shadowInnerHTML: string = <string>shadowHead.html().value;
         let oldHead = DomQuery.querySelectorAll(Const.TAG_HEAD);
 
         //delete all to avoid script and style overlays
@@ -62,8 +63,12 @@ export class ResponseProcessor implements IResponseProcessor {
      */
     replaceBody(shadowDocument: XMLQuery | DomQuery) {
 
-        let shadowBody = shadowDocument.getIf(Const.TAG_BODY);
-        let shadowInnerHTML: string = <string> shadowBody.html().value;
+        let shadowBody = shadowDocument.querySelectorAll(Const.TAG_BODY);
+        if (!shadowBody.isPresent()) {
+            return;
+        }
+
+        let shadowInnerHTML: string = <string>shadowBody.html().value;
 
         let resultingBody = <DomQuery>DomQuery.querySelectorAll(Const.TAG_BODY).html(shadowInnerHTML);
         let updateForms = resultingBody.querySelectorAll(Const.TAG_FORM);
@@ -157,19 +162,20 @@ export class ResponseProcessor implements IResponseProcessor {
         });
     }
 
-    replaceViewRoot(shadownResponse: XMLQuery) {
-
-        let head = new XMLQuery(shadownResponse.byTagName(Const.TAG_HEAD));
-        let body = new XMLQuery(shadownResponse.byTagName(Const.TAG_BODY));
-
-        if (head.isPresent()) {
-            this.replaceHead(head);
-        }
-        if (body.isPresent()) {
-            this.replaceBody(body);
-        }
+    /**
+     *
+     * @param shadownResponse
+     */
+    replaceViewRoot(shadowDocument: XMLQuery) {
+        this.replaceHead(shadowDocument);
+        this.replaceBody(shadowDocument);
     }
 
+    /**
+     * insert handling, either before or after
+     *
+     * @param node
+     */
     insert(node: XMLQuery) {
         //let insertId = node.id; //not used atm
 

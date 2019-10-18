@@ -122,7 +122,7 @@ describe('Tests of the various aspects of the response protocol functionality', 
     });
 
 
-    it("head replace", function () {
+    it("must have a proper workiung head replace", function () {
         DQ.byId("cmd_replace").click();
         this.respond(XmlResponses.HEAD_REPLACEMENT);
 
@@ -130,6 +130,38 @@ describe('Tests of the various aspects of the response protocol functionality', 
         let newHead = DQ.byId(document.head);
         let newBody = DQ.byId(document.body);
         let newContent = <string>newBody.html().value;
+
+        //standard replacement successful
+        //script eval
+        //modern browsers block head replacement but you still can eval
+        expect(newContent.indexOf(">hello from embedded script in replacement head") != -1,
+            "embedded scripts must be executed").to.be.true;
+    });
+
+
+    it("must have a proper workiung  root replace", function () {
+        DQ.byId("cmd_replace").click();
+        this.respond(XmlResponses.VIEW_ROOT_REPLACEMENT);
+
+        //basic replacement
+        let newHead = DQ.byId(document.head);
+        let newBody = DQ.byId(document.body);
+        let newContent = <string>newBody.html().value;
+
+        expect(newHead.isPresent()," head must exist ").to.be.true;
+
+        //standard replacement successful
+        expect(newContent.indexOf("<h3>Body replacement test successful</h3>") != -1,
+            "elements must be updated").to.be.true;
+        //script eval
+        expect(newContent.indexOf(">hello from embedded script in replacement body<") != -1,
+            "embedded scripts must be executed").to.be.true;
+
+        //body attributes
+        expect(newBody.hasClass("tundra"),
+            "attributes must be updated").to.be.true;
+        expect(newBody.id.value == "the_id",
+            "id must be updated").to.be.true;
 
         //standard replacement successful
         //script eval

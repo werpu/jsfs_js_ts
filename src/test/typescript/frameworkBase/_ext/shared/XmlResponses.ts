@@ -117,7 +117,6 @@ export class XmlResponses {
 
 `;
 
-
     static HEAD_REPLACEMENT = `<partial-response>
     <changes>
         <update id="javax.faces.ViewHead"><![CDATA[
@@ -134,6 +133,40 @@ export class XmlResponses {
 
 `;
 
+    static VIEW_ROOT_REPLACEMENT = `<partial-response>
+    <changes>
+        <update id="javax.faces.ViewRoot"><![CDATA[
+            <html>
+            <head>
+                <meta blarg="blarg2"></meta>
+                <script type='text/javascript'>
+                    document.getElementById('evalarea1').innerHTML = 'hello from embedded script in replacement head';
+                </script>
+            </head>
+            <body id="the_id" class="tundra">
+            <div id='centerDiv'>
+                <h1>Test for body change done</h1>
+                <h3>Body replacement test successful</h3>
+                <table>
+                    <tbody>
+                    <td>
+                        <div id="evalarea1">blarg</div>
+                        <div id="embed_target" class='embed-target'>booga</div>
+                    </td>
+                    <td></td>
+                    </tbody>
+                </table>
+                <script type='text/javascript'>
+                    document.getElementById('embed_target').innerHTML = 'hello from embedded script in replacement body';
+                </script>
+            </div>
+            </body>
+            </html>
+            ]]>
+        </update>
+    </changes>
+</partial-response>
+`;
 
     static ILLEGAL_RESP = `>>>> xxxx >YYYY-!->>>`;
 }

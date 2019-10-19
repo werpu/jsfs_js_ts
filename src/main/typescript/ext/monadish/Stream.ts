@@ -2,25 +2,23 @@
  * A small stream implementation
  */
 import {IMonad, IValueHolder, Optional} from "./Monad";
+import {
+    ArrayCollector,
+    ArrayStreamDataSource,
+    FilteredStreamDatasource, FlatMapStreamDataSource,
+    ICollector,
+    IStreamDataSource,
+    MappedStreamDataSource
+} from "./SourcesCollectors";
 
-/**
- * A collector, needs to be implemented
- */
-export interface ICollector<T,S> {
-    /**
-     * this method basically takes a single stream element
-     * and does something with it (collecting it one way or the other
-     * in most cases)
-     *
-     * @param element
-     */
-    collect(element: T);
 
-    /**
-     * the final result after all the collecting is done
-     */
-    finalValue: S;
-}
+export type StreamMapper<T> = (data: T) => IStreamDataSource<any>;
+export type IteratableConsumer<T> = (data: T, pos ?: number) => void | boolean;
+export type Reducable<T> = (val1: T, val2: T) => T;
+export type Matchable<T> = (data: T) => boolean;
+export type Mappable<T,R> = (data: T) => R;
+
+
 
 /**
  * Generic interface defining a stream
@@ -36,7 +34,7 @@ export interface IStream<T> {
      *
      * @param fn the processing function, if it returns false, further processing is stopped
      */
-    onElem(fn: (data: T, pos ?: number) => void | boolean): IStream<T>;
+    onElem(fn: IteratableConsumer<T>): IStream<T>;
 
     /**
      * Iterate over all elements in the stream and do some processing via fn
@@ -44,13 +42,13 @@ export interface IStream<T> {
      * @param fn takes a single element and if it returns false
      * then further processing is stopped
      */
-    each(fn: (data: T, pos ?: number) => void | boolean): void;
+    each(fn: IteratableConsumer<T>): void;
 
     /**
      * maps a single element into another via fn
      * @param fn function which takes one element in and returns another
      */
-    map<R>(fn?: (data: T) => R): IStream<R>;
+    map<R>(fn?: Mappable<T, R>): IStream<R>;
 
     /**
      * Takes an element in and returns a set of something
@@ -58,7 +56,7 @@ export interface IStream<T> {
      *
      * @param fn
      */
-    flatMap<R>(fn?: (data: T) => IStream<R>): IStream<any>;
+    flatMap<R>(fn?: StreamMapper<T>): IStream<R>;
 
     /**
      * filtering, takes an element in and is processed by fn.
@@ -67,7 +65,7 @@ export interface IStream<T> {
      *
      * @param fn
      */
-    filter(fn?: (data: T) => boolean): IStream<T>;
+    filter(fn?:  Matchable<T>): IStream<T>;
 
     /**
      * functional reduce... takes two elements in the stream and reduces to
@@ -77,7 +75,7 @@ export interface IStream<T> {
      * @param startVal an optional starting value, if provided the the processing starts with this element
      * and further goes down into the stream, if not, then the first two elements are taken as reduction starting point
      */
-    reduce(fn: (val1: T, val2: T) => T, startVal: T): Optional<T>;
+    reduce(fn: Reducable<T>, startVal: T): Optional<T>;
 
     /**
      * returns the first element in the stream is given as Optional
@@ -95,21 +93,21 @@ export interface IStream<T> {
      *
      * @param fn
      */
-    anyMatch(fn: (data: T) => boolean): boolean;
+    anyMatch(fn:  Matchable<T>): boolean;
 
     /**
      * returns true if all elmements produce true on a call to fn(element)
      *
      * @param fn
      */
-    allMatch(fn: (data: T) => boolean): boolean;
+    allMatch(fn:  Matchable<T>): boolean;
 
     /**
      * returns true if no elmements produce true on a call to fn(element)
      *
      * @param fn
      */
-    noneMatch(fn: (data: T) => boolean): boolean;
+    noneMatch(fn:  Matchable<T>): boolean;
 
     /**
      * Collect the elements with a collector given
@@ -155,13 +153,22 @@ export class Stream<T> implements IMonad<T, Stream<any>>, IValueHolder<Array<T>>
         return new Stream<T>(...data);
     }
 
+    static ofDataSource<T>(dataSource: IStreamDataSource<T>) {
+        let value: T[] = [];
+        while (dataSource.hasNext()) {
+            value.push(dataSource.next());
+        }
+
+        return new Stream(...value);
+    }
+
     limits(end: number): Stream<T> {
         this._limits = end;
         return this;
     }
 
     onElem(fn: (data: T, pos ?: number) => void | boolean): Stream<T> {
-        for (let cnt = 0; cnt < this.value.length && (this._limits == -1 || cnt < this._limits); cnt++) {
+        for (let cnt = 0; cnt < this.value.length && (this._limits == -1 || cnt < this._limits); cnt++) {
             if (fn(this.value[cnt], cnt) === false) {
                 break;
             }
@@ -190,13 +197,13 @@ export class Stream<T> implements IMonad<T, Stream<any>>, IValueHolder<Array<T>>
      * all values are flattened when accessed anyway, so there is no need to call this methiod
      */
 
-    flatMap<R>(fn: (data: T) => R): Stream<any> {
+    flatMap<IStreamDataSource>(fn: (data: T) => IStreamDataSource): Stream<any> {
         let ret = [];
-        this.each( item => {
+        this.each(item => {
             let strmR: any = fn(item);
-            ret = ret.concat(... strmR.value);
+            ret = ret.concat(...strmR.value);
         });
-        return <Stream<any>> Stream.of(... ret);
+        return <Stream<any>>Stream.of(...ret);
     }
 
     filter(fn?: (data: T) => boolean): Stream<T> {
@@ -209,11 +216,11 @@ export class Stream<T> implements IMonad<T, Stream<any>>, IValueHolder<Array<T>>
         return new Stream<T>(...res);
     }
 
-    reduce(fn: (val1: T, val2: T) => T, startVal: T = null): Optional<T> {
+    reduce(fn: Reducable<T>, startVal: T = null): Optional<T> {
         let offset = startVal != null ? 0 : 1;
         let val1 = startVal != null ? startVal : this.value.length ? this.value[0] : null;
 
-        for (let cnt = offset; cnt < this.value.length && (this._limits == -1 || cnt < this._limits); cnt++) {
+        for (let cnt = offset; cnt < this.value.length && (this._limits == -1 || cnt < this._limits); cnt++) {
             val1 = fn(val1, this.value[cnt]);
         }
         return Optional.fromNullable(val1);
@@ -230,8 +237,8 @@ export class Stream<T> implements IMonad<T, Stream<any>>, IValueHolder<Array<T>>
         return Optional.fromNullable(length ? this.value[length - 1] : null);
     }
 
-    anyMatch(fn: (data: T) => boolean): boolean {
-        for (let cnt = 0; cnt < this.value.length && (this._limits == -1 || cnt < this._limits); cnt++) {
+    anyMatch(fn: Matchable<T>): boolean {
+        for (let cnt = 0; cnt < this.value.length && (this._limits == -1 || cnt < this._limits); cnt++) {
             if (fn(this.value[cnt])) {
                 return true;
             }
@@ -239,7 +246,7 @@ export class Stream<T> implements IMonad<T, Stream<any>>, IValueHolder<Array<T>>
         return false;
     }
 
-    allMatch(fn: (data: T) => boolean): boolean {
+    allMatch(fn:  Matchable<T>): boolean {
         if (!this.value.length) {
             return false;
         }
@@ -252,7 +259,7 @@ export class Stream<T> implements IMonad<T, Stream<any>>, IValueHolder<Array<T>>
         return matches == this.value.length;
     }
 
-    noneMatch(fn: (data: T) => boolean): boolean {
+    noneMatch(fn:  Matchable<T>): boolean {
         let matches = 0;
         for (let cnt = 0; cnt < this.value.length; cnt++) {
             if (!fn(this.value[cnt])) {
@@ -267,7 +274,6 @@ export class Stream<T> implements IMonad<T, Stream<any>>, IValueHolder<Array<T>>
         return collector.finalValue;
     }
 
-
     //-- internally exposed methods needed for the interconnectivity
     hasNext() {
         let isLimitsReached = this._limits != -1 && this.pos >= this._limits - 1;
@@ -276,8 +282,8 @@ export class Stream<T> implements IMonad<T, Stream<any>>, IValueHolder<Array<T>>
             isEndOfArray);
     }
 
-    next():T {
-        if(!this.hasNext()) {
+    next(): T {
+        if (!this.hasNext()) {
             return null;
         }
         this.pos++;
@@ -290,18 +296,200 @@ export class Stream<T> implements IMonad<T, Stream<any>>, IValueHolder<Array<T>>
 
 }
 
+
 /**
- * For the time being we only need one collector
- * a collector which collects a stream back into arrays
+ * Lazy implementation of a Stream
+ * The idea is to connect the intermediate
+ * streams as datasources like a linked list
+ * with reverse referencing
+ * and for special operations like filtering
+ * flatmapping have intermediate datasources in the list
+ * with specialized functions.
+ *
+ * That way we can have a lazy evaluating stream
+ *
+ * So on the endpoints side, every call to get an element
+ * triggers a chain of operations to the parents with then
+ * perform a set of monadic operations until the data hits
+ * the endpoint
  */
-export class ArrayCollector<S> implements ICollector<S, Array<S>>{
-    private data: Array<S> = [];
+export class LazyStream<T> implements IStreamDataSource<T>, IStream<T>, IMonad<T, LazyStream<any>> {
 
-    collect(element: S) {
-        this.data.push(element);
+    protected parent: IStreamDataSource<T>;
+
+    pos = -1;
+    _limits = -1;
+
+    static of<T>(...values: Array<T>): LazyStream<T> {
+        return new LazyStream<T>(new ArrayStreamDataSource(...values));
     }
 
-    get finalValue(): Array<S> {
-        return this.data;
+    static ofStreamDataSource<T>(value: IStreamDataSource<T>): LazyStream<T> {
+        return new LazyStream(value);
     }
+
+    constructor(parent: IStreamDataSource<T>) {
+        this.parent = parent;
+
+    }
+
+    hasNext(): boolean {
+        if (this.isOverLimits()) {
+            return false;
+        }
+
+        return this.parent.hasNext();
+    }
+
+    next(): T {
+        let next = this.parent.next();
+        // @ts-ignore
+        this.pos++;
+        return next;
+    }
+
+    reset(): void {
+        this.parent.reset();
+        this.pos = 0;
+        this._limits = -1;
+    }
+
+    nextFilter(fn:  Matchable<T>): T {
+        if (this.hasNext()) {
+            let newVal: T = this.next();
+            if (!fn(newVal)) {
+                return this.nextFilter(fn);
+            }
+            return <T>newVal;
+        }
+        return null;
+    }
+
+    limits(max: number): LazyStream<T> {
+        this._limits = max;
+        return this;
+    }
+
+    //main stream methods
+    collect(collector: ICollector<T, any>): any {
+        while (this.hasNext()) {
+            let t = this.next();
+            collector.collect(<T>t);
+        }
+        return collector.finalValue;
+    }
+
+    onElem(fn: IteratableConsumer<T>): LazyStream<T> {
+        return new LazyStream(new MappedStreamDataSource((el) => {
+            if(fn(el, this.pos) === false) {
+                this.stop();
+            }
+            return el;
+        }, this));
+    }
+
+    filter(fn:  Matchable<T>): LazyStream<T> {
+        return <LazyStream<T>> new LazyStream<T>(new FilteredStreamDatasource<any>(fn, this));
+    }
+
+    map<R>(fn:  Mappable<T, R>): LazyStream<any> {
+        return new LazyStream(new MappedStreamDataSource(fn, this));
+    }
+
+
+    flatMap<StreamProducer>(fn: StreamProducer): LazyStream<any> {
+        return new LazyStream<any>(new FlatMapStreamDataSource(<any>fn, this));
+    }
+
+    //endpoint
+    each(fn:  IteratableConsumer<T>) {
+        while (this.hasNext()) {
+            if (fn(this.next()) === false) {
+                this.stop();
+            }
+        }
+    }
+
+    reduce(fn: Reducable<T>, startVal: T = null): Optional<T> {
+        if (!this.hasNext()) {
+            return Optional.absent;
+        }
+        let value1 = null;
+        let value2 = null;
+        if (startVal != null) {
+            value1 = startVal;
+            value2 = this.next();
+        } else {
+            value1 = this.next();
+            if (!this.hasNext()) {
+                return Optional.fromNullable(value1);
+            }
+            value2 = this.next();
+        }
+        value1 = fn(value1, value2);
+        while (this.hasNext()) {
+            value2 = this.next();
+            value1 = fn(value1, value2);
+        }
+
+        return Optional.fromNullable(value1);
+    }
+
+    last(): Optional<T> {
+        if (!this.hasNext()) {
+            return Optional.absent;
+        }
+        return this.reduce((el1, el2) => el2);
+    }
+
+    first(): Optional<T> {
+        this.reset();
+        if (!this.hasNext()) {
+            return Optional.absent;
+        }
+        return Optional.fromNullable(this.next());
+    }
+
+    anyMatch(fn:  Matchable<T>): boolean {
+        while (this.hasNext()) {
+            if (fn(this.next())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    allMatch(fn:  Matchable<T>): boolean {
+        while (this.hasNext()) {
+            if (!fn(this.next())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    noneMatch(fn:  Matchable<T>): boolean {
+        while (this.hasNext()) {
+            if (fn(this.next())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    get value(): Array<T> {
+        return this.collect(new ArrayCollector<T>());
+    }
+
+    private stop() {
+        this.pos = this._limits + 1000000000;
+    }
+
+    private isOverLimits() {
+        return this._limits != -1 && this.pos >= this._limits - 1;
+    }
+
+
 }
+
+

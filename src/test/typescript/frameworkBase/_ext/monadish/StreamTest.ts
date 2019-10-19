@@ -1,8 +1,6 @@
 import {describe} from "mocha";
 import {expect} from "chai";
-import {Stream} from "../../../../../main/typescript/ext/monadish/Stream";
-import {LazyStream} from "../../../../../main/typescript/ext/monadish/LazyStream";
-
+import {Stream, LazyStream} from "../../../../../main/typescript/ext/monadish/Stream";
 
 describe('early stream tests', () => {
 
@@ -106,10 +104,9 @@ describe('early stream tests', () => {
 
     })
 
-
     it("must correctly lazily flatmap", function () {
 
-        let resultingArr = LazyStream.of<number>(...this.probe).flatMap((data) => LazyStream.of(...[data,2])).value;
+        let resultingArr = LazyStream.of<number>(...this.probe).flatMap((data) => LazyStream.of(...[data, 2])).value;
 
         expect(resultingArr.length == 10).to.be.true;
         expect(resultingArr.join(",")).to.eq("1,2,2,2,3,2,4,2,5,2");
@@ -117,16 +114,15 @@ describe('early stream tests', () => {
 
     it("must correctly early flatmap", function () {
 
-        let resultingArr = Stream.of<number>(...this.probe).flatMap((data) => Stream.of(...[data,2])).value;
+        let resultingArr = Stream.of<number>(...this.probe).flatMap((data) => Stream.of(...[data, 2])).value;
 
         expect(resultingArr.length == 10).to.be.true;
         expect(resultingArr.join(",")).to.eq("1,2,2,2,3,2,4,2,5,2");
     });
 
-
     it("must correctly flatmap intermixed", function () {
 
-        let resultingArr = LazyStream.of<number>(...this.probe).flatMap((data) => Stream.of(...[data,2])).value;
+        let resultingArr = LazyStream.of<number>(...this.probe).flatMap((data) => Stream.of(...[data, 2])).value;
 
         expect(resultingArr.length == 10).to.be.true;
         expect(resultingArr.join(",")).to.eq("1,2,2,2,3,2,4,2,5,2");
@@ -134,7 +130,7 @@ describe('early stream tests', () => {
 
     it("must correctly flatmap intermixed2", function () {
 
-        let resultingArr = Stream.of<number>(...this.probe).flatMap((data) => LazyStream.of(...[data,2])).value;
+        let resultingArr = Stream.of<number>(...this.probe).flatMap((data) => LazyStream.of(...[data, 2])).value;
 
         expect(resultingArr.length == 10).to.be.true;
         expect(resultingArr.join(",")).to.eq("1,2,2,2,3,2,4,2,5,2");

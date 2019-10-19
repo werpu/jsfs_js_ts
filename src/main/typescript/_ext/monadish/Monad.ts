@@ -119,7 +119,7 @@ export class Optional<T> extends Monad<T> {
         return this._value;
     }
 
-     static fromNullable<T>(value?: T): Optional<T> {
+    static fromNullable<T>(value?: T): Optional<T> {
         return new Optional(value);
     }
 

@@ -183,7 +183,7 @@ export class LazyStream<T> implements IStreamDataSource<T>, IStream<T>, IMonad<T
             return false;
         }
 
-       return this.parent.hasNext();
+        return this.parent.hasNext();
     }
 
     next(): T {
@@ -227,7 +227,7 @@ export class LazyStream<T> implements IStreamDataSource<T>, IStream<T>, IMonad<T
     onElem(fn: (data: T, pos ?: number) => boolean | void): LazyStream<T> {
         return new LazyStream(new MappedStreamDataSource((el) => {
             if(fn(el, this.pos) === false) {
-               this.stop();
+                this.stop();
             }
             return el;
         }, this));

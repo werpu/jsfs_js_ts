@@ -306,7 +306,7 @@ export class Optional<T> extends Monad<T> {
      * elvis like typesafe functional save resolver
      * a typesafe option for getIfPresent
      *
-     * usage myOptional.resolve(value => value.subAttr.subAttr2)
+     * usage myOptional.resolve(value => value.subAttr.subAttr2).orElseLazy(....)
      * if this is resolvable without any errors an Optional with the value is returned
      * if not, then an Optional absent is returned, also if you return Optional absent
      * it is flatmapped into absent

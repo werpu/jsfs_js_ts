@@ -23,7 +23,7 @@ describe('early stream tests', () => {
             sum = sum + data;
         });
         expect(sum).to.eq(15);
-    })
+    });
 
     it("must iterate filtered", function () {
         let stream = Stream.of<number>(...this.probe);
@@ -39,7 +39,7 @@ describe('early stream tests', () => {
             sum = sum + data;
         });
         expect(sum).to.eq(10);
-    })
+    });
 
     it("must onElem", function () {
         let stream = Stream.of<number>(...this.probe);
@@ -85,7 +85,7 @@ describe('early stream tests', () => {
         expect(first).to.eq(1);
         expect(last).to.eq(4);
 
-    })
+    });
 
     it("must have a correct limits", function () {
         let cnt = 0;
@@ -96,7 +96,7 @@ describe('early stream tests', () => {
         expect(last).to.eq(2);
         expect(cnt).to.eq(2);
 
-    })
+    });
 
     it("must have a correct lazy limits", function () {
         let last = LazyStream.of<number>(...this.probe).filter((data) => data != 5).limits(2).onElem((data) => {
@@ -105,6 +105,23 @@ describe('early stream tests', () => {
 
         expect(last).to.eq(2);
 
-    })
+    });
+
+    it("must correctly flatmap", function () {
+
+        let resultingArr = LazyStream.of<number>(...this.probe).flatMap((data) => LazyStream.of(...[data,2])).value;
+
+        expect(resultingArr.length == 10).to.be.true;
+        expect(resultingArr.join(",")).to.eq("1,2,2,2,3,2,4,2,5,2");
+    });
+
+    it("must correctly flatmap intermixed", function () {
+
+        let resultingArr = LazyStream.of<number>(...this.probe).flatMap((data) => Stream.of(...[data,2])).value;
+
+        expect(resultingArr.length == 10).to.be.true;
+        expect(resultingArr.join(",")).to.eq("1,2,2,2,3,2,4,2,5,2");
+    });
+
 
 });

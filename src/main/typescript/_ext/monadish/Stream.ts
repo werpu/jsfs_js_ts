@@ -66,6 +66,9 @@ export class Stream<T> implements IMonad<T, Stream<any>>, IValueHolder<Array<T>>
     value: Array<T>;
     _limits = -1;
 
+    private pos = 0;
+
+
     constructor(...value: T[]) {
         this.value = value;
     }
@@ -73,6 +76,32 @@ export class Stream<T> implements IMonad<T, Stream<any>>, IValueHolder<Array<T>>
     static of<T>(...data: Array<T>): Stream<T> {
         return new Stream<T>(...data);
     }
+
+    /**
+     * implementations for intermixing
+     */
+
+
+
+    hasNext() {
+        let isLimitsReached = this._limits != -1 && this.pos >= this._limits - 1;
+        let isEndOfArray = this.pos >= this.value.length - 1;
+        return !(isLimitsReached ||
+            isEndOfArray);
+    }
+
+    next():T {
+        if(!this.hasNext()) {
+            return null;
+        }
+        this.pos++;
+        return this.value[this.pos];
+    }
+
+    reset() {
+        this.pos = 0;
+    }
+
 
     limits(end: number): Stream<T> {
         this._limits = end;

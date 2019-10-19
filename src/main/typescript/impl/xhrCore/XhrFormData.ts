@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import {Config, DomQuery} from "../../_ext/monadish";
+import {Config, DomQuery} from "../../ext/monadish";
 import {Const} from "../core/Const";
 import {Implementation} from "../AjaxImpl";
 import {Lang} from "../util/Lang";
-import {Stream} from "../../_ext/monadish/Stream";
+import {Stream} from "../../ext/monadish/Stream";
 
 declare let jsf: any;
 

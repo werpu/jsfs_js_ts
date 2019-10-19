@@ -1,7 +1,7 @@
 import {describe} from "mocha";
 import {expect} from "chai";
-import {Stream} from "../../../../../main/typescript/_ext/monadish/Stream";
-import {LazyStream} from "../../../../../main/typescript/_ext/monadish/LazyStream";
+import {Stream} from "../../../../../main/typescript/ext/monadish/Stream";
+import {LazyStream} from "../../../../../main/typescript/ext/monadish/LazyStream";
 
 
 describe('early stream tests', () => {

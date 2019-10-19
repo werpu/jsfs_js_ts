@@ -16,12 +16,12 @@
 
 import {Lang} from "../util/Lang";
 import {AsyncRunnable} from "../util/AsyncRunnable";
-import {Config} from "../../_ext/monadish/Monad";
+import {Config} from "../../ext/monadish/Monad";
 import {Implementation} from "../AjaxImpl";
-import {DomQuery} from "../../_ext/monadish/DomQuery";
+import {DomQuery} from "../../ext/monadish/DomQuery";
 import {Const} from "../core/Const";
 import {XhrFormData} from "./XhrFormData";
-import {XMLQuery} from "../../_ext/monadish";
+import {XMLQuery} from "../../ext/monadish";
 
 /**
  * JSFed XHR Request Wrapper

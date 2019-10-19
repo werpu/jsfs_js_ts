@@ -16,7 +16,7 @@
 
 import {expect} from 'chai';
 import {describe, it} from 'mocha';
-import {Config, Optional} from "../../../../../main/typescript/_ext/monadish/Monad";
+import {Config, Optional} from "../../../../../main/typescript/ext/monadish/Monad";
 
 //TODO saveResolveTest
 describe('optional tests', () => {

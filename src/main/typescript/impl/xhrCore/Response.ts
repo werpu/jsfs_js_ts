@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import {Config} from "../../_ext/monadish/Monad";
-import {XMLQuery} from "../../_ext/monadish/XmlQuery";
+import {Config} from "../../ext/monadish/Monad";
+import {XMLQuery} from "../../ext/monadish/XmlQuery";
 import {Const} from "../core/Const";
 import {ResponseProcessor} from "./ResponseProcessor";
 import {ResonseDataResolver} from "./ResonseDataResolver";
 import {IResponseProcessor} from "./IResponseProcessor";
-import {DomQuery} from "../../_ext/monadish";
+import {DomQuery} from "../../ext/monadish";
 
 export class Response {
 

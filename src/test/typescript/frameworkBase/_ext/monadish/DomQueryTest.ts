@@ -16,7 +16,7 @@
 
 import {expect} from 'chai';
 import {describe, it} from 'mocha';
-import {DomQuery} from "../../../../../main/typescript/_ext/monadish/DomQuery";
+import {DomQuery} from "../../../../../main/typescript/ext/monadish/DomQuery";
 import {StandardInits} from "../shared/StandardInits";
 import defaultHtml = StandardInits.defaultHtml;
 import standardInit = StandardInits.standardInit;

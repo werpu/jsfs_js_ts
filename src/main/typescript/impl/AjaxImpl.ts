@@ -20,8 +20,8 @@ import {ErrorData, EventData, IListener, ListenerQueue} from "./util/ListenerQue
 import {Response} from "./xhrCore/Response";
 import {XhrRequest} from "./xhrCore/XhrRequest";
 import {AsynchronouseQueue} from "./util/AsyncQueue";
-import {Config, Optional} from "../_ext/monadish/Monad";
-import {DomQuery} from "../_ext/monadish/DomQuery";
+import {Config, Optional} from "../ext/monadish/Monad";
+import {DomQuery} from "../ext/monadish/DomQuery";
 
 import {Const} from "./core/Const";
 import {Assertions} from "./util/Assertions";

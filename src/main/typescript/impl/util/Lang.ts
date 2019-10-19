@@ -19,18 +19,18 @@
 
 import {LangTypes} from "./LangTypes";
 
-import {Lang as LangBase} from "../../_ext/monadish/Lang";
+import {Lang as LangBase} from "../../ext/monadish/Lang";
 
 import {Messages_de} from "../i18n/Messages_de";
 import {Messages_es} from "../i18n/Messages_es";
 import {Messages_fr} from "../i18n/Messages_fr";
 import {Messages_it} from "../i18n/Messages_it";
 import {Messages} from "../i18n/Messages";
-import {Config, Optional} from "../../_ext/monadish/Monad";
-import {CancellablePromise} from "../../_ext/monadish/Promise";
+import {Config, Optional} from "../../ext/monadish/Monad";
+import {CancellablePromise} from "../../ext/monadish/Promise";
 import JSFErrorData = LangTypes.JSFErrorData;
 import MyFacesErrorData = LangTypes.MyFacesErrorData;
-import {DomQuery} from "../../_ext/monadish";
+import {DomQuery} from "../../ext/monadish";
 
 export class Lang {
 

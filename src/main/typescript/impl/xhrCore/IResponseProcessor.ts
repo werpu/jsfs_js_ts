@@ -1,4 +1,4 @@
-import {DomQuery, XMLQuery} from "../../_ext/monadish";
+import {DomQuery, XMLQuery} from "../../ext/monadish";
 
 /**
  * response processor interface

@@ -5,7 +5,7 @@ let libraryTarget = process.env.TARGET_TYPE || "window";
 
 const config: webpack.Configuration =  {
     context: __dirname,
-    entry: "./src/main/typescript/api/jsf.ts",
+    entry: "./src/main/typescript/api/Jsf.ts",
     output: {
         path: path.resolve(__dirname, './dist/'+libraryTarget),
         libraryTarget: libraryTarget,

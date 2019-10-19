@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Config, DomQuery, XMLQuery} from "../../_ext/monadish";
+import {Config, DomQuery, XMLQuery} from "../../ext/monadish";
 import {Const} from "../core/Const";
 import {Assertions} from "../util/Assertions";
 

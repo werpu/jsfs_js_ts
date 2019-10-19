@@ -16,7 +16,7 @@
 
 import {expect} from 'chai';
 import {describe, it} from 'mocha';
-import {Lang} from "../../../../../main/typescript/_ext/monadish/Lang";
+import {Lang} from "../../../../../main/typescript/ext/monadish/Lang";
 
 const jsdom = require("jsdom");
 const {JSDOM} = jsdom;

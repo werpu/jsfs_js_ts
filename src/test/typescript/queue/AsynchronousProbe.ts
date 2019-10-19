@@ -19,7 +19,7 @@
  * the asynchronous behavior needs to be in an asynchronus runnable
  */
 import {AsyncRunnable} from "../../../main/typescript/impl/util/AsyncRunnable";
-import {IValueHolder} from "../../../main/typescript/_ext/monadish/Monad";
+import {IValueHolder} from "../../../main/typescript/ext/monadish/Monad";
 
 export class ProbeClass implements AsyncRunnable<Promise<any>>, IValueHolder<Promise<any>> {
 

@@ -22,8 +22,8 @@ import * as sinon from "sinon";
 import {XmlResponses} from "../frameworkBase/_ext/shared/XmlResponses";
 import {expect} from "chai";
 import protocolPage = StandardInits.protocolPage;
-import {DQ} from "../../../main/typescript/_ext/monadish/DomQuery";
-import {Optional} from "../../../main/typescript/_ext/monadish";
+import {DQ} from "../../../main/typescript/ext/monadish/DomQuery";
+import {Optional} from "../../../main/typescript/ext/monadish";
 
 declare var jsf: any;
 declare var Implementation: any;

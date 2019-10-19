@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import {Config} from "../../../main/typescript/_ext/monadish/Monad";
+import {Config} from "../../../main/typescript/ext/monadish/Monad";
 import {describe, it} from 'mocha';
 import {expect} from 'chai';
 import * as sinon from 'sinon';
 
-import {DomQuery} from "../../../main/typescript/_ext/monadish/DomQuery";
+import {DomQuery} from "../../../main/typescript/ext/monadish/DomQuery";
 
 import {Const} from "../../../main/typescript/impl/core/Const";
 import {StandardInits} from "../frameworkBase/_ext/shared/StandardInits";

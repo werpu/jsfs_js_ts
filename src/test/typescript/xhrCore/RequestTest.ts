@@ -18,7 +18,7 @@ import {describe, it} from "mocha";
 import * as sinon from "sinon";
 import {expect} from "chai";
 import {StandardInits} from "../frameworkBase/_ext/shared/StandardInits";
-import {DomQuery} from "../../../main/typescript/_ext/monadish";
+import {DomQuery} from "../../../main/typescript/ext/monadish";
 import {Const} from "../../../main/typescript/impl/core/Const";
 import defaultMyFaces = StandardInits.defaultMyFaces;
 import STD_XML = StandardInits.STD_XML;

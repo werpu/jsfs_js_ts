@@ -1,4 +1,4 @@
-import {Config, DomQuery, XMLQuery} from "../../_ext/monadish";
+import {Config, DomQuery, XMLQuery} from "../../ext/monadish";
 import {Const} from "../core/Const";
 import {Implementation} from "../AjaxImpl";
 import {Lang} from "../util/Lang";

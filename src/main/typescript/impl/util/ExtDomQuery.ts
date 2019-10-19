@@ -1,5 +1,5 @@
-import {DomQuery} from "../../_ext/monadish/DomQuery";
-import {Config, IValueHolder, Optional} from "../../_ext/monadish/Monad";
+import {DomQuery} from "../../ext/monadish/DomQuery";
+import {Config, IValueHolder, Optional} from "../../ext/monadish/Monad";
 import {Const} from "../core/Const";
 
 declare let window: any;

@@ -119,7 +119,7 @@ export class Optional<T> extends Monad<T> {
         return this._value;
     }
 
-    static fromNullable<T>(value?: T): Optional<T> {
+     static fromNullable<T>(value?: T): Optional<T> {
         return new Optional(value);
     }
 
@@ -300,6 +300,29 @@ export class Optional<T> extends Monad<T> {
             return this.getClass().absent;
         }
         return this.getClass().fromNullable(this.value[key]).flatMap();
+    }
+
+    /**
+     * elvis like typesafe functional save resolver
+     * a typesafe option for getIfPresent
+     *
+     * usage myOptional.resolve(value => value.subAttr.subAttr2)
+     * if this is resolvable without any errors an Optional with the value is returned
+     * if not, then an Optional absent is returned, also if you return Optional absent
+     * it is flatmapped into absent
+     *
+     * @param resolver the resolver function, can throw any arbitrary errors, int  the error case
+     * the resolution goes towards absent
+     */
+    resolve<V>(resolver: (item: T) => V): Optional<V> {
+        if(this.isAbsent()) {
+            return Optional.absent;
+        }
+        try {
+            return Optional.fromNullable(resolver(this.value))
+        } catch(e) {
+            return Optional.absent;
+        }
     }
 
 }

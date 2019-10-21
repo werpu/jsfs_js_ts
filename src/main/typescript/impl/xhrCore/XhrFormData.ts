@@ -157,4 +157,8 @@ export class XhrFormData extends Config {
         this.shallowMerge(toEncode.querySelectorAll("input, checkbox, select, textarea").encodeFormElement());
     }
 
+    get isMultipartRequest(): boolean {
+        return  this.dataSource instanceof DQ && (<DQ> this.dataSource).querySelectorAll("input[type='file']").isPresent();
+    }
+
 }

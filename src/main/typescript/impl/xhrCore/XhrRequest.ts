@@ -88,7 +88,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
 
             let formData: XhrFormData = new XhrFormData(viewState);
 
-
+            this.contentType = formData.isMultipartRequest ? Const.MULTIPART : this.contentType;
             //next step the pass through parameters are merged in for post params
             formData.shallowMerge(this.requestContext.getIf(Const.CTX_PARAM_PASS_THR));
 
@@ -120,7 +120,6 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
 
         } catch (e) {
             //_onError//_onError
-            e = (e._mfInternal) ? e : _Lang.makeException(new Error(), "sendError", "sendError", "XHRPromise", "send", e.message);
             this.handleError(e);
         }
         return this;
@@ -130,7 +129,6 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         try {
             this.xhrObject.abort();
         } catch (e) {
-            e = (e._mfInternal) ? e : Lang.instance.makeException(new Error(), "sendError", "sendError", "XHRPromise", "send", e.message);
             this.handleError(e);
         }
     }
@@ -143,7 +141,6 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
      * xhr promise
      *
      */
-
     protected get $promise(): Promise<any> {
         if (!this.xhrPromise) {
             this.xhrPromise = new Lang.Promise((resolve: Consumer<any>, reject: Consumer<any>) => {
@@ -270,7 +267,12 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     }
 
     protected sendRequest(formData: XhrFormData) {
-        this.xhrObject.send((this.ajaxType != Const.REQ_TYPE_GET) ? formData.toString() : null);
+        let isPost = this.ajaxType != Const.REQ_TYPE_GET;
+        if(formData.isMultipartRequest) {
+            this.xhrObject.send((isPost) ? formData.toFormData() : null);
+        } else {
+            this.xhrObject.send((isPost) ? formData.toString() : null);
+        }
     }
 
     private resolveFinalUrl(formData: XhrFormData) {

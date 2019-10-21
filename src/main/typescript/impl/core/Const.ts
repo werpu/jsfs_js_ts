@@ -84,6 +84,7 @@ export class Const {
     static STATE_EVT_TIMEOUT = "TIMEOUT_EVENT";
     static STATE_EVT_COMPLETE = "complete"; //TODO remove this
     static URL_ENCODED = "application/x-www-form-urlencoded";
+    static MULTIPART = "multipart/form-data";
     static NO_TIMEOUT = 0;
     static STD_ACCEPT = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
 

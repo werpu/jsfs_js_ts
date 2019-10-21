@@ -306,39 +306,11 @@ export class Implementation {
         this.eventQueue.enqueue(eventListener);
     }
 
-    createEventData(request: XMLHttpRequest, /*Object*/ context: Config, /*event name*/ name: string): EventData {
-        let _Lang = Lang.instance;
-        let eventData = new EventData();
-        let UNKNOWN = _Lang.getMessage("UNKNOWN");
-
-        eventData.type = Const.EVENT;
-
-        eventData.status = name;
-        eventData.source = context.getIf(Const.P_PARTIAL_SOURCE).value;
-
-        if (name !== Const.BEGIN) {
-            try {
-                eventData.responseCode = request.status.toString();
-                eventData.responseText = request.responseText;
-
-                eventData.responseXML = request.responseXML;
-            } catch (e) {
-                let errorData = ErrorData.fromClient(e);
-                this.sendError(errorData);
-                //client errors are not swallowed
-                throw e;
-            }
-
-        }
-        return eventData;
-    }
 
     /**
      * sends an event
      */
     sendEvent(data: EventData) {
-        let _Lang = Lang.instance;
-
         /*now we serve the queue as well*/
         this.eventQueue.broadcastEvent(data);
     }

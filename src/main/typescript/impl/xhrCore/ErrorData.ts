@@ -36,13 +36,14 @@ export class ErrorData extends EventData {
     //TODO backwards compatible attributes
     serverErrorName: string;
     serverErrorMessage: string;
+    message: string;
 
-    constructor(source: string, errorName: string, errorMessage: string, responseText: string = null, responseXML: any = null, responseCode: string = "", status: string = "UNKNOWN", type = ErrorType.CLIENT_ERROR) {
+    constructor(source: string, errorName: string, errorMessage: string, responseText: string = null, responseXML: any = null, responseCode: string = "200", status: string = "UNKNOWN", type = ErrorType.CLIENT_ERROR) {
         super();
         this.source = source;
         this.type = "error";
         this.errorName = errorName;
-        this.errorMessage = errorMessage;
+        this.message = this.errorMessage = errorMessage;
         this.responseCode = responseCode;
         this.responseText = responseText;
         this.status = status;

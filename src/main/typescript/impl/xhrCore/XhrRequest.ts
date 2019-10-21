@@ -23,6 +23,7 @@ import {Const} from "../core/Const";
 import {XhrFormData} from "./XhrFormData";
 import {XMLQuery} from "../../ext/monadish";
 import {ErrorData} from "./ErrorData";
+import {EventData} from "./EventData";
 
 /**
  * JSFed XHR Request Wrapper
@@ -237,7 +238,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
      * other helpers
      */
     private sendEvent(evtType: string) {
-        let eventData = Implementation.instance.createEventData(this.xhrObject, this.requestContext, evtType);
+        let eventData = EventData.createFromRequest(this.xhrObject, this.requestContext, evtType);
         try {
             //user code error, we might cover
             //this in onError but also we cannot swallow it

@@ -289,7 +289,7 @@ describe('Tests after core when it hits response', function () {
                     expect(!!error.source).to.eq(true);
                     expect(!!error.responseCode).to.eq(true);
                     expect(!!error.responseText).to.eq(true);
-                    expect(!!error.responseXML).to.eq(true);
+                    expect(!error.responseXML).to.eq(true);
                     done();
                 },
                 onevent: (evt: any) => {

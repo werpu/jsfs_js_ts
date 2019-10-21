@@ -67,6 +67,7 @@ export class Assertions {
         let finalName = name || Const.MALFORMEDXML;
         let finalMessage = message || "";
 
+
         return Lang.instance.makeException(error, finalTitle, finalName, "Response", caller || (((<any>arguments).caller) ? (<any>arguments).caller.toString() : "_raiseError"), finalMessage);
     }
 }

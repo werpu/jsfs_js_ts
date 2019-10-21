@@ -17,8 +17,6 @@
  *
  */
 
-import {LangTypes} from "./LangTypes";
-
 import {Lang as LangBase} from "../../ext/monadish/Lang";
 
 import {Messages_de} from "../i18n/Messages_de";
@@ -28,8 +26,6 @@ import {Messages_it} from "../i18n/Messages_it";
 import {Messages} from "../i18n/Messages";
 import {Config, Optional} from "../../ext/monadish/Monad";
 import {CancellablePromise} from "../../ext/monadish/Promise";
-import JSFErrorData = LangTypes.JSFErrorData;
-import MyFacesErrorData = LangTypes.MyFacesErrorData;
 import {DomQuery} from "../../ext/monadish";
 
 export class Lang {
@@ -409,10 +405,9 @@ export class Lang {
      * @param {String} callFunc the caller function
      * @param {String} message the message for the exception
      */
-    makeException(error: Error, title: string, name: string, callerCls: string, callFunc: string, message: string): JSFErrorData {
-        return new JSFErrorData(name || "clientError", title || "", message || "",
-            new MyFacesErrorData(name || "clientError", title || "clientError", callerCls || this.nameSpace, callFunc || ("" + (<any>arguments).caller.toString()))
-        );
+    makeException(error: Error, title: string, name: string, callerCls: string, callFunc: string, message: string): Error {
+
+        return new Error(message + (callerCls || this.nameSpace, callFunc || ("" + (<any>arguments).caller.toString())));
 
     }
 

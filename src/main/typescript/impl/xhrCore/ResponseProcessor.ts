@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Config, DomQuery, XMLQuery} from "../../ext/monadish";
+import {Config, XMLQuery} from "../../ext/monadish";
 import {Const} from "../core/Const";
 import {Implementation} from "../AjaxImpl";
 import {Assertions} from "../util/Assertions";
@@ -22,6 +22,7 @@ import {Lang} from "../util/Lang";
 import {ResonseDataResolver} from "./ResonseDataResolver";
 import {IResponseProcessor} from "./IResponseProcessor";
 import {ErrorData} from "./ErrorData";
+import {DQ} from "../../ext/monadish/DomQuery";
 
 /**
  * Response processor
@@ -40,13 +41,13 @@ export class ResponseProcessor implements IResponseProcessor {
 
     }
 
-    replaceHead(shadowDocument: XMLQuery | DomQuery) {
+    replaceHead(shadowDocument: XMLQuery | DQ) {
         let shadowHead = shadowDocument.querySelectorAll(Const.TAG_HEAD);
         if (!shadowHead.isPresent()) {
             return;
         }
         let shadowInnerHTML: string = <string>shadowHead.html().value;
-        let oldHead = DomQuery.querySelectorAll(Const.TAG_HEAD);
+        let oldHead = DQ.querySelectorAll(Const.TAG_HEAD);
 
         //delete all to avoid script and style overlays
         oldHead.querySelectorAll(Const.SEL_SCRIPTS_STYLES).delete();
@@ -62,7 +63,7 @@ export class ResponseProcessor implements IResponseProcessor {
      *
      * @param shadowDocument .. an incoming shadow document hosting the new nodes
      */
-    replaceBody(shadowDocument: XMLQuery | DomQuery) {
+    replaceBody(shadowDocument: XMLQuery | DQ) {
 
         let shadowBody = shadowDocument.querySelectorAll(Const.TAG_BODY);
         if (!shadowBody.isPresent()) {
@@ -71,7 +72,7 @@ export class ResponseProcessor implements IResponseProcessor {
 
         let shadowInnerHTML: string = <string>shadowBody.html().value;
 
-        let resultingBody = <DomQuery>DomQuery.querySelectorAll(Const.TAG_BODY).html(shadowInnerHTML);
+        let resultingBody = <DQ>DQ.querySelectorAll(Const.TAG_BODY).html(shadowInnerHTML);
         let updateForms = resultingBody.querySelectorAll(Const.TAG_FORM);
 
         resultingBody.copyAttrs(shadowBody);
@@ -85,7 +86,7 @@ export class ResponseProcessor implements IResponseProcessor {
      * @param node
      */
     eval(node: XMLQuery) {
-        DomQuery.globalEval(node.cDATAAsString);
+        DQ.globalEval(node.cDATAAsString);
     }
 
     /**
@@ -141,14 +142,14 @@ export class ResponseProcessor implements IResponseProcessor {
      * @param cdataBlock
      */
     update(node: XMLQuery, cdataBlock: string) {
-        let result = DomQuery.byId(node.id.value).outerHTML(cdataBlock);
+        let result = DQ.byId(node.id.value).outerHTML(cdataBlock);
         let sourceForm = result.parents(Const.TAG_FORM).orElse(result.byTagName(Const.TAG_FORM, true));
 
         this.storeForPostProcessing(sourceForm, result);
     }
 
     delete(node: XMLQuery) {
-        DomQuery.byId(node.id.value).delete();
+        DQ.byId(node.id.value).delete();
     }
 
     /**
@@ -160,7 +161,7 @@ export class ResponseProcessor implements IResponseProcessor {
      * @param node
      */
     attributes(node: XMLQuery) {
-        let elem = DomQuery.byId(node.id.value);
+        let elem = DQ.byId(node.id.value);
 
         node.byTagName("attribute").each((item: XMLQuery) => {
             elem.attr(item.attr("name").value).value = item.attr("value").value;
@@ -187,13 +188,13 @@ export class ResponseProcessor implements IResponseProcessor {
         let before = node.attr(Const.TAG_BEFORE);
         let after = node.attr(Const.TAG_AFTER);
 
-        let insertNodes = DomQuery.fromMarkup(node.cDATAAsString);
+        let insertNodes = DQ.fromMarkup(node.cDATAAsString);
 
         if (before.isPresent()) {
-            DomQuery.byId(before.value).insertBefore(insertNodes);
+            DQ.byId(before.value).insertBefore(insertNodes);
         }
         if (after.isPresent()) {
-            DomQuery.byId(after.value).insertAfter(insertNodes);
+            DQ.byId(after.value).insertAfter(insertNodes);
         }
 
         this.internalContext.apply(Const.UPDATE_ELEMS).value.push(insertNodes);
@@ -221,7 +222,7 @@ export class ResponseProcessor implements IResponseProcessor {
     }
 
     globalEval() {
-        let updateElems = new DomQuery(...this.internalContext.getIf(Const.UPDATE_ELEMS).value);
+        let updateElems = new DQ(...this.internalContext.getIf(Const.UPDATE_ELEMS).value);
         updateElems.runCss();
         updateElems.runScripts();
     }
@@ -232,10 +233,10 @@ export class ResponseProcessor implements IResponseProcessor {
         }
         let viewState = this.internalContext.getIf("appliedViewState").value;
         if (this.isAllFormResolution(this.externalContext)) {
-            let forms = DomQuery.querySelectorAll(Const.TAG_FORM);
+            let forms = DQ.querySelectorAll(Const.TAG_FORM);
             this.appendViewStateToForms(forms, viewState);
         } else {
-            let updateForms = new DomQuery(...this.internalContext.getIf(Const.UPDATE_FORMS).value);
+            let updateForms = new DQ(...this.internalContext.getIf(Const.UPDATE_FORMS).value);
             this.appendViewStateToForms(updateForms, viewState);
         }
     }
@@ -244,8 +245,8 @@ export class ResponseProcessor implements IResponseProcessor {
         return Lang.instance.getLocalOrGlobalConfig(context, "no_portlet_env", false);
     }
 
-    private appendViewStateToForms(forms: DomQuery, viewState: string) {
-        forms.each((form: DomQuery) => {
+    private appendViewStateToForms(forms: DQ, viewState: string) {
+        forms.each((form: DQ) => {
             let viewStateElems = form.querySelectorAll(Const.SEL_VIEWSTATE_ELEM)
                 .orElseLazy(() => this.newViewStateElement(form));
 
@@ -259,8 +260,8 @@ export class ResponseProcessor implements IResponseProcessor {
      * @param parent, the parent node to attach the viewstate element to
      * (usually a form node)
      */
-    private newViewStateElement(parent: DomQuery): DomQuery {
-        let newViewState = DomQuery.fromMarkup(
+    private newViewStateElement(parent: DQ): DQ {
+        let newViewState = DQ.fromMarkup(
             ["<input type='hidden'", "id='", Const.P_VIEWSTATE, "' name='", Const.P_VIEWSTATE, "' value='' />"].join("")
         );
         newViewState.appendTo(parent);
@@ -273,16 +274,16 @@ export class ResponseProcessor implements IResponseProcessor {
      * @param updateForms the update forms which should receive standardized internal jsf data
      * @param toBeEvaled the resulting elements which should be evaled
      */
-    private storeForPostProcessing(updateForms: DomQuery, toBeEvaled: DomQuery) {
+    private storeForPostProcessing(updateForms: DQ, toBeEvaled: DQ) {
         this.storeForUpdate(updateForms);
         this.storeForEval(toBeEvaled);
     }
 
-    private storeForUpdate(updateForms: DomQuery) {
+    private storeForUpdate(updateForms: DQ) {
         this.internalContext.apply(Const.UPDATE_FORMS).value.push(updateForms);
     }
 
-    private storeForEval(toBeEvaled: DomQuery) {
+    private storeForEval(toBeEvaled: DQ) {
         this.internalContext.apply(Const.UPDATE_ELEMS).value.push(toBeEvaled);
     }
 

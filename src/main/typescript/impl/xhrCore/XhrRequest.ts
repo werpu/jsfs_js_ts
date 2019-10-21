@@ -18,12 +18,13 @@ import {Lang} from "../util/Lang";
 import {AsyncRunnable} from "../util/AsyncRunnable";
 import {Config} from "../../ext/monadish/Monad";
 import {Implementation} from "../AjaxImpl";
-import {DomQuery} from "../../ext/monadish/DomQuery";
+
 import {Const} from "../core/Const";
 import {XhrFormData} from "./XhrFormData";
 import {XMLQuery} from "../../ext/monadish";
 import {ErrorData} from "./ErrorData";
 import {EventData} from "./EventData";
+import {DQ} from "../../ext/monadish/DomQuery";
 
 /**
  * JSFed XHR Request Wrapper
@@ -63,8 +64,8 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
      * @param xhrObject optional xhr object which must fullfill the XMLHTTPRequest api, default XMLHttpRequest
      */
     constructor(
-        private source: DomQuery,
-        private sourceForm: DomQuery,
+        private source: DQ,
+        private sourceForm: DQ,
         private requestContext: Config,
         private internalContext: Config,
         private partialIdsArray = [],

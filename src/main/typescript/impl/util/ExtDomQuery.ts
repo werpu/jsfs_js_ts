@@ -1,6 +1,7 @@
-import {DomQuery} from "../../ext/monadish/DomQuery";
+
 import {Config, IValueHolder, Optional} from "../../ext/monadish/Monad";
 import {Const} from "../core/Const";
+import {DQ} from "../../ext/monadish/DomQuery";
 
 declare let window: any;
 
@@ -9,18 +10,18 @@ declare let window: any;
  * meta data to our dom qury
  *
  * Usage
- * el = new ExtDomQuery(oldReference)
+ * el = new ExtDQ(oldReference)
  * nonce = el.nonce
  * windowId = el.getWindowId
  */
-export class ExtDomQuery extends DomQuery {
+export class ExtDomquery extends DQ {
 
     static get windowId() {
-        return new ExtDomQuery(document.body).windowId;
+        return new ExtDomquery(document.body).windowId;
     }
 
     static get nonce(): string {
-        return new ExtDomQuery(document.body).nonce;
+        return new ExtDomquery(document.body).nonce;
     }
 
     get windowId() {
@@ -60,14 +61,14 @@ export class ExtDomQuery extends DomQuery {
             return <string>nonce.value;
         }
 
-        let curScript = new DomQuery(document.currentScript);
+        let curScript = new DQ(document.currentScript);
         //since our baseline atm is ie11 we cannot use document.currentScript globally
         if (curScript.attr("nonce").value != null) {
             //fastpath for modern browsers
             return curScript.attr("nonce").value;
         }
 
-        let nonceScript = DomQuery.querySelectorAll("script[src], link[src]")
+        let nonceScript = DQ.querySelectorAll("script[src], link[src]")
             .filter((item) => item.attr("nonce").value != null && item.attr("src") != null)
             .first((item => !item.attr("src").value.match(/jsf\.js\?ln\=javax\.faces/gi)));
 
@@ -78,14 +79,14 @@ export class ExtDomQuery extends DomQuery {
     }
 
     static searchJsfJsFor(item: RegExp): Optional<String> {
-        return new ExtDomQuery(document).searchJsfJsFor(item);
+        return new ExtDomquery(document).searchJsfJsFor(item);
     }
 
     searchJsfJsFor(rexp: RegExp): Optional<string> {
         let res: string = null;
-        DomQuery.querySelectorAll("script").filter(item => {
+        DQ.querySelectorAll("script").filter(item => {
             return (item.attr("src", "").value || "").search(/\/javax\.faces\.resource.*\/jsf\.js.*separator/) != -1;
-        }).first((item: DomQuery) => {
+        }).first((item: DQ) => {
             let result = item.attr("src", "").value.match(rexp);
             res = decodeURIComponent(result[1]);
             return false;
@@ -93,7 +94,9 @@ export class ExtDomQuery extends DomQuery {
         return Optional.fromNullable(res);
     }
 
-    globalEval(code: string, nonce ?: string): DomQuery {
+    globalEval(code: string, nonce ?: string): DQ {
         return super.globalEval(code, nonce || this.nonce);
     }
 }
+
+export const ExtDQ = DQ;

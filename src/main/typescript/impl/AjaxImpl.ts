@@ -21,14 +21,14 @@ import {Response} from "./xhrCore/Response";
 import {XhrRequest} from "./xhrCore/XhrRequest";
 import {AsynchronouseQueue} from "./util/AsyncQueue";
 import {Config, Optional} from "../ext/monadish/Monad";
-import {DomQuery} from "../ext/monadish/DomQuery";
 
 import {Const} from "./core/Const";
 import {Assertions} from "./util/Assertions";
 import {XhrFormData} from "./xhrCore/XhrFormData";
-import {ExtDomQuery} from "./util/ExtDomQuery";
+import {ExtDomquery, ExtDQ} from "./util/ExtDomQuery";
 import {ErrorData} from "./xhrCore/ErrorData";
 import {EventData} from "./xhrCore/EventData";
+import {DQ} from "../ext/monadish/DomQuery";
 
 declare var jsf: any;
 
@@ -90,7 +90,7 @@ export class Implementation {
         return Optional.fromNullable(this.globalConfig.separator)
             .orElse(this.separator)
             .orElseLazy(() => {
-                this.separator = ExtDomQuery.searchJsfJsFor(/separator=([^&;]*)/).orElse(":").value;
+                this.separator = ExtDomquery.searchJsfJsFor(/separator=([^&;]*)/).orElse(":").value;
                 return this.separator;
             }).value;
     }
@@ -112,7 +112,7 @@ export class Implementation {
                 let projectStages = {"Production": 1, "Development": 1, "SystemTest": 1, "UnitTest": 1};
 
                 /* run through all script tags and try to find the one that includes jsf.js */
-                let foundStage = ExtDomQuery.searchJsfJsFor(/stage=([^&;]*)/).orElse(null).value;
+                let foundStage = ExtDomquery.searchJsfJsFor(/stage=([^&;]*)/).orElse(null).value;
                 return (foundStage in projectStages) ? this.projectStage = foundStage : null;
             }).value;
     }
@@ -170,7 +170,7 @@ export class Implementation {
 
         //options not set we define a default one with nothing
         const options = new Config(opts).shallowCopy;
-        const elem = DomQuery.byId(el || <Element>event.target);
+        const elem = DQ.byId(el || <Element>event.target);
         const elementId = elem.id;
         const requestCtx = new Config({});
         const internalCtx = new Config({});
@@ -199,7 +199,7 @@ export class Implementation {
          * with detached objects
          */
         const configId = requestCtx.getIf(Const.MYFACES, "form").orElse("__mf_none__").value;
-        let form: DomQuery = this.resolveForm(requestCtx, elem, event);
+        let form: DQ = this.resolveForm(requestCtx, elem, event);
 
         /**
          * binding contract the javax.faces.source must be set
@@ -258,9 +258,9 @@ export class Implementation {
         this.addRequestToQueue(elem, form, requestCtx, internalCtx, delay, timeout);
     }
 
-    private resolveForm(requestCtx: Config, elem: DomQuery, event: Event): DomQuery {
+    private resolveForm(requestCtx: Config, elem: DQ, event: Event): DQ {
         const configId = requestCtx.getIf(Const.MYFACES, "form").orElse("__mf_none__").value;
-        let form: DomQuery = DomQuery
+        let form: DQ = DQ
             .byId(configId)
             .orElseLazy(() => Lang.getForm(elem.getAsElem(0).value, event));
         return form
@@ -281,7 +281,7 @@ export class Implementation {
     /**
      * public to make it shimmable for tests
      */
-    addRequestToQueue(elem: DomQuery, form: DomQuery, reqCtx: Config, respPassThr: Config, delay = 0, timeout = 0) {
+    addRequestToQueue(elem: DQ, form: DQ, reqCtx: Config, respPassThr: Config, delay = 0, timeout = 0) {
         //TODO multipart handling via its own adapted xhr derviate
         this.requestQueue.enqueue(new XhrRequest(elem, form, reqCtx, respPassThr, [], timeout), delay);
     }
@@ -390,7 +390,7 @@ export class Implementation {
         /**
          * the search root for the dom element search
          */
-        let searchRoot = new DomQuery(node || document.body);
+        let searchRoot = new DQ(node || document.body);
 
         /**
          * a set of input elements holding the window id over the entire document
@@ -400,7 +400,7 @@ export class Implementation {
         /**
          * lazy helper to fetch the window id from the window url
          */
-        let fetchWindowIdFromUrl = () => ExtDomQuery.searchJsfJsFor(/jfwid=([^&;]*)/).orElse(null).value;
+        let fetchWindowIdFromUrl = () => ExtDomquery.searchJsfJsFor(/jfwid=([^&;]*)/).orElse(null).value;
 
         /**
          * functional double check based on stream reduction
@@ -426,7 +426,7 @@ export class Implementation {
          *
          * @param item
          */
-        let getValue = (item: DomQuery) => item.attr("value").value;
+        let getValue = (item: DQ) => item.attr("value").value;
         /**
          * fetch the window id from the forms
          * window ids must be present in all forms
@@ -460,7 +460,7 @@ export class Implementation {
          *  because it makes it easier to detect bugs
          */
 
-        let element: DomQuery = DomQuery.byId(form);
+        let element: DQ = DQ.byId(form);
         if (!element.isTag("form")) {
             throw new Error(Lang.instance.getMessage("ERR_VIEWSTATE"));
         }
@@ -471,18 +471,18 @@ export class Implementation {
 
     private applyWindowId(options: Config) {
         let windowId = options.getIf("windowId")
-            .orElseLazy(() => ExtDomQuery.windowId).value;
+            .orElseLazy(() => ExtDomquery.windowId).value;
         options.applyIf(!!windowId, Const.P_WINDOW_ID).value = windowId;
         options.delete("windowId");
     }
 
-    private applyRender(options: Config, ctx: Config, form: DomQuery, elementId: string) {
+    private applyRender(options: Config, ctx: Config, form: DQ, elementId: string) {
         if (options.getIf("render").isPresent()) {
             this.transformValues(ctx.getIf(Const.CTX_PARAM_PASS_THR).get({}), Const.P_RENDER, <string>options.getIf("render").value, form, <any>elementId);
         }
     }
 
-    private applyExecute(options: Config, ctx: Config, form: DomQuery, elementId: string) {
+    private applyExecute(options: Config, ctx: Config, form: DQ, elementId: string) {
         const PARAM_EXECUTE = Const.CTX_PARAM_EXECUTE;
         const PARAM_PASS_THR = Const.CTX_PARAM_PASS_THR;
         const P_EXECUTE = Const.P_EXECUTE;
@@ -499,7 +499,7 @@ export class Implementation {
         }
     }
 
-    private applyClientWindowId(form: DomQuery, ctx: Config) {
+    private applyClientWindowId(form: DQ, ctx: Config) {
         let clientWindow = jsf.getClientWindow(form.getAsElem(0).value);
         if (clientWindow) {
             ctx.apply(Const.CTX_PARAM_PASS_THR, Const.P_CLIENTWINDOW).value = clientWindow;
@@ -521,7 +521,7 @@ export class Implementation {
      * @param issuingForm the form where the issuing element originates
      * @param issuingElementId the issuing element
      */
-    private transformValues(targetConfig: Config, targetKey: string, userValues: string, issuingForm: DomQuery, issuingElementId: string): Config {
+    private transformValues(targetConfig: Config, targetKey: string, userValues: string, issuingForm: DQ, issuingElementId: string): Config {
         //a cleaner implementation of the transform list method
         let _Lang = Lang.instance;
         let iterValues = (userValues) ? _Lang.trim(userValues).split(/\s+/gi) : [];

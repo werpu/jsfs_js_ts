@@ -26,7 +26,8 @@ import {Messages_it} from "../i18n/Messages_it";
 import {Messages} from "../i18n/Messages";
 import {Config, Optional} from "../../ext/monadish/Monad";
 import {CancellablePromise} from "../../ext/monadish/Promise";
-import {DomQuery} from "../../ext/monadish";
+import {DQ} from "../../ext/monadish/DomQuery";
+
 
 export class Lang {
 
@@ -502,12 +503,12 @@ export class Lang {
      * @param elem
      * @param event
      */
-    static getForm(elem: Element, event ?: Event): DomQuery {
+    static getForm(elem: Element, event ?: Event): DQ {
         const _Lang = Lang.instance;
         const FORM = "form";
 
-        let queryElem = new DomQuery(elem);
-        let eventTarget = new DomQuery(_Lang.getEventTarget(event));
+        let queryElem = new DQ(elem);
+        let eventTarget = new DQ(_Lang.getEventTarget(event));
 
         if(queryElem.isTag(FORM)) {
             return queryElem;
@@ -516,7 +517,7 @@ export class Lang {
         //html 5 for handling
         if(queryElem.attr(FORM).isPresent()) {
             let formId = queryElem.attr(FORM).value;
-            let foundForm = DomQuery.byId(formId);
+            let foundForm = DQ.byId(formId);
             if(foundForm.isPresent()) {
                 return foundForm;
             }

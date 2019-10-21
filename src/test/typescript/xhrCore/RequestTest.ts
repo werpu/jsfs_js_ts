@@ -113,10 +113,10 @@ describe('Tests on the xhr core when it starts to call the request', function ()
             expect(resultsMap["pass2"]).to.eq("pass2");
             expect(!!resultsMap["render"]).to.be.false;
             expect(!!resultsMap["execute"]).to.be.false;
-            expect(Const.P_WINDOW_ID in resultsMap).to.be.true;
+            expect(Const.P_WINDOW_ID in resultsMap).to.be.false;
             expect(Const.P_VIEWSTATE in resultsMap).to.be.true;
             expect(resultsMap[Const.P_PARTIAL_SOURCE]).to.eq("input_2");
-            expect(resultsMap[Const.P_AJAX]).to.eq("input_2");
+            expect(resultsMap[Const.P_AJAX]).to.eq("true");
             expect(resultsMap[Const.P_RENDER]).to.eq("blarg");
             expect(resultsMap[Const.P_EXECUTE]).to.eq("input_1%20input_2");
 

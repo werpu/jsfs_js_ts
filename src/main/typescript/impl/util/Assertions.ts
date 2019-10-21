@@ -1,7 +1,8 @@
-import {Config, DomQuery, XMLQuery} from "../../ext/monadish";
+import {Config, XMLQuery} from "../../ext/monadish";
 import {Const} from "../core/Const";
 import {Implementation} from "../AjaxImpl";
 import {Lang} from "../util/Lang";
+import {DQ} from "../../ext/monadish/DomQuery";
 
 /**
  * a set of internal code assertions
@@ -10,7 +11,7 @@ import {Lang} from "../util/Lang";
  */
 export class Assertions {
 
-    static assertRequestIntegrity(options: Config, elem: DomQuery) {
+    static assertRequestIntegrity(options: Config, elem: DQ) {
         /*assert if the onerror is set and once if it is set it must be of type function*/
         Assertions.assertType(options.getIf(Const.ON_ERROR).value, "function");
         /*assert if the onevent is set and once if it is set it must be of type function*/
@@ -25,7 +26,7 @@ export class Assertions {
         }
     }
 
-    static assertElementExists(elem: DomQuery) {
+    static assertElementExists(elem: DQ) {
         if (elem.isAbsent()) {
             throw Lang.instance.makeException(new Error(), "ArgNotSet", null, "Impl", "request", Lang.instance.getMessage("ERR_MUST_BE_PROVIDED1", "{0}: source  must be provided", "jsf.ajax.request", "source element id"));
         }

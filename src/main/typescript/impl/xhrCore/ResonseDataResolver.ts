@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-import {Config, DomQuery, XMLQuery} from "../../ext/monadish";
+import {Config, XMLQuery} from "../../ext/monadish";
 import {Const} from "../core/Const";
 import {Assertions} from "../util/Assertions";
+import {DQ} from "../../ext/monadish/DomQuery";
 
 /**
  * Resolver for various aspects of the response data
@@ -72,9 +73,9 @@ export class ResonseDataResolver {
      * @param internalContext internal passthrough fall back
      *
      */
-    static resolveSourceElement(context: Config, internalContext: Config): DomQuery {
+    static resolveSourceElement(context: Config, internalContext: Config): DQ {
         let elemId = this.resolveSourceElementId(context, internalContext);
-        let elem = DomQuery.byId(elemId.value);
+        let elem = DQ.byId(elemId.value);
         return elem;
     }
 
@@ -86,13 +87,13 @@ export class ResonseDataResolver {
      * @param internalContext
      * @param elem
      */
-    static resolveSourceForm(internalContext: Config, elem: DomQuery): DomQuery {
+    static resolveSourceForm(internalContext: Config, elem: DQ): DQ {
         let sourceFormId = internalContext.getIf(Const.CTX_PARAM_SRC_FRM_ID);
-        let sourceForm = new DomQuery(sourceFormId.isPresent() ? document.forms[sourceFormId.value] : null);
+        let sourceForm = new DQ(sourceFormId.isPresent() ? document.forms[sourceFormId.value] : null);
 
         sourceForm = sourceForm.orElse(elem.parents(Const.TAG_FORM))
             .orElse(elem.querySelectorAll(Const.TAG_FORM))
-            .orElse(DomQuery.querySelectorAll(Const.TAG_FORM));
+            .orElse(DQ.querySelectorAll(Const.TAG_FORM));
 
         return sourceForm;
     }

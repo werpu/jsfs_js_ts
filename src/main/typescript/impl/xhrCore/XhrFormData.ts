@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-import {Config, DomQuery} from "../../ext/monadish";
+import {Config} from "../../ext/monadish";
 import {Const} from "../core/Const";
 import {Implementation} from "../AjaxImpl";
 import {Lang} from "../util/Lang";
 import {Stream} from "../../ext/monadish/Stream";
+import {DQ} from "../../ext/monadish/DomQuery";
 
 declare let jsf: any;
 
@@ -44,7 +45,7 @@ export class XhrFormData extends Config {
      * @param dataSource either a form as domquery object or an encoded url string
      * @param partialIdsArray partial ids to collect
      */
-    constructor(private dataSource: DomQuery | string, private partialIdsArray?: string[]) {
+    constructor(private dataSource: DQ | string, private partialIdsArray?: string[]) {
         super({});
         //a call to getViewState before must pass the encoded line
         //a call from getViewState passes the form element as datasource
@@ -66,13 +67,13 @@ export class XhrFormData extends Config {
          *
          */
 
-        this.encodeSubmittableFields(this, <DomQuery>this.dataSource, this.partialIdsArray);
+        this.encodeSubmittableFields(this, <DQ>this.dataSource, this.partialIdsArray);
 
         if (this.getIf(Const.P_VIEWSTATE).isPresent()) {
             return;
         }
 
-        this.applyViewState(<DomQuery>this.dataSource);
+        this.applyViewState(<DQ>this.dataSource);
     }
 
     private handleStringSource() {
@@ -80,9 +81,9 @@ export class XhrFormData extends Config {
         return;
     }
 
-    private applyViewState(form: DomQuery) {
+    private applyViewState(form: DQ) {
         form.byId(Const.P_VIEWSTATE)
-            .ifPresentLazy((elem: DomQuery) => {
+            .ifPresentLazy((elem: DQ) => {
                 let value = elem.inputValue.value;
                 this.applyIf(!!value ,Const.P_VIEWSTATE).value = value;
             });
@@ -136,7 +137,7 @@ export class XhrFormData extends Config {
      * @param {Array} partialIds - ids fo PPS
      */
     private encodeSubmittableFields(targetBuf: Config,
-                                    parentItem: DomQuery, partialIds ?: string[]) {
+                                    parentItem: DQ, partialIds ?: string[]) {
         let toEncode = null;
         if (this.partialIdsArray && this.partialIdsArray.length) {
             //in case of our myfaces reduced ppr we only
@@ -145,7 +146,7 @@ export class XhrFormData extends Config {
             //TODO maybe also the window id and other defaults lets see
             //this is not a spec case anyway
             this._value = {};
-            toEncode = new DomQuery(...this.partialIdsArray);
+            toEncode = new DQ(...this.partialIdsArray);
 
         } else {
             if (parentItem.isAbsent()) throw "NO_PARITEM";

@@ -42,6 +42,11 @@ export class Const {
 
     static SOURCE = "source";
     static STATUS = "status";
+
+    static ERROR_NAME = "error-name";
+    static ERROR_MESSAGE = "error-message";
+
+
     static RESPONSE_TEXT = "responseText";
     static RESPONSE_XML = "responseXML";
 

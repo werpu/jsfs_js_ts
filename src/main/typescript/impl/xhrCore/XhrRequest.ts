@@ -22,6 +22,7 @@ import {DomQuery} from "../../ext/monadish/DomQuery";
 import {Const} from "../core/Const";
 import {XhrFormData} from "./XhrFormData";
 import {XMLQuery} from "../../ext/monadish";
+import {ErrorData} from "./ErrorData";
 
 /**
  * JSFed XHR Request Wrapper
@@ -249,11 +250,12 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     }
 
     private handleError(exception) {
-        let errorData = Implementation.instance.createErrorFromException(this.xhrObject, this.requestContext, exception);
+        let errorData = ErrorData.fromClient(exception);
+
         try {
             this._onError(errorData);
         } finally {
-            Implementation.instance.stdErrorHandler(this.xhrObject, this.requestContext, exception, true);
+            Implementation.instance.sendError(errorData);
         }
     }
 

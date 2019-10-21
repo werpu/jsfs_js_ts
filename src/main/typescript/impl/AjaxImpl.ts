@@ -16,7 +16,7 @@
 
 import * as myfacesConfig from "../api/myfaces";
 import {Lang} from "./util/Lang";
-import {ErrorData, EventData, IListener, ListenerQueue} from "./util/ListenerQueue";
+import {IListener, ListenerQueue} from "./util/ListenerQueue";
 import {Response} from "./xhrCore/Response";
 import {XhrRequest} from "./xhrCore/XhrRequest";
 import {AsynchronouseQueue} from "./util/AsyncQueue";
@@ -27,6 +27,8 @@ import {Const} from "./core/Const";
 import {Assertions} from "./util/Assertions";
 import {XhrFormData} from "./xhrCore/XhrFormData";
 import {ExtDomQuery} from "./util/ExtDomQuery";
+import {ErrorData} from "./xhrCore/ErrorData";
+import {EventData} from "./xhrCore/EventData";
 
 declare var jsf: any;
 
@@ -256,8 +258,6 @@ export class Implementation {
         this.addRequestToQueue(elem, form, requestCtx, internalCtx, delay, timeout);
     }
 
-
-
     private resolveForm(requestCtx: Config, elem: DomQuery, event: Event): DomQuery {
         const configId = requestCtx.getIf(Const.MYFACES, "form").orElse("__mf_none__").value;
         let form: DomQuery = DomQuery
@@ -265,7 +265,6 @@ export class Implementation {
             .orElseLazy(() => Lang.getForm(elem.getAsElem(0).value, event));
         return form
     }
-
 
     private resolveTimeout(options, _Lang, requestCtx) {
         return options.getIf(Const.CTX_PARAM_TIMEOUT)
@@ -324,13 +323,8 @@ export class Implementation {
 
                 eventData.responseXML = request.responseXML;
             } catch (e) {
-                let impl = _Lang.getGlobalConfig("jsfAjaxImpl", this);
-                this.sendError(
-                    this.createErrorData(request, context, Const.CLIENT_ERROR,
-                        "ErrorRetrievingResponse",
-                        _Lang.getMessage("ERR_CONSTRUCT"),
-                        e.toString())
-                );
+                let errorData = ErrorData.fromClient(e);
+                this.sendError(errorData);
                 //client errors are not swallowed
                 throw e;
             }
@@ -371,7 +365,7 @@ export class Implementation {
         //this is a valid approach
         try {
             if (this.threshold == "ERROR") {
-                let errorData = this.createErrorFromException(request, context, exception);
+                let errorData = ErrorData.fromClient(exception);
                 this.sendError(errorData);
             }
         } finally {
@@ -381,67 +375,16 @@ export class Implementation {
         }
     }
 
-    createErrorFromException(request: XMLHttpRequest,
-                             context: Config,
-                             exception: any): ErrorData {
-        let errorData = this.createErrorData(request, context, "Client Exception");
-        errorData.message = exception.message;
-        errorData.stacktrace = exception.stack;
-        return errorData;
-
-    }
-
-    createErrorData(request: XMLHttpRequest,
-                    context: Config,
-                    name: string,
-                    serverErrorName?: string,
-                    serverErrorMessage?: string,
-                    caller?: string,
-                    callFunc?: string): ErrorData {
-        let _Lang = Lang.instance;
-        let UNKNOWN = _Lang.getMessage("UNKNOWN");
-
-        let eventData = new ErrorData();
-        //we keep this in a closure because we might reuse it for our serverErrorMessage
-        let malFormedMessage = function () {
-            return (name && name === this.MALFORMEDXML) ? _Lang.getMessage("ERR_MALFORMEDXML") : "";
-        };
-
-        //by setting unknown values to unknown we can handle cases
-        //better where a simulated context is pushed into the system
-        eventData.type = Const.ERROR;
-
-        eventData.status = name || UNKNOWN;
-        eventData.serverErrorName = serverErrorName || UNKNOWN;
-        eventData.serverErrorMessage = serverErrorMessage || UNKNOWN;
-
-        try {
-            eventData.source = context.getIf(Const.SOURCE).orElse(UNKNOWN).value;
-            eventData.responseCode = context.getIf(Const.STATUS).orElse(UNKNOWN).value;
-            eventData.responseText = context.getIf(Const.RESPONSE_TEXT).orElse(UNKNOWN).value;
-            eventData.responseXML = context.getIf(Const.RESPONSE_XML).orElse(UNKNOWN).value;
-        } catch (e) {
-            // silently ignore: user can find out by examining the event data
-        }
-        //extended error message only in dev mode
-        if (jsf.getProjectStage() === Const.STAGE_DEVELOPMENT) {
-            let errTpl = `
-                    Error:
-                    Server Error Message: ${eventData.serverErrorMessage || ''}
-                    Calling class: ${caller || ''}
-                    Calling function: ${callFunc || ''}
-            `;
-            eventData.serverErrorMessage = errTpl;
-        }
-        return eventData;
-    }
-
     /**
      * implementation triggering the error chain
      *
      * @param {Object} request the request object which comes from the xhr cycle
      * @param {Object} context (Map) the context object being pushed over the xhr cycle keeping additional metadata
-     * @param {String} name the error name
+     * @param {String} errorName the error name
+     * @param {String} errorMessage the error name
+     * @param {String} responseCode response Code
+     * @param {String} responseMessage response Message
+     *
      * @param {String} serverErrorName the server error name in case of a server error
      * @param {String} serverErrorMessage the server error message in case of a server error
      * @param {String} caller optional caller reference for extended error messages
@@ -456,8 +399,11 @@ export class Implementation {
      *
      *
      */
-    sendError(errorData: EventData) {
+    sendError(errorData: any) {
 
+        this.errorQueue.each((errorCallback: Function) => {
+            errorCallback(errorData);
+        });
         let displayError: (string) => void = Lang.instance.getGlobalConfig("defaultErrorOutput", (console ? console.error : alert));
         displayError(errorData);
     }
@@ -528,7 +474,6 @@ export class Implementation {
         return formWindowId.orElseLazy(fetchWindowIdFromUrl).value;
     }
 
-
     /**
      * collect and encode data for a given form element (must be of type form)
      * find the javax.faces.ViewState element and encode its value as well!
@@ -537,13 +482,13 @@ export class Implementation {
      * @throws Error in case of the given element not being of type form!
      * https://issues.apache.org/jira/browse/MYFACES-2110
      */
-    getViewState(form: Element | string) {
+    getViewState(form: Element | string) {
         /**
          *  typecheck assert!, we opt for strong typing here
          *  because it makes it easier to detect bugs
          */
 
-        let element:DomQuery = DomQuery.byId(form);
+        let element: DomQuery = DomQuery.byId(form);
         if (!element.isTag("form")) {
             throw new Error(Lang.instance.getMessage("ERR_VIEWSTATE"));
         }
@@ -551,7 +496,6 @@ export class Implementation {
         let formData = new XhrFormData(element);
         return formData.toString();
     }
-
 
     private applyWindowId(options: Config) {
         /*preparations for jsf 2.2 windowid handling*/
@@ -561,7 +505,6 @@ export class Implementation {
             .orElseLazy(() => ExtDomQuery.windowId).value;
         options.delete("windowId");
     }
-
 
     private applyRender(options: Config, ctx: Config, form: DomQuery, elementId: string) {
         if (options.getIf("render").isPresent()) {
@@ -585,7 +528,6 @@ export class Implementation {
             ctx.apply(PARAM_PASS_THR, P_EXECUTE).value = elementId;
         }
     }
-
 
     private applyClientWindowId(form: DomQuery, ctx: Config) {
         let clientWindow = jsf.getClientWindow(form.getAsElem(0).value);
@@ -655,7 +597,4 @@ export class Implementation {
         targetConfig.apply(targetKey).value = ret.join(" ");
         return targetConfig;
     }
-
-
-
 }

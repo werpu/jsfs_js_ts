@@ -67,32 +67,31 @@ describe('tests the addOnEvent and addOnError handling', function () {
     };
 
     it("must have a global add on event call with all three phases passed", function () {
-       let onEventCalled1 = 0;
-       let onEventCalled2 = 0;
+        let onEventCalled1 = 0;
+        let onEventCalled2 = 0;
 
-       jsf.ajax.addOnEvent((data: any) => {
-           onEventCalled1++;
-           if(onEventCalled1 == 1 && data.status != "begin") {
-               throw ("Wrong status")
-           }
-           if(onEventCalled1 == 2 && data.status != "complete") {
-               throw ("Wrong status")
-           }
-           if(onEventCalled1 == 3 && data.status != "success") {
-               throw ("Wrong status")
-           }
-       });
+        jsf.ajax.addOnEvent((data: any) => {
+            onEventCalled1++;
+            if (onEventCalled1 == 1 && data.status != "begin") {
+                throw ("Wrong status")
+            }
+            if (onEventCalled1 == 2 && data.status != "complete") {
+                throw ("Wrong status")
+            }
+            if (onEventCalled1 == 3 && data.status != "success") {
+                throw ("Wrong status")
+            }
+        });
         jsf.ajax.addOnEvent((data: any) => {
             onEventCalled2++;
 
         });
         let issuer = DQ.byId("cmd_update_insert").click();
-        this.respond( XmlResponses.UPDATE_INSERT_1);
+        this.respond(XmlResponses.UPDATE_INSERT_1);
 
         expect(onEventCalled1).to.eq(3);
         expect(onEventCalled2).to.eq(3);
     });
-
 
     it("must have onError called in case of error", function () {
         let onErrorCalled1 = 0;
@@ -108,12 +107,10 @@ describe('tests the addOnEvent and addOnError handling', function () {
 
         //cmd_error_component
         let issuer = DQ.byId("cmd_error_component").click();
-        this.respond( XmlResponses.ERROR_2);
-
+        this.respond(XmlResponses.ERROR_2);
 
         expect(onErrorCalled1).to.eq(1);
         expect(onErrorCalled2).to.eq(1);
-
     });
 
 });

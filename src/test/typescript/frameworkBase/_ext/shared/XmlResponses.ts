@@ -72,21 +72,17 @@ export class XmlResponses {
 
     static ERROR_1 = `
     <partial-response>
-    <changes>
         <error>
             <error-name>Error1</error-name>    
         </error>
-    </changes>
     </partial-response>
     `;
     static ERROR_2 = `
     <partial-response>
-    <changes>
         <error>
             <error-name>Erro21</error-name>    
             <error-message><![CDATA[Error2 Text]]></error-message>    
         </error>
-    </changes>
     </partial-response>
     `;
 

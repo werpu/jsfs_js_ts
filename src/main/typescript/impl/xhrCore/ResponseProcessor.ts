@@ -21,6 +21,7 @@ import {Assertions} from "../util/Assertions";
 import {Lang} from "../util/Lang";
 import {ResonseDataResolver} from "./ResonseDataResolver";
 import {IResponseProcessor} from "./IResponseProcessor";
+import {ErrorData} from "./ErrorData";
 
 /**
  * Response processor
@@ -102,13 +103,17 @@ export class ResponseProcessor implements IResponseProcessor {
          * <error>
          */
 
-        const errorName = node.getIf("error-name").textContent("");
-        const errorMessage = node.getIf("error-message").cDATAAsString;
+        let mergedErrorData = new Config({});
+        mergedErrorData.apply(Const.SOURCE).value = this.externalContext.getIf(Const.P_PARTIAL_SOURCE).get(0).value;
+        mergedErrorData.apply(Const.ERROR_NAME).value = node.getIf(Const.ERROR_NAME).textContent("");
+        mergedErrorData.apply(Const.ERROR_MESSAGE).value = node.getIf(Const.ERROR_MESSAGE).cDATAAsString;
 
-        const Impl = Implementation.instance;
-        const errorData = Impl.createErrorData(this.request.value, this.externalContext,
-            Const.SERVER_ERROR, errorName, errorMessage, "Response", "processError");
-        Impl.sendError(errorData);
+        let hasResponseXML = this.internalContext.get(Const.RESPONSE_XML).isPresent();
+        mergedErrorData.applyIf(hasResponseXML, Const.RESPONSE_XML).value = this.internalContext.getIf(Const.RESPONSE_XML).value.get(0).value;
+
+        let errorData = ErrorData.fromServerError(mergedErrorData);
+
+        Implementation.instance.sendError(errorData);
     }
 
     /**

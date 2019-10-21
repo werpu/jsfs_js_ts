@@ -1,20 +1,5 @@
 import {Queue} from "./Queue";
 
-export class EventData {
-    type: string;
-    status: string;
-    source: string;
-    responseCode: string;
-    responseText: string;
-    responseXML: Document;
-}
-
-export class ErrorData extends EventData {
-    message?: string;
-    stacktrace ?: string;
-    serverErrorName?: string;
-    serverErrorMessage?: string;
-}
 
 export interface IListener<T> {
     (data: T): void;

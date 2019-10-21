@@ -39,9 +39,12 @@ export class Response {
 
         let req = Config.fromNullable(request);
         let {externalContext, internalContext} = ResonseDataResolver.resolveContexts(context);
+
         let responseXML: XMLQuery = ResonseDataResolver.resolveResponseXML(req);
 
         let responseProcessor = new ResponseProcessor(req, externalContext, internalContext);
+
+        internalContext.apply(Const.RESPONSE_XML).value = responseXML;
 
         //we now process the partial tags, or in none given raise an error
         responseXML.querySelectorAll(Const.RESP_PARTIAL)

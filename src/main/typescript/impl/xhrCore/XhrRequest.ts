@@ -83,7 +83,9 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         let _Lang = Lang.instance;
         try {
 
-            let formData: XhrFormData = new XhrFormData(jsf.getViewState(this.sourceForm.getAsElem(0).value));
+            let viewState = jsf.getViewState(this.sourceForm.getAsElem(0).value);
+
+            let formData: XhrFormData = new XhrFormData(viewState);
 
 
             //next step the pass through parameters are merged in for post params

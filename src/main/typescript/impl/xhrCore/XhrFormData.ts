@@ -83,7 +83,8 @@ export class XhrFormData extends Config {
     private applyViewState(form: DomQuery) {
         form.byId(Const.P_VIEWSTATE)
             .ifPresentLazy((elem: DomQuery) => {
-                this.apply(Const.P_VIEWSTATE).value = elem.getAsElem(0).value;
+                let value = elem.inputValue.value;
+                this.applyIf(!!value ,Const.P_VIEWSTATE).value = value;
             });
     }
 
@@ -152,7 +153,7 @@ export class XhrFormData extends Config {
         }
 
         //lets encode the form elements
-        this.shallowMerge(toEncode.encodeFormElement());
+        this.shallowMerge(toEncode.querySelectorAll("input, checkbox, select, textarea").encodeFormElement());
     }
 
 }

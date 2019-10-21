@@ -1599,12 +1599,12 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         //lets keep it sideffects free
         let target = toMerge.shallowCopy;
 
-        this.eachElem((element: HTMLFormElement) => {
+        this.each((element: DomQuery) => {
             if (!element.name) {//no name, no encoding
                 return;
             }
-            let name = element.name;
-            let tagName = element.tagName.toLowerCase();
+            let name = element.name.orElse("__none__").value;
+            let tagName = element.tagName.orElse("__none__").value.toLowerCase();
             let elemType = element.type.orElse("__none__").value.toLowerCase();
 
             elemType = elemType.toLowerCase();

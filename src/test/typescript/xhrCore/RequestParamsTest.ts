@@ -11,6 +11,8 @@ describe("test for proper request param patterns identical to the old implementa
     const DELETE_PATTERN = {
         op: "delete1",
         "javax.faces.source": "cmd_delete",
+        "javax.faces.partial.event": "click",
+        "javax.faces.partial.ajax": "true",
         "javax.faces.partial.execute": "cmd_delete",
         "form1": "form1",
         "javax.faces.ViewState": "blubbblubblubb"
@@ -18,7 +20,7 @@ describe("test for proper request param patterns identical to the old implementa
 
     const UPDATE_INSERT_2 = {
         "op": "updateinsert2",
-        "javax.faces.partial.event": "message",
+        "javax.faces.partial.event": "click",
         "javax.faces.source": "cmd_update_insert2",
         "javax.faces.partial.ajax": "true",
         "javax.faces.partial.execute": "cmd_update_insert2",
@@ -28,7 +30,7 @@ describe("test for proper request param patterns identical to the old implementa
 
     const ERRORS = {
         "op": "errors",
-        "javax.faces.partial.event": "message",
+        "javax.faces.partial.event": "click",
         "javax.faces.source": "cmd_error",
         "javax.faces.partial.ajax": "true",
         "javax.faces.partial.execute": "cmd_error",

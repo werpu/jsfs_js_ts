@@ -210,7 +210,7 @@ export class Implementation {
          * javax.faces.partial.ajax must be set to true
          * TODO error?
          */
-        requestCtx.apply(Const.CTX_PARAM_PASS_THR, Const.P_AJAX).value = elementId.value;
+        requestCtx.apply(Const.CTX_PARAM_PASS_THR, Const.P_AJAX).value = true;
 
         /**
          * binding contract the javax.faces.source must be set
@@ -470,11 +470,9 @@ export class Implementation {
     }
 
     private applyWindowId(options: Config) {
-        /*preparations for jsf 2.2 windowid handling*/
-        //pass the window id into the options if not set already
-        //TODO probably not needed anymore
-        options.apply(Const.P_WINDOW_ID).value = options.getIf("windowId")
+        let windowId = options.getIf("windowId")
             .orElseLazy(() => ExtDomQuery.windowId).value;
+        options.applyIf(!!windowId, Const.P_WINDOW_ID).value = windowId;
         options.delete("windowId");
     }
 

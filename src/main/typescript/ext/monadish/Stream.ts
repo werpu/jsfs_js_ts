@@ -11,14 +11,14 @@ import {
     MappedStreamDataSource
 } from "./SourcesCollectors";
 
-
+/*
+ * some typedefs to make the code more reabable
+ */
 export type StreamMapper<T> = (data: T) => IStreamDataSource<any>;
 export type IteratableConsumer<T> = (data: T, pos ?: number) => void | boolean;
 export type Reducable<T> = (val1: T, val2: T) => T;
 export type Matchable<T> = (data: T) => boolean;
-export type Mappable<T,R> = (data: T) => R;
-
-
+export type Mappable<T, R> = (data: T) => R;
 
 /**
  * Generic interface defining a stream
@@ -65,7 +65,7 @@ export interface IStream<T> {
      *
      * @param fn
      */
-    filter(fn?:  Matchable<T>): IStream<T>;
+    filter(fn?: Matchable<T>): IStream<T>;
 
     /**
      * functional reduce... takes two elements in the stream and reduces to
@@ -93,21 +93,21 @@ export interface IStream<T> {
      *
      * @param fn
      */
-    anyMatch(fn:  Matchable<T>): boolean;
+    anyMatch(fn: Matchable<T>): boolean;
 
     /**
      * returns true if all elmements produce true on a call to fn(element)
      *
      * @param fn
      */
-    allMatch(fn:  Matchable<T>): boolean;
+    allMatch(fn: Matchable<T>): boolean;
 
     /**
      * returns true if no elmements produce true on a call to fn(element)
      *
      * @param fn
      */
-    noneMatch(fn:  Matchable<T>): boolean;
+    noneMatch(fn: Matchable<T>): boolean;
 
     /**
      * Collect the elements with a collector given
@@ -136,7 +136,8 @@ export interface IStream<T> {
  * This is the early eval version
  * for a lazy eval version check, LazyStream, which is api compatible
  * to this implementation, however with the benefit of being able
- * to provide infinite data sources and generic data providers
+ * to provide infinite data sources and generic data providers, the downside
+ * is, it might be a tad slower in some situations
  */
 export class Stream<T> implements IMonad<T, Stream<any>>, IValueHolder<Array<T>>, IStream<T> {
 
@@ -246,7 +247,7 @@ export class Stream<T> implements IMonad<T, Stream<any>>, IValueHolder<Array<T>>
         return false;
     }
 
-    allMatch(fn:  Matchable<T>): boolean {
+    allMatch(fn: Matchable<T>): boolean {
         if (!this.value.length) {
             return false;
         }
@@ -259,7 +260,7 @@ export class Stream<T> implements IMonad<T, Stream<any>>, IValueHolder<Array<T>>
         return matches == this.value.length;
     }
 
-    noneMatch(fn:  Matchable<T>): boolean {
+    noneMatch(fn: Matchable<T>): boolean {
         let matches = 0;
         for (let cnt = 0; cnt < this.value.length; cnt++) {
             if (!fn(this.value[cnt])) {
@@ -296,29 +297,45 @@ export class Stream<T> implements IMonad<T, Stream<any>>, IValueHolder<Array<T>>
 
 }
 
-
 /**
  * Lazy implementation of a Stream
  * The idea is to connect the intermediate
  * streams as datasources like a linked list
- * with reverse referencing
- * and for special operations like filtering
- * flatmapping have intermediate datasources in the list
+ * with reverse referencing and for special
+ * operations like filtering flatmapping
+ * have intermediate datasources in the list
  * with specialized functions.
+ *
+ * Sort of a modified pipe valve pattern
+ * the streams are the pipes the intermediate
+ * data sources are the valves
+ *
+ * We then can use passed in functions to control
+ * the flow in the valves
  *
  * That way we can have a lazy evaluating stream
  *
- * So on the endpoints side, every call to get an element
- * triggers a chain of operations to the parents with then
- * perform a set of monadic operations until the data hits
- * the endpoint
+ * So if an endpoint requests data
+ * a callback trace goes back the stream list
+ * which triggers an operation upwards
+ * which sends data down the drain which then is processed
+ * and filtered until one element hits the endpoint.
+ *
+ * That is repeated, until all elements are processed
+ * or an internal limit is hit.
+ *
  */
 export class LazyStream<T> implements IStreamDataSource<T>, IStream<T>, IMonad<T, LazyStream<any>> {
 
-    protected parent: IStreamDataSource<T>;
-
-    pos = -1;
+    protected dataSource: IStreamDataSource<T>;
     _limits = -1;
+
+    /*
+     * needed to have the limits check working
+     * we need to keep track of the current position
+     * in the stream
+     */
+    pos = -1;
 
     static of<T>(...values: Array<T>): LazyStream<T> {
         return new LazyStream<T>(new ArrayStreamDataSource(...values));
@@ -329,7 +346,7 @@ export class LazyStream<T> implements IStreamDataSource<T>, IStream<T>, IMonad<T
     }
 
     constructor(parent: IStreamDataSource<T>) {
-        this.parent = parent;
+        this.dataSource = parent;
 
     }
 
@@ -338,23 +355,23 @@ export class LazyStream<T> implements IStreamDataSource<T>, IStream<T>, IMonad<T
             return false;
         }
 
-        return this.parent.hasNext();
+        return this.dataSource.hasNext();
     }
 
     next(): T {
-        let next = this.parent.next();
+        let next = this.dataSource.next();
         // @ts-ignore
         this.pos++;
         return next;
     }
 
     reset(): void {
-        this.parent.reset();
+        this.dataSource.reset();
         this.pos = 0;
         this._limits = -1;
     }
 
-    nextFilter(fn:  Matchable<T>): T {
+    nextFilter(fn: Matchable<T>): T {
         if (this.hasNext()) {
             let newVal: T = this.next();
             if (!fn(newVal)) {
@@ -381,28 +398,27 @@ export class LazyStream<T> implements IStreamDataSource<T>, IStream<T>, IMonad<T
 
     onElem(fn: IteratableConsumer<T>): LazyStream<T> {
         return new LazyStream(new MappedStreamDataSource((el) => {
-            if(fn(el, this.pos) === false) {
+            if (fn(el, this.pos) === false) {
                 this.stop();
             }
             return el;
         }, this));
     }
 
-    filter(fn:  Matchable<T>): LazyStream<T> {
-        return <LazyStream<T>> new LazyStream<T>(new FilteredStreamDatasource<any>(fn, this));
+    filter(fn: Matchable<T>): LazyStream<T> {
+        return <LazyStream<T>>new LazyStream<T>(new FilteredStreamDatasource<any>(fn, this));
     }
 
-    map<R>(fn:  Mappable<T, R>): LazyStream<any> {
+    map<R>(fn: Mappable<T, R>): LazyStream<any> {
         return new LazyStream(new MappedStreamDataSource(fn, this));
     }
-
 
     flatMap<StreamProducer>(fn: StreamProducer): LazyStream<any> {
         return new LazyStream<any>(new FlatMapStreamDataSource(<any>fn, this));
     }
 
     //endpoint
-    each(fn:  IteratableConsumer<T>) {
+    each(fn: IteratableConsumer<T>) {
         while (this.hasNext()) {
             if (fn(this.next()) === false) {
                 this.stop();
@@ -450,7 +466,7 @@ export class LazyStream<T> implements IStreamDataSource<T>, IStream<T>, IMonad<T
         return Optional.fromNullable(this.next());
     }
 
-    anyMatch(fn:  Matchable<T>): boolean {
+    anyMatch(fn: Matchable<T>): boolean {
         while (this.hasNext()) {
             if (fn(this.next())) {
                 return true;
@@ -459,7 +475,7 @@ export class LazyStream<T> implements IStreamDataSource<T>, IStream<T>, IMonad<T
         return false;
     }
 
-    allMatch(fn:  Matchable<T>): boolean {
+    allMatch(fn: Matchable<T>): boolean {
         while (this.hasNext()) {
             if (!fn(this.next())) {
                 return false;
@@ -468,7 +484,7 @@ export class LazyStream<T> implements IStreamDataSource<T>, IStream<T>, IMonad<T
         return true;
     }
 
-    noneMatch(fn:  Matchable<T>): boolean {
+    noneMatch(fn: Matchable<T>): boolean {
         while (this.hasNext()) {
             if (fn(this.next())) {
                 return false;
@@ -488,7 +504,6 @@ export class LazyStream<T> implements IStreamDataSource<T>, IStream<T>, IMonad<T
     private isOverLimits() {
         return this._limits != -1 && this.pos >= this._limits - 1;
     }
-
 
 }
 

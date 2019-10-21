@@ -94,4 +94,26 @@ describe('tests the addOnEvent and addOnError handling', function () {
     });
 
 
+    it("must have onError called in case of error", function () {
+        let onErrorCalled1 = 0;
+        let onErrorCalled2 = 0;
+
+        jsf.ajax.addOnError((data: any) => {
+            onErrorCalled1++
+        });
+        jsf.ajax.addOnError((data: any) => {
+            onErrorCalled2++;
+
+        });
+
+        //cmd_error_component
+        let issuer = DQ.byId("cmd_error_component").click();
+        this.respond( XmlResponses.ERROR_2);
+
+
+        expect(onErrorCalled1).to.eq(1);
+        expect(onErrorCalled2).to.eq(1);
+
+    });
+
 });

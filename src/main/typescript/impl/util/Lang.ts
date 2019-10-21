@@ -28,7 +28,6 @@ import {Config, Optional} from "../../ext/monadish/Monad";
 import {CancellablePromise} from "../../ext/monadish/Promise";
 import {DQ} from "../../ext/monadish/DomQuery";
 
-
 export class Lang {
 
     private static LANGUAGE_MAPS: { [key: string]: any } = {
@@ -166,23 +165,6 @@ export class Lang {
     }
 
     /**
-     * hitch backported from dojo
-     * hitch allows to assign a function to a dedicated scope
-     * this is helpful in situations when function reassignments
-     * can happen
-     * (notably happens often in lazy xhr code)
-     *
-     * @param {Function} scope of the function to be executed in
-     * @param {Function} method to be executed, the method must be of type function
-     *
-     * @return whatever the executed method returns
-     * @deprecated we should to use typescript first order functions instead
-     */
-    hitch(scope: any, method: Function): Function {
-        return this.base.hitch(scope, method);
-    }
-
-    /**
      * simplified merge maps which basically produces
      * a final merged map from left to right
      * the function is sideffect free
@@ -190,19 +172,6 @@ export class Lang {
      */
     mergeMaps(maps: { [key: string]: any }[], overwrite: boolean = true, blockFilter: Function = (item) => false, whitelistFilter: Function = (item) => true): { [key: string]: any } {
         return this.base.mergeMaps(maps, overwrite, blockFilter, whitelistFilter);
-    }
-
-    /**
-     * Helper function to merge two maps
-     * into one
-     * @param {Object} dest the destination map
-     * @param {Object} src the source map
-     * @param {boolean} overwrite if set to true the destination is overwritten if the keys exist in both maps
-     * @param blockFilter
-     * @param whitelistFilter
-     **/
-    mixMaps<T>(dest: { [key: string]: T }, src: { [key: string]: T }, overwrite: boolean = true, blockFilter: Function = (item) => false, whitelistFilter: Function = (item) => true): { [key: string]: T } {
-        return this.base.mixMaps(dest, src, overwrite, blockFilter, whitelistFilter);
     }
 
     /**
@@ -215,51 +184,6 @@ export class Lang {
      */
     objToArray<T>(obj: any, offset: number = 0, pack: Array<T> = []): Array<T> {
         return this.base.objToArray(obj, offset, pack);
-    }
-
-    /**
-     * foreach implementation utilizing the
-     * ECMAScript wherever possible
-     * with added functionality
-     *
-     * @param arr the array to filter
-     * @param callbackfn
-     * @param startPos
-     * @param scope the closure to apply the function to, with the syntax defined by the ecmascript functionality
-     * function (element<,key, array>)
-     * <p />
-     * optional params
-     * <p />
-     * <ul>
-     *      <li>param startPos (optional) the starting position </li>
-     *      <li>param scope (optional) the scope to apply the closure to  </li>
-     * </ul>
-     */
-    arrForEach<T>(arr: any, callbackfn: (value: T, index: number, array: T[]) => void, startPos: number = 0, scope: Function = null) {
-        return this.base.arrForEach(arr, callbackfn, startPos, scope);
-    }
-
-    /**
-     * checks if an array contains an element
-     * @param {Array} arr   array
-     * @param {String} str string to check for
-     */
-    contains<T>(arr: T[], str: string) {
-        return this.base.contains(arr, str);
-    }
-
-    /**
-     * adds a EcmaScript optimized indexOf to our mix,
-     * checks for the presence of an indexOf functionality
-     * and applies it, otherwise uses a fallback to the hold
-     * loop method to determine the index
-     *
-     * @param arr the array
-     * @param element the index to search for
-     * @param fromIndex
-     */
-    arrIndexOf<T>(arr: any, element: T, fromIndex: number = 0): number {
-        return this.base.arrIndexOf(arr, element, fromIndex);
     }
 
     /**
@@ -282,26 +206,6 @@ export class Lang {
     }
 
     /**
-     * helper to automatically apply a delivered arguments map or array
-     * to its destination which has a field "_"<key> and a full field
-     *
-     * @param dest the destination object
-     * @param args the arguments array or map
-     * @param argNames the argument names to be transferred
-     */
-    /**
-     * helper to automatically apply a delivered arguments map or array
-     * to its destination which has a field "_"<key> and a full field
-     *
-     * @param dest the destination object
-     * @param args the arguments array or map
-     * @param argNames the argument names to be transferred
-     */
-    applyArgs<T>(dest: any, args: { [key: string]: T } | Array<T>, argNames: Array<string> = null): any {
-        return this.base.applyArgs(dest, args, argNames);
-    }
-
-    /**
      * transforms a key value pair into a string
      * @param key the key
      * @param val the value
@@ -312,39 +216,6 @@ export class Lang {
         ret.push(key);
         ret.push(val);
         return ret.join(delimiter);
-    }
-
-    serializeXML(xmlNode: Node | CDATASection, escape?: boolean): string {
-        if (!escape) {
-            if ((<CDATASection>xmlNode).data) return (<CDATASection>xmlNode).data; //CDATA block has raw data
-            if (xmlNode.textContent) return xmlNode.textContent; //textNode has textContent
-        }
-        return (new XMLSerializer()).serializeToString(xmlNode);
-    }
-
-    serializeChilds(xmlNode: Node): string {
-        let buffer = [];
-        if (!xmlNode.childNodes) return "";
-        for (let cnt = 0; cnt < xmlNode.childNodes.length; cnt++) {
-            buffer.push(this.serializeXML(xmlNode.childNodes[cnt]));
-        }
-        return buffer.join("");
-    }
-
-    isXMLParseError(xmlContent: Node): boolean {
-        //no xml content
-        if (xmlContent == null) return true;
-        let findParseError = function (node) {
-            if (!node || !node.childNodes) return false;
-            for (let cnt = 0; cnt < node.childNodes.length; cnt++) {
-                let childNode = node.childNodes[cnt];
-                if (childNode.tagName && childNode.tagName == "parsererror") return true;
-            }
-            return false;
-        };
-
-        return !xmlContent ||
-            ((<any>xmlContent).parseError && (<any>xmlContent).parserError.errorCode) || findParseError(xmlContent);
     }
 
     /**
@@ -410,17 +281,6 @@ export class Lang {
 
         return new Error(message + (callerCls || this.nameSpace, callFunc || ("" + (<any>arguments).caller.toString())));
 
-    }
-
-    /*
-     * Promise wrappers for timeout and interval
-     */
-    timeout(timeout: number): CancellablePromise {
-        return this.base.timeout(timeout);
-    }
-
-    interval(timeout: number): CancellablePromise {
-        return this.base.interval(timeout);
     }
 
     /**
@@ -510,15 +370,15 @@ export class Lang {
         let queryElem = new DQ(elem);
         let eventTarget = new DQ(_Lang.getEventTarget(event));
 
-        if(queryElem.isTag(FORM)) {
+        if (queryElem.isTag(FORM)) {
             return queryElem;
         }
 
         //html 5 for handling
-        if(queryElem.attr(FORM).isPresent()) {
+        if (queryElem.attr(FORM).isPresent()) {
             let formId = queryElem.attr(FORM).value;
             let foundForm = DQ.byId(formId);
-            if(foundForm.isPresent()) {
+            if (foundForm.isPresent()) {
                 return foundForm;
             }
         }

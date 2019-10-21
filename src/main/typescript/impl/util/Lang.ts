@@ -43,7 +43,7 @@ export class Lang {
 
     private base: LangBase;
 
-    private installedLocale: Messages = new Messages();
+    private installedLocale: Messages;
     private nameSpace = "impl/util/Lang/";
 
     private constructor() {

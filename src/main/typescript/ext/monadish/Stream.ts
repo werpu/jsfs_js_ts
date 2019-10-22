@@ -19,6 +19,7 @@ export type IteratableConsumer<T> = (data: T, pos ?: number) => void | boolean;
 export type Reducable<T> = (val1: T, val2: T) => T;
 export type Matchable<T> = (data: T) => boolean;
 export type Mappable<T, R> = (data: T) => R;
+export type Comparator<T> = (el1: T, el2: T) => number;
 
 /**
  * Generic interface defining a stream
@@ -116,6 +117,16 @@ export interface IStream<T> {
      * @param collector
      */
     collect(collector: ICollector<T, any>): any;
+
+    /**
+     * sort on the stream, this is a special case
+     * of an endpoint, so your data which is fed in needs
+     * to be limited otherwise it will fail
+     * it still returns a stream for further processing
+     *
+     * @param comparator
+     */
+    sort(comparator: Comparator<T>): IStream<T>;
 
     /**
      * Limits the stream to a certain number of elements
@@ -270,6 +281,12 @@ export class Stream<T> implements IMonad<T, Stream<any>>, IValueHolder<Array<T>>
         return matches == this.value.length;
     }
 
+    sort(comparator: Comparator<T>): IStream<T> {
+        let newArr = this.value.slice().sort(comparator);
+        return Stream.of(...newArr);
+    }
+
+
     collect(collector: ICollector<T, any>): any {
         this.each(data => collector.collect(data));
         return collector.finalValue;
@@ -279,8 +296,7 @@ export class Stream<T> implements IMonad<T, Stream<any>>, IValueHolder<Array<T>>
     hasNext() {
         let isLimitsReached = this._limits != -1 && this.pos >= this._limits - 1;
         let isEndOfArray = this.pos >= this.value.length - 1;
-        return !(isLimitsReached ||
-            isEndOfArray);
+        return !(isLimitsReached || isEndOfArray);
     }
 
     next(): T {
@@ -491,6 +507,12 @@ export class LazyStream<T> implements IStreamDataSource<T>, IStream<T>, IMonad<T
             }
         }
         return true;
+    }
+
+    sort(comparator: Comparator<T>): IStream<T> {
+        let arr = this.collect(new ArrayCollector());
+        arr = arr.sort(comparator);
+        return LazyStream.of(...arr);
     }
 
     get value(): Array<T> {

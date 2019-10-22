@@ -582,33 +582,42 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         if (this.getAsElem(0).getIf("value").isPresent()) {
             return new ValueEmbedder<string>(this.getAsElem(0).value);
         } else {
+            if(this.isTag("textArea")) {
+                return new ValueEmbedder<string>(this.getAsElem(0).value, "innerText");
+            }
             return <any>ValueEmbedder.absent;
         }
     }
 
     get elements(): DomQuery {
-        let elements: Array<DomQuery> = this.each((item: DomQuery) => {
+        let elements: DomQuery = this.stream.flatMap((item: DomQuery) => {
             let formElement: HTMLFormElement = <HTMLFormElement>item.value.value;
-            return formElement.elements ? formElement.elements : null;
-        }).stream
-            .filter(item => !!item).value;
+            return new Stream(formElement.elements ? Lang.instance.objToArray(formElement.elements) : []);
+        }).filter(item => !!item).collect(new DomQueryCollector());
 
-        let res = new DomQuery(...elements);
-
-        return res
-            .orElseLazy(() => this.querySelectorAll("form").elements)
-            .orElseLazy(() => this.querySelectorAll("input, select, textarea"));
+        return elements
+            .orElseLazy(() => this.querySelectorAll("input, select, textarea, fieldset"));
     }
 
     /**
      * todo align this api with the rest of the apis
      */
     get disabled(): boolean {
-        return !!this.attr("disabled").value;
+        return this.attr("disabled").isPresent();
     }
 
     set disabled(disabled: boolean) {
-        this.attr("disabled").value = disabled + "";
+       // this.attr("disabled").value = disabled + "";
+        if(!disabled) {
+            this.removeAttribute("disabled");
+        } else {
+            this.attr("disabled").value = "disabled";
+        }
+
+    }
+
+    removeAttribute(name: string) {
+        this.eachElem(item => item.removeAttribute(name));
     }
 
     get childNodes(): DomQuery {
@@ -684,8 +693,8 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         }
     }
 
-    static globalEval(code: string): DomQuery {
-        return new DomQuery(document).globalEval(code);
+    static globalEval(code: string, nonce?:string): DomQuery {
+        return new DomQuery(document).globalEval(code, nonce);
     }
 
     /**
@@ -939,12 +948,21 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
      */
     html(inval?: string): DomQuery | Optional<string> {
         if (Optional.fromNullable(inval).isAbsent()) {
-            return this.getAsElem(0).isPresent() ? Optional.fromNullable(this.getAsElem(0).value.innerHTML) : Optional.absent;
+            return this.isPresent() ? Optional.fromNullable(this.innerHtml) : Optional.absent;
         }
-        if (this.getAsElem(0).isPresent()) {
-            this.getAsElem(0).value.innerHTML = inval;
-        }
+        this.innerHtml = inval;
+
         return this;
+    }
+
+   set innerHtml(inVal: string) {
+        this.eachElem(elem => elem.innerHTML = inVal);
+    }
+
+    get innerHtml(): string {
+        let retArr = [];
+        this.eachElem(elem => retArr.push(elem.innerHTML));
+        return retArr.join("");
     }
 
     //source: https://developer.mozilla.org/en-US/docs/Web/API/Element/matches
@@ -964,7 +982,6 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
                 return i > -1;
             };
         return matchesSelector.call(toMatch, selector);
-        //return matchesSelector.call(toMatch, selector);
     }
 
     /**
@@ -1218,14 +1235,15 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
     }
 
     parents(tagName: string): DomQuery {
-        let retArr = [];
+        const retSet: Set<Element> = new Set();
+        const retArr: Array<Element> = [];
         const lowerTagName = tagName.toLowerCase();
-        let resolveItem = (item: Element) => {
 
-            if ((item.tagName || "").toLowerCase() == lowerTagName) {
+        let resolveItem = (item: Element) => {
+            if ((item.tagName || "").toLowerCase() == lowerTagName && !retSet.has(item)) {
+                retSet.add(item);
                 retArr.push(item);
             }
-
         };
 
         this.eachElem((item: Element) => {
@@ -1238,7 +1256,8 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
                 }
             }
         });
-        return new DomQuery(...retArr);
+
+        return  new DomQuery(... retArr);
     }
 
     copyAttrs(sourceItem: DomQuery | XMLQuery): DomQuery {

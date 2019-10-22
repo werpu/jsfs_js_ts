@@ -16,25 +16,44 @@
 
 import {expect} from 'chai';
 import {describe, it} from 'mocha';
-import {DomQuery} from "../../../../../main/typescript/ext/monadish/DomQuery";
-import {StandardInits} from "../shared/StandardInits";
-import defaultHtml = StandardInits.defaultHtml;
-import standardInit = StandardInits.standardInit;
-import standardClose = StandardInits.standardClose;
+import {ArrayCollector, DomQuery, Lang} from "../../../../../main/typescript/ext/monadish";
+;
 
 const jsdom = require("jsdom");
 const {JSDOM} = jsdom;
 
-describe('DOMQuery tests', function () {
+describe('DOMQuery tests', () => {
 
-    beforeEach(function () {
-        return standardInit(this, () => {
-            return defaultHtml(false);
-        });
-    });
+    beforeEach(() => {
 
-    afterEach(function () {
-        standardClose(this);
+        let dom = new JSDOM(`
+            <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <title>Title</title>
+            </head>
+            <body>
+                <div id="id_1"></div>
+                <div id="id_2"  booga="blarg"></div>
+                <div id="id_3"></div>
+                <div id="id_4"></div>
+            </body>
+            </html>
+    
+    `, {
+            contentType: "text/html",
+            runScripts: "dangerously"
+        })
+
+        let window = dom.window;
+
+        (<any>global).window = window;
+        (<any>global).body = window.document.body;
+        (<any>global).document = window.document;
+        (<any>global).navigator = {
+            language: "en-En"
+        };
     });
 
     it('basic init', function () {
@@ -56,14 +75,29 @@ describe('DOMQuery tests', function () {
         expect(probe2.length == 3);
     });
 
-    it('domquery ops test2 each', () => {
+    it('global eval test', function () {
         let probe2 = DomQuery.querySelectorAll("div");
-        let noIter = 0;
-        probe2 = probe2.eachElem((item, cnt) => {
-            expect(noIter == cnt).to.be.true;
-            noIter++;
-        });
-        expect(noIter == 4).to.be.true;
+        probe2 = probe2.filter((item: DomQuery) => item.id.match((id) => id != "id_1"));
+        expect(probe2.length == 3);
+    });
+
+    it('must detach', function () {
+        let probe2 = DomQuery.querySelectorAll("div#id_1");
+        probe2.detach();
+
+        expect(DomQuery.querySelectorAll("div#id_1").isPresent()).to.be.false;
+        probe2.appendTo(DomQuery.querySelectorAll("body"));
+        expect(DomQuery.querySelectorAll("div#id_1").isPresent()).to.be.true;
+    });
+
+    it('domquery ops test2 each', () => {
+        let probe2 = DomQuery.querySelectorAll("div#id_1");
+
+        DomQuery.globalEval("document.getElementById('id_1').innerHTML = 'hello'");
+        expect(probe2.html().value).to.eq("hello");
+
+        DomQuery.globalEval("document.getElementById('id_1').innerHTML = 'hello2'", "nonci");
+        expect(probe2.html().value).to.eq("hello2");
     });
 
     it('domquery ops test2 eachNode', function () {
@@ -142,5 +176,88 @@ describe('DOMQuery tests', function () {
         expect(DomQuery.querySelectorAll("#insertedAfter2").isPresent()).to.be.true;
     });
 
+    it('it must stream', function () {
+        let probe1 = new DomQuery(document).querySelectorAll("div");
+        let coll: Array<any> = probe1.stream.collect(new ArrayCollector());
+        expect(coll.length == 4).to.be.true;
+
+        coll = probe1.lazyStream.collect(new ArrayCollector());
+        expect(coll.length == 4).to.be.true;
+
+    });
+
+    it('it must have parents', function () {
+        let probe1 = new DomQuery(document).querySelectorAll("div");
+        let coll: Array<any> = probe1.parents("body").stream.collect(new ArrayCollector());
+        expect(coll.length == 1).to.be.true;
+
+    });
+
+    it("must have a working insertBefore and insertAfter", function () {
+        let probe1 = new DomQuery(document).byId("id_2");
+        probe1.insertBefore(DomQuery.fromMarkup(` <div id="id_x_0"></div><div id="id_x_1"></div>`));
+        probe1.insertAfter(DomQuery.fromMarkup(` <div id="id_x_0_1"></div><div id="id_x_1_1"></div>`));
+
+        expect(DomQuery.querySelectorAll("div").length).to.eq(8);
+        DomQuery.querySelectorAll("body").innerHtml = Lang.instance.trim(DomQuery.querySelectorAll("body").innerHtml.replace(/>\s*</gi, "><"));
+        expect(DomQuery.querySelectorAll("body").childNodes.length).to.eq(8);
+
+        let innerHtml = DomQuery.querySelectorAll("body").innerHtml;
+        expect(innerHtml.indexOf("id_x_0") < innerHtml.indexOf("id_x_1")).to.be.true;
+        expect(innerHtml.indexOf("id_x_0") < innerHtml.indexOf("id_2")).to.be.true;
+        expect(innerHtml.indexOf("id_x_0") > 0).to.be.true;
+
+        expect(innerHtml.indexOf("id_x_0_1") > innerHtml.indexOf("id_2")).to.be.true;
+        expect(innerHtml.indexOf("id_x_1_1") > innerHtml.indexOf("id_x_0_1")).to.be.true;
+    })
+
+    it("must have a working input handling", function () {
+        DomQuery.querySelectorAll("body").innerHtml = `
+        <form id="blarg">
+            <div id="embed1">
+            <input type="text" id="id_1" name="id_1" value="id_1_val"></input> 
+            <input type="text" id="id_2" name="id_2" value="id_2_val" disabled="disabled"> </input>
+            <textarea type="text" id="id_3" name="id_3">textareaVal</textarea> 
+                    
+            <fieldset>
+                <input type="radio" id="mc" name="cc_1" value="Mastercard" checked="checked"></input>
+                <label for="mc"> Mastercard</label> 
+                <input type="radio" id="vi" name="cc_1" value="Visa"></input>
+                <label for="vi"> Visa</label>
+                <input type="radio" id="ae" name="cc_1" value="AmericanExpress"></input>
+                <label for="ae"> American Express</label> 
+             </fieldset>
+             </div>
+        </form>
+       `;
+
+
+        let length = DomQuery.querySelectorAll("form").elements.length;
+        expect(length == 7).to.be.true;
+        let length1 = DomQuery.querySelectorAll("body").elements.length;
+        expect(length1 == 7).to.be.true;
+        let length2 = DomQuery.byId("embed1").elements.length;
+        expect(length2 == 7).to.be.true;
+
+        let count = DomQuery.byId("embed1").elements
+            .stream.map<number>(item => item.disabled ? 1 : 0)
+            .reduce((val1, val2) => val1+val2, 0);
+        expect(count.value).to.eq(1);
+
+
+        DomQuery.byId("embed1").elements
+            .stream.filter(item => item.disabled)
+            .each(item => item.disabled = false);
+
+        count = DomQuery.byId("embed1").elements
+            .stream.map<number>(item => item.disabled ? 1 : 0)
+            .reduce((val1, val2) => val1+val2, 0);
+        expect(count.value).to.eq(0);
+
+        count = DomQuery.byId("embed1").elements
+            .stream.map<number>(item => item.attr("checked").isPresent() ? 1 : 0)
+            .reduce((val1, val2) => val1+val2, 0);
+        expect(count.value).to.eq(1);
+    })
 
 });

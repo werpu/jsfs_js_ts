@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import {expect} from 'chai';
-import {describe, it} from 'mocha';
-import {Config, Optional} from "../../../../../main/typescript/ext/monadish/Monad";
+import { expect } from 'chai';
+import { describe, it } from 'mocha';
+import {Config, Optional} from "../../../../../main/typescript/ext/monadish";
 
 //TODO saveResolveTest
 describe('optional tests', () => {
@@ -67,8 +67,9 @@ describe('optional tests', () => {
     });
 });
 
+
 describe('Config tests', () => {
-    var setup = function (): Config {
+    var setup = function ():Config {
         return new Config({
             data: {
                 value: 1,
@@ -159,6 +160,16 @@ describe('Config tests', () => {
         expect(config.value[5].world[3].from[2]).to.be.eq("me");
         structureBroken(config.value);
     });
+
+    it('resolve test', () => {
+        let probe = new Config({});
+        probe.apply("test1","test2","test3").value = "hello";
+
+        expect(probe.resolve((root) => root.test1.test2.test3).value).to.eq("hello");
+        expect(probe.resolve((root) => root.test1.test2.testborked).isAbsent()).to.be.true;
+        expect(probe.resolve((root) => root.test1.testborked.test3).isAbsent()).to.be.true;
+    });
+
 });
 
 

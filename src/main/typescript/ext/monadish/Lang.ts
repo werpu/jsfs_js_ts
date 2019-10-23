@@ -105,7 +105,7 @@ export class Lang {
      * http://blog.stevenlevithan.com/archives/faster-trim-javascript
      * crossported from dojo
      */
-    trim(str: string): string {
+    trim(str: string = ""): string {
         str = str.replace(/^\s\s*/, '');
         let ws = /\s/, i = str.length;
 

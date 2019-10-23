@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Config, XMLQuery} from "../../ext/monadish";
+import {Config, DomQuery, XMLQuery} from "../../ext/monadish";
 import {Const} from "../core/Const";
 import {Implementation} from "../AjaxImpl";
 import {Assertions} from "../util/Assertions";
@@ -155,9 +155,6 @@ export class ResponseProcessor implements IResponseProcessor {
     /**
      * attributes leaf tag... process the attributes
      *
-     * @param request
-     * @param context
-     * @param internalContext
      * @param node
      */
     attributes(node: XMLQuery) {
@@ -188,7 +185,7 @@ export class ResponseProcessor implements IResponseProcessor {
         let before = node.attr(Const.TAG_BEFORE);
         let after = node.attr(Const.TAG_AFTER);
 
-        let insertNodes = DQ.fromMarkup(node.cDATAAsString);
+        let insertNodes = DQ.fromMarkup(<any>node.cDATAAsString);
 
         if (before.isPresent()) {
             DQ.byId(before.value).insertBefore(insertNodes);

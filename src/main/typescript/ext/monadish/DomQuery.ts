@@ -1263,17 +1263,6 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         return new DomQuery(...retArr);
     }
 
-    get cDATAAsString(): string {
-        let cDataBlock = [];
-        // response may contain several blocks
-        this.each((item: DomQuery) => {
-            item.childNodes.eachElem((node: Node) => {
-                cDataBlock.push(<string>(<any>node).data);
-            });
-        });
-        return cDataBlock.join('');
-    }
-
     copyAttrs(sourceItem: DomQuery | XMLQuery): DomQuery {
         sourceItem.eachElem((sourceNode: Element) => {
             let attrs: Array<Attr> = Lang.instance.objToArray(sourceNode.attributes);
@@ -1358,14 +1347,15 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
     runScripts(whilteListed: (val: string) => boolean = DEFAULT_JSF_WHITELIST): DomQuery {
         let _Lang = Lang.instance,
             finalScripts = [],
+            equi = _Lang.equalsIgnoreCase,
             execScrpt = (item) => {
                 let tagName = item.tagName;
                 let itemType = item.type || "";
-                if (tagName && _Lang.equalsIgnoreCase(tagName, "script") &&
-                    (itemType === "" || _Lang.equalsIgnoreCase(itemType, "text/javascript") ||
-                        _Lang.equalsIgnoreCase(itemType, "javascript") ||
-                        _Lang.equalsIgnoreCase(itemType, "text/ecmascript") ||
-                        _Lang.equalsIgnoreCase(itemType, "ecmascript"))) {
+                if (tagName && equi(tagName, "script") &&
+                    (itemType === "" || equi(itemType, "text/javascript") ||
+                        equi(itemType, "javascript") ||
+                        equi(itemType, "text/ecmascript") ||
+                        equi(itemType, "ecmascript"))) {
                     let src = item.getAttribute('src');
                     if ('undefined' != typeof src
                         && null != src
@@ -1389,7 +1379,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
                         // embedded script auto eval
                         //TODO this probably needs to be changed due to our new parsing structures
                         //probably not needed anymore
-                        let evalText = Lang.instance.trim(item.text || item.innerText || item.innerHTML);
+                        let evalText = _Lang.trim(item.text || item.innerText || item.innerHTML);
                         let go = true;
 
                         while (go) {
@@ -1446,24 +1436,21 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
 
     runCss(): DomQuery {
 
-        const UDEF = "undefined",
-            // _RT = this._RT,
-            _Lang = Lang.instance,
+        const _Lang = Lang.instance,
             applyStyle = (item: Element, style: string) => {
                 let newSS: HTMLStyleElement = document.createElement("style");
                 document.getElementsByTagName("head")[0].appendChild(newSS);
 
-                let styleSheet = newSS.sheet ? newSS.sheet : (<any>newSS).styleSheet;
+                let styleSheet =  newSS.sheet ?? (<any>newSS).styleSheet;
 
-                newSS.setAttribute("rel", item.getAttribute("rel") || "stylesheet");
-                newSS.setAttribute("type", item.getAttribute("type") || "text/css");
+                newSS.setAttribute("rel", item.getAttribute("rel") ?? "stylesheet");
+                newSS.setAttribute("type", item.getAttribute("type") ?? "text/css");
 
-                if (UDEF != typeof styleSheet.cssText) {
+                if (styleSheet?.cssText ?? false) {
                     styleSheet.cssText = style;
                 } else {
                     newSS.appendChild(document.createTextNode(style));
                 }
-
             },
 
             execCss = (item: Element) => {
@@ -1629,7 +1616,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
             if (element.name.isAbsent()) {//no name, no encoding
                 return;
             }
-            let name = element.name.orElse("__none__").value;
+            let name = element.name.value;
             let tagName = element.tagName.orElse("__none__").value.toLowerCase();
             let elemType = element.type.orElse("__none__").value.toLowerCase();
 
@@ -1691,6 +1678,18 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
 
     }
 
+    get cDATAAsString(): string {
+        let cDataBlock = [];
+        // response may contain several blocks
+        return this.stream
+            .flatMap(item => item.childNodes.stream).reduce((reduced: Array<any>, item: DomQuery) => {
+                reduced.push((<any>item?.value?.value)?.data ?? "");
+                return reduced;
+            }, []).value.join("");
+
+    }
+
+
     subNodes(from: number, to?: number): DomQuery {
         if (Optional.fromNullable(to).isAbsent()) {
             to = this.length;
@@ -1724,7 +1723,6 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
     reset() {
         this.pos = -1;
     }
-
 }
 
 /**

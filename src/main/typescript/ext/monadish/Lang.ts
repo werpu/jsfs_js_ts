@@ -52,10 +52,7 @@ export class Lang {
     static saveResolve<T>(resolverProducer: () => T, defaultValue: T = null): Optional<T> {
         try {
             let result = resolverProducer();
-            if ("undefined" == typeof result || null == result) {
-                return Optional.fromNullable(defaultValue);
-            }
-            return Optional.fromNullable(result);
+            return Optional.fromNullable(result ?? defaultValue);
         } catch (e) {
             return Optional.absent;
         }
@@ -64,10 +61,7 @@ export class Lang {
     static saveResolveLazy<T>(resolverProducer: () => T, defaultValue: () => T = null): Optional<T> {
         try {
             let result = resolverProducer();
-            if ("undefined" == typeof result || null == result) {
-                return Optional.fromNullable(defaultValue());
-            }
-            return Optional.fromNullable(result);
+            return Optional.fromNullable(result ?? defaultValue());
         } catch (e) {
             return Optional.absent;
         }
@@ -105,7 +99,7 @@ export class Lang {
      * http://blog.stevenlevithan.com/archives/faster-trim-javascript
      * crossported from dojo
      */
-    trim(str: string = ""): string {
+    trim(str: string): string {
         str = str.replace(/^\s\s*/, '');
         let ws = /\s/, i = str.length;
 
@@ -182,7 +176,6 @@ export class Lang {
                overwrite: boolean,
                blockFilter?: Function,
                whitelistFilter?: Function): { [key: string]: T } {
-        let UNDEF = "undefined";
         for (let key in src) {
             if (!src.hasOwnProperty(key)) continue;
             if (blockFilter && blockFilter(key)) {
@@ -197,9 +190,9 @@ export class Lang {
                  *on all values being non boolean, we would need an getIf
                  *operator in javascript to shorten this :-(
                  */
-                dest[key] = (UNDEF != typeof dest[key]) ? dest[key] : src[key];
+                dest[key] =  dest[key] ?? src[key];
             } else {
-                dest[key] = (UNDEF != typeof src[key]) ? src[key] : dest[key];
+                dest[key] =  src[key] ?? dest[key];
             }
         }
         return dest;
@@ -220,7 +213,7 @@ export class Lang {
         //since offset is numeric we cannot use the shortcut due to 0 being false
         //special condition array delivered no offset no pack
         if (obj instanceof Array && !offset && !pack) return obj;
-        let finalOffset = ('undefined' != typeof offset || null != offset) ? offset : 0;
+        let finalOffset =  offset ?? 0;
         let finalPack = pack || [];
         try {
             return finalPack.concat(Array.prototype.slice.call(obj, finalOffset));

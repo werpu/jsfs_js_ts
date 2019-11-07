@@ -17,14 +17,16 @@
 import {expect} from 'chai';
 import {describe, it} from 'mocha';
 import {ArrayCollector, DomQuery, Lang} from "../../../../../main/typescript/ext/monadish";
+import * as sinon from 'sinon';
 ;
 
 const jsdom = require("jsdom");
 const {JSDOM} = jsdom;
 
-describe('DOMQuery tests', () => {
 
-    beforeEach(() => {
+describe('DOMQuery tests', function () {
+
+    beforeEach(function () {
 
         let dom = new JSDOM(`
             <!DOCTYPE html>
@@ -44,7 +46,7 @@ describe('DOMQuery tests', () => {
     `, {
             contentType: "text/html",
             runScripts: "dangerously"
-        })
+        });
 
         let window = dom.window;
 
@@ -54,6 +56,18 @@ describe('DOMQuery tests', () => {
         (<any>global).navigator = {
             language: "en-En"
         };
+
+        this.xhr = sinon.useFakeXMLHttpRequest();
+        this.requests = [];
+        this.xhr.onCreate = (xhr) => {
+            this.requests.push(xhr);
+        };
+        (<any>global).XMLHttpRequest = this.xhr;
+        (<any>window).XMLHttpRequest = this.xhr;
+    });
+
+    this.afterEach(function () {
+        (<any>global).XMLHttpRequest = (<any>window).XMLHttpRequest = this.xhr.restore();
     });
 
     it('basic init', function () {
@@ -231,7 +245,6 @@ describe('DOMQuery tests', () => {
         </form>
        `;
 
-
         let length = DomQuery.querySelectorAll("form").elements.length;
         expect(length == 7).to.be.true;
         let length1 = DomQuery.querySelectorAll("body").elements.length;
@@ -241,9 +254,8 @@ describe('DOMQuery tests', () => {
 
         let count = DomQuery.byId("embed1").elements
             .stream.map<number>(item => item.disabled ? 1 : 0)
-            .reduce((val1, val2) => val1+val2, 0);
+            .reduce((val1, val2) => val1 + val2, 0);
         expect(count.value).to.eq(1);
-
 
         DomQuery.byId("embed1").elements
             .stream.filter(item => item.disabled)
@@ -251,13 +263,54 @@ describe('DOMQuery tests', () => {
 
         count = DomQuery.byId("embed1").elements
             .stream.map<number>(item => item.disabled ? 1 : 0)
-            .reduce((val1, val2) => val1+val2, 0);
+            .reduce((val1, val2) => val1 + val2, 0);
         expect(count.value).to.eq(0);
 
         count = DomQuery.byId("embed1").elements
             .stream.map<number>(item => item.attr("checked").isPresent() ? 1 : 0)
-            .reduce((val1, val2) => val1+val2, 0);
+            .reduce((val1, val2) => val1 + val2, 0);
         expect(count.value).to.eq(1);
     })
 
+    it("must have a proper loadScriptEval execution", function (done) {
+
+        DomQuery.byTagName("body").loadScriptEval("test.js");
+
+        let xhr = this.requests[0];
+        xhr.respond(200, {
+            "content-type": "application/javascript",
+        }, `
+            document.getElementById('id_1').innerHTML = "hello world";
+        `);
+        setTimeout(() => {
+            expect(DomQuery.byId("id_1").innerHtml == "hello world").to.be.true;
+            done();
+        }, 100)
+
+
+    })
+
+    it("must have a proper loadScriptEval deferred", function (done) {
+
+        DomQuery.byTagName("body").loadScriptEval("test.js", 700);
+
+        let xhr = this.requests[0];
+        xhr.respond(200, {
+            "content-type": "application/javascript",
+        }, `
+            document.getElementById('id_1').innerHTML = "hello world";
+        `);
+        setTimeout(() => {
+            expect(DomQuery.byId("id_1").innerHtml == "hello world").to.be.false;
+
+        }, 100)
+
+        setTimeout(() => {
+            expect(DomQuery.byId("id_1").innerHtml == "hello world").to.be.true;
+            done();
+        }, 1000)
+    })
+
 });
+
+

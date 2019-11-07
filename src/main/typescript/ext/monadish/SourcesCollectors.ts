@@ -207,7 +207,12 @@ export class FlatMapStreamDataSource<T, S> implements IStreamDataSource<S> {
     private resolveNextNext() {
         let next = false;
         while (!next && this.inputDataSource.hasNext()) {
-            this.activeDataSource = this.mapFunc(this.inputDataSource.next());
+            let mapped =  this.mapFunc(this.inputDataSource.next());
+            if(Array.isArray(mapped)) {
+                this.activeDataSource = new ArrayStreamDataSource(...mapped);
+            } else {
+                this.activeDataSource = mapped;
+            }
             next = this.activeDataSource.hasNext();
         }
         return next;

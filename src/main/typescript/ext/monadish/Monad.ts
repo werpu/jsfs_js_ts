@@ -87,7 +87,7 @@ export class Monad<T> implements IMonad<T, Monad<any>>, IValueHolder<T> {
 
     flatMap<R>(fn?: (data: T) => R): Monad<any> {
         let mapped: Monad<any> = this.map(fn);
-        while ("undefined" != typeof mapped && mapped != null && mapped.value instanceof Monad) {
+        while (mapped?.value instanceof Monad) {
             mapped = mapped.value
         }
         return mapped;
@@ -410,7 +410,7 @@ class ConfigEntry<T> extends ValueEmbedder<T> {
     constructor(rootElem: any, key: any, arrPos?: number) {
         super(rootElem, key);
 
-        this.arrPos = ("undefined" != typeof arrPos) ? arrPos : -1;
+        this.arrPos =  arrPos ?? -1;
     }
 
     get value() {

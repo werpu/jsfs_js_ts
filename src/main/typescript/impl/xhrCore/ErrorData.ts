@@ -66,14 +66,21 @@ export class ErrorData extends EventData {
     static fromGeneric(context: Config, errorCode: number, errorType: String): ErrorData {
 
         let UNKNOWN = "UNKNOWN";
+        let getMsg = this.getMsg;
 
-        let source =  Lang.instance.getMessage(context.getIf(Const.SOURCE).orElse(UNKNOWN).value);
-        let errorName =  Lang.instance.getMessage(context.getIf(Const.ERROR_NAME).orElse(UNKNOWN).value);
-        let errorMessage =  Lang.instance.getMessage(context.getIf(Const.ERROR_MESSAGE).orElse(UNKNOWN).value);
-        let status =  Lang.instance.getMessage(context.getIf(Const.STATUS).orElse(UNKNOWN).value);
-        let responseText =  Lang.instance.getMessage(context.getIf(Const.RESPONSE_TEXT).orElse(UNKNOWN).value);
-        let responseXML =  Lang.instance.getMessage(context.getIf(Const.RESPONSE_XML).orElse(UNKNOWN).value);
+        let source =  getMsg(context,Const.SOURCE);
+        let errorName =  getMsg(context,Const.ERROR_NAME);
+        let errorMessage =  getMsg(context, Const.ERROR_MESSAGE);
+        let status =  getMsg(context,Const.STATUS);
+        let responseText =  getMsg(context,Const.RESPONSE_TEXT);
+        let responseXML =  getMsg(context,Const.RESPONSE_XML);
         return new ErrorData(source, name, errorMessage, responseText, responseXML, errorCode+"", status, ErrorType.SERVER_ERROR);
+    }
+
+    private static getMsg(context, param) {
+        let UNKNOWN = "UNKNOWN";
+        let getMsg = Lang.instance.getMessage;
+        return getMsg(context.getIf(param).orElse(UNKNOWN).value);
     }
 
     static fromServerError(context: Config): ErrorData {

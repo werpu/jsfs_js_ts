@@ -1,6 +1,4 @@
-import {Lang} from "./Lang";
 import {AsyncRunnable} from "./AsyncRunnable";
-import {Queue} from "./Queue";
 import {ArrayCollector, Stream} from "../../ext/monadish";
 
 /**

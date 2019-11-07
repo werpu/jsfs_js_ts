@@ -48,7 +48,7 @@ export interface AsyncRunnable<T> {
     then(func: (data: any) => any): AsyncRunnable<T>;
 
     /**
-     * callback for catch functinality
+     * callback for catch functionality
      * triggered when the asynch run is complete
      *
      * the async runnable must register the passed function
@@ -62,7 +62,7 @@ export interface AsyncRunnable<T> {
 
     /**
      * finally called when all then and catches are performed
-     * same this is a registere function
+     * same this is a register function
      * and once the finally time for the promise has
      * come the finally functions must be performed
      */

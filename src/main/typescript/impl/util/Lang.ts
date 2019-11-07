@@ -267,12 +267,13 @@ export class Lang {
      * @return either the config entry or if none is given the default value
      */
     public getLocalOrGlobalConfig(localOptions: Config, configName: string, defaultValue: any): any {
-        /*use(myfaces._impl._util)*/
-        let local = Config.fromNullable(localOptions);
-        let global = Config.fromNullable(window);
-
         let MYFACES = "myfaces";
         let CONFIG = "config";
+
+        let fromNullable = Config.fromNullable;
+
+        let local = fromNullable(localOptions);
+        let global = fromNullable(window);
 
         //we use a monadic structure here to have a more readable code for accessing the config values
         //it either is a <local>myfaces.config.<configName> value or window.myfaces.config.<configName> or a default value

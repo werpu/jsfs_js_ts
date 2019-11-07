@@ -93,7 +93,7 @@ export class ResponseProcessor implements IResponseProcessor {
      * processes an incoming error from the response
      * which is hosted under the &lt;error&gt; tag
      * @param request the current request
-     * @param context the contect object
+     * @param context the context object
      * @param node the node in the xml hosting the error message
      */
     error(node: XMLQuery) {
@@ -120,9 +120,6 @@ export class ResponseProcessor implements IResponseProcessor {
     /**
      * process the redirect operation
      *
-     * @param request
-     * @param context
-     * @param internalContext
      * @param node
      */
     redirect(node: XMLQuery) {
@@ -166,7 +163,6 @@ export class ResponseProcessor implements IResponseProcessor {
     }
 
     /**
-     *
      * @param shadownResponse
      */
     replaceViewRoot(shadowDocument: XMLQuery) {

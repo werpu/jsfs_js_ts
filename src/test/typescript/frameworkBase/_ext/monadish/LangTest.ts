@@ -72,22 +72,6 @@ describe('Lang tests', () => {
 
     });
 
-    it('arrToMap working', () => {
-        const lang = Lang.instance;
-
-        let arr = lang.strToArray("hello.world.from.me", /\./gi);
-        let probe = lang.arrToMap(arr);
-        expect(probe).to.exist;
-        expect(probe.length).to.eq(4);
-        expect(probe["me"]).to.eq(3);
-        expect(probe["hello"]).to.eq(0);
-
-        probe = lang.arrToMap(arr, 3);
-        expect(probe["hello"]).to.eq(3);
-        expect(probe.length).to.eq(4);
-        expect(probe["me"]).to.eq(6);
-    });
-
     it('trim working', () => {
         const lang = Lang.instance;
         let origStr = " hello world from me    ";
@@ -115,32 +99,6 @@ describe('Lang tests', () => {
         expect(lang.isFunc(new Probe())).to.be.false;
     });
 
-
-
-    it('mergeMaps working', () => {
-        const lang = Lang.instance;
-        let probe1 = {
-            "key1":"val1",
-            "key2":"val1_2",
-            "key3":"val_2"
-        }
-
-        let probe2 = {
-            "key1":"val2_1",
-            "key4": "val4"
-        }
-
-        let probe3 = {
-            "key2":"val2_2",
-            "key5": "val5"
-        }
-
-        let merged = lang.mergeMaps([probe1, probe2, probe3]);
-        expect(merged["key1"]).to.eq("val2_1");
-        expect(merged["key2"]).to.eq("val2_2");
-        expect(merged["key4"]).to.eq("val4");
-        expect(merged["key5"]).to.eq("val5");
-    });
 
     it('objToArray working', () => {
         const lang = Lang.instance;

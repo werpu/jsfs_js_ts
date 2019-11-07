@@ -131,4 +131,6 @@ export class Const {
 
     static SEL_SCRIPTS_STYLES = "script, style, link";
 
+    static MF_NONE = "__mf_none__";
+
 }

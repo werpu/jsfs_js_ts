@@ -64,11 +64,13 @@ export class Assertions {
      */
     static raiseError(error: any, message: string, caller ?: string, title ?: string, name ?: string) {
         let _Impl = Implementation.instance;
-        let finalTitle = title || Const.MALFORMEDXML;
-        let finalName = name || Const.MALFORMEDXML;
-        let finalMessage = message || "";
+        let finalTitle = title ?? Const.MALFORMEDXML;
+        let finalName = name ?? Const.MALFORMEDXML;
+        let finalMessage = message ?? "";
 
 
         return Lang.instance.makeException(error, finalTitle, finalName, "Response", caller || (((<any>arguments).caller) ? (<any>arguments).caller.toString() : "_raiseError"), finalMessage);
     }
+
+
 }

@@ -1,6 +1,7 @@
 import {Lang} from "./Lang";
 import {AsyncRunnable} from "./AsyncRunnable";
 import {Queue} from "./Queue";
+import {ArrayCollector, Stream} from "../../ext/monadish";
 
 /**
  * we use the dom to decouple the next processing
@@ -35,7 +36,9 @@ class DomEventDispatcher {
             this.shadowElement.removeEventListener(theName, listener, {
                 capture: true
             });
-            this.listeners = Lang.instance.arrFilter(this.listeners, (item) => item != listener);
+            this.listeners = Stream.of(...this.listeners)
+                        .filter(item => item != listener)
+                        .collect(new ArrayCollector());
         } else {
             for (let currListener of this.listeners) {
                 this.shadowElement.removeEventListener(theName, currListener, {
@@ -69,7 +72,7 @@ class DomEventDispatcher {
 export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
     static EVT_NEXT = "__mf_queue_next__";
 
-    private runnableQueue = new Queue<T>();
+    private runnableQueue = [];//new Queue<T>();
     private delayTimeout: number;
     private eventDispatcher = new DomEventDispatcher();
 
@@ -83,12 +86,7 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
     }
 
     get isEmpty(): boolean {
-        return this.runnableQueue.isEmpty;
-    }
-
-    // noinspection JSUnusedLocalSymbols
-    private set queueSize(newSize: number) {
-        this.runnableQueue.queueSize = newSize;
+        return !this.runnableQueue.length;
     }
 
     /**
@@ -113,19 +111,19 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
     }
 
     dequeue(): T {
-        return this.runnableQueue.dequeue();
+        return this.runnableQueue.shift();
     }
 
     cleanup() {
         this.currentlyRunning = null;
-        this.runnableQueue.cleanup();
+        this.runnableQueue.length = 0;
     }
 
     private appendElement(element: T) {
         //only if the first element is added we start with a trigger
         //otherwise a process already is running and not finished yet at that
         //time
-        this.runnableQueue.enqueue(element);
+        this.runnableQueue.push(element);
         if (!this.currentlyRunning) {
             this.runEntry();
         }

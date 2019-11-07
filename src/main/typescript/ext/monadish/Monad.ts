@@ -22,6 +22,8 @@
 /*IMonad definitions*/
 
 import {Lang} from "./Lang";
+import {AssocArrayCollector} from "./SourcesCollectors";
+import {Stream} from "./Stream";
 
 /**
  * IFunctor interface,
@@ -446,7 +448,7 @@ export class Config extends Optional<any> {
     }
 
     get shallowCopy(): Config {
-        return new Config(Lang.instance.mergeMaps([{}, this.value || {}]));
+        return new Config(Stream.ofAssoc(this.value).collect(new AssocArrayCollector()));
     }
 
     static fromNullable<T>(value?: any): Config {

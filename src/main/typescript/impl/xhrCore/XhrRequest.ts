@@ -48,6 +48,8 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     private _onEvent: Function;
     private _onError: Function;
 
+    private responseContext: Config;
+
     /**
      * Reqired Parameters
      *
@@ -82,6 +84,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
 
     start(): AsyncRunnable<XMLHttpRequest> {
         let _Lang = Lang.instance;
+        let fsExec = Lang.failSaveExecute;
         try {
 
             let viewState = jsf.getViewState(this.sourceForm.getAsElem(0).value);
@@ -89,14 +92,18 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             let formData: XhrFormData = new XhrFormData(viewState);
 
             this.contentType = formData.isMultipartRequest ? Const.MULTIPART : this.contentType;
+
             //next step the pass through parameters are merged in for post params
-            formData.shallowMerge(this.requestContext.getIf(Const.CTX_PARAM_PASS_THR));
+            let passThroughParams = this.requestContext.getIf(Const.CTX_PARAM_PASS_THR);
+            formData.shallowMerge(passThroughParams);
+
+            this.responseContext = passThroughParams.shallowCopy;
 
             //we have to shift the internal passthroughs around to build up our response context
-            this.requestContext.apply(Const.CTX_PARAM_PASS_THR, Const.CTX_PARAM_MF_INTERNAL).value = this.internalContext.value;
+            this.responseContext.apply(Const.CTX_PARAM_MF_INTERNAL).value = this.internalContext.value;
             //per spec the onevent and onerrors must be passed through to the response
-            this.requestContext.apply(Const.CTX_PARAM_PASS_THR, Const.ON_EVENT).value = this.requestContext.getIf(Const.ON_EVENT).value;
-            this.requestContext.apply(Const.CTX_PARAM_PASS_THR, Const.ON_ERROR).value = this.requestContext.getIf(Const.ON_ERROR).value;
+            this.responseContext.apply(Const.ON_EVENT).value = this.requestContext.getIf(Const.ON_EVENT).value;
+            this.responseContext.apply(Const.ON_ERROR).value = this.requestContext.getIf(Const.ON_ERROR).value;
 
             this.xhrObject.open(this.ajaxType, this.resolveFinalUrl(formData), true);
 
@@ -106,13 +113,14 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             //a bug in the xhr stub library prevents the setRequestHeader to be properly executed on fake xhr objects
             //normal browsers should resolve this
             //tests can quietly fail on this one
-            Lang.failSaveExecute(() => this.xhrObject.setRequestHeader(Const.CONTENT_TYPE, `${this.contentType}; charset=utf-8`));
-            Lang.failSaveExecute(() => this.xhrObject.setRequestHeader(Const.HEAD_FACES_REQ, Const.VAL_AJAX));
+
+            fsExec(() => this.xhrObject.setRequestHeader(Const.CONTENT_TYPE, `${this.contentType}; charset=utf-8`));
+            fsExec(() => this.xhrObject.setRequestHeader(Const.HEAD_FACES_REQ, Const.VAL_AJAX));
 
             //probably not needed anymore, will test this
             //some webkit based mobile browsers do not follow the w3c spec of
             // setting the accept headers automatically
-            Lang.failSaveExecute(() => this.xhrObject.setRequestHeader(Const.REQ_ACCEPT, Const.STD_ACCEPT));
+            fsExec(() => this.xhrObject.setRequestHeader(Const.REQ_ACCEPT, Const.STD_ACCEPT));
 
             this.sendEvent(Const.BEGIN);
 
@@ -221,7 +229,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         });
         this.sendEvent(Const.COMPLETE);
 
-        jsf.ajax.response(this.xhrObject, this.requestContext.getIf(Const.CTX_PARAM_PASS_THR).orElse({}).value);
+        jsf.ajax.response(this.xhrObject, this.responseContext.value ?? {});
     }
 
     protected onDone(data: any, resolve: Consumer<any>, reject: Consumer<any>) {

@@ -16,7 +16,7 @@
 
 import * as myfacesConfig from "../api/myfaces";
 import {Lang} from "./util/Lang";
-import {IListener, ListenerQueue} from "./util/ListenerQueue";
+import {IListener} from "./util/ListenerQueue";
 import {Response} from "./xhrCore/Response";
 import {XhrRequest} from "./xhrCore/XhrRequest";
 import {AsynchronouseQueue} from "./util/AsyncQueue";
@@ -29,6 +29,8 @@ import {ExtDomquery, ExtDQ} from "./util/ExtDomQuery";
 import {ErrorData} from "./xhrCore/ErrorData";
 import {EventData} from "./xhrCore/EventData";
 import {DQ} from "../ext/monadish/DomQuery";
+import {Stream} from "../ext/monadish";
+import {AssocArrayCollector} from "../ext/monadish/SourcesCollectors";
 
 declare var jsf: any;
 
@@ -45,7 +47,7 @@ export class Implementation {
     private globalConfig = myfacesConfig.myfaces.config;
     /*blockfilter for the passthrough filtering; the attributes given here
      * will not be transmitted from the options into the passthrough*/
-    private BLOCK_FILTER = {
+    private BLOCK_FILTER =  {
         onerror: 1,
         onevent: 1,
         render: 1,
@@ -57,8 +59,8 @@ export class Implementation {
     };
     private projectStage: string = null;
     private separator: string = null;
-    private eventQueue = new ListenerQueue<EventData>();
-    private errorQueue = new ListenerQueue<ErrorData>();
+    private eventQueue = [];
+    private errorQueue = [];
     private requestQueue = new AsynchronouseQueue<XhrRequest>();
     /*error reporting threshold*/
     private threshold = "ERROR";
@@ -74,11 +76,7 @@ export class Implementation {
      * to avoid the initialisation via instance
      */
     static get instance(): Implementation {
-        if (this._instance) {
-            return this._instance;
-        }
-        this._instance = new Implementation();
-        return this._instance;
+        return this._instance ?? (this._instance = new Implementation());
     }
 
     /**
@@ -87,12 +85,9 @@ export class Implementation {
      * @return {char} the separator char for the given script tags
      */
     get separatorChar(): string {
-        return Optional.fromNullable(this.globalConfig.separator)
-            .orElse(this.separator)
-            .orElseLazy(() => {
-                this.separator = ExtDomquery.searchJsfJsFor(/separator=([^&;]*)/).orElse(":").value;
-                return this.separator;
-            }).value;
+        return this?.globalConfig?.separator ??
+                this?.separator ??
+                (this.separator = ExtDomquery.searchJsfJsFor(/separator=([^&;]*)/).orElse(":").value);
     }
 
     //for testing only
@@ -159,14 +154,14 @@ export class Implementation {
      * b) passThrough handling with a map copy with a filter map block map
      */
     request(el: ElemDef, event?: Event, opts?: Options) {
-        const _Lang = Lang.instance;
+        const lang = Lang.instance;
 
         /*
          *namespace remap for our local function context we mix the entire function namespace into
          *a local function variable so that we do not have to write the entire namespace
          *all the time
          */
-        event = _Lang.getEvent(event);
+        event = lang.getEvent(event);
 
         //options not set we define a default one with nothing
         const options = new Config(opts).shallowCopy;
@@ -179,18 +174,20 @@ export class Implementation {
 
         this.applyWindowId(options);
 
-        requestCtx.apply(Const.CTX_PARAM_PASS_THR).value = _Lang.mergeMaps([{}, <any>options.value], true, (key) => key in this.BLOCK_FILTER);
-        requestCtx.applyIf(!!event, Const.CTX_PARAM_PASS_THR, Const.P_EVT).value = Lang.failSaveResolve(() => event.type);
+        requestCtx.apply(Const.CTX_PARAM_PASS_THR).value = this.fetchPassthroughValues(options.value);
+
+        requestCtx.applyIf(!!event, Const.CTX_PARAM_PASS_THR, Const.P_EVT).value = event?.type;
 
         /**
          * ajax pass through context with the source
          * onevent and onerror
          */
         requestCtx.apply(Const.SOURCE).value = elementId.value;
-        requestCtx.apply(Const.ON_EVENT).value = options.getIf(Const.ON_EVENT).value;
-        requestCtx.apply(Const.ON_ERROR).value = options.getIf(Const.ON_ERROR).value;
 
-        requestCtx.apply(Const.MYFACES).value = options.getIf(Const.MYFACES).value;
+        requestCtx.apply(Const.ON_EVENT).value = options.value?.onevent;
+        requestCtx.apply(Const.ON_ERROR).value = options.value?.onerror;
+
+        requestCtx.apply(Const.MYFACES).value = options.value?.myfaces;
         /**
          * fetch the parent form
          *
@@ -198,7 +195,7 @@ export class Implementation {
          * so that people can use dummy forms and work
          * with detached objects
          */
-        const configId = requestCtx.getIf(Const.MYFACES, "form").orElse("__mf_none__").value;
+        const configId = requestCtx.value?.myfaces?.form ?? Const.MF_NONE;
         let form: DQ = this.resolveForm(requestCtx, elem, event);
 
         /**
@@ -224,7 +221,7 @@ export class Implementation {
          * the value has to be explicitly true, according to
          * the specs jsdoc
          */
-        requestCtx.applyIf(true === options.getIf(Const.CTX_PARAM_RST).get(false).value,
+        requestCtx.applyIf(true === options.value?.resetValues,
             Const.CTX_PARAM_PASS_THR, Const.P_RESET_VALUES).value = true;
 
         //additional meta information to speed things up, note internal non jsf
@@ -251,30 +248,37 @@ export class Implementation {
         this.applyExecute(options, requestCtx, form, elementId.value);
         this.applyRender(options, requestCtx, form, elementId.value);
 
-        let delay: number = this.resolveDelay(options, _Lang, requestCtx);
-
-        let timeout: number = this.resolveTimeout(options, _Lang, requestCtx);
+        let delay: number = this.resolveDelay(options, requestCtx);
+        let timeout: number = this.resolveTimeout(options, requestCtx);
 
         this.addRequestToQueue(elem, form, requestCtx, internalCtx, delay, timeout);
     }
 
+    private fetchPassthroughValues(mappedOpts: { [key: string]: any }) {
+        return Stream.ofAssoc(mappedOpts)
+            .filter(item => !(item[0] in this.BLOCK_FILTER))
+            .collect(new AssocArrayCollector());
+    }
+
     private resolveForm(requestCtx: Config, elem: DQ, event: Event): DQ {
-        const configId = requestCtx.getIf(Const.MYFACES, "form").orElse("__mf_none__").value;
+        const configId = requestCtx.value?.myfaces?.form ?? Const.MF_NONE; //requestCtx.getIf(Const.MYFACES, "form").orElse(Const.MF_NONE).value;
         let form: DQ = DQ
             .byId(configId)
             .orElseLazy(() => Lang.getForm(elem.getAsElem(0).value, event));
         return form
     }
 
-    private resolveTimeout(options, _Lang, requestCtx) {
+    private resolveTimeout(options: Config, requestCtx: Config):number {
+        let getCfg = Lang.instance.getLocalOrGlobalConfig;
         return options.getIf(Const.CTX_PARAM_TIMEOUT)
-            .orElseLazy(() => _Lang.getLocalOrGlobalConfig(requestCtx.value, Const.CTX_PARAM_TIMEOUT, 0))
+            .orElseLazy(() => getCfg(requestCtx.value, Const.CTX_PARAM_TIMEOUT, 0))
             .value;
     }
 
-    private resolveDelay(options, _Lang, requestCtx) {
+    private resolveDelay(options: Config, requestCtx: Config) {
+        let getCfg = Lang.instance.getLocalOrGlobalConfig;
         return options.getIf(Const.CTX_PARAM_DELAY)
-            .orElseLazy(() => _Lang.getLocalOrGlobalConfig(requestCtx.value, Const.CTX_PARAM_DELAY, 0))
+            .orElseLazy(() => getCfg(requestCtx.value, Const.CTX_PARAM_DELAY, 0))
             .value;
     }
 
@@ -298,21 +302,20 @@ export class Implementation {
 
     addOnError(errorListener: IListener<ErrorData>) {
         /*error handling already done in the assert of the queue*/
-        this.errorQueue.enqueue(errorListener);
+        this.errorQueue.push(errorListener);
     }
 
     addOnEvent(eventListener: IListener<EventData>) {
         /*error handling already done in the assert of the queue*/
-        this.eventQueue.enqueue(eventListener);
+        this.eventQueue.push(eventListener);
     }
-
 
     /**
      * sends an event
      */
     sendEvent(data: EventData) {
         /*now we serve the queue as well*/
-        this.eventQueue.broadcastEvent(data);
+        this.eventQueue.forEach(fn => fn(data));
     }
 
     /**
@@ -373,7 +376,7 @@ export class Implementation {
      */
     sendError(errorData: any) {
 
-        this.errorQueue.each((errorCallback: Function) => {
+        this.errorQueue.forEach((errorCallback: Function) => {
             errorCallback(errorData);
         });
         let displayError: (string) => void = Lang.instance.getGlobalConfig("defaultErrorOutput", (console ? console.error : alert));
@@ -470,8 +473,7 @@ export class Implementation {
     }
 
     private applyWindowId(options: Config) {
-        let windowId = options.getIf("windowId")
-            .orElseLazy(() => ExtDomquery.windowId).value;
+        let windowId = options?.value?.windowId ?? ExtDomquery.windowId;
         options.applyIf(!!windowId, Const.P_WINDOW_ID).value = windowId;
         options.delete("windowId");
     }

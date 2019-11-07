@@ -21,7 +21,7 @@ import {Lang as LangBase} from "../../ext/monadish/Lang";
 import {Messages} from "../i18n/Messages";
 import {Config, Optional} from "../../ext/monadish/Monad";
 import {CancellablePromise} from "../../ext/monadish/Promise";
-import {DQ} from "../../ext/monadish/DomQuery";
+import {DomQuery, DQ} from "../../ext/monadish/DomQuery";
 
 export class Lang {
 
@@ -39,10 +39,7 @@ export class Lang {
     private static _instance: Lang;
 
     static get instance() {
-        if (!Lang._instance) {
-            Lang._instance = new Lang();
-        }
-        return Lang._instance;
+        return Lang._instance ?? (Lang._instance = new Lang());
     }
 
     /**
@@ -125,9 +122,7 @@ export class Lang {
         return this.base.strToArray(it, splitter);
     }
 
-    arrToMap(arr: any[], offset: number = 0) {
-        return this.base.arrToMap(arr, offset);
-    }
+
 
     /**
      * hyperfast trim
@@ -154,16 +149,6 @@ export class Lang {
     }
 
     /**
-     * simplified merge maps which basically produces
-     * a final merged map from left to right
-     * the function is sideffect free
-     * @param maps
-     */
-    mergeMaps(maps: { [key: string]: any }[], overwrite: boolean = true, blockFilter: Function = (item) => false, whitelistFilter: Function = (item) => true): { [key: string]: any } {
-        return this.base.mergeMaps(maps, overwrite, blockFilter, whitelistFilter);
-    }
-
-    /**
      * generic object arrays like dom definitions to array conversion method which
      * transforms any object to something array like
      * @param obj
@@ -175,24 +160,6 @@ export class Lang {
         return this.base.objToArray(obj, offset, pack);
     }
 
-    /**
-     * filter implementation utilizing the
-     * ECMAScript wherever possible
-     * with added functionality
-     *
-     * @param arr the array to filter
-     * @param scope the closure to apply the function to, with the syntax defined by the ecmascript functionality
-     * function (element<,key, array>)
-     * <p />
-     * additional params
-     * <ul>
-     *  <li> startPos (optional) the starting position</li>
-     *  <li> scope (optional) the scope to apply the closure to</li>
-     * </ul>
-     */
-    arrFilter<T>(arr: any, callbackfn: (value: T, index?: number, array?: T[]) => boolean, startPos: number = 0, scope: Function = null) {
-        return this.base.arrFilter(arr, callbackfn, startPos, scope);
-    }
 
     /**
      * transforms a key value pair into a string
@@ -217,8 +184,7 @@ export class Lang {
      * @return an event object no matter what is incoming
      */
     getEvent(evt: Event): Event {
-        let retVal: Event = (!evt) ? window.event || <Event>{} : evt;
-        return retVal;
+        return evt ?? <any>window?.event ?? {};
     }
 
     /**
@@ -239,7 +205,7 @@ export class Lang {
          * behavior. I dont use it that way but nevertheless it
          * does not break anything so why not
          * */
-        let t = evt.srcElement || evt.target || (<any>evt).source || null;
+        let t = evt?.srcElement ?? evt?.target ?? (<any>evt)?.source;
         while ((t) && (t.nodeType != 1)) {
             t = t.parentNode;
         }
@@ -333,12 +299,8 @@ export class Lang {
      * @param newLocale locale override
      */
     private initLocale(newLocale ?: any) {
-        if (newLocale) {
-            this.installedLocale = new newLocale();
-            return;
-        }
-
-        this.installedLocale = new Messages();
+        let finalLocale = newLocale ?? Messages;
+        this.installedLocale = new finalLocale();
     }
 
     /**
@@ -349,11 +311,11 @@ export class Lang {
      * @param event
      */
     static getForm(elem: Element, event ?: Event): DQ {
-        const _Lang = Lang.instance;
+        const lang = Lang.instance;
         const FORM = "form";
 
         let queryElem = new DQ(elem);
-        let eventTarget = new DQ(_Lang.getEventTarget(event));
+        let eventTarget = new DQ(lang.getEventTarget(event));
 
         if (queryElem.isTag(FORM)) {
             return queryElem;
@@ -374,11 +336,16 @@ export class Lang {
             .orElseLazy(() => eventTarget.byTagName(FORM))
             .first();
 
-        if (form.isAbsent()) {
-            throw _Lang.makeException(new Error(), null, null, "Impl", "getForm", _Lang.getMessage("ERR_FORM"));
-        }
+        this.assertFormExists(form);
 
         return form;
+    }
+
+    private static assertFormExists(form: DomQuery) {
+        if (form.isAbsent()) {
+            let lang = Lang.instance;
+            throw lang.makeException(new Error(), null, null, "Impl", "getForm", lang.getMessage("ERR_FORM"));
+        }
     }
 
 }

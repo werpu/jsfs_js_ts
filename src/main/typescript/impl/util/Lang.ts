@@ -18,11 +18,6 @@
  */
 
 import {Lang as LangBase} from "../../ext/monadish/Lang";
-
-import {Messages_de} from "../i18n/Messages_de";
-import {Messages_es} from "../i18n/Messages_es";
-import {Messages_fr} from "../i18n/Messages_fr";
-import {Messages_it} from "../i18n/Messages_it";
 import {Messages} from "../i18n/Messages";
 import {Config, Optional} from "../../ext/monadish/Monad";
 import {CancellablePromise} from "../../ext/monadish/Promise";
@@ -30,12 +25,6 @@ import {DQ} from "../../ext/monadish/DomQuery";
 
 export class Lang {
 
-    private static LANGUAGE_MAPS: { [key: string]: any } = {
-        "de": Messages_de,
-        "es": Messages_es,
-        "fr": Messages_fr,
-        "it": Messages_it
-    };
 
     private base: LangBase;
 
@@ -349,11 +338,7 @@ export class Lang {
             return;
         }
 
-        let language: string = this.language;
-        let languageClass = (language) ? Lang.LANGUAGE_MAPS[language] : Messages;
-        languageClass = (languageClass) ? languageClass : Messages;
-
-        this.installedLocale = new languageClass();
+        this.installedLocale = new Messages();
     }
 
     /**

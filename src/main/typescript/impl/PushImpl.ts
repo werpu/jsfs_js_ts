@@ -86,11 +86,11 @@ export module PushImpl {
     }
 
     export function open(socketClientId: string) {
-        getSocket(components[socketClientId]['channelToken']).open();
+        getSocket(components?.[socketClientId]?.channelToken).open();
     }
 
     export function close(socketClientId: string) {
-        getSocket(components[socketClientId]['channelToken']).close();
+        getSocket(components?.[socketClientId].channelToken).close();
     }
 
     // Private helper classes
@@ -173,7 +173,7 @@ export module PushImpl {
                 let clientIds = clientIdsByTokens[this.channelToken];
                 for (let i = clientIds.length - 1; i >= 0; i--) {
                     let socketClientId = clientIds[i];
-                    components[socketClientId]['onclose'](event.code, this.channel, event);
+                    components[socketClientId]['onclose'](event?.code, this?.channel, event);
                 }
             } else {
                 setTimeout(this.open, RECONNECT_INTERVAL * this.reconnectAttempts++);

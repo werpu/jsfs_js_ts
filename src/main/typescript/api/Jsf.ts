@@ -180,7 +180,8 @@ export module jsf {
          *
          * @param {DomNode} source, the callee object
          * @param {Event} event, the event object of the callee event triggering this function
-         *
+         * @param funcs ... arbitrary array of functions or strings
+         * @returns true if the chain has succeeded false otherwise
          */
         export function chain(source, event, ...funcs: Array<Function | string>): boolean {
             return Implementation.chain(source, event, ...funcs);

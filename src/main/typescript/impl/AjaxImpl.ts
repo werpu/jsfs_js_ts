@@ -23,16 +23,23 @@ import {AsynchronouseQueue} from "./util/AsyncQueue";
 import {Config, Optional} from "../ext/monadish/Monad";
 
 import {Const} from "./core/Const";
-import {Assertions} from "./util/Assertions";
+import {assert, Assertions} from "./util/Assertions";
 import {XhrFormData} from "./xhrCore/XhrFormData";
 import {ExtDomquery, ExtDQ} from "./util/ExtDomQuery";
 import {ErrorData} from "./xhrCore/ErrorData";
 import {EventData} from "./xhrCore/EventData";
 import {DQ} from "../ext/monadish/DomQuery";
-import {Stream} from "../ext/monadish";
+import {LazyStream, Stream} from "../ext/monadish";
 import {AssocArrayCollector} from "../ext/monadish/SourcesCollectors";
 
 declare var jsf: any;
+
+enum ProjectStages {
+    Production = "Production",
+    Development = "Development",
+    SystemTest = "SystemTest",
+    UnitTest = "UnitTest"
+}
 
 /**
  * Core Implementation
@@ -100,38 +107,38 @@ export class Implementation {
      * it cannot be cached and must be delivered over the server
      * The value for it comes from the requestInternal parameter of the jsf.js script called "stage".
      */
-    getProjectStage(): string {
-        return Optional.fromNullable(this.globalConfig.projectStage)
-            .orElse(this.projectStage)
-            .orElseLazy(() => {
-                let projectStages = {"Production": 1, "Development": 1, "SystemTest": 1, "UnitTest": 1};
+    getProjectStage(): string | null {
+        return this?.globalConfig?.projectStage ??
+                this?.projectStage ??
+                (this.projectStage = this.resolveProjectStateFromURL());
+    }
 
-                /* run through all script tags and try to find the one that includes jsf.js */
-                let foundStage = ExtDomquery.searchJsfJsFor(/stage=([^&;]*)/).orElse(null).value;
-                return (foundStage in projectStages) ? this.projectStage = foundStage : null;
-            }).value;
+    private resolveProjectStateFromURL(): string | null {
+
+        /* run through all script tags and try to find the one that includes jsf.js */
+        let foundStage = <string> ExtDomquery.searchJsfJsFor(/stage=([^&;]*)/).value;
+        return (foundStage in ProjectStages) ? foundStage : null;
     }
 
     static chain(source: any, event: Event, ...funcs: EvalFuncs): boolean {
-        for (let cnt = 0; funcs && cnt < funcs.length; cnt++) {
-            let ret: any;
-            if ("string" != typeof funcs[cnt]) {
-                ret = (<Function>funcs[cnt]).call(source, event);
+
+        let ret = true;
+        let execute = function (func: Function | string) {
+            if ("string" != typeof func) {
+                return (ret = ret && ((<Function>func).call(source, event) !== false));
             } else {
                 //either a function or a string can be passed in case of a string we have to wrap it into another function
                 //it it is not a plain executable code but a definition
-                let sourceCode = Lang.instance.trim(<string>funcs[cnt]);
+                let sourceCode = Lang.instance.trim(<string>func);
                 if (sourceCode.indexOf("function ") == 0) {
                     sourceCode = `return ${sourceCode} (event)`;
                 }
+                return (ret = ret && (new Function("event", sourceCode).call(source, event) !== false));
+            }
+        };
 
-                ret = new Function("event", sourceCode).call(source, event);
-            }
-            if (ret === false) {
-                return false;
-            }
-        }
-        return true;
+        <any> Stream.of(...funcs).each(func => execute(func));
+        return ret;
     }
 
     /**
@@ -153,7 +160,7 @@ export class Implementation {
      * a) transformArguments out of the function
      * b) passThrough handling with a map copy with a filter map block map
      */
-    request(el: ElemDef, event?: Event, opts?: Options) {
+    request(el: ElemDef, event?: Event, opts ?: Options) {
         const lang = Lang.instance;
 
         /*
@@ -184,9 +191,17 @@ export class Implementation {
          */
         requestCtx.apply(Const.SOURCE).value = elementId.value;
 
+        /**
+         * on event and onError...
+         * those values will be traversed later on
+         * also into the response context
+         */
         requestCtx.apply(Const.ON_EVENT).value = options.value?.onevent;
         requestCtx.apply(Const.ON_ERROR).value = options.value?.onerror;
 
+        /**
+         * lets drag the myfaces config params also in
+         */
         requestCtx.apply(Const.MYFACES).value = options.value?.myfaces;
         /**
          * fetch the parent form
@@ -205,7 +220,6 @@ export class Implementation {
 
         /**
          * javax.faces.partial.ajax must be set to true
-         * TODO error?
          */
         requestCtx.apply(Const.CTX_PARAM_PASS_THR, Const.P_AJAX).value = true;
 
@@ -238,11 +252,6 @@ export class Implementation {
 
         requestCtx.apply(Const.CTX_PARAM_PASS_THR, form.id.value).value = form.id.value;
 
-        //todo partial id handling from config
-
-        //now we enqueue the request as asynchronous runnable into our request
-        //queue and let the queue take over the rest
-
         this.applyClientWindowId(form, requestCtx);
 
         this.applyExecute(options, requestCtx, form, elementId.value);
@@ -251,42 +260,16 @@ export class Implementation {
         let delay: number = this.resolveDelay(options, requestCtx);
         let timeout: number = this.resolveTimeout(options, requestCtx);
 
+        //now we enqueue the request as asynchronous runnable into our request
+        //queue and let the queue take over the rest
         this.addRequestToQueue(elem, form, requestCtx, internalCtx, delay, timeout);
     }
 
-    private fetchPassthroughValues(mappedOpts: { [key: string]: any }) {
-        return Stream.ofAssoc(mappedOpts)
-            .filter(item => !(item[0] in this.BLOCK_FILTER))
-            .collect(new AssocArrayCollector());
-    }
-
-    private resolveForm(requestCtx: Config, elem: DQ, event: Event): DQ {
-        const configId = requestCtx.value?.myfaces?.form ?? Const.MF_NONE; //requestCtx.getIf(Const.MYFACES, "form").orElse(Const.MF_NONE).value;
-        let form: DQ = DQ
-            .byId(configId)
-            .orElseLazy(() => Lang.getForm(elem.getAsElem(0).value, event));
-        return form
-    }
-
-    private resolveTimeout(options: Config, requestCtx: Config):number {
-        let getCfg = Lang.instance.getLocalOrGlobalConfig;
-        return options.getIf(Const.CTX_PARAM_TIMEOUT)
-            .orElseLazy(() => getCfg(requestCtx.value, Const.CTX_PARAM_TIMEOUT, 0))
-            .value;
-    }
-
-    private resolveDelay(options: Config, requestCtx: Config) {
-        let getCfg = Lang.instance.getLocalOrGlobalConfig;
-        return options.getIf(Const.CTX_PARAM_DELAY)
-            .orElseLazy(() => getCfg(requestCtx.value, Const.CTX_PARAM_DELAY, 0))
-            .value;
-    }
 
     /**
      * public to make it shimmable for tests
      */
     addRequestToQueue(elem: DQ, form: DQ, reqCtx: Config, respPassThr: Config, delay = 0, timeout = 0) {
-        //TODO multipart handling via its own adapted xhr derviate
         this.requestQueue.enqueue(new XhrRequest(elem, form, reqCtx, respPassThr, [], timeout), delay);
     }
 
@@ -438,15 +421,13 @@ export class Implementation {
         let formWindowId: Optional<string> = searchRoot.stream.map<string>(getValue).reduce(doubleCheck, INIT);
 
         //if the resulting window id is set on altered then we have an unresolvable problem
-        if (formWindowId.value == ALTERED) {
-            throw Error("Multiple different windowIds found in document");
-        }
+        assert(formWindowId.value != ALTERED,"Multiple different windowIds found in document");
 
         /**
          * return the window id or null
          * prio, forms under node/document and if not given then from the url
          */
-        return formWindowId.orElseLazy(fetchWindowIdFromUrl).value;
+        return formWindowId.value ?? fetchWindowIdFromUrl();
     }
 
     /**
@@ -471,6 +452,8 @@ export class Implementation {
         let formData = new XhrFormData(element);
         return formData.toString();
     }
+
+    //----------------------------------------------- Private Methods ---------------------------------------------------------------------
 
     private applyWindowId(options: Config) {
         let windowId = options?.value?.windowId ?? ExtDomquery.windowId;
@@ -569,4 +552,30 @@ export class Implementation {
         targetConfig.apply(targetKey).value = ret.join(" ");
         return targetConfig;
     }
+
+    private fetchPassthroughValues(mappedOpts: { [key: string]: any }) {
+        return Stream.ofAssoc(mappedOpts)
+            .filter(item => !(item[0] in this.BLOCK_FILTER))
+            .collect(new AssocArrayCollector());
+    }
+
+    private resolveForm(requestCtx: Config, elem: DQ, event: Event): DQ {
+        const configId = requestCtx.value?.myfaces?.form ?? Const.MF_NONE; //requestCtx.getIf(Const.MYFACES, "form").orElse(Const.MF_NONE).value;
+        let form: DQ = DQ
+            .byId(configId)
+            .orElseLazy(() => Lang.getForm(elem.getAsElem(0).value, event));
+        return form
+    }
+
+    private resolveTimeout(options: Config, requestCtx: Config):number {
+        let getCfg = Lang.instance.getLocalOrGlobalConfig;
+        return options.getIf(Const.CTX_PARAM_TIMEOUT).value ?? getCfg(requestCtx.value, Const.CTX_PARAM_TIMEOUT, 0);
+    }
+
+    private resolveDelay(options: Config, requestCtx: Config): number {
+        let getCfg = Lang.instance.getLocalOrGlobalConfig;
+
+        return options.getIf(Const.CTX_PARAM_DELAY).value ?? getCfg(requestCtx.value, Const.CTX_PARAM_DELAY, 0);
+    }
+
 }

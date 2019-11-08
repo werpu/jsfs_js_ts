@@ -12,7 +12,7 @@ import {DQ} from "../../ext/monadish/DomQuery";
  */
 export class Assertions {
 
-    static assertRequestIntegrity(options: Config, elem: DQ) {
+    static assertRequestIntegrity(options: Config, elem: DQ): void | never {
         /*assert if the onerror is set and once if it is set it must be of type function*/
         assertFunction(options.getIf(Const.ON_ERROR).value);
         /*assert if the onevent is set and once if it is set it must be of type function*/
@@ -47,12 +47,12 @@ export class Assertions {
      * @param name the name of the error (optional)
      */
     static raiseError(error: any, message: string, caller ?: string, title ?: string, name ?: string): Error {
-        let _Impl = Implementation.instance;
+
         let finalTitle = title ?? Const.MALFORMEDXML;
         let finalName = name ?? Const.MALFORMEDXML;
         let finalMessage = message ?? "";
 
-
+        //TODO clean up the messy makeException, this is a perfect case for encapsulation and sane defaults
         return Lang.instance.makeException(error, finalTitle, finalName, "Response", caller || (((<any>arguments).caller) ? (<any>arguments).caller.toString() : "_raiseError"), finalMessage);
     }
 

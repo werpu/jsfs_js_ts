@@ -34,11 +34,29 @@ import {AssocArrayCollector} from "../ext/monadish/SourcesCollectors";
 
 declare var jsf: any;
 
+/*
+ * allowed project stages
+ */
 enum ProjectStages {
     Production = "Production",
     Development = "Development",
     SystemTest = "SystemTest",
     UnitTest = "UnitTest"
+}
+
+/*
+ *   blockfilter for the passthrough filtering; the attributes given here
+ *   will not be transmitted from the options into the passthrough
+ */
+enum BlockFilter {
+    onerror= "onerror",
+    onevent= "onevent",
+    render= "render",
+    execute= "execute",
+    myfaces= "myfaces",
+    delay= "delay",
+    timeout= "timeout",
+    windowId= "windowId"
 }
 
 /**
@@ -52,18 +70,7 @@ enum ProjectStages {
 export class Implementation {
 
     private globalConfig = myfacesConfig.myfaces.config;
-    /*blockfilter for the passthrough filtering; the attributes given here
-     * will not be transmitted from the options into the passthrough*/
-    private BLOCK_FILTER =  {
-        onerror: 1,
-        onevent: 1,
-        render: 1,
-        execute: 1,
-        myfaces: 1,
-        delay: 1,
-        timedOut: 1,
-        windowId: 1
-    };
+
     private projectStage: string = null;
     private separator: string = null;
     private eventQueue = [];
@@ -511,7 +518,10 @@ export class Implementation {
         let _Lang = Lang.instance;
         let iterValues = (userValues) ? _Lang.trim(userValues).split(/\s+/gi) : [];
         let ret = [];
-        let added = {};
+
+        let processed = {};
+
+        //TODO make this code cleaner
 
         //the idea is simply to loop over all values and then replace
         //their generic values and filter out doubles
@@ -520,7 +530,7 @@ export class Implementation {
         //anyway
         for (let cnt = 0; cnt < iterValues.length; cnt++) {
             //avoid doubles
-            if (iterValues[cnt] in added) {
+            if (iterValues[cnt] in processed) {
                 continue;
             }
             switch (iterValues[cnt]) {
@@ -534,18 +544,18 @@ export class Implementation {
                 //@form pushes the issuing form id into our list
                 case Const.IDENT_FORM:
                     ret.push(issuingForm.id.value);
-                    added[issuingForm.id.value] = true;
+                    processed[issuingForm.id.value] = true;
                     break;
                 //@this is replaced with the current issuing element id
                 case Const.IDENT_THIS:
-                    if (!(issuingElementId in added)) {
+                    if (!(issuingElementId in processed)) {
                         ret.push(issuingElementId);
-                        added[issuingElementId] = true;
+                        processed[issuingElementId] = true;
                     }
                     break;
                 default:
                     ret.push(iterValues[cnt]);
-                    added[iterValues[cnt]] = true;
+                    processed[iterValues[cnt]] = true;
             }
         }
         //We now add the target as joined list
@@ -555,7 +565,7 @@ export class Implementation {
 
     private fetchPassthroughValues(mappedOpts: { [key: string]: any }) {
         return Stream.ofAssoc(mappedOpts)
-            .filter(item => !(item[0] in this.BLOCK_FILTER))
+            .filter(item => !(item[0] in BlockFilter))
             .collect(new AssocArrayCollector());
     }
 

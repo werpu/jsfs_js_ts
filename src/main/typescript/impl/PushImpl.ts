@@ -16,12 +16,23 @@ export module PushImpl {
     const MAX_RECONNECT_ATTEMPTS = 25;
     const REASON_EXPIRED = "Expired";
 
+    //we expose the member variables for testing purposes
+    //they are not directly touched outside of tests
+
     /* socket map by token */
-    let sockets = {};
+    export let sockets = {};
     /* component attributes by clientId */
-    let components = {};
+    export let components = {};
     /* client ids by token (share websocket connection) */
-    let clientIdsByTokens = {};
+    export let clientIdsByTokens = {};
+
+
+    //needed for testing
+    export function reset() {
+        sockets = {};
+        components = {}
+        clientIdsByTokens = {}
+    }
 
     /*
      * Api implementations, exposed functions
@@ -52,7 +63,22 @@ export module PushImpl {
         let channelToken = uri.substr(uri.indexOf('?') + 1);
 
         if (!components[socketClientId]) {
-         }
+            components[socketClientId] = {
+                'channelToken': channelToken,
+                'onopen': resolveFunction(onopen),
+                'onmessage' : resolveFunction(onmessage),
+                'onclose': onclose,
+                'behaviors': behaviorScripts,
+                'autoconnect': autoconnect};
+            if (!clientIdsByTokens[channelToken]) {
+                clientIdsByTokens[channelToken] = [];
+            }
+            clientIdsByTokens[channelToken].push(socketClientId);
+            if (!sockets[channelToken]){
+                sockets[channelToken] = new Socket(channelToken,
+                    getBaseURL(uri), channel);
+            }
+        }
 
         if (autoconnect) {
             jsf.push.open(socketClientId);

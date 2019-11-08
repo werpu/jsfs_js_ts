@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import {Implementation} from "../../../../../main/typescript/impl/AjaxImpl";
 
 declare let jsf: any;
 
@@ -245,10 +244,11 @@ export module StandardInits {
      * @param data
      * @param Implementation
      */
-    let applyJsfToGlobals = function (data, Implementation) {
+    let applyJsfToGlobals = function (data, Implementation, PushImpl) {
         (<any>global).jsf = data.jsf;
         (<any>global).window.jsf = data.jsf;
         (<any>global).Implementation = Implementation.Implementation;
+        (<any>global).PushImpl = PushImpl.PushImpl;
     };
 
     /**
@@ -273,7 +273,8 @@ export module StandardInits {
         // @ts-ignore
         return import("../../../../../main/typescript/api/jsf").then((data) => {
             let Implementation = require("../../../../../main/typescript/impl/AjaxImpl");
-            applyJsfToGlobals(data, Implementation);
+            let PushImpl = require("../../../../../main/typescript/impl/PushImpl");
+            applyJsfToGlobals(data, Implementation, PushImpl);
         });
     };
 
@@ -281,8 +282,12 @@ export module StandardInits {
      * lets clean up some old data which might interfere
      */
     let resetGlobals = function () {
+        (<any>global)?.Implementation?.reset();
+        (<any>global)?.PushImpl?.reset();
+
         delete (<any>global).jsf;
         delete (<any>global).Implementation;
+        delete (<any>global).PushImpl;
     };
 
     /**
@@ -298,8 +303,8 @@ export module StandardInits {
         //we use jsdom global to fullfill our requirements
         //we need to import dynamically and use awaits
         if (withJsf) {
+
             resetGlobals();
-            Implementation.reset();
             // @ts-ignore
             await initJSDOM(template).then(data => clean = data);
             await initJSF();

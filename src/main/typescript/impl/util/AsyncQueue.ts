@@ -70,7 +70,7 @@ class DomEventDispatcher {
 export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
     static EVT_NEXT = "__mf_queue_next__";
 
-    private runnableQueue = [];//new Queue<T>();
+    private runnableQueue = [];
     private delayTimeout: number;
     private eventDispatcher = new DomEventDispatcher();
 

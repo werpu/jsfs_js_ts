@@ -79,8 +79,7 @@ export class ErrorData extends EventData {
 
     private static getMsg(context, param) {
         let UNKNOWN = "UNKNOWN";
-        let getMsg = Lang.instance.getMessage;
-        return getMsg(context.getIf(param).orElse(UNKNOWN).value);
+        return Lang.instance.getMessage(context.getIf(param).orElse(UNKNOWN).value);
     }
 
     static fromServerError(context: Config): ErrorData {

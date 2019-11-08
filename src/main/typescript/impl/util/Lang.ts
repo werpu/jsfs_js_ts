@@ -22,6 +22,9 @@ import {Messages} from "../i18n/Messages";
 import {Config, Optional} from "../../ext/monadish/Monad";
 import {CancellablePromise} from "../../ext/monadish/Promise";
 import {DomQuery, DQ} from "../../ext/monadish/DomQuery";
+import {Stream} from "../../ext/monadish";
+
+
 
 export class Lang {
 
@@ -48,15 +51,13 @@ export class Lang {
      * @constructor
      */
     static get Promise(): any {
-        return this.failSaveResolve<any>(
-            () => Promise.prototype.then ? Promise : CancellablePromise,
-            CancellablePromise).value
+        return Promise ?? CancellablePromise;
     }
 
     private get language(): string {
         //TODO global config override
 
-        let language: string = ("undefined" != typeof (<any>navigator).languages) ? (<any>navigator).languages[0] : navigator.language;
+        let language: string = (<any>navigator).languages?.[0] ?? navigator?.language;
         language = language.split("-")[0];
         return language;
     }
@@ -72,7 +73,7 @@ export class Lang {
      *
      * usage
      * <code>
-     *     let var: Optiona<string> = saveResolve(() => a.b.c.d.e, "foobaz")
+     *     let var: Optional<string> = saveResolve(() => a.b.c.d.e, "foobaz")
      * </code>
      *
      * @param resolverProducer a lambda which can produce the value
@@ -101,13 +102,11 @@ export class Lang {
      */
     getMessage(key: string, defaultMessage?: string, ...templateParams: Array<string>): string {
 
-        let msg = this.installedLocale[key] || defaultMessage || key + " - undefined message";
+        let msg = this.installedLocale[key] ?? defaultMessage ?? key + " - undefined message";
 
-        //we now make a simple templating replace of {0}, {1} etc... with their corresponding
-        //arguments
-        for (let cnt = 0; templateParams && cnt < templateParams.length; cnt++) {
-            msg = msg.replace(new RegExp(["\\{", cnt, "\\}"].join(""), "g"), templateParams[cnt]);
-        }
+        Stream.of(...templateParams).each((param, cnt) => {
+            msg = msg.replace(new RegExp(["\\{", cnt, "\\}"].join(""), "g"), param);
+        });
 
         return msg;
     }
@@ -168,10 +167,7 @@ export class Lang {
      * @param delimiter the delimiter
      */
     keyValToStr(key: string, val: string, delimiter: string = "\n") {
-        let ret = [];
-        ret.push(key);
-        ret.push(val);
-        return ret.join(delimiter);
+        return [key, val].join(delimiter);
     }
 
     /**
@@ -234,7 +230,7 @@ export class Lang {
      */
     makeException(error: Error, title: string, name: string, callerCls: string, callFunc: string, message: string): Error {
 
-        return new Error(message + (callerCls || this.nameSpace, callFunc || ("" + (<any>arguments).caller.toString())));
+        return new Error(message + (callerCls ?? this.nameSpace, callFunc ?? ("" + (<any>arguments).caller.toString())));
 
     }
 
@@ -251,8 +247,7 @@ export class Lang {
          * given this function here is called very often
          * is a single entry without . in between we can do the lighter shortcut
          */
-        let myfaces = Config.fromNullable(<any>window);
-        return myfaces.getIf("myfaces", "config", configName).get(defaultValue).value;
+        return (<any>window)?.myfaces?.config?.[configName] ?? defaultValue;
     }
 
     /**
@@ -267,18 +262,9 @@ export class Lang {
      * @return either the config entry or if none is given the default value
      */
     public getLocalOrGlobalConfig(localOptions: Config, configName: string, defaultValue: any): any {
-        let MYFACES = "myfaces";
-        let CONFIG = "config";
-
-        let fromNullable = Config.fromNullable;
-
-        let local = fromNullable(localOptions);
-        let global = fromNullable(window);
-
-        //we use a monadic structure here to have a more readable code for accessing the config values
-        //it either is a <local>myfaces.config.<configName> value or window.myfaces.config.<configName> or a default value
-
-        return local.getIf(MYFACES, CONFIG, configName).get(global.getIf(MYFACES, CONFIG, configName)).get(defaultValue).value;
+        return localOptions.value?.myfaces?.config?.[configName] ??
+            (<any>window)?.myfaces?.config?.[configName] ??
+            defaultValue;
     };
 
     /**
@@ -311,7 +297,7 @@ export class Lang {
      * @param elem
      * @param event
      */
-    static getForm(elem: Element, event ?: Event): DQ {
+    static getForm(elem: Element, event ?: Event): DQ | never {
         const lang = Lang.instance;
         const FORM = "form";
 
@@ -342,7 +328,7 @@ export class Lang {
         return form;
     }
 
-    private static assertFormExists(form: DomQuery) {
+    private static assertFormExists(form: DomQuery): void | never {
         if (form.isAbsent()) {
             let lang = Lang.instance;
             throw lang.makeException(new Error(), null, null, "Impl", "getForm", lang.getMessage("ERR_FORM"));

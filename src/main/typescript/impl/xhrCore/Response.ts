@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-import {Config} from "../../ext/monadish/Monad";
+import {Config, DQ} from "../../ext/monadish";
 import {XMLQuery} from "../../ext/monadish/XmlQuery";
 import {Const} from "../core/Const";
 import {ResponseProcessor} from "./ResponseProcessor";
 import {ResonseDataResolver} from "./ResonseDataResolver";
 import {IResponseProcessor} from "./IResponseProcessor";
-import {DQ} from "../../ext/monadish/DomQuery";
 
 export class Response {
 
@@ -85,10 +84,8 @@ export class Response {
     /**
      * next level changes tag
      *
-     * @param request
-     * @param context
-     * @param internalContext
      * @param node
+     * @param responseProcessor
      */
     private static processChangesTag(node: XMLQuery, responseProcessor: IResponseProcessor): boolean {
         const ALLOWED_TAGS = [Const.CMD_UPDATE, Const.CMD_EVAL, Const.CMD_INSERT, Const.CMD_DELETE, Const.CMD_ATTRIBUTES, Const.CMD_EXTENSION].join(",");
@@ -128,10 +125,8 @@ export class Response {
      * special case viewstate in that case it is a leaf
      * and the viewstate must be processed
      *
-     * @param request
-     * @param context
-     * @param internalContext
      * @param node
+     * @param responseProcessor
      */
     private static processUpdateTag(node: XMLQuery, responseProcessor: IResponseProcessor) {
         if (node.id.value == Const.P_VIEWSTATE) {
@@ -144,9 +139,9 @@ export class Response {
 
     /**
      * element update
+     *
      * @param node
-     * @param context
-     * @param internalContext
+     * @param responseProcessor
      */
     private static handleElementUpdate(node: XMLQuery, responseProcessor: IResponseProcessor) {
         let cdataBlock = node.cDATAAsString;

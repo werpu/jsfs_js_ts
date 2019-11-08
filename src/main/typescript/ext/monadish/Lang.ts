@@ -208,3 +208,4 @@ export class Lang {
         return it instanceof Function || typeof it === "function";
     }
 }
+

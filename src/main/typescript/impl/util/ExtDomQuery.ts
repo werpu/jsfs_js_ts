@@ -1,7 +1,7 @@
 
 import {Config, IValueHolder, Optional} from "../../ext/monadish/Monad";
 import {Const} from "../core/Const";
-import {DQ} from "../../ext/monadish/DomQuery";
+import {DomQuery, DQ} from "../../ext/monadish/DomQuery";
 
 declare let window: any;
 
@@ -68,12 +68,13 @@ export class ExtDomquery extends DQ {
             return curScript.attr("nonce").value;
         }
 
-        let nonceScript = DQ.querySelectorAll("script[src], link[src]")
+        let nonceScript = DQ.querySelectorAll("script[src], link[src]").lazyStream
             .filter((item) => item.attr("nonce").value != null && item.attr("src") != null)
-            .first((item => !item.attr("src").value.match(/jsf\.js\?ln\=javax\.faces/gi)));
+            .map((item => !item.attr("src").value.match(/jsf\.js\?ln\=javax\.faces/gi)))
+            .first();
 
         if (nonceScript.isPresent()) {
-            nonce.value = nonceScript.attr("nonce").value;
+            nonce.value = DomQuery.byId(nonceScript.value).attr("nonce").value;
         }
         return <string>nonce.value;
     }
@@ -83,19 +84,18 @@ export class ExtDomquery extends DQ {
     }
 
     searchJsfJsFor(rexp: RegExp): Optional<string> {
-        let res: string = null;
-        DQ.querySelectorAll("script").filter(item => {
-            return (item.attr("src", "").value || "").search(/\/javax\.faces\.resource.*\/jsf\.js.*separator/) != -1;
-        }).first((item: DQ) => {
-            let result = item.attr("src", "").value.match(rexp);
-            res = decodeURIComponent(result[1]);
-            return false;
-        });
-        return Optional.fromNullable(res);
+        //perfect application for lazy stream
+        return DQ.querySelectorAll("script").lazyStream
+                .filter(item => {
+                    return (item.attr("src").value ?? "").search(/\/javax\.faces\.resource.*\/jsf\.js.*separator/) != -1;
+                }).map((item: DQ) => {
+                    let result = item.attr("src").value.match(rexp);
+                    return decodeURIComponent(result[1]);
+                }).first();
     }
 
     globalEval(code: string, nonce ?: string): DQ {
-        return super.globalEval(code, nonce || this.nonce);
+        return super.globalEval(code, nonce ?? this.nonce);
     }
 }
 

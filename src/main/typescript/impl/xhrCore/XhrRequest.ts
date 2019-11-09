@@ -28,6 +28,25 @@ import {DQ} from "../../ext/monadish/DomQuery";
 import {ExtLang} from "../util/Lang";
 import failSaveExecute = ExtLang.failSaveExecute;
 import getPromise = ExtLang.getPromise;
+import COMPLETE = Const.COMPLETE;
+import SUCCESS = Const.SUCCESS;
+import NO_TIMEOUT = Const.NO_TIMEOUT;
+import REQ_TYPE_POST = Const.REQ_TYPE_POST;
+import URL_ENCODED = Const.URL_ENCODED;
+import ON_EVENT = Const.ON_EVENT;
+import ON_ERROR = Const.ON_ERROR;
+import MULTIPART = Const.MULTIPART;
+import CTX_PARAM_PASS_THR = Const.CTX_PARAM_PASS_THR;
+import CTX_PARAM_MF_INTERNAL = Const.CTX_PARAM_MF_INTERNAL;
+import CONTENT_TYPE = Const.CONTENT_TYPE;
+import HEAD_FACES_REQ = Const.HEAD_FACES_REQ;
+import VAL_AJAX = Const.VAL_AJAX;
+import STATE_EVT_TIMEOUT = Const.STATE_EVT_TIMEOUT;
+import REQ_ACCEPT = Const.REQ_ACCEPT;
+import STD_ACCEPT = Const.STD_ACCEPT;
+import REQ_TYPE_GET = Const.REQ_TYPE_GET;
+import ENCODED_URL = Const.ENCODED_URL;
+import BEGIN = Const.BEGIN;
 
 
 /**
@@ -75,14 +94,14 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         private requestContext: Config,
         private internalContext: Config,
         private partialIdsArray = [],
-        private timeout = Const.NO_TIMEOUT,
-        private ajaxType = Const.REQ_TYPE_POST,
-        private contentType = Const.URL_ENCODED,
+        private timeout = NO_TIMEOUT,
+        private ajaxType = REQ_TYPE_POST,
+        private contentType = URL_ENCODED,
         private xhrObject = new XMLHttpRequest()
     ) {
-        this._onEvent = requestContext.getIf(Const.ON_EVENT).orElse(() => {
+        this._onEvent = requestContext.getIf(ON_EVENT).orElse(() => {
         }).value;
-        this._onError = requestContext.getIf(Const.ON_ERROR).orElse(() => {
+        this._onError = requestContext.getIf(ON_ERROR).orElse(() => {
         }).value;
     }
 
@@ -95,19 +114,19 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
 
             let formData: XhrFormData = new XhrFormData(viewState);
 
-            this.contentType = formData.isMultipartRequest ? Const.MULTIPART : this.contentType;
+            this.contentType = formData.isMultipartRequest ? MULTIPART : this.contentType;
 
             //next step the pass through parameters are merged in for post params
-            let passThroughParams = this.requestContext.getIf(Const.CTX_PARAM_PASS_THR);
+            let passThroughParams = this.requestContext.getIf(CTX_PARAM_PASS_THR);
             formData.shallowMerge(passThroughParams);
 
             this.responseContext = passThroughParams.shallowCopy;
 
             //we have to shift the internal passthroughs around to build up our response context
-            this.responseContext.assign(Const.CTX_PARAM_MF_INTERNAL).value = this.internalContext.value;
+            this.responseContext.assign(CTX_PARAM_MF_INTERNAL).value = this.internalContext.value;
             //per spec the onevent and onerrors must be passed through to the response
-            this.responseContext.assign(Const.ON_EVENT).value = this.requestContext.getIf(Const.ON_EVENT).value;
-            this.responseContext.assign(Const.ON_ERROR).value = this.requestContext.getIf(Const.ON_ERROR).value;
+            this.responseContext.assign(ON_EVENT).value = this.requestContext.getIf(ON_EVENT).value;
+            this.responseContext.assign(ON_ERROR).value = this.requestContext.getIf(ON_ERROR).value;
 
             this.xhrObject.open(this.ajaxType, this.resolveFinalUrl(formData), true);
 
@@ -118,15 +137,15 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             //normal browsers should resolve this
             //tests can quietly fail on this one
 
-            fsExec(() => this.xhrObject.setRequestHeader(Const.CONTENT_TYPE, `${this.contentType}; charset=utf-8`));
-            fsExec(() => this.xhrObject.setRequestHeader(Const.HEAD_FACES_REQ, Const.VAL_AJAX));
+            fsExec(() => this.xhrObject.setRequestHeader(CONTENT_TYPE, `${this.contentType}; charset=utf-8`));
+            fsExec(() => this.xhrObject.setRequestHeader(HEAD_FACES_REQ, VAL_AJAX));
 
             //probably not needed anymore, will test this
             //some webkit based mobile browsers do not follow the w3c spec of
             // setting the accept headers automatically
-            fsExec(() => this.xhrObject.setRequestHeader(Const.REQ_ACCEPT, Const.STD_ACCEPT));
+            fsExec(() => this.xhrObject.setRequestHeader(REQ_ACCEPT, STD_ACCEPT));
 
-            this.sendEvent(Const.BEGIN);
+            this.sendEvent(BEGIN);
 
             this.sendRequest(formData);
 
@@ -218,7 +237,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     }
 
     protected onTimeout(resolve: Consumer<any>, reject: Consumer<any>) {
-        this.sendEvent(Const.STATE_EVT_TIMEOUT);
+        this.sendEvent(STATE_EVT_TIMEOUT);
         reject();
     }
 
@@ -231,13 +250,13 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
                 (<any>this.xhrObject)["responseXML"] = <any>XMLQuery.parseXML(this.xhrObject.responseText).getAsElem(0).value;
             }
         });
-        this.sendEvent(Const.COMPLETE);
+        this.sendEvent(COMPLETE);
 
         jsf.ajax.response(this.xhrObject, this.responseContext.value ?? {});
     }
 
     protected onDone(data: any, resolve: Consumer<any>, reject: Consumer<any>) {
-        this.sendEvent(Const.SUCCESS);
+        this.sendEvent(SUCCESS);
         resolve(data);
     }
 
@@ -273,13 +292,13 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     }
 
     private resolveTargetUrl(srcFormElement: HTMLFormElement) {
-        return (typeof srcFormElement.elements[Const.ENCODED_URL] == 'undefined') ?
+        return (typeof srcFormElement.elements[ENCODED_URL] == 'undefined') ?
             srcFormElement.action :
-            srcFormElement.elements[Const.ENCODED_URL].value;
+            srcFormElement.elements[ENCODED_URL].value;
     }
 
     protected sendRequest(formData: XhrFormData) {
-        let isPost = this.ajaxType != Const.REQ_TYPE_GET;
+        let isPost = this.ajaxType != REQ_TYPE_GET;
         if(formData.isMultipartRequest) {
             this.xhrObject.send((isPost) ? formData.toFormData() : null);
         } else {
@@ -294,7 +313,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     }
 
     private isGetRequest() {
-        return this.ajaxType == Const.REQ_TYPE_GET;
+        return this.ajaxType == REQ_TYPE_GET;
     }
 
 }

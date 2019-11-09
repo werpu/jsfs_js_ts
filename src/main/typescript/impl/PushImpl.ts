@@ -5,16 +5,20 @@
 //TODO still work in progress
 //this is a 1:1 port for the time being
 import {jsf} from "../api/Jsf";
+import {Const} from "./core/Const";
+
 
 /**
  * Implementation class for the push functionality
  */
 export module PushImpl {
 
+    import REASON_EXPIRED = Const.REASON_EXPIRED;
+    import MAX_RECONNECT_ATTEMPTS = Const.MAX_RECONNECT_ATTEMPTS;
+    import RECONNECT_INTERVAL = Const.RECONNECT_INTERVAL;
+
     const URL_PROTOCOL = window.location.protocol.replace("http", "ws") + "//";
-    const RECONNECT_INTERVAL = 500;
-    const MAX_RECONNECT_ATTEMPTS = 25;
-    const REASON_EXPIRED = "Expired";
+
 
     //we expose the member variables for testing purposes
     //they are not directly touched outside of tests

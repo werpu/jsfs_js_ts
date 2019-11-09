@@ -1,136 +1,140 @@
-export class Const {
+export module Const {
     /*internal identifiers for options*/
-    static IDENT_ALL = "@all";
-    static IDENT_NONE = "@none";
-    static IDENT_THIS = "@this";
-    static IDENT_FORM = "@form";
+    export const IDENT_ALL = "@all";
+    export const IDENT_NONE = "@none";
+    export const IDENT_THIS = "@this";
+    export const IDENT_FORM = "@form";
 
     /*
-     * [STATIC] constants
+     * [export const] constants
      */
 
-    static P_PARTIAL_SOURCE = "javax.faces.source";
-    static PARTIAL_ID = "partialId";
-    static P_VIEWSTATE = "javax.faces.ViewState";
-    static P_VIEWROOT = "javax.faces.ViewRoot";
-    static P_VIEWHEAD = "javax.faces.ViewHead";
-    static P_VIEWBODY = "javax.faces.ViewBody";
+    export const P_PARTIAL_SOURCE = "javax.faces.source";
+    export const PARTIAL_ID = "partialId";
+    export const P_VIEWSTATE = "javax.faces.ViewState";
+    export const P_VIEWROOT = "javax.faces.ViewRoot";
+    export const P_VIEWHEAD = "javax.faces.ViewHead";
+    export const P_VIEWBODY = "javax.faces.ViewBody";
 
 
-    static P_CLIENTWINDOW = "javax.faces.ClientWindow";
-    static P_AJAX = "javax.faces.partial.ajax";
-    static P_EXECUTE = "javax.faces.partial.execute";
-    static P_RENDER = "javax.faces.partial.render";
-    static P_EVT = "javax.faces.partial.event";
-    static P_CLIENT_WINDOW = "javax.faces.ClientWindow";
-    static P_RESET_VALUES = "javax.faces.partial.resetValues";
-    static P_WIN_ID = "javax.faces.WindowId";
+    export const P_CLIENTWINDOW = "javax.faces.ClientWindow";
+    export const P_AJAX = "javax.faces.partial.ajax";
+    export const P_EXECUTE = "javax.faces.partial.execute";
+    export const P_RENDER = "javax.faces.partial.render";
+    export const P_EVT = "javax.faces.partial.event";
+    export const P_CLIENT_WINDOW = "javax.faces.ClientWindow";
+    export const P_RESET_VALUES = "javax.faces.partial.resetValues";
+    export const P_WIN_ID = "javax.faces.WindowId";
 
-    static P_WINDOW_ID = "javax.faces.windowId";
+    export const P_WINDOW_ID = "javax.faces.windowId";
 
     /* message types */
-    static ERROR = "error";
-    static EVENT = "event";
+    export const ERROR = "error";
+    export const EVENT = "event";
 
-    static ON_ERROR = "onerror";
-    static ON_EVENT = "onevent";
+    export const ON_ERROR = "onerror";
+    export const ON_EVENT = "onevent";
 
     /* event emitting stages */
-    static BEGIN = "begin";
-    static COMPLETE = "complete";
-    static SUCCESS = "success";
+    export const BEGIN = "begin";
+    export const COMPLETE = "complete";
+    export const SUCCESS = "success";
 
-    static SOURCE = "source";
-    static STATUS = "status";
+    export const SOURCE = "source";
+    export const STATUS = "status";
 
-    static ERROR_NAME = "error-name";
-    static ERROR_MESSAGE = "error-message";
+    export const ERROR_NAME = "error-name";
+    export const ERROR_MESSAGE = "error-message";
 
 
-    static RESPONSE_TEXT = "responseText";
-    static RESPONSE_XML = "responseXML";
+    export const RESPONSE_TEXT = "responseText";
+    export const RESPONSE_XML = "responseXML";
 
     /*ajax errors spec 14.4.2*/
-    static HTTPERROR = "httpError";
-    static EMPTY_RESPONSE = "emptyResponse";
-    static MALFORMEDXML = "malformedXML";
-    static SERVER_ERROR = "serverError";
-    static CLIENT_ERROR = "clientError";
-    static TIMEOUT_EVENT = "timeout";
+    export const HTTPERROR = "httpError";
+    export const EMPTY_RESPONSE = "emptyResponse";
+    export const MALFORMEDXML = "malformedXML";
+    export const SERVER_ERROR = "serverError";
+    export const CLIENT_ERROR = "clientError";
+    export const TIMEOUT_EVENT = "timeout";
 
-    static CTX_PARAM_MF_INTERNAL = "_mfInternal";
+    export const CTX_PARAM_MF_INTERNAL = "_mfInternal";
 
-    static CTX_PARAM_SRC_FRM_ID = "_mfSourceFormId";
-    static CTX_PARAM_SRC_CTL_ID = "_mfSourceControlId";
-    static CTX_PARAM_TR_TYPE = "_mfTransportType";
-    static CTX_PARAM_PASS_THR = "passThrgh";
-    static CTX_PARAM_DELAY = "delay";
-    static CTX_PARAM_TIMEOUT = "timeout";
-    static CTX_PARAM_RST = "resetValues";
-    static CTX_PARAM_EXECUTE = "execute";
+    export const CTX_PARAM_SRC_FRM_ID = "_mfSourceFormId";
+    export const CTX_PARAM_SRC_CTL_ID = "_mfSourceControlId";
+    export const CTX_PARAM_TR_TYPE = "_mfTransportType";
+    export const CTX_PARAM_PASS_THR = "passThrgh";
+    export const CTX_PARAM_DELAY = "delay";
+    export const CTX_PARAM_TIMEOUT = "timeout";
+    export const CTX_PARAM_RST = "resetValues";
+    export const CTX_PARAM_EXECUTE = "execute";
 
-    static STAGE_DEVELOPMENT = "Development";
-
-
-
-    static CONTENT_TYPE: "Content-Type";
-    static HEAD_FACES_REQ: "Faces-Request";
-    static REQ_ACCEPT = "Accept";
-    static VAL_AJAX: "partial/ajax";
-    static ENCODED_URL: "javax.faces.encodedURL";
-    static REQ_TYPE_GET = "GET";
-    static REQ_TYPE_POST = "POST";
-    static STATE_EVT_BEGIN = "begin"; //TODO remove this
-    static STATE_EVT_TIMEOUT = "TIMEOUT_EVENT";
-    static STATE_EVT_COMPLETE = "complete"; //TODO remove this
-    static URL_ENCODED = "application/x-www-form-urlencoded";
-    static MULTIPART = "multipart/form-data";
-    static NO_TIMEOUT = 0;
-    static STD_ACCEPT = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
-
-    static TAG_HEAD = "head";
-    static TAG_FORM = "form";
-    static TAG_BODY = "body";
-    static TAG_BEFORE = "before";
-    static TAG_AFTER = "after";
+    export const STAGE_DEVELOPMENT = "Development";
 
 
-    static SEL_VIEWSTATE_ELEM = "[name='" + Const.P_VIEWSTATE + "']";
-    static SEL_RESPONSE_XML = "responseXML";
 
-    static PHASE_PROCESS_RESPONSE = "processResponse";
+    export const CONTENT_TYPE= "Content-Type";
+    export const HEAD_FACES_REQ= "Faces-Request";
+    export const REQ_ACCEPT = "Accept";
+    export const VAL_AJAX= "partial/ajax";
+    export const ENCODED_URL= "javax.faces.encodedURL";
+    export const REQ_TYPE_GET = "GET";
+    export const REQ_TYPE_POST = "POST";
+    export const STATE_EVT_BEGIN = "begin"; //TODO remove this
+    export const STATE_EVT_TIMEOUT = "TIMEOUT_EVENT";
+    export const STATE_EVT_COMPLETE = "complete"; //TODO remove this
+    export const URL_ENCODED = "application/x-www-form-urlencoded";
+    export const MULTIPART = "multipart/form-data";
+    export const NO_TIMEOUT = 0;
+    export const STD_ACCEPT = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
+
+    export const TAG_HEAD = "head";
+    export const TAG_FORM = "form";
+    export const TAG_BODY = "body";
+    export const TAG_BEFORE = "before";
+    export const TAG_AFTER = "after";
 
 
-    static ERR_NO_PARTIAL_RESPONSE = "Partial response not set";
+    export const SEL_VIEWSTATE_ELEM = "[name='" + Const.P_VIEWSTATE + "']";
+    export const SEL_RESPONSE_XML = "responseXML";
 
-    static ATTR_URL = "url";
+    export const PHASE_PROCESS_RESPONSE = "processResponse";
+
+
+    export const ERR_NO_PARTIAL_RESPONSE = "Partial response not set";
+
+    export const ATTR_URL = "url";
 
     /*partial response types*/
-    static RESP_PARTIAL = "partial-response";
-    static RESP_TYPE_ERROR = "error";
-    static RESP_TYPE_REDIRECT = "redirect";
-    static RESP_TYPE_CHANGES = "changes";
+    export const RESP_PARTIAL = "partial-response";
+    export const RESP_TYPE_ERROR = "error";
+    export const RESP_TYPE_REDIRECT = "redirect";
+    export const RESP_TYPE_CHANGES = "changes";
 
     /*partial commands*/
-    static CMD_CHANGES = "changes";
-    static CMD_UPDATE = "update";
-    static CMD_DELETE = "delete";
-    static CMD_INSERT = "insert";
-    static CMD_EVAL = "eval";
-    static CMD_ERROR = "error";
-    static CMD_ATTRIBUTES = "attributes";
-    static CMD_EXTENSION = "extension";
-    static CMD_REDIRECT = "redirect";
+    export const CMD_CHANGES = "changes";
+    export const CMD_UPDATE = "update";
+    export const CMD_DELETE = "delete";
+    export const CMD_INSERT = "insert";
+    export const CMD_EVAL = "eval";
+    export const CMD_ERROR = "error";
+    export const CMD_ATTRIBUTES = "attributes";
+    export const CMD_EXTENSION = "extension";
+    export const CMD_REDIRECT = "redirect";
 
     /*other constants*/
 
-    static UPDATE_FORMS = "_updateForms";
-    static UPDATE_ELEMS = "_updateElems";
+    export const UPDATE_FORMS = "_updateForms";
+    export const UPDATE_ELEMS = "_updateElems";
 
-    static MYFACES = "myfaces";
+    export const MYFACES = "myfaces";
 
-    static SEL_SCRIPTS_STYLES = "script, style, link";
+    export const SEL_SCRIPTS_STYLES = "script, style, link";
 
-    static MF_NONE = "__mf_none__";
+    export const MF_NONE = "__mf_none__";
 
+    export const REASON_EXPIRED = "Expired";
+
+    export const RECONNECT_INTERVAL = 500;
+    export const MAX_RECONNECT_ATTEMPTS = 25;
 }

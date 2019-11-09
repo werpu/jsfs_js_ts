@@ -23,7 +23,7 @@ import {AsynchronouseQueue} from "./util/AsyncQueue";
 import {Config, Optional} from "../ext/monadish/Monad";
 
 import {Const} from "./core/Const";
-import {assert, Assertions} from "./util/Assertions";
+import {Assertions} from "./util/Assertions";
 import {XhrFormData} from "./xhrCore/XhrFormData";
 import {ExtDomquery, ExtDQ} from "./util/ExtDomQuery";
 import {ErrorData} from "./xhrCore/ErrorData";
@@ -76,6 +76,33 @@ export module Implementation {
     import getLocalOrGlobalConfig = ExtLang.getLocalOrGlobalConfig;
     import getEvent = ExtLang.getEvent;
     import getGlobalConfig = ExtLang.getGlobalConfig;
+    import assert = Assertions.assert;
+    import CTX_PARAM_PASS_THR = Const.CTX_PARAM_PASS_THR;
+    import P_EVT = Const.P_EVT;
+    import SOURCE = Const.SOURCE;
+    import ON_EVENT = Const.ON_EVENT;
+    import ON_ERROR = Const.ON_ERROR;
+    import MYFACES = Const.MYFACES;
+    import MF_NONE = Const.MF_NONE;
+    import P_PARTIAL_SOURCE = Const.P_PARTIAL_SOURCE;
+    import P_AJAX = Const.P_AJAX;
+    import P_RESET_VALUES = Const.P_RESET_VALUES;
+    import CTX_PARAM_SRC_FRM_ID = Const.CTX_PARAM_SRC_FRM_ID;
+    import CTX_PARAM_SRC_CTL_ID = Const.CTX_PARAM_SRC_CTL_ID;
+    import CTX_PARAM_TR_TYPE = Const.CTX_PARAM_TR_TYPE;
+    import REQ_TYPE_POST = Const.REQ_TYPE_POST;
+    import P_WIN_ID = Const.P_WIN_ID;
+    import CTX_PARAM_EXECUTE = Const.CTX_PARAM_EXECUTE;
+    import P_EXECUTE = Const.P_EXECUTE;
+    import P_WINDOW_ID = Const.P_WINDOW_ID;
+    import P_RENDER = Const.P_RENDER;
+    import IDENT_ALL = Const.IDENT_ALL;
+    import IDENT_NONE = Const.IDENT_NONE;
+    import IDENT_FORM = Const.IDENT_FORM;
+    import IDENT_THIS = Const.IDENT_THIS;
+    import P_CLIENTWINDOW = Const.P_CLIENTWINDOW;
+    import CTX_PARAM_TIMEOUT = Const.CTX_PARAM_TIMEOUT;
+    import CTX_PARAM_DELAY = Const.CTX_PARAM_DELAY;
     let globalConfig = myfacesConfig.myfaces.config;
 
     let projectStage: string = null;
@@ -197,28 +224,28 @@ export module Implementation {
 
         applyWindowId(options);
 
-        requestCtx.assign(Const.CTX_PARAM_PASS_THR).value = fetchPassthroughValues(options.value);
+        requestCtx.assign(CTX_PARAM_PASS_THR).value = fetchPassthroughValues(options.value);
 
-        requestCtx.assignIf(!!event, Const.CTX_PARAM_PASS_THR, Const.P_EVT).value = event?.type;
+        requestCtx.assignIf(!!event, CTX_PARAM_PASS_THR, P_EVT).value = event?.type;
 
         /**
          * ajax pass through context with the source
          * onevent and onerror
          */
-        requestCtx.assign(Const.SOURCE).value = elementId.value;
+        requestCtx.assign(SOURCE).value = elementId.value;
 
         /**
          * on event and onError...
          * those values will be traversed later on
          * also into the response context
          */
-        requestCtx.assign(Const.ON_EVENT).value = options.value?.onevent;
-        requestCtx.assign(Const.ON_ERROR).value = options.value?.onerror;
+        requestCtx.assign(ON_EVENT).value = options.value?.onevent;
+        requestCtx.assign(ON_ERROR).value = options.value?.onerror;
 
         /**
          * lets drag the myfaces config params also in
          */
-        requestCtx.assign(Const.MYFACES).value = options.value?.myfaces;
+        requestCtx.assign(MYFACES).value = options.value?.myfaces;
         /**
          * fetch the parent form
          *
@@ -226,23 +253,23 @@ export module Implementation {
          * so that people can use dummy forms and work
          * with detached objects
          */
-        const configId = requestCtx.value?.myfaces?.form ?? Const.MF_NONE;
+        const configId = requestCtx.value?.myfaces?.form ?? MF_NONE;
         let form: DQ = resolveForm(requestCtx, elem, event);
 
         /**
          * binding contract the javax.faces.source must be set
          */
-        requestCtx.assign(Const.CTX_PARAM_PASS_THR, Const.P_PARTIAL_SOURCE).value = elementId.value;
+        requestCtx.assign(CTX_PARAM_PASS_THR, P_PARTIAL_SOURCE).value = elementId.value;
 
         /**
          * javax.faces.partial.ajax must be set to true
          */
-        requestCtx.assign(Const.CTX_PARAM_PASS_THR, Const.P_AJAX).value = true;
+        requestCtx.assign(CTX_PARAM_PASS_THR, P_AJAX).value = true;
 
         /**
          * binding contract the javax.faces.source must be set
          */
-        requestCtx.assign(Const.CTX_PARAM_PASS_THR, Const.P_PARTIAL_SOURCE).value = elementId.value;
+        requestCtx.assign(CTX_PARAM_PASS_THR, P_PARTIAL_SOURCE).value = elementId.value;
 
         /**
          * if resetValues is set to true
@@ -252,13 +279,13 @@ export module Implementation {
          * the specs jsdoc
          */
         requestCtx.assignIf(true === options.value?.resetValues,
-            Const.CTX_PARAM_PASS_THR, Const.P_RESET_VALUES).value = true;
+            CTX_PARAM_PASS_THR, P_RESET_VALUES).value = true;
 
         //additional meta information to speed things up, note internal non jsf
         //pass through options are stored under _mfInternal in the context
-        internalCtx.assign(Const.CTX_PARAM_SRC_FRM_ID).value = form.id.value;
-        internalCtx.assign(Const.CTX_PARAM_SRC_CTL_ID).value = elementId.value;
-        internalCtx.assign(Const.CTX_PARAM_TR_TYPE).value = Const.REQ_TYPE_POST;
+        internalCtx.assign(CTX_PARAM_SRC_FRM_ID).value = form.id.value;
+        internalCtx.assign(CTX_PARAM_SRC_CTL_ID).value = elementId.value;
+        internalCtx.assign(CTX_PARAM_TR_TYPE).value = REQ_TYPE_POST;
 
         //mojarra compatibility, mojarra is sending the form id as well
         //this is not documented behavior but can be determined by running
@@ -266,7 +293,7 @@ export module Implementation {
         //i assume it does the same as our formId_submit=1 so leaving it out
         //wont hurt but for the sake of compatibility we are going to add it
 
-        requestCtx.assign(Const.CTX_PARAM_PASS_THR, form.id.value).value = form.id.value;
+        requestCtx.assign(CTX_PARAM_PASS_THR, form.id.value).value = form.id.value;
 
         applyClientWindowId(form, requestCtx);
 
@@ -389,7 +416,7 @@ export module Implementation {
         /**
          * a set of input elements holding the window id over the entire document
          */
-        let windowIdHolders = searchRoot.querySelectorAll(`form #${Const.P_WIN_ID}`);
+        let windowIdHolders = searchRoot.querySelectorAll(`form #${P_WIN_ID}`);
 
         /**
          * lazy helper to fetch the window id from the window url
@@ -465,20 +492,19 @@ export module Implementation {
 
     function applyWindowId(options: Config) {
         let windowId = options?.value?.windowId ?? ExtDomquery.windowId;
-        options.assignIf(!!windowId, Const.P_WINDOW_ID).value = windowId;
+        options.assignIf(!!windowId, P_WINDOW_ID).value = windowId;
         options.delete("windowId");
     }
 
     function applyRender(options: Config, ctx: Config, form: DQ, elementId: string) {
         if (options.getIf("render").isPresent()) {
-            transformValues(ctx.getIf(Const.CTX_PARAM_PASS_THR).get({}), Const.P_RENDER, <string>options.getIf("render").value, form, <any>elementId);
+            transformValues(ctx.getIf(CTX_PARAM_PASS_THR).get({}), P_RENDER, <string>options.getIf("render").value, form, <any>elementId);
         }
     }
 
     function applyExecute(options: Config, ctx: Config, form: DQ, elementId: string) {
-        const PARAM_EXECUTE = Const.CTX_PARAM_EXECUTE;
-        const PARAM_PASS_THR = Const.CTX_PARAM_PASS_THR;
-        const P_EXECUTE = Const.P_EXECUTE;
+        const PARAM_EXECUTE = CTX_PARAM_EXECUTE;
+        const PARAM_PASS_THR = CTX_PARAM_PASS_THR;
 
         if (options.getIf(PARAM_EXECUTE).isPresent()) {
             /*the options must be a blank delimited list of strings*/
@@ -495,7 +521,7 @@ export module Implementation {
     function applyClientWindowId(form: DQ, ctx: Config) {
         let clientWindow = jsf.getClientWindow(form.getAsElem(0).value);
         if (clientWindow) {
-            ctx.assign(Const.CTX_PARAM_PASS_THR, Const.P_CLIENTWINDOW).value = clientWindow;
+            ctx.assign(CTX_PARAM_PASS_THR, P_CLIENTWINDOW).value = clientWindow;
         }
     }
 
@@ -536,19 +562,19 @@ export module Implementation {
             }
             switch (iterValues[cnt]) {
                 //@none no values should be sent
-                case Const.IDENT_NONE:
+                case IDENT_NONE:
                     return targetConfig.delete(targetKey);
                 //@all is a pass through case according to the spec
-                case Const.IDENT_ALL:
-                    targetConfig.assign(targetKey).value = Const.IDENT_ALL;
+                case IDENT_ALL:
+                    targetConfig.assign(targetKey).value = IDENT_ALL;
                     return targetConfig;
                 //@form pushes the issuing form id into our list
-                case Const.IDENT_FORM:
+                case IDENT_FORM:
                     ret.push(issuingForm.id.value);
                     processed[issuingForm.id.value] = true;
                     break;
                 //@this is replaced with the current issuing element id
-                case Const.IDENT_THIS:
+                case IDENT_THIS:
                     if (!(issuingElementId in processed)) {
                         ret.push(issuingElementId);
                         processed[issuingElementId] = true;
@@ -571,7 +597,7 @@ export module Implementation {
     }
 
     function resolveForm(requestCtx: Config, elem: DQ, event: Event): DQ {
-        const configId = requestCtx.value?.myfaces?.form ?? Const.MF_NONE; //requestCtx.getIf(Const.MYFACES, "form").orElse(Const.MF_NONE).value;
+        const configId = requestCtx.value?.myfaces?.form ?? MF_NONE; //requestCtx.getIf(MYFACES, "form").orElse(MF_NONE).value;
         let form: DQ = DQ
             .byId(configId)
             .orElseLazy(() => getForm(elem.getAsElem(0).value, event));
@@ -580,13 +606,13 @@ export module Implementation {
 
     function resolveTimeout(options: Config, requestCtx: Config): number {
         let getCfg = getLocalOrGlobalConfig;
-        return options.getIf(Const.CTX_PARAM_TIMEOUT).value ?? getCfg(requestCtx.value, Const.CTX_PARAM_TIMEOUT, 0);
+        return options.getIf(CTX_PARAM_TIMEOUT).value ?? getCfg(requestCtx.value, CTX_PARAM_TIMEOUT, 0);
     }
 
     function resolveDelay(options: Config, requestCtx: Config): number {
         let getCfg = getLocalOrGlobalConfig;
 
-        return options.getIf(Const.CTX_PARAM_DELAY).value ?? getCfg(requestCtx.value, Const.CTX_PARAM_DELAY, 0);
+        return options.getIf(CTX_PARAM_DELAY).value ?? getCfg(requestCtx.value, CTX_PARAM_DELAY, 0);
     }
 
 }

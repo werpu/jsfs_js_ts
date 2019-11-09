@@ -4,6 +4,12 @@ import {Config} from "../../ext/monadish";
 import {EventData} from "./EventData";
 import {ExtLang} from "../util/Lang";
 import getMessage = ExtLang.getMessage;
+import SOURCE = Const.SOURCE;
+import ERROR_NAME = Const.ERROR_NAME;
+import ERROR_MESSAGE = Const.ERROR_MESSAGE;
+import STATUS = Const.STATUS;
+import RESPONSE_TEXT = Const.RESPONSE_TEXT;
+import RESPONSE_XML = Const.RESPONSE_XML;
 
 
 export enum ErrorType {
@@ -70,12 +76,12 @@ export class ErrorData extends EventData {
         let UNKNOWN = "UNKNOWN";
         let getMsg = this.getMsg;
 
-        let source =  getMsg(context,Const.SOURCE);
-        let errorName =  getMsg(context,Const.ERROR_NAME);
-        let errorMessage =  getMsg(context, Const.ERROR_MESSAGE);
-        let status =  getMsg(context,Const.STATUS);
-        let responseText =  getMsg(context,Const.RESPONSE_TEXT);
-        let responseXML =  getMsg(context,Const.RESPONSE_XML);
+        let source =  getMsg(context,SOURCE);
+        let errorName =  getMsg(context,ERROR_NAME);
+        let errorMessage =  getMsg(context, ERROR_MESSAGE);
+        let status =  getMsg(context,STATUS);
+        let responseText =  getMsg(context,RESPONSE_TEXT);
+        let responseXML =  getMsg(context,RESPONSE_XML);
         return new ErrorData(source, name, errorMessage, responseText, responseXML, errorCode+"", status, ErrorType.SERVER_ERROR);
     }
 

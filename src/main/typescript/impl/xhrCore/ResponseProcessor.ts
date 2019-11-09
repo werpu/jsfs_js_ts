@@ -26,6 +26,15 @@ import {DQ} from "../../ext/monadish/DomQuery";
 import trim = Lang.trim;
 import {ExtLang} from "../util/Lang";
 import getLocalOrGlobalConfig = ExtLang.getLocalOrGlobalConfig;
+import TAG_HEAD = Const.TAG_HEAD;
+import SEL_SCRIPTS_STYLES = Const.SEL_SCRIPTS_STYLES;
+import TAG_BODY = Const.TAG_BODY;
+import TAG_FORM = Const.TAG_FORM;
+import SOURCE = Const.SOURCE;
+import ERROR_NAME = Const.ERROR_NAME;
+import ERROR_MESSAGE = Const.ERROR_MESSAGE;
+import P_PARTIAL_SOURCE = Const.P_PARTIAL_SOURCE;
+import RESPONSE_XML = Const.RESPONSE_XML;
 
 /**
  * Response processor
@@ -45,15 +54,15 @@ export class ResponseProcessor implements IResponseProcessor {
     }
 
     replaceHead(shadowDocument: XMLQuery | DQ) {
-        let shadowHead = shadowDocument.querySelectorAll(Const.TAG_HEAD);
+        let shadowHead = shadowDocument.querySelectorAll(TAG_HEAD);
         if (!shadowHead.isPresent()) {
             return;
         }
         let shadowInnerHTML: string = <string>shadowHead.html().value;
-        let oldHead = DQ.querySelectorAll(Const.TAG_HEAD);
+        let oldHead = DQ.querySelectorAll(TAG_HEAD);
 
         //delete all to avoid script and style overlays
-        oldHead.querySelectorAll(Const.SEL_SCRIPTS_STYLES).delete();
+        oldHead.querySelectorAll(SEL_SCRIPTS_STYLES).delete();
 
         this.storeForEval(shadowHead);
     }
@@ -68,15 +77,15 @@ export class ResponseProcessor implements IResponseProcessor {
      */
     replaceBody(shadowDocument: XMLQuery | DQ) {
 
-        let shadowBody = shadowDocument.querySelectorAll(Const.TAG_BODY);
+        let shadowBody = shadowDocument.querySelectorAll(TAG_BODY);
         if (!shadowBody.isPresent()) {
             return;
         }
 
         let shadowInnerHTML: string = <string>shadowBody.html().value;
 
-        let resultingBody = <DQ>DQ.querySelectorAll(Const.TAG_BODY).html(shadowInnerHTML);
-        let updateForms = resultingBody.querySelectorAll(Const.TAG_FORM);
+        let resultingBody = <DQ>DQ.querySelectorAll(TAG_BODY).html(shadowInnerHTML);
+        let updateForms = resultingBody.querySelectorAll(TAG_FORM);
 
         resultingBody.copyAttrs(shadowBody);
 
@@ -108,12 +117,12 @@ export class ResponseProcessor implements IResponseProcessor {
          */
 
         let mergedErrorData = new Config({});
-        mergedErrorData.assign(Const.SOURCE).value = this.externalContext.getIf(Const.P_PARTIAL_SOURCE).get(0).value;
-        mergedErrorData.assign(Const.ERROR_NAME).value = node.getIf(Const.ERROR_NAME).textContent("");
-        mergedErrorData.assign(Const.ERROR_MESSAGE).value = node.getIf(Const.ERROR_MESSAGE).cDATAAsString;
+        mergedErrorData.assign(SOURCE).value = this.externalContext.getIf(P_PARTIAL_SOURCE).get(0).value;
+        mergedErrorData.assign(ERROR_NAME).value = node.getIf(ERROR_NAME).textContent("");
+        mergedErrorData.assign(ERROR_MESSAGE).value = node.getIf(ERROR_MESSAGE).cDATAAsString;
 
-        let hasResponseXML = this.internalContext.get(Const.RESPONSE_XML).isPresent();
-        mergedErrorData.assignIf(hasResponseXML, Const.RESPONSE_XML).value = this.internalContext.getIf(Const.RESPONSE_XML).value.get(0).value;
+        let hasResponseXML = this.internalContext.get(RESPONSE_XML).isPresent();
+        mergedErrorData.assignIf(hasResponseXML, RESPONSE_XML).value = this.internalContext.getIf(RESPONSE_XML).value.get(0).value;
 
         let errorData = ErrorData.fromServerError(mergedErrorData);
 

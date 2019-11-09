@@ -25,9 +25,7 @@ import {DomQuery, DQ} from "../../ext/monadish/DomQuery";
 import {Stream} from "../../ext/monadish";
 
 
-
 export module ExtLang {
-
 
      let installedLocale: Messages;
      let nameSpace = "impl/util/Lang/";

@@ -1,7 +1,9 @@
 import {Const} from "../core/Const";
 import {Config} from "../../ext/monadish";
-import {Lang} from "../util/Lang";
+
 import {EventData} from "./EventData";
+import {ExtLang} from "../util/Lang";
+import getMessage = ExtLang.getMessage;
 
 
 export enum ErrorType {
@@ -79,7 +81,7 @@ export class ErrorData extends EventData {
 
     private static getMsg(context, param) {
         let UNKNOWN = "UNKNOWN";
-        return Lang.instance.getMessage(context.getIf(param).orElse(UNKNOWN).value);
+        return getMessage(context.getIf(param).orElse(UNKNOWN).value);
     }
 
     static fromServerError(context: Config): ErrorData {

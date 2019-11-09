@@ -1,6 +1,7 @@
 import {Config} from "../../ext/monadish";
-import {Lang} from "../util/Lang";
 import {Const} from "../core/Const";
+import {ExtLang} from "../util/Lang";
+import getMessage = ExtLang.getMessage;
 
 export class EventData {
     type: string;
@@ -11,9 +12,9 @@ export class EventData {
     responseXML: Document;
 
     static createFromRequest(request: XMLHttpRequest, context: Config, /*event name*/ name: string): EventData {
-        let lang = Lang.instance;
+
         let eventData = new EventData();
-        let UNKNOWN = lang.getMessage("UNKNOWN");
+        let UNKNOWN = getMessage("UNKNOWN");
 
         eventData.type = Const.EVENT;
         eventData.status = name;

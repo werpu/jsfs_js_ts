@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-import {Config} from "../../ext/monadish";
+import {Config, Lang} from "../../ext/monadish";
 import {Const} from "../core/Const";
 import {Implementation} from "../AjaxImpl";
-import {Lang} from "../util/Lang";
+
 import {Stream} from "../../ext/monadish/Stream";
 import {DQ} from "../../ext/monadish/DomQuery";
+import isString = Lang.isString;
 
 declare let jsf: any;
 
@@ -50,7 +51,7 @@ export class XhrFormData extends Config {
         //a call to getViewState before must pass the encoded line
         //a call from getViewState passes the form element as datasource
         //so we have two call points
-        if (Lang.instance.isString(dataSource)) {
+        if (isString(dataSource)) {
             this.handleStringSource();
         } else {
             this.handleFormSource();

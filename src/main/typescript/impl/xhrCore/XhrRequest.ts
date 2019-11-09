@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Lang} from "../util/Lang";
+
 import {AsyncRunnable} from "../util/AsyncRunnable";
 import {Config} from "../../ext/monadish/Monad";
 import {Implementation} from "../AjaxImpl";
@@ -25,6 +25,10 @@ import {XMLQuery} from "../../ext/monadish";
 import {ErrorData} from "./ErrorData";
 import {EventData} from "./EventData";
 import {DQ} from "../../ext/monadish/DomQuery";
+import {ExtLang} from "../util/Lang";
+import failSaveExecute = ExtLang.failSaveExecute;
+import getPromise = ExtLang.getPromise;
+
 
 /**
  * JSFed XHR Request Wrapper
@@ -83,8 +87,8 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     }
 
     start(): AsyncRunnable<XMLHttpRequest> {
-        let _Lang = Lang.instance;
-        let fsExec = Lang.failSaveExecute;
+
+        let fsExec = failSaveExecute;
         try {
 
             let viewState = jsf.getViewState(this.sourceForm.getAsElem(0).value);
@@ -151,7 +155,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
      */
     protected get $promise(): Promise<any> {
         if (!this.xhrPromise) {
-            this.xhrPromise = new Lang.Promise((resolve: Consumer<any>, reject: Consumer<any>) => {
+            this.xhrPromise = new (getPromise())((resolve: Consumer<any>, reject: Consumer<any>) => {
                 //to allow callback into xhr over promises
                 //we have to register the callbacks
                 //accordingly
@@ -222,7 +226,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         //bypass a bug in some testing libraries
         //normally the attribute is reasdonly but the testing shims make it writable
         //but in my case do not generate the response xml document object
-        Lang.failSaveExecute(() => {
+        failSaveExecute(() => {
             if (!this.xhrObject.responseXML) {
                 (<any>this.xhrObject)["responseXML"] = <any>XMLQuery.parseXML(this.xhrObject.responseText).getAsElem(0).value;
             }
@@ -251,7 +255,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             //user code error, we might cover
             //this in onError but also we cannot swallow it
             this._onEvent(eventData);
-            Implementation.instance.sendEvent(eventData);
+            Implementation.sendEvent(eventData);
         } catch (e) {
             this.handleError(e);
             throw e;
@@ -264,7 +268,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         try {
             this._onError(errorData);
         } finally {
-            Implementation.instance.sendError(errorData);
+            Implementation.sendError(errorData);
         }
     }
 

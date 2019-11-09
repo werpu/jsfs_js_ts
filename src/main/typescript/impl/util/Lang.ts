@@ -26,35 +26,22 @@ import {Stream} from "../../ext/monadish";
 
 
 
-export class Lang {
+export module ExtLang {
 
 
-    private base: LangBase;
-
-    private installedLocale: Messages;
-    private nameSpace = "impl/util/Lang/";
-
-    private constructor() {
-        this.base = LangBase.instance;
-        this.initLocale();
-    }
-
-    private static _instance: Lang;
-
-    static get instance() {
-        return Lang._instance ?? (Lang._instance = new Lang());
-    }
+     let installedLocale: Messages;
+     let nameSpace = "impl/util/Lang/";
 
     /**
      * instead of Polyfills we rely on class
      * producers
      * @constructor
      */
-    static get Promise(): any {
+    export function getPromise(): any {
         return Promise ?? CancellablePromise;
     }
 
-    private get language(): string {
+    export function getLanguage(): string {
         //TODO global config override
 
         let language: string = (<any>navigator).languages?.[0] ?? navigator?.language;
@@ -80,11 +67,11 @@ export class Lang {
      * @param defaultValue an optional default value if the producer failes to produce anything
      * @returns an Optional of the produced value
      */
-    static failSaveResolve<T>(resolverProducer: () => T, defaultValue: T = null): Optional<T> {
+    export function failSaveResolve<T>(resolverProducer: () => T, defaultValue: T = null): Optional<T> {
         return LangBase.saveResolve(resolverProducer, defaultValue);
     }
 
-    static failSaveExecute<T>(resolverProducer: () => any, defaultValue: T = null): void {
+    export function failSaveExecute<T>(resolverProducer: () => any, defaultValue: T = null): void {
         LangBase.saveResolve(resolverProducer, defaultValue);
     }
 
@@ -100,9 +87,10 @@ export class Lang {
      *
      * @param templateParams the param list to be filled in
      */
-    getMessage(key: string, defaultMessage?: string, ...templateParams: Array<string>): string {
+    export function getMessage(key: string, defaultMessage?: string, ...templateParams: Array<string>): string {
+        installedLocale = installedLocale ?? new Messages();
 
-        let msg = this.installedLocale[key] ?? defaultMessage ?? key + " - undefined message";
+        let msg = installedLocale[key] ?? defaultMessage ?? key + " - undefined message";
 
         Stream.of(...templateParams).each((param, cnt) => {
             msg = msg.replace(new RegExp(["\\{", cnt, "\\}"].join(""), "g"), param);
@@ -111,53 +99,6 @@ export class Lang {
         return msg;
     }
 
-    /**
-     * String to array function performs a string to array transformation
-     * @param {String} it the string which has to be changed into an array
-     * @param {RegExp} splitter our splitter reglar expression
-     * @return an array of the splitted string
-     */
-    strToArray(it: string, splitter: string | RegExp = /\./gi): Array<string> {
-        return this.base.strToArray(it, splitter);
-    }
-
-
-
-    /**
-     * hyperfast trim
-     * http://blog.stevenlevithan.com/archives/faster-trim-javascript
-     * crossported from dojo
-     */
-    trim(str: string): string {
-        return this.base.trim(str);
-    }
-
-    /**
-     * Backported from dojo
-     * a failsafe string determination method
-     * (since in javascript String != "" typeof alone fails!)
-     * @param it {|Object|} the object to be checked for being a string
-     * @return true in case of being a string false otherwise
-     */
-    isString(it?: any): boolean {
-        return this.base.isString(it);
-    }
-
-    isFunc(it: any): boolean {
-        return this.base.isFunc(it);
-    }
-
-    /**
-     * generic object arrays like dom definitions to array conversion method which
-     * transforms any object to something array like
-     * @param obj
-     * @param offset
-     * @param pack
-     * @returns an array converted from the object
-     */
-    objToArray<T>(obj: any, offset: number = 0, pack: Array<T> = []): Array<T> {
-        return this.base.objToArray(obj, offset, pack);
-    }
 
 
     /**
@@ -166,7 +107,7 @@ export class Lang {
      * @param val the value
      * @param delimiter the delimiter
      */
-    keyValToStr(key: string, val: string, delimiter: string = "\n") {
+    export function keyValToStr(key: string, val: string, delimiter: string = "\n") {
         return [key, val].join(delimiter);
     }
 
@@ -179,7 +120,7 @@ export class Lang {
      *
      * @return an event object no matter what is incoming
      */
-    getEvent(evt: Event): Event {
+    export function getEvent(evt: Event): Event {
         return evt ?? <any>window?.event ?? {};
     }
 
@@ -189,9 +130,9 @@ export class Lang {
      * @param evt the event object
      * (with a fallback for ie events if none is present)
      */
-    getEventTarget(evt: Event): Element {
+    export function getEventTarget(evt: Event): Element {
         //ie6 and 7 fallback
-        evt = this.getEvent(evt);
+        evt = getEvent(evt);
         /**
          * evt source is defined in the jsf events
          * seems like some component authors use our code
@@ -209,16 +150,6 @@ export class Lang {
     }
 
     /**
-     * equalsIgnoreCase, case insensitive comparison of two strings
-     *
-     * @param source
-     * @param destination
-     */
-    equalsIgnoreCase(source: string, destination: string): boolean {
-        return this.base.equalsIgnoreCase(source, destination);
-    }
-
-    /**
      * creates an exeption with additional internal parameters
      * for extra information
      *
@@ -228,9 +159,9 @@ export class Lang {
      * @param {String} callFunc the caller function
      * @param {String} message the message for the exception
      */
-    makeException(error: Error, title: string, name: string, callerCls: string, callFunc: string, message: string): Error {
+    export function makeException(error: Error, title: string, name: string, callerCls: string, callFunc: string, message: string): Error {
 
-        return new Error(message + (callerCls ?? this.nameSpace, callFunc ?? ("" + (<any>arguments).caller.toString())));
+        return new Error(message + (callerCls ?? nameSpace) + callFunc ?? ("" + (<any>arguments).caller.toString()));
 
     }
 
@@ -241,7 +172,7 @@ export class Lang {
      *
      * @return either the config entry or if none is given the default value
      */
-    public getGlobalConfig(configName: string, defaultValue: any): any {
+    export function getGlobalConfig(configName: string, defaultValue: any): any {
         /**
          * note we could use exists but this is an heavy operation, since the config name usually
          * given this function here is called very often
@@ -261,34 +192,12 @@ export class Lang {
      *
      * @return either the config entry or if none is given the default value
      */
-    public getLocalOrGlobalConfig(localOptions: Config, configName: string, defaultValue: any): any {
+    export function getLocalOrGlobalConfig(localOptions: Config, configName: string, defaultValue: any): any {
         return localOptions.value?.myfaces?.config?.[configName] ??
             (<any>window)?.myfaces?.config?.[configName] ??
             defaultValue;
     };
 
-    /**
-     * runtime type assertion
-     *
-     * @param probe the probe to be tested for a type
-     * @param theType the type to be tested for
-     */
-    public assertType(probe: any, theType: any): boolean {
-        return this.base.assertType(probe, theType);
-    }
-
-    /**
-     * (re)inits the currently installed
-     * messages so that after loading the main scripts
-     * a new locale can be installed optionally
-     * to our i18n subsystem
-     *
-     * @param newLocale locale override
-     */
-    private initLocale(newLocale ?: any) {
-        let finalLocale = newLocale ?? Messages;
-        this.installedLocale = new finalLocale();
-    }
 
     /**
      * fetches the form in an unprecise manner depending
@@ -297,12 +206,12 @@ export class Lang {
      * @param elem
      * @param event
      */
-    static getForm(elem: Element, event ?: Event): DQ | never {
-        const lang = Lang.instance;
+    export function getForm(elem: Element, event ?: Event): DQ | never {
+
         const FORM = "form";
 
         let queryElem = new DQ(elem);
-        let eventTarget = new DQ(lang.getEventTarget(event));
+        let eventTarget = new DQ(ExtLang.getEventTarget(event));
 
         if (queryElem.isTag(FORM)) {
             return queryElem;
@@ -323,15 +232,14 @@ export class Lang {
             .orElseLazy(() => eventTarget.byTagName(FORM))
             .first();
 
-        this.assertFormExists(form);
+        assertFormExists(form);
 
         return form;
     }
 
-    private static assertFormExists(form: DomQuery): void | never {
+    function assertFormExists(form: DomQuery): void | never {
         if (form.isAbsent()) {
-            let lang = Lang.instance;
-            throw lang.makeException(new Error(), null, null, "Impl", "getForm", lang.getMessage("ERR_FORM"));
+            throw makeException(new Error(), null, null, "Impl", "getForm", getMessage("ERR_FORM"));
         }
     }
 

@@ -70,7 +70,7 @@ export module jsf {
      * <i>javax.faces.application.Application.getProjectStage()</i>
      */
     export function getProjectStage(): string {
-        return Implementation.instance.getProjectStage();
+        return Implementation.getProjectStage();
     }
 
     /**
@@ -82,7 +82,7 @@ export module jsf {
      * https://issues.apache.org/jira/browse/MYFACES-2110
      */
     export function getViewState(formElement: Element | string): string {
-        return Implementation.instance.getViewState(formElement);
+        return Implementation.getViewState(formElement);
     }
 
     /**
@@ -91,12 +91,12 @@ export module jsf {
      * @return the window identifier or null if none is found
      */
     export function getClientWindow(rootNode?: Element | string): string {
-        return Implementation.instance.getClientWindow(rootNode);
+        return Implementation.getClientWindow(rootNode);
     }
 
     //private helper functions
     function getSeparatorChar() {
-        return Implementation.instance.separatorChar;
+        return Implementation.getSeparatorChar();
     }
 
     //We hook the old namespace system into our npm system
@@ -123,7 +123,7 @@ export module jsf {
          * @param {Map} options : map of options being pushed into the ajax cycle
          */
         export function request(element: Element, event?: Event, options?: Context) {
-            Implementation.instance.request(element, event, options)
+            Implementation.request(element, event, options)
             //Implementation.getInstance().requestInternal(element, event, options);
         }
 
@@ -135,7 +135,7 @@ export module jsf {
          * TODO add info on what can be in the context
          */
         export function response(request: XMLHttpRequest, context?: Context) {
-            Implementation.instance.response(request, context);
+            Implementation.response(request, context);
         }
 
         /**
@@ -156,7 +156,7 @@ export module jsf {
          * @param {function} errorListener error handler must be of the format <i>function errorListener(&lt;errorData&gt;)</i>
          */
         export function addOnError(errorFunc: (data: _apiInterfaces.ErrorData) => void) {
-            Implementation.instance.addOnError(<any>errorFunc);
+            Implementation.addOnError(<any>errorFunc);
         }
 
         /**
@@ -166,7 +166,7 @@ export module jsf {
          * @param {function} eventListener event must be of the format <i>function eventListener(&lt;eventData&gt;)</i>
          */
         export function addOnEvent(eventFunc: (data: _apiInterfaces.EventData) => void) {
-            Implementation.instance.addOnEvent(<any>eventFunc);
+            Implementation.addOnEvent(<any>eventFunc);
         }
     }
 

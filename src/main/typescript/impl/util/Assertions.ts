@@ -1,9 +1,10 @@
-import {Config, Optional, XMLQuery} from "../../ext/monadish";
+import {Config, Lang, XMLQuery} from "../../ext/monadish";
 import {Const} from "../core/Const";
-import {Implementation} from "../AjaxImpl";
-import {Lang} from "../util/Lang";
-import {DQ} from "../../ext/monadish/DomQuery";
 
+import {DQ} from "../../ext/monadish/DomQuery";
+import {ExtLang} from "./Lang";
+import getMessage = ExtLang.getMessage;
+import makeException = ExtLang.makeException;
 
 /**
  * a set of internal code assertions
@@ -19,12 +20,12 @@ export class Assertions {
         assertFunction(options.getIf(Const.ON_EVENT).value);
         //improve the error messages if an empty elem is passed
         //Assertions.assertElementExists(elem);
-        assert(elem.isPresent(),Lang.instance.getMessage("ERR_MUST_BE_PROVIDED1", "{0}: source  must be provided or exist", "source element id"), "jsf.ajax.request", "ArgNotSet",  )
+        assert(elem.isPresent(), getMessage("ERR_MUST_BE_PROVIDED1", "{0}: source  must be provided or exist", "source element id"), "jsf.ajax.request", "ArgNotSet",  )
     }
 
     static assertUrlExists(node: XMLQuery): void | never {
         if (node.attr(Const.ATTR_URL).isAbsent()) {
-            throw Assertions.raiseError(new Error(), Lang.instance.getMessage("ERR_RED_URL", null, "_Ajaxthis.processRedirect"), "processRedirect");
+            throw Assertions.raiseError(new Error(), getMessage("ERR_RED_URL", null, "_Ajaxthis.processRedirect"), "processRedirect");
         }
     }
 
@@ -53,7 +54,7 @@ export class Assertions {
         let finalMessage = message ?? "";
 
         //TODO clean up the messy makeException, this is a perfect case for encapsulation and sane defaults
-        return Lang.instance.makeException(error, finalTitle, finalName, "Response", caller || (((<any>arguments).caller) ? (<any>arguments).caller.toString() : "_raiseError"), finalMessage);
+        return makeException(error, finalTitle, finalName, "Response", caller || (((<any>arguments).caller) ? (<any>arguments).caller.toString() : "_raiseError"), finalMessage);
     }
 
 
@@ -72,7 +73,7 @@ export function assert(value: any, msg = "", caller="", title="Assertion Error")
 
 
 export function assertType(value: any, theType: any, msg = "", caller="", title="Type Assertion Error"): asserts value {
-    if((!!value) && !Lang.instance.assertType(value,theType)) {
+    if((!!value) && !Lang.assertType(value,theType)) {
         throw Assertions.raiseError(new Error(), msg ,caller, title);
     }
 }

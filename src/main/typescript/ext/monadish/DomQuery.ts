@@ -14,11 +14,16 @@
  * limitations under the License.
  */
 
-import {Lang} from "./Lang";
+
 import {Config, Optional, ValueEmbedder} from "./Monad";
 import {XMLQuery} from "./XmlQuery";
 import {IStream, LazyStream, Stream} from "./Stream";
 import {ICollector, IStreamDataSource} from "./SourcesCollectors";
+import {Lang} from "./Lang";
+import trim = Lang.trim;
+import objToArray = Lang.objToArray;
+import isString = Lang.isString;
+import equalsIgnoreCase = Lang.equalsIgnoreCase;
 
 // @ts-ignore supression needed here due to fromnullable
 export class ElementAttribute extends ValueEmbedder<string> {
@@ -486,14 +491,14 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
             //we need to flatten out the arrays
 
             for (let cnt = 0; cnt < rootNode.length; cnt++) {
-                if (Lang.instance.isString(rootNode[cnt])) {
+                if (isString(rootNode[cnt])) {
                     let foundElement = DomQuery.querySelectorAll(<string>rootNode[cnt]);
                     if (!foundElement.isAbsent()) {
                         rootNode.push(...foundElement.values)
                     }
                 } else if (rootNode[cnt] instanceof DomQuery) {
                     this.rootNode.push(...(<any>rootNode[cnt]).values);
-                } else if (Lang.instance.isString(rootNode[cnt])) {
+                } else if (isString(rootNode[cnt])) {
                     let result = DomQuery.querySelectorAll(<string>rootNode[cnt]);
                     this.rootNode.push(...result.values);
 
@@ -597,7 +602,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
     get elements(): DomQuery {
         let elements: DomQuery = this.stream.flatMap((item: DomQuery) => {
             let formElement: HTMLFormElement = <HTMLFormElement>item.value.value;
-            return new Stream(formElement.elements ? Lang.instance.objToArray(formElement.elements) : []);
+            return new Stream(formElement.elements ? objToArray(formElement.elements) : []);
         }).filter(item => !!item).collect(new DomQueryCollector());
 
         return elements
@@ -628,7 +633,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
     get childNodes(): DomQuery {
         let childNodeArr: Array<Element> = [];
         this.eachElem((item: Element) => {
-            childNodeArr = childNodeArr.concat(Lang.instance.objToArray(item.childNodes));
+            childNodeArr = childNodeArr.concat(objToArray(item.childNodes));
         });
         return new DomQuery(...childNodeArr);
     }
@@ -677,7 +682,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
      * @return a DomQuery containing the found elements
      */
     static byId(selector: string | DomQuery | Element): DomQuery {
-        if (Lang.instance.isString(selector)) {
+        if (isString(selector)) {
             return new DomQuery(document).byId(<string>selector);
         } else {
             return new DomQuery(<any>selector);
@@ -691,7 +696,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
      * @return a DomQuery containing the found elements
      */
     static byTagName(selector: string | DomQuery | Element): DomQuery {
-        if (Lang.instance.isString(selector)) {
+        if (isString(selector)) {
             return new DomQuery(document).byTagName(<string>selector);
         } else {
             return new DomQuery(<any>selector);
@@ -715,7 +720,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         } else {
             //https://developer.mozilla.org/de/docs/Web/API/DOMParser license creative commons
             const doc = document.implementation.createHTMLDocument("");
-            markup = Lang.instance.trim(markup);
+            markup = trim(markup);
             let lowerMarkup = markup.toLowerCase();
             if (lowerMarkup.includes('<!doctype') ||
                 lowerMarkup.includes('<html') ||
@@ -725,7 +730,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
                 return new DomQuery(doc.documentElement);
             } else {
                 doc.body.innerHTML = markup;
-                return new DomQuery(...<Array<Element>>Lang.instance.objToArray(doc.body.childNodes));
+                return new DomQuery(...<Array<Element>>objToArray(doc.body.childNodes));
             }
         }
     }
@@ -819,7 +824,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
                 continue;
             }
             let res = this.rootNode[cnt].querySelectorAll(selector);
-            nodes = nodes.concat(Lang.instance.objToArray(res));
+            nodes = nodes.concat(objToArray(res));
         }
 
         return new DomQuery(...nodes);
@@ -906,7 +911,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         this.each((item) => {
             let oldClass = item.attr("class").value || "";
             if (!this.hasClass(clazz)) {
-                item.attr("class").value = Lang.instance.trim(oldClass + " " + clazz);
+                item.attr("class").value = trim(oldClass + " " + clazz);
                 return;
             }
         });
@@ -1265,7 +1270,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
 
     copyAttrs(sourceItem: DomQuery | XMLQuery): DomQuery {
         sourceItem.eachElem((sourceNode: Element) => {
-            let attrs: Array<Attr> = Lang.instance.objToArray(sourceNode.attributes);
+            let attrs: Array<Attr> = objToArray(sourceNode.attributes);
             for (let item of attrs) {
                 let value: string = item.value;
                 let name: string = item.name;
@@ -1345,9 +1350,8 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
      * defaults to the standard jsf.js exclusion (we use this code for myfaces)
      */
     runScripts(whilteListed: (val: string) => boolean = DEFAULT_JSF_WHITELIST): DomQuery {
-        let _Lang = Lang.instance,
-            finalScripts = [],
-            equi = _Lang.equalsIgnoreCase,
+        let finalScripts = [],
+            equi = equalsIgnoreCase,
             execScrpt = (item) => {
                 let tagName = item.tagName;
                 let itemType = item.type || "";
@@ -1379,7 +1383,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
                         // embedded script auto eval
                         //TODO this probably needs to be changed due to our new parsing structures
                         //probably not needed anymore
-                        let evalText = _Lang.trim(item.text || item.innerText || item.innerHTML);
+                        let evalText = trim(item.text || item.innerText || item.innerHTML);
                         let go = true;
 
                         while (go) {
@@ -1436,8 +1440,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
 
     runCss(): DomQuery {
 
-        const _Lang = Lang.instance,
-            applyStyle = (item: Element, style: string) => {
+        const  applyStyle = (item: Element, style: string) => {
                 let newSS: HTMLStyleElement = document.createElement("style");
                 document.getElementsByTagName("head")[0].appendChild(newSS);
 
@@ -1454,7 +1457,6 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
             },
 
             execCss = (item: Element) => {
-                const equalsIgnoreCase = _Lang.equalsIgnoreCase;
                 const tagName = item.tagName;
                 if (tagName && equalsIgnoreCase(tagName, "link") && equalsIgnoreCase(item.getAttribute("type"), "text/css")) {
                     applyStyle(item, "@import url('" + item.getAttribute("href") + "');");

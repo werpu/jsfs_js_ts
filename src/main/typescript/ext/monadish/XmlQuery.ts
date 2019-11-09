@@ -16,6 +16,7 @@
 
 import {Lang} from "./Lang";
 import {DomQuery} from "./DomQuery";
+import isString = Lang.isString;
 
 declare let ActiveXObject: any;
 
@@ -50,7 +51,7 @@ export class XMLQuery extends DomQuery {
             return domParser.parseFromString(xml, docType);
         };
 
-        if(Lang.instance.isString(rootNode)) {
+        if(isString(rootNode)) {
             super(parseXML(<string>rootNode))
         } else {
             super(rootNode);

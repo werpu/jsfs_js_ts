@@ -15,7 +15,7 @@
  */
 
 import * as myfacesConfig from "../api/myfaces";
-import {Lang} from "./util/Lang";
+
 import {IListener} from "./util/ListenerQueue";
 import {Response} from "./xhrCore/Response";
 import {XhrRequest} from "./xhrCore/XhrRequest";
@@ -29,8 +29,9 @@ import {ExtDomquery, ExtDQ} from "./util/ExtDomQuery";
 import {ErrorData} from "./xhrCore/ErrorData";
 import {EventData} from "./xhrCore/EventData";
 import {DQ} from "../ext/monadish/DomQuery";
-import {LazyStream, Stream} from "../ext/monadish";
+import {Lang, LazyStream, Stream} from "../ext/monadish";
 import {AssocArrayCollector} from "../ext/monadish/SourcesCollectors";
+import {ExtLang} from "./util/Lang";
 
 declare var jsf: any;
 
@@ -49,14 +50,14 @@ enum ProjectStages {
  *   will not be transmitted from the options into the passthrough
  */
 enum BlockFilter {
-    onerror= "onerror",
-    onevent= "onevent",
-    render= "render",
-    execute= "execute",
-    myfaces= "myfaces",
-    delay= "delay",
-    timeout= "timeout",
-    windowId= "windowId"
+    onerror = "onerror",
+    onevent = "onevent",
+    render = "render",
+    execute = "execute",
+    myfaces = "myfaces",
+    delay = "delay",
+    timeout = "timeout",
+    windowId = "windowId"
 }
 
 /**
@@ -67,30 +68,33 @@ enum BlockFilter {
  * but this is pointless, you always can overwrite the thin api layer
  * however a dedicated api makes sense for readability reasons
  */
-export class Implementation {
+export module Implementation {
 
-    private globalConfig = myfacesConfig.myfaces.config;
+    import trim = Lang.trim;
+    import getMessage = ExtLang.getMessage;
+    import getForm = ExtLang.getForm;
+    import getLocalOrGlobalConfig = ExtLang.getLocalOrGlobalConfig;
+    import getEvent = ExtLang.getEvent;
+    import getGlobalConfig = ExtLang.getGlobalConfig;
+    let globalConfig = myfacesConfig.myfaces.config;
 
-    private projectStage: string = null;
-    private separator: string = null;
-    private eventQueue = [];
-    private errorQueue = [];
-    private requestQueue = new AsynchronouseQueue<XhrRequest>();
+    let projectStage: string = null;
+    let separator: string = null;
+    let eventQueue = [];
+    let errorQueue = [];
+    let requestQueue = null;
     /*error reporting threshold*/
-    private threshold = "ERROR";
+    let threshold = "ERROR";
 
-    private constructor() {
-    }
-
-    private static _instance: Implementation = null;
-
-    /**
-     * singleton for now, but we probably
-     * can move this code into a module
-     * to avoid the initialisation via instance
-     */
-    static get instance(): Implementation {
-        return this._instance ?? (this._instance = new Implementation());
+    //we need to proxy this in the tests
+    export let queueHandler = {
+        /**
+         * public to make it shimmable for tests
+         */
+        addRequestToQueue: function (elem: DQ, form: DQ, reqCtx: Config, respPassThr: Config, delay = 0, timeout = 0) {
+            requestQueue = requestQueue ?? new AsynchronouseQueue<XhrRequest>();
+            requestQueue.enqueue(new XhrRequest(elem, form, reqCtx, respPassThr, [], timeout), delay);
+        }
     }
 
     /**
@@ -98,15 +102,21 @@ export class Implementation {
      *
      * @return {char} the separator char for the given script tags
      */
-    get separatorChar(): string {
+    export function getSeparatorChar(): string {
         return this?.globalConfig?.separator ??
-                this?.separator ??
-                (this.separator = ExtDomquery.searchJsfJsFor(/separator=([^&;]*)/).orElse(":").value);
+            this?.separator ??
+            (separator = ExtDomquery.searchJsfJsFor(/separator=([^&;]*)/).orElse(":").value);
     }
 
     //for testing only
-    static reset() {
-        this._instance = null;
+    export function reset() {
+        globalConfig = myfacesConfig.myfaces.config;
+
+        projectStage = null;
+        separator = null;
+        eventQueue = [];
+        errorQueue = [];
+        requestQueue = null;
     }
 
     /**
@@ -114,20 +124,20 @@ export class Implementation {
      * it cannot be cached and must be delivered over the server
      * The value for it comes from the requestInternal parameter of the jsf.js script called "stage".
      */
-    getProjectStage(): string | null {
+    export function getProjectStage(): string | null {
         return this?.globalConfig?.projectStage ??
-                this?.projectStage ??
-                (this.projectStage = this.resolveProjectStateFromURL());
+            this?.projectStage ??
+            (projectStage = resolveProjectStateFromURL());
     }
 
-    private resolveProjectStateFromURL(): string | null {
+    export function resolveProjectStateFromURL(): string | null {
 
         /* run through all script tags and try to find the one that includes jsf.js */
-        let foundStage = <string> ExtDomquery.searchJsfJsFor(/stage=([^&;]*)/).value;
+        let foundStage = <string>ExtDomquery.searchJsfJsFor(/stage=([^&;]*)/).value;
         return (foundStage in ProjectStages) ? foundStage : null;
     }
 
-    static chain(source: any, event: Event, ...funcs: EvalFuncs): boolean {
+    export function chain(source: any, event: Event, ...funcs: EvalFuncs): boolean {
 
         let ret = true;
         let execute = function (func: Function | string) {
@@ -136,7 +146,7 @@ export class Implementation {
             } else {
                 //either a function or a string can be passed in case of a string we have to wrap it into another function
                 //it it is not a plain executable code but a definition
-                let sourceCode = Lang.instance.trim(<string>func);
+                let sourceCode = trim(<string>func);
                 if (sourceCode.indexOf("function ") == 0) {
                     sourceCode = `return ${sourceCode} (event)`;
                 }
@@ -144,7 +154,7 @@ export class Implementation {
             }
         };
 
-        <any> Stream.of(...funcs).each(func => execute(func));
+        <any>Stream.of(...funcs).each(func => execute(func));
         return ret;
     }
 
@@ -167,15 +177,14 @@ export class Implementation {
      * a) transformArguments out of the function
      * b) passThrough handling with a map copy with a filter map block map
      */
-    request(el: ElemDef, event?: Event, opts ?: Options) {
-        const lang = Lang.instance;
+    export function request(el: ElemDef, event?: Event, opts ?: Options) {
 
         /*
          *namespace remap for our local function context we mix the entire function namespace into
          *a local function variable so that we do not have to write the entire namespace
          *all the time
          */
-        event = lang.getEvent(event);
+        event = getEvent(event);
 
         //options not set we define a default one with nothing
         const options = new Config(opts).shallowCopy;
@@ -186,9 +195,9 @@ export class Implementation {
 
         Assertions.assertRequestIntegrity(options, elem);
 
-        this.applyWindowId(options);
+        applyWindowId(options);
 
-        requestCtx.assign(Const.CTX_PARAM_PASS_THR).value = this.fetchPassthroughValues(options.value);
+        requestCtx.assign(Const.CTX_PARAM_PASS_THR).value = fetchPassthroughValues(options.value);
 
         requestCtx.assignIf(!!event, Const.CTX_PARAM_PASS_THR, Const.P_EVT).value = event?.type;
 
@@ -218,7 +227,7 @@ export class Implementation {
          * with detached objects
          */
         const configId = requestCtx.value?.myfaces?.form ?? Const.MF_NONE;
-        let form: DQ = this.resolveForm(requestCtx, elem, event);
+        let form: DQ = resolveForm(requestCtx, elem, event);
 
         /**
          * binding contract the javax.faces.source must be set
@@ -259,25 +268,17 @@ export class Implementation {
 
         requestCtx.assign(Const.CTX_PARAM_PASS_THR, form.id.value).value = form.id.value;
 
-        this.applyClientWindowId(form, requestCtx);
+        applyClientWindowId(form, requestCtx);
 
-        this.applyExecute(options, requestCtx, form, elementId.value);
-        this.applyRender(options, requestCtx, form, elementId.value);
+        applyExecute(options, requestCtx, form, elementId.value);
+        applyRender(options, requestCtx, form, elementId.value);
 
-        let delay: number = this.resolveDelay(options, requestCtx);
-        let timeout: number = this.resolveTimeout(options, requestCtx);
+        let delay: number = resolveDelay(options, requestCtx);
+        let timeout: number = resolveTimeout(options, requestCtx);
 
         //now we enqueue the request as asynchronous runnable into our request
         //queue and let the queue take over the rest
-        this.addRequestToQueue(elem, form, requestCtx, internalCtx, delay, timeout);
-    }
-
-
-    /**
-     * public to make it shimmable for tests
-     */
-    addRequestToQueue(elem: DQ, form: DQ, reqCtx: Config, respPassThr: Config, delay = 0, timeout = 0) {
-        this.requestQueue.enqueue(new XhrRequest(elem, form, reqCtx, respPassThr, [], timeout), delay);
+        queueHandler.addRequestToQueue(elem, form, requestCtx, internalCtx, delay, timeout);
     }
 
     /**
@@ -286,26 +287,26 @@ export class Implementation {
      * @param {XMLHttpRequest} request - the ajax request
      * @param {Object} context - the ajax context
      */
-    response(request: XMLHttpRequest, context: Context) {
+    export function response(request: XMLHttpRequest, context: Context) {
         Response.processResponse(request, context);
     }
 
-    addOnError(errorListener: IListener<ErrorData>) {
+    export function addOnError(errorListener: IListener<ErrorData>) {
         /*error handling already done in the assert of the queue*/
-        this.errorQueue.push(errorListener);
+        errorQueue.push(errorListener);
     }
 
-    addOnEvent(eventListener: IListener<EventData>) {
+    export function addOnEvent(eventListener: IListener<EventData>) {
         /*error handling already done in the assert of the queue*/
-        this.eventQueue.push(eventListener);
+        eventQueue.push(eventListener);
     }
 
     /**
      * sends an event
      */
-    sendEvent(data: EventData) {
+    export function sendEvent(data: EventData) {
         /*now we serve the queue as well*/
-        this.eventQueue.forEach(fn => fn(data));
+        eventQueue.forEach(fn => fn(data));
     }
 
     /**
@@ -320,22 +321,22 @@ export class Implementation {
      * @param exception the exception being thrown
      * @param clearRequestQueue if set to true, clears the request queue of all pending requests
      */
-    stdErrorHandler(request: XMLHttpRequest,
-                    context: Config,
-                    exception: any,
-                    clearRequestQueue = false) {
+    export function stdErrorHandler(request: XMLHttpRequest,
+                                    context: Config,
+                                    exception: any,
+                                    clearRequestQueue = false) {
         //newer browsers do not allow to hold additional values on native objects like exceptions
         //we hence capsule it into the request, which is gced automatically
         //on ie as well, since the stdErrorHandler usually is called between requests
         //this is a valid approach
         try {
-            if (this.threshold == "ERROR") {
+            if (threshold == "ERROR") {
                 let errorData = ErrorData.fromClient(exception);
-                this.sendError(errorData);
+                sendError(errorData);
             }
         } finally {
             if (clearRequestQueue) {
-                this.requestQueue.cleanup();
+                requestQueue.cleanup();
             }
         }
     }
@@ -364,19 +365,19 @@ export class Implementation {
      *
      *
      */
-    sendError(errorData: any) {
+    export function sendError(errorData: any) {
 
-        this.errorQueue.forEach((errorCallback: Function) => {
+        errorQueue.forEach((errorCallback: Function) => {
             errorCallback(errorData);
         });
-        let displayError: (string) => void = Lang.instance.getGlobalConfig("defaultErrorOutput", (console ? console.error : alert));
+        let displayError: (string) => void = getGlobalConfig("defaultErrorOutput", (console ? console.error : alert));
         displayError(errorData);
     }
 
     /**
      * @return the client window id of the current window, if one is given
      */
-    getClientWindow(node ?: Element | string): string {
+    export function getClientWindow(node ?: Element | string): string {
         const ALTERED = "___mf_id_altered__";
         const INIT = "___init____";
 
@@ -428,7 +429,7 @@ export class Implementation {
         let formWindowId: Optional<string> = searchRoot.stream.map<string>(getValue).reduce(doubleCheck, INIT);
 
         //if the resulting window id is set on altered then we have an unresolvable problem
-        assert(formWindowId.value != ALTERED,"Multiple different windowIds found in document");
+        assert(formWindowId.value != ALTERED, "Multiple different windowIds found in document");
 
         /**
          * return the window id or null
@@ -445,7 +446,7 @@ export class Implementation {
      * @throws Error in case of the given element not being of type form!
      * https://issues.apache.org/jira/browse/MYFACES-2110
      */
-    getViewState(form: Element | string) {
+    export function getViewState(form: Element | string) {
         /**
          *  typecheck assert!, we opt for strong typing here
          *  because it makes it easier to detect bugs
@@ -453,28 +454,28 @@ export class Implementation {
 
         let element: DQ = DQ.byId(form);
         if (!element.isTag("form")) {
-            throw new Error(Lang.instance.getMessage("ERR_VIEWSTATE"));
+            throw new Error(getMessage("ERR_VIEWSTATE"));
         }
 
         let formData = new XhrFormData(element);
         return formData.toString();
     }
 
-    //----------------------------------------------- Private Methods ---------------------------------------------------------------------
+    //----------------------------------------------- Methods ---------------------------------------------------------------------
 
-    private applyWindowId(options: Config) {
+    function applyWindowId(options: Config) {
         let windowId = options?.value?.windowId ?? ExtDomquery.windowId;
         options.assignIf(!!windowId, Const.P_WINDOW_ID).value = windowId;
         options.delete("windowId");
     }
 
-    private applyRender(options: Config, ctx: Config, form: DQ, elementId: string) {
+    function applyRender(options: Config, ctx: Config, form: DQ, elementId: string) {
         if (options.getIf("render").isPresent()) {
-            this.transformValues(ctx.getIf(Const.CTX_PARAM_PASS_THR).get({}), Const.P_RENDER, <string>options.getIf("render").value, form, <any>elementId);
+            transformValues(ctx.getIf(Const.CTX_PARAM_PASS_THR).get({}), Const.P_RENDER, <string>options.getIf("render").value, form, <any>elementId);
         }
     }
 
-    private applyExecute(options: Config, ctx: Config, form: DQ, elementId: string) {
+    function applyExecute(options: Config, ctx: Config, form: DQ, elementId: string) {
         const PARAM_EXECUTE = Const.CTX_PARAM_EXECUTE;
         const PARAM_PASS_THR = Const.CTX_PARAM_PASS_THR;
         const P_EXECUTE = Const.P_EXECUTE;
@@ -485,13 +486,13 @@ export class Implementation {
              * the spec rev 2.0a however states, if none is issued nothing at all should be sent down
              */
             options.assign(PARAM_EXECUTE).value = options.getIf(PARAM_EXECUTE).value + " @this";
-            this.transformValues(ctx.getIf(PARAM_PASS_THR).get({}), P_EXECUTE, <string>options.getIf(PARAM_EXECUTE).value, form, <any>elementId);
+            transformValues(ctx.getIf(PARAM_PASS_THR).get({}), P_EXECUTE, <string>options.getIf(PARAM_EXECUTE).value, form, <any>elementId);
         } else {
             ctx.assign(PARAM_PASS_THR, P_EXECUTE).value = elementId;
         }
     }
 
-    private applyClientWindowId(form: DQ, ctx: Config) {
+    function applyClientWindowId(form: DQ, ctx: Config) {
         let clientWindow = jsf.getClientWindow(form.getAsElem(0).value);
         if (clientWindow) {
             ctx.assign(Const.CTX_PARAM_PASS_THR, Const.P_CLIENTWINDOW).value = clientWindow;
@@ -513,10 +514,10 @@ export class Implementation {
      * @param issuingForm the form where the issuing element originates
      * @param issuingElementId the issuing element
      */
-    private transformValues(targetConfig: Config, targetKey: string, userValues: string, issuingForm: DQ, issuingElementId: string): Config {
+    function transformValues(targetConfig: Config, targetKey: string, userValues: string, issuingForm: DQ, issuingElementId: string): Config {
         //a cleaner implementation of the transform list method
-        let _Lang = Lang.instance;
-        let iterValues = (userValues) ? _Lang.trim(userValues).split(/\s+/gi) : [];
+
+        let iterValues = (userValues) ? trim(userValues).split(/\s+/gi) : [];
         let ret = [];
 
         let processed = {};
@@ -563,27 +564,27 @@ export class Implementation {
         return targetConfig;
     }
 
-    private fetchPassthroughValues(mappedOpts: { [key: string]: any }) {
+    function fetchPassthroughValues(mappedOpts: { [key: string]: any }) {
         return Stream.ofAssoc(mappedOpts)
             .filter(item => !(item[0] in BlockFilter))
             .collect(new AssocArrayCollector());
     }
 
-    private resolveForm(requestCtx: Config, elem: DQ, event: Event): DQ {
+    function resolveForm(requestCtx: Config, elem: DQ, event: Event): DQ {
         const configId = requestCtx.value?.myfaces?.form ?? Const.MF_NONE; //requestCtx.getIf(Const.MYFACES, "form").orElse(Const.MF_NONE).value;
         let form: DQ = DQ
             .byId(configId)
-            .orElseLazy(() => Lang.getForm(elem.getAsElem(0).value, event));
+            .orElseLazy(() => getForm(elem.getAsElem(0).value, event));
         return form
     }
 
-    private resolveTimeout(options: Config, requestCtx: Config):number {
-        let getCfg = Lang.instance.getLocalOrGlobalConfig;
+    function resolveTimeout(options: Config, requestCtx: Config): number {
+        let getCfg = getLocalOrGlobalConfig;
         return options.getIf(Const.CTX_PARAM_TIMEOUT).value ?? getCfg(requestCtx.value, Const.CTX_PARAM_TIMEOUT, 0);
     }
 
-    private resolveDelay(options: Config, requestCtx: Config): number {
-        let getCfg = Lang.instance.getLocalOrGlobalConfig;
+    function resolveDelay(options: Config, requestCtx: Config): number {
+        let getCfg = getLocalOrGlobalConfig;
 
         return options.getIf(Const.CTX_PARAM_DELAY).value ?? getCfg(requestCtx.value, Const.CTX_PARAM_DELAY, 0);
     }

@@ -20,13 +20,8 @@ import {Optional} from "./Monad";
 /**
  * Lang helpers crossported from the apache myfaces project
  */
-export class Lang {
-
-    private static _instance: Lang;
-
-    static get instance() {
-        return Lang._instance ?? (Lang._instance = new Lang());
-    }
+export module Lang {
+    
 
     //should be in lang, but for now here to avoid recursive imports, not sure if typescript still has a problem with those
     /**
@@ -46,7 +41,7 @@ export class Lang {
      * @param defaultValue an optional default value if the producer failes to produce anything
      * @returns an Optional of the produced value
      */
-    static saveResolve<T>(resolverProducer: () => T, defaultValue: T = null): Optional<T> {
+    export function saveResolve<T>(resolverProducer: () => T, defaultValue: T = null): Optional<T> {
         try {
             let result = resolverProducer();
             return Optional.fromNullable(result ?? defaultValue);
@@ -55,7 +50,7 @@ export class Lang {
         }
     }
 
-    static saveResolveLazy<T>(resolverProducer: () => T, defaultValue: () => T = null): Optional<T> {
+    export function saveResolveLazy<T>(resolverProducer: () => T, defaultValue: () => T = null): Optional<T> {
         try {
             let result = resolverProducer();
             return Optional.fromNullable(result ?? defaultValue());
@@ -70,11 +65,11 @@ export class Lang {
      * @param {RegExp} splitter our splitter reglar expression
      * @return a trimmed array of the splitted string
      */
-    strToArray(it: string, splitter: string | RegExp = /\./gi): Array<string> {
+    export function strToArray(it: string, splitter: string | RegExp = /\./gi): Array<string> {
 
         let ret = [];
         it.split(splitter).forEach((element => {
-            ret.push(this.trim(element));
+            ret.push(trim(element));
         }));
         return ret;
     }
@@ -84,7 +79,7 @@ export class Lang {
      * http://blog.stevenlevithan.com/archives/faster-trim-javascript
      * crossported from dojo
      */
-    trim(str: string): string {
+    export function trim(str: string): string {
         str = str.replace(/^\s\s*/, '');
         let ws = /\s/, i = str.length;
 
@@ -102,7 +97,7 @@ export class Lang {
      * @param pack
      * @returns an array converted from the object
      */
-    objToArray<T>(obj: any, offset: number = 0, pack: Array<T> = []): Array<T> {
+    export function objToArray<T>(obj: any, offset: number = 0, pack: Array<T> = []): Array<T> {
         if ("undefined" == typeof obj || null == obj) {
             return pack ?? null;
         }
@@ -119,7 +114,7 @@ export class Lang {
      * @param source
      * @param destination
      */
-    equalsIgnoreCase(source?: string, destination?: string): boolean {
+    export function equalsIgnoreCase(source?: string, destination?: string): boolean {
         let finalSource = source ?? "___no_value__";
         let finalDest = destination ?? "___no_value__";
 
@@ -130,7 +125,7 @@ export class Lang {
     /*
      * Promise wrappers for timeout and interval
      */
-    timeout(timeout: number): CancellablePromise {
+    export function timeout(timeout: number): CancellablePromise {
         let handler: any = null;
         return new CancellablePromise((apply: Function, reject: Function) => {
             handler = setTimeout(() => {
@@ -144,7 +139,7 @@ export class Lang {
         });
     }
 
-    interval(timeout: number): CancellablePromise {
+    export function interval(timeout: number): CancellablePromise {
         let handler: any = null;
         return new CancellablePromise((apply: Function, reject: Function) => {
             handler = setInterval(() => {
@@ -164,8 +159,8 @@ export class Lang {
      * @param probe the probe to be tested for a type
      * @param theType the type to be tested for
      */
-    public assertType(probe: any, theType: any): boolean {
-        return this.isString(theType) ? typeof probe == theType : probe instanceof theType;
+    export function assertType(probe: any, theType: any): boolean {
+        return isString(theType) ? typeof probe == theType : probe instanceof theType;
     }
 
     /**
@@ -175,13 +170,13 @@ export class Lang {
      * @param it {|Object|} the object to be checked for being a string
      * @return true in case of being a string false otherwise
      */
-    isString(it?: any): boolean {
+    export function isString(it?: any): boolean {
         //	summary:
         //		Return true if it is a String
         return !!arguments.length && it != null && (typeof it == "string" || it instanceof String); // Boolean
     }
 
-    isFunc(it: any): boolean {
+    export function isFunc(it: any): boolean {
         return it instanceof Function || typeof it === "function";
     }
 }

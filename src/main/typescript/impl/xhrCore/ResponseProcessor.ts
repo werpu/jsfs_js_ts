@@ -14,15 +14,18 @@
  * limitations under the License.
  */
 
-import {Config, DomQuery, XMLQuery} from "../../ext/monadish";
+import {Config, DomQuery, Lang, XMLQuery} from "../../ext/monadish";
 import {Const} from "../core/Const";
 import {Implementation} from "../AjaxImpl";
 import {Assertions} from "../util/Assertions";
-import {Lang} from "../util/Lang";
+
 import {ResonseDataResolver} from "./ResonseDataResolver";
 import {IResponseProcessor} from "./IResponseProcessor";
 import {ErrorData} from "./ErrorData";
 import {DQ} from "../../ext/monadish/DomQuery";
+import trim = Lang.trim;
+import {ExtLang} from "../util/Lang";
+import getLocalOrGlobalConfig = ExtLang.getLocalOrGlobalConfig;
 
 /**
  * Response processor
@@ -114,7 +117,7 @@ export class ResponseProcessor implements IResponseProcessor {
 
         let errorData = ErrorData.fromServerError(mergedErrorData);
 
-        Implementation.instance.sendError(errorData);
+        Implementation.sendError(errorData);
     }
 
     /**
@@ -125,7 +128,7 @@ export class ResponseProcessor implements IResponseProcessor {
     redirect(node: XMLQuery) {
         Assertions.assertUrlExists(node);
 
-        let redirectUrl = Lang.instance.trim(node.attr(Const.ATTR_URL).value);
+        let redirectUrl = trim(node.attr(Const.ATTR_URL).value);
         if (redirectUrl != "") {
             (<any>window).location.href = redirectUrl;
         }
@@ -235,7 +238,7 @@ export class ResponseProcessor implements IResponseProcessor {
     }
 
     private isAllFormResolution(context: Config) {
-        return Lang.instance.getLocalOrGlobalConfig(context, "no_portlet_env", false);
+        return getLocalOrGlobalConfig(context, "no_portlet_env", false);
     }
 
     private appendViewStateToForms(forms: DQ, viewState: string) {

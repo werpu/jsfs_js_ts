@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Config, XMLQuery} from "../../ext/monadish";
+import {Config, Optional, XMLQuery} from "../../ext/monadish";
 import {Const} from "../core/Const";
 import {Assertions} from "../util/Assertions";
 import {DQ} from "../../ext/monadish/DomQuery";
@@ -33,7 +33,7 @@ import SEL_RESPONSE_XML = Const.SEL_RESPONSE_XML;
  * stateless because it might be called from various
  * parts of the response classes
  */
-export class ResonseDataResolver {
+export module ResonseDataResolver {
 
     /**
      * fetches the response XML
@@ -44,7 +44,7 @@ export class ResonseDataResolver {
      * Throws an error in case of non existent or wrong xml data
      *
      */
-    static resolveResponseXML(request: Config): XMLQuery {
+    export function resolveResponseXML(request: Config): XMLQuery {
         let ret = new XMLQuery(request.getIf(SEL_RESPONSE_XML).value);
         Assertions.assertValidXMLResponse(ret);
 
@@ -58,7 +58,7 @@ export class ResonseDataResolver {
      *
      * @param context the root context as associative array
      */
-    static resolveContexts(context: { [p: string]: any }) {
+    export function resolveContexts(context: { [p: string]: any }): any {
         /**
          * we split the context apart into the external one and
          * some internal values
@@ -81,8 +81,8 @@ export class ResonseDataResolver {
      * @param internalContext internal passthrough fall back
      *
      */
-    static resolveSourceElement(context: Config, internalContext: Config): DQ {
-        let elemId = this.resolveSourceElementId(context, internalContext);
+    export function resolveSourceElement(context: Config, internalContext: Config): DQ {
+        let elemId = resolveSourceElementId(context, internalContext);
         let elem = DQ.byId(elemId.value);
         return elem;
     }
@@ -95,7 +95,7 @@ export class ResonseDataResolver {
      * @param internalContext
      * @param elem
      */
-    static resolveSourceForm(internalContext: Config, elem: DQ): DQ {
+    export function resolveSourceForm(internalContext: Config, elem: DQ): DQ {
         let sourceFormId = internalContext.getIf(CTX_PARAM_SRC_FRM_ID);
         let sourceForm = new DQ(sourceFormId.isPresent() ? document.forms[sourceFormId.value] : null);
 
@@ -107,7 +107,7 @@ export class ResonseDataResolver {
     }
 
 
-    private static resolveSourceElementId(context: Config, internalContext: Config) {
+    function resolveSourceElementId(context: Config, internalContext: Config): Optional<string> {
         //?internal context?? used to be external one
         return internalContext.getIf(CTX_PARAM_SRC_CTL_ID)
             .orElseLazy(() => context.getIf(SOURCE, "id").value);

@@ -13,6 +13,7 @@ export {
     IStreamDataSource,
     ICollector,
     ArrayCollector,
+    AssocArrayCollector,
     FormDataCollector,
     QueryFormDataCollector
 } from "./SourcesCollectors";

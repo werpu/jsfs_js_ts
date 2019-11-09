@@ -25,11 +25,11 @@ import {Config, Optional} from "../ext/monadish/Monad";
 import {Const} from "./core/Const";
 import {Assertions} from "./util/Assertions";
 import {XhrFormData} from "./xhrCore/XhrFormData";
-import {ExtDomquery, ExtDQ} from "./util/ExtDomQuery";
+import {ExtDomquery} from "./util/ExtDomQuery";
 import {ErrorData} from "./xhrCore/ErrorData";
 import {EventData} from "./xhrCore/EventData";
 import {DQ} from "../ext/monadish/DomQuery";
-import {Lang, LazyStream, Stream} from "../ext/monadish";
+import {Lang, Stream} from "../ext/monadish";
 import {AssocArrayCollector} from "../ext/monadish/SourcesCollectors";
 import {ExtLang} from "./util/Lang";
 
@@ -167,7 +167,7 @@ export module Implementation {
     export function chain(source: any, event: Event, ...funcs: EvalFuncs): boolean {
 
         let ret = true;
-        let execute = function (func: Function | string) {
+        let resolveAndExecute = function (func: Function | string) {
             if ("string" != typeof func) {
                 return (ret = ret && ((<Function>func).call(source, event) !== false));
             } else {
@@ -181,7 +181,7 @@ export module Implementation {
             }
         };
 
-        <any>Stream.of(...funcs).each(func => execute(func));
+        <any>Stream.of(...funcs).each(func => resolveAndExecute(func));
         return ret;
     }
 

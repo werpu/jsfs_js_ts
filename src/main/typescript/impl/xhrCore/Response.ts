@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-import {Config, DQ} from "../../ext/monadish";
-import {XMLQuery} from "../../ext/monadish/XmlQuery";
+import {Config, DQ,XMLQuery} from "../../ext/monadish";
 import {Const} from "../core/Const";
 import {ResponseProcessor} from "./ResponseProcessor";
 import {ResonseDataResolver} from "./ResonseDataResolver";
@@ -37,7 +36,10 @@ import P_VIEWHEAD = Const.P_VIEWHEAD;
 import P_VIEWBODY = Const.P_VIEWBODY;
 import P_VIEWSTATE = Const.P_VIEWSTATE;
 
-export class Response {
+export module Response {
+
+    import resolveResponseXML = ResonseDataResolver.resolveResponseXML;
+    import resolveContexts = ResonseDataResolver.resolveContexts;
 
     /**
      * Standardized jsf.js response
@@ -50,20 +52,18 @@ export class Response {
      * @param {[key: string]: any} context (Map) - AJAX context
      *
      */
-    static processResponse(request: XMLHttpRequest, context: { [key: string]: any }) {
+    export function processResponse(request: XMLHttpRequest, context: { [key: string]: any }) {
 
         let req = Config.fromNullable(request);
-        let {externalContext, internalContext} = ResonseDataResolver.resolveContexts(context);
-
-        let responseXML: XMLQuery = ResonseDataResolver.resolveResponseXML(req);
-
+        let {externalContext, internalContext} = resolveContexts(context);
+        let responseXML: XMLQuery = resolveResponseXML(req);
         let responseProcessor = new ResponseProcessor(req, externalContext, internalContext);
 
         internalContext.assign(RESPONSE_XML).value = responseXML;
 
         //we now process the partial tags, or in none given raise an error
         responseXML.querySelectorAll(RESP_PARTIAL)
-            .each(item => this.processPartialTag(<XMLQuery>item, responseProcessor, internalContext));
+            .each(item => processPartialTag(<XMLQuery>item, responseProcessor, internalContext));
 
         //we now process the viewstates and the evals deferred
         //the reason for this is that often it is better
@@ -76,7 +76,7 @@ export class Response {
     /**
      * highest node partial-response from there the main operations are triggered
      */
-    private static processPartialTag(node: XMLQuery, responseProcessor: IResponseProcessor, internalContext) {
+     function processPartialTag(node: XMLQuery, responseProcessor: IResponseProcessor, internalContext) {
 
         internalContext.assign(PARTIAL_ID).value = node.id;
         const SEL_SUB_TAGS = [CMD_ERROR, CMD_REDIRECT, CMD_CHANGES].join(",");
@@ -91,7 +91,7 @@ export class Response {
                     responseProcessor.redirect(node);
                     break;
                 case CMD_CHANGES:
-                    this.processChangesTag(node, responseProcessor);
+                    processChangesTag(node, responseProcessor);
                     break;
             }
         });
@@ -103,13 +103,13 @@ export class Response {
      * @param node
      * @param responseProcessor
      */
-    private static processChangesTag(node: XMLQuery, responseProcessor: IResponseProcessor): boolean {
+     function processChangesTag(node: XMLQuery, responseProcessor: IResponseProcessor): boolean {
         const ALLOWED_TAGS = [CMD_UPDATE, CMD_EVAL, CMD_INSERT, CMD_DELETE, CMD_ATTRIBUTES, CMD_EXTENSION].join(",");
         node.getIf(ALLOWED_TAGS).each(
             (node: XMLQuery) => {
                 switch (node.tagName.value) {
                     case CMD_UPDATE:
-                        this.processUpdateTag(node, responseProcessor);
+                        processUpdateTag(node, responseProcessor);
                         break;
 
                     case CMD_EVAL:
@@ -144,12 +144,12 @@ export class Response {
      * @param node
      * @param responseProcessor
      */
-    private static processUpdateTag(node: XMLQuery, responseProcessor: IResponseProcessor) {
+     function processUpdateTag(node: XMLQuery, responseProcessor: IResponseProcessor) {
         if (node.id.value == P_VIEWSTATE) {
             responseProcessor.processViewState(node);
         } else {
             //branch case we need to drill down further
-            this.handleElementUpdate(node, responseProcessor);
+            handleElementUpdate(node, responseProcessor);
         }
     }
 
@@ -159,7 +159,7 @@ export class Response {
      * @param node
      * @param responseProcessor
      */
-    private static handleElementUpdate(node: XMLQuery, responseProcessor: IResponseProcessor) {
+     function handleElementUpdate(node: XMLQuery, responseProcessor: IResponseProcessor) {
         let cdataBlock = node.cDATAAsString;
         switch (node.id.value) {
             case P_VIEWROOT :

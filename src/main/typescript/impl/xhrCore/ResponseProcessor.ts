@@ -35,6 +35,8 @@ import ERROR_NAME = Const.ERROR_NAME;
 import ERROR_MESSAGE = Const.ERROR_MESSAGE;
 import P_PARTIAL_SOURCE = Const.P_PARTIAL_SOURCE;
 import RESPONSE_XML = Const.RESPONSE_XML;
+import resolveSourceElement = ResonseDataResolver.resolveSourceElement;
+import resolveSourceForm = ResonseDataResolver.resolveSourceForm;
 
 /**
  * Response processor
@@ -213,8 +215,8 @@ export class ResponseProcessor implements IResponseProcessor {
     processViewState(node: XMLQuery) {
         this.internalContext.assign("appliedViewState").value = node.textContent("");
 
-        let elem = ResonseDataResolver.resolveSourceElement(this.externalContext, this.internalContext);
-        let sourceForm = ResonseDataResolver.resolveSourceForm(this.internalContext, elem);
+        let elem = resolveSourceElement(this.externalContext, this.internalContext);
+        let sourceForm = resolveSourceForm(this.internalContext, elem);
 
         if (sourceForm.isPresent()) {
             this.internalContext.assign(Const.UPDATE_FORMS).value.push(sourceForm);

@@ -68,20 +68,16 @@ export class Lang {
      * String to array function performs a string to array transformation
      * @param {String} it the string which has to be changed into an array
      * @param {RegExp} splitter our splitter reglar expression
-     * @return an array of the splitted string
+     * @return a trimmed array of the splitted string
      */
     strToArray(it: string, splitter: string | RegExp = /\./gi): Array<string> {
-        //	summary:
-        //		Return true if it is a String
 
-        let retArr = it.split(splitter);
-        for (let cnt = 0; cnt < retArr.length; cnt++) {
-            retArr[cnt] = this.trim(retArr[cnt]);
-        }
-        return retArr;
+        let ret = [];
+        it.split(splitter).forEach((element => {
+            ret.push(this.trim(element));
+        }));
+        return ret;
     }
-
-
 
     /**
      * hyperfast trim
@@ -98,8 +94,6 @@ export class Lang {
         return str.slice(0, i + 1);
     }
 
-
-
     /**
      * generic object arrays like dom definitions to array conversion method which
      * transforms any object to something array like
@@ -108,29 +102,15 @@ export class Lang {
      * @param pack
      * @returns an array converted from the object
      */
-    objToArray<T>(obj: any, offset?: number, pack?: Array<T>): Array<T> {
-        if (!obj) {
-            return pack || null;
+    objToArray<T>(obj: any, offset: number = 0, pack: Array<T> = []): Array<T> {
+        if ("undefined" == typeof obj || null == obj) {
+            return pack ?? null;
         }
         //since offset is numeric we cannot use the shortcut due to 0 being false
         //special condition array delivered no offset no pack
-        if (obj instanceof Array && !offset && !pack) return obj;
-        let finalOffset =  offset ?? 0;
-        let finalPack = pack || [];
-        try {
-            return finalPack.concat(Array.prototype.slice.call(obj, finalOffset));
-        } catch (e) {
-            //ie8 (again as only browser) delivers for css 3 selectors a non convertible object
-            //we have to do it the hard way
-            //ie8 seems generally a little bit strange in its behavior some
-            //objects break the function is everything methodology of javascript
-            //and do not implement apply call, or are pseudo arrays which cannot
-            //be sliced
-            for (let cnt = finalOffset; cnt < obj.length; cnt++) {
-                finalPack.push(obj[cnt]);
-            }
-            return finalPack;
-        }
+        if ((<any>obj) instanceof Array && !offset && !pack) return obj;
+
+        return pack.concat(Array.prototype.slice.call(obj, offset));
     }
 
     /**
@@ -139,15 +119,12 @@ export class Lang {
      * @param source
      * @param destination
      */
-    equalsIgnoreCase(source: string, destination: string): boolean {
-        //either both are not set or null
-        if (!source && !destination) {
-            return true;
-        }
-        //source or dest is set while the other is not
-        if (!source || !destination) return false;
+    equalsIgnoreCase(source?: string, destination?: string): boolean {
+        let finalSource = source ?? "___no_value__";
+        let finalDest = destination ?? "___no_value__";
+
         //in any other case we do a strong string comparison
-        return source.toLowerCase() === destination.toLowerCase();
+        return finalSource.toLowerCase() === finalDest.toLowerCase();
     }
 
     /*

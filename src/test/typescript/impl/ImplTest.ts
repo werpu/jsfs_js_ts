@@ -47,8 +47,8 @@ describe('jsf.ajax.request test suite', () => {
         //we stub the addRequestToQueue, to enable the request check only
         //without any xhr and response, both will be tested separately for
         //proper behavior
-        const Impl = Implementation.instance;
-        const addRequestToQueue = sinon.stub(Impl, "addRequestToQueue");
+        const Impl = Implementation;
+        const addRequestToQueue = sinon.stub(Impl.queueHandler, "addRequestToQueue");
         //now the jsf.ajax.request should trigger but should not go into
         //the asynchronous event loop.
         //lets check it out

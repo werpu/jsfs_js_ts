@@ -8,6 +8,7 @@ import {expect} from "chai";
 import defaultMyFaces = StandardInits.defaultMyFaces;
 import {Lang} from "../../../main/typescript/ext/monadish";
 import {FakeWebsocket} from "./FakeWebsocket";
+import assertType = Lang.assertType;
 
 declare var jsf: any;
 
@@ -89,10 +90,10 @@ describe('Tests the jsf websocket client side api on high level (generic test wi
             expect(calledArgs[0] == "clientId1").to.be.true;
             expect(calledArgs[1] == "booga.ws").to.be.true;
             expect(calledArgs[2] == "mychannel").to.be.true;
-            let lang = Lang.instance;
-            expect(lang.assertType(calledArgs[3], "function")).to.be.true;
-            expect(lang.assertType(calledArgs[4], "function")).to.be.true;
-            expect(lang.assertType(calledArgs[5], "function")).to.be.true;
+
+            expect(assertType(calledArgs[3], "function")).to.be.true;
+            expect(assertType(calledArgs[4], "function")).to.be.true;
+            expect(assertType(calledArgs[5], "function")).to.be.true;
 
             //implementation specific
             expect("clientId1" in this.pushImpl.components, "a component must be registered").to.be.true;

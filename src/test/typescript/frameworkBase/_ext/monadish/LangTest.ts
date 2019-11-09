@@ -57,12 +57,12 @@ describe('Lang tests', () => {
 
 
     it('initializable', () => {
-        const lang = Lang.instance;
+        const lang = Lang;
         expect(lang).to.exist;
     });
 
     it('strToArray working', () => {
-        const lang = Lang.instance;
+        const lang = Lang;
 
         let arr = lang.strToArray("hello.world.from.me", /\./gi);
 
@@ -75,7 +75,7 @@ describe('Lang tests', () => {
 
 
     it('trim working', () => {
-        const lang = Lang.instance;
+        const lang = Lang;
         let origStr = " hello world from me    ";
         let trimmed = lang.trim(origStr);
         expect(trimmed).to.exist;
@@ -84,7 +84,7 @@ describe('Lang tests', () => {
     });
 
     it('isString working', () => {
-        const lang = Lang.instance;
+        const lang = Lang;
         expect(lang.isString(" ")).to.be.true;
         expect(lang.isString('')).to.be.true;
         expect(lang.isString(null)).to.be.false;
@@ -94,7 +94,7 @@ describe('Lang tests', () => {
     });
 
     it('isFunc working', () => {
-        const lang = Lang.instance;
+        const lang = Lang;
         expect(lang.isFunc(() => {})).to.be.true;
         expect(lang.isFunc(function() {return true;})).to.be.true;
         expect(lang.isFunc("blarg")).to.be.false;
@@ -102,7 +102,7 @@ describe('Lang tests', () => {
     });
 
     it('objToArray working', () => {
-        const lang = Lang.instance;
+        const lang = Lang;
         let obj_probe = new Probe();
         let resultArr = lang.objToArray(obj_probe);
         expect(lang.assertType(resultArr, Array)).to.be.true;
@@ -116,7 +116,7 @@ describe('Lang tests', () => {
 
 
     it('equals ignore case test', () => {
-        const lang = Lang.instance;
+        const lang = Lang;
         expect(lang.equalsIgnoreCase(null, null)).to.be.true;
         expect(lang.equalsIgnoreCase("", "")).to.be.true;
         expect(lang.equalsIgnoreCase("null", "NuLL")).to.be.true;

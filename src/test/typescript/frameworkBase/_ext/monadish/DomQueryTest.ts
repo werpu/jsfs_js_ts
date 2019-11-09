@@ -18,6 +18,7 @@ import {expect} from 'chai';
 import {describe, it} from 'mocha';
 import {ArrayCollector, DomQuery, Lang, LazyStream} from "../../../../../main/typescript/ext/monadish";
 import * as sinon from 'sinon';
+import trim = Lang.trim;
 
 
 const jsdom = require("jsdom");
@@ -213,7 +214,7 @@ describe('DOMQuery tests', function () {
         probe1.insertAfter(DomQuery.fromMarkup(` <div id="id_x_0_1"></div><div id="id_x_1_1"></div>`));
 
         expect(DomQuery.querySelectorAll("div").length).to.eq(8);
-        DomQuery.querySelectorAll("body").innerHtml = Lang.instance.trim(DomQuery.querySelectorAll("body").innerHtml.replace(/>\s*</gi, "><"));
+        DomQuery.querySelectorAll("body").innerHtml = trim(DomQuery.querySelectorAll("body").innerHtml.replace(/>\s*</gi, "><"));
         expect(DomQuery.querySelectorAll("body").childNodes.length).to.eq(8);
 
         let innerHtml = DomQuery.querySelectorAll("body").innerHtml;

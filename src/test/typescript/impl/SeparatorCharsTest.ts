@@ -50,7 +50,7 @@ describe('various tests for get separator char', () => {
         let waitForResult = defaultSeparatorChar("$");
         waitForResult.then((close) => {
             try {
-                let separator = Implementation.instance.separatorChar;
+                let separator = Implementation.separatorChar;
                 console.debug("sep:", separator);
                 expect(separator).to.eq("$");
             } finally {
@@ -67,7 +67,7 @@ describe('various tests for get separator char', () => {
         let waitForResult = defaultSeparatorChar("%21");
         waitForResult.then((close) => {
             try {
-                let separator = Implementation.instance.separatorChar;
+                let separator = Implementation.separatorChar;
                 expect(separator).to.eq("!");
             } finally {
                 Implementation.reset();

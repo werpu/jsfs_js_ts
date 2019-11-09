@@ -56,7 +56,7 @@ export class ExtDomquery extends DQ {
     get nonce(): string {
         //already processed
         let myfacesConfig = new Config(window.myfaces);
-        let nonce: IValueHolder<string> = myfacesConfig.apply("config", "cspMeta", "nonce");
+        let nonce: IValueHolder<string> = myfacesConfig.assign("config", "cspMeta", "nonce");
         if (nonce.value) {
             return <string>nonce.value;
         }

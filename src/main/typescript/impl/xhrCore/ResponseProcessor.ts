@@ -105,12 +105,12 @@ export class ResponseProcessor implements IResponseProcessor {
          */
 
         let mergedErrorData = new Config({});
-        mergedErrorData.apply(Const.SOURCE).value = this.externalContext.getIf(Const.P_PARTIAL_SOURCE).get(0).value;
-        mergedErrorData.apply(Const.ERROR_NAME).value = node.getIf(Const.ERROR_NAME).textContent("");
-        mergedErrorData.apply(Const.ERROR_MESSAGE).value = node.getIf(Const.ERROR_MESSAGE).cDATAAsString;
+        mergedErrorData.assign(Const.SOURCE).value = this.externalContext.getIf(Const.P_PARTIAL_SOURCE).get(0).value;
+        mergedErrorData.assign(Const.ERROR_NAME).value = node.getIf(Const.ERROR_NAME).textContent("");
+        mergedErrorData.assign(Const.ERROR_MESSAGE).value = node.getIf(Const.ERROR_MESSAGE).cDATAAsString;
 
         let hasResponseXML = this.internalContext.get(Const.RESPONSE_XML).isPresent();
-        mergedErrorData.applyIf(hasResponseXML, Const.RESPONSE_XML).value = this.internalContext.getIf(Const.RESPONSE_XML).value.get(0).value;
+        mergedErrorData.assignIf(hasResponseXML, Const.RESPONSE_XML).value = this.internalContext.getIf(Const.RESPONSE_XML).value.get(0).value;
 
         let errorData = ErrorData.fromServerError(mergedErrorData);
 
@@ -190,7 +190,7 @@ export class ResponseProcessor implements IResponseProcessor {
             DQ.byId(after.value).insertAfter(insertNodes);
         }
 
-        this.internalContext.apply(Const.UPDATE_ELEMS).value.push(insertNodes);
+        this.internalContext.assign(Const.UPDATE_ELEMS).value.push(insertNodes);
     }
 
     /**
@@ -199,13 +199,13 @@ export class ResponseProcessor implements IResponseProcessor {
      *
      */
     processViewState(node: XMLQuery) {
-        this.internalContext.apply("appliedViewState").value = node.textContent("");
+        this.internalContext.assign("appliedViewState").value = node.textContent("");
 
         let elem = ResonseDataResolver.resolveSourceElement(this.externalContext, this.internalContext);
         let sourceForm = ResonseDataResolver.resolveSourceForm(this.internalContext, elem);
 
         if (sourceForm.isPresent()) {
-            this.internalContext.apply(Const.UPDATE_FORMS).value.push(sourceForm);
+            this.internalContext.assign(Const.UPDATE_FORMS).value.push(sourceForm);
         } else {
             this.newViewStateElement(sourceForm);
         }
@@ -273,11 +273,11 @@ export class ResponseProcessor implements IResponseProcessor {
     }
 
     private storeForUpdate(updateForms: DQ) {
-        this.internalContext.apply(Const.UPDATE_FORMS).value.push(updateForms);
+        this.internalContext.assign(Const.UPDATE_FORMS).value.push(updateForms);
     }
 
     private storeForEval(toBeEvaled: DQ) {
-        this.internalContext.apply(Const.UPDATE_ELEMS).value.push(toBeEvaled);
+        this.internalContext.assign(Const.UPDATE_ELEMS).value.push(toBeEvaled);
     }
 
 }

@@ -61,8 +61,8 @@ export class ResonseDataResolver {
         /**
          * prepare storage for some deferred operations
          */
-        internalContext.apply(Const.UPDATE_FORMS).value = [];
-        internalContext.apply(Const.UPDATE_ELEMS).value = [];
+        internalContext.assign(Const.UPDATE_FORMS).value = [];
+        internalContext.assign(Const.UPDATE_ELEMS).value = [];
         return {externalContext, internalContext};
     }
 

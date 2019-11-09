@@ -1648,7 +1648,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
                             //let subBuf = [];
                             if (selectElem.options[u].selected) {
                                 let elementOption = selectElem.options[u];
-                                target.apply(name).value = (elementOption.getAttribute("value") != null) ?
+                                target.assign(name).value = (elementOption.getAttribute("value") != null) ?
                                     elementOption.value : elementOption.text;
                             }
                         }
@@ -1665,9 +1665,9 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
                     let files: any = (<any>element.value).files;
                     if (files && files.length) {
                         //xhr level2
-                        target.apply(name).value = files[0];
+                        target.assign(name).value = files[0];
                     } else {
-                        target.apply(name).value = element.inputValue.value;
+                        target.assign(name).value = element.inputValue.value;
                     }
                 }
 

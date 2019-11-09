@@ -72,6 +72,8 @@ describe('Lang tests', () => {
 
     });
 
+
+
     it('trim working', () => {
         const lang = Lang.instance;
         let origStr = " hello world from me    ";
@@ -98,7 +100,6 @@ describe('Lang tests', () => {
         expect(lang.isFunc("blarg")).to.be.false;
         expect(lang.isFunc(new Probe())).to.be.false;
     });
-
 
     it('objToArray working', () => {
         const lang = Lang.instance;

@@ -100,10 +100,10 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             this.responseContext = passThroughParams.shallowCopy;
 
             //we have to shift the internal passthroughs around to build up our response context
-            this.responseContext.apply(Const.CTX_PARAM_MF_INTERNAL).value = this.internalContext.value;
+            this.responseContext.assign(Const.CTX_PARAM_MF_INTERNAL).value = this.internalContext.value;
             //per spec the onevent and onerrors must be passed through to the response
-            this.responseContext.apply(Const.ON_EVENT).value = this.requestContext.getIf(Const.ON_EVENT).value;
-            this.responseContext.apply(Const.ON_ERROR).value = this.requestContext.getIf(Const.ON_ERROR).value;
+            this.responseContext.assign(Const.ON_EVENT).value = this.requestContext.getIf(Const.ON_EVENT).value;
+            this.responseContext.assign(Const.ON_ERROR).value = this.requestContext.getIf(Const.ON_ERROR).value;
 
             this.xhrObject.open(this.ajaxType, this.resolveFinalUrl(formData), true);
 

@@ -461,14 +461,14 @@ export class Config extends Optional<any> {
     shallowMerge(other: Config, overwrite = true) {
         for (let key in other.value) {
             if (overwrite && key in this.value) {
-                this.apply(key).value = other.getIf(key).value;
+                this.assign(key).value = other.getIf(key).value;
             } else if (!(key in this.value)) {
-                this.apply(key).value = other.getIf(key).value;
+                this.assign(key).value = other.getIf(key).value;
             }
         }
     }
 
-    apply(...keys: Array<any>): IValueHolder<any> {
+    assign(...keys): IValueHolder<any> {
         if (keys.length < 1) {
             return;
         }
@@ -484,8 +484,8 @@ export class Config extends Optional<any> {
         return retVal;
     }
 
-    applyIf(condition: boolean, ...keys: Array<any>): IValueHolder<any> {
-        return condition ? this.apply(...keys) : {value: null};
+    assignIf(condition: boolean, ...keys: Array<any>): IValueHolder<any> {
+        return condition ? this.assign(...keys) : {value: null};
     }
 
     getIf(...keys: Array<string>): Config {

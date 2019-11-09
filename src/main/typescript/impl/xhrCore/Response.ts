@@ -43,7 +43,7 @@ export class Response {
 
         let responseProcessor = new ResponseProcessor(req, externalContext, internalContext);
 
-        internalContext.apply(Const.RESPONSE_XML).value = responseXML;
+        internalContext.assign(Const.RESPONSE_XML).value = responseXML;
 
         //we now process the partial tags, or in none given raise an error
         responseXML.querySelectorAll(Const.RESP_PARTIAL)
@@ -62,7 +62,7 @@ export class Response {
      */
     private static processPartialTag(node: XMLQuery, responseProcessor: IResponseProcessor, internalContext) {
 
-        internalContext.apply(Const.PARTIAL_ID).value = node.id;
+        internalContext.assign(Const.PARTIAL_ID).value = node.id;
         const SEL_SUB_TAGS = [Const.CMD_ERROR, Const.CMD_REDIRECT, Const.CMD_CHANGES].join(",");
 
         //now we can process the main operations

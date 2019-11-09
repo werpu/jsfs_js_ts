@@ -188,28 +188,28 @@ export class Implementation {
 
         this.applyWindowId(options);
 
-        requestCtx.apply(Const.CTX_PARAM_PASS_THR).value = this.fetchPassthroughValues(options.value);
+        requestCtx.assign(Const.CTX_PARAM_PASS_THR).value = this.fetchPassthroughValues(options.value);
 
-        requestCtx.applyIf(!!event, Const.CTX_PARAM_PASS_THR, Const.P_EVT).value = event?.type;
+        requestCtx.assignIf(!!event, Const.CTX_PARAM_PASS_THR, Const.P_EVT).value = event?.type;
 
         /**
          * ajax pass through context with the source
          * onevent and onerror
          */
-        requestCtx.apply(Const.SOURCE).value = elementId.value;
+        requestCtx.assign(Const.SOURCE).value = elementId.value;
 
         /**
          * on event and onError...
          * those values will be traversed later on
          * also into the response context
          */
-        requestCtx.apply(Const.ON_EVENT).value = options.value?.onevent;
-        requestCtx.apply(Const.ON_ERROR).value = options.value?.onerror;
+        requestCtx.assign(Const.ON_EVENT).value = options.value?.onevent;
+        requestCtx.assign(Const.ON_ERROR).value = options.value?.onerror;
 
         /**
          * lets drag the myfaces config params also in
          */
-        requestCtx.apply(Const.MYFACES).value = options.value?.myfaces;
+        requestCtx.assign(Const.MYFACES).value = options.value?.myfaces;
         /**
          * fetch the parent form
          *
@@ -223,17 +223,17 @@ export class Implementation {
         /**
          * binding contract the javax.faces.source must be set
          */
-        requestCtx.apply(Const.CTX_PARAM_PASS_THR, Const.P_PARTIAL_SOURCE).value = elementId.value;
+        requestCtx.assign(Const.CTX_PARAM_PASS_THR, Const.P_PARTIAL_SOURCE).value = elementId.value;
 
         /**
          * javax.faces.partial.ajax must be set to true
          */
-        requestCtx.apply(Const.CTX_PARAM_PASS_THR, Const.P_AJAX).value = true;
+        requestCtx.assign(Const.CTX_PARAM_PASS_THR, Const.P_AJAX).value = true;
 
         /**
          * binding contract the javax.faces.source must be set
          */
-        requestCtx.apply(Const.CTX_PARAM_PASS_THR, Const.P_PARTIAL_SOURCE).value = elementId.value;
+        requestCtx.assign(Const.CTX_PARAM_PASS_THR, Const.P_PARTIAL_SOURCE).value = elementId.value;
 
         /**
          * if resetValues is set to true
@@ -242,14 +242,14 @@ export class Implementation {
          * the value has to be explicitly true, according to
          * the specs jsdoc
          */
-        requestCtx.applyIf(true === options.value?.resetValues,
+        requestCtx.assignIf(true === options.value?.resetValues,
             Const.CTX_PARAM_PASS_THR, Const.P_RESET_VALUES).value = true;
 
         //additional meta information to speed things up, note internal non jsf
         //pass through options are stored under _mfInternal in the context
-        internalCtx.apply(Const.CTX_PARAM_SRC_FRM_ID).value = form.id.value;
-        internalCtx.apply(Const.CTX_PARAM_SRC_CTL_ID).value = elementId.value;
-        internalCtx.apply(Const.CTX_PARAM_TR_TYPE).value = Const.REQ_TYPE_POST;
+        internalCtx.assign(Const.CTX_PARAM_SRC_FRM_ID).value = form.id.value;
+        internalCtx.assign(Const.CTX_PARAM_SRC_CTL_ID).value = elementId.value;
+        internalCtx.assign(Const.CTX_PARAM_TR_TYPE).value = Const.REQ_TYPE_POST;
 
         //mojarra compatibility, mojarra is sending the form id as well
         //this is not documented behavior but can be determined by running
@@ -257,7 +257,7 @@ export class Implementation {
         //i assume it does the same as our formId_submit=1 so leaving it out
         //wont hurt but for the sake of compatibility we are going to add it
 
-        requestCtx.apply(Const.CTX_PARAM_PASS_THR, form.id.value).value = form.id.value;
+        requestCtx.assign(Const.CTX_PARAM_PASS_THR, form.id.value).value = form.id.value;
 
         this.applyClientWindowId(form, requestCtx);
 
@@ -464,7 +464,7 @@ export class Implementation {
 
     private applyWindowId(options: Config) {
         let windowId = options?.value?.windowId ?? ExtDomquery.windowId;
-        options.applyIf(!!windowId, Const.P_WINDOW_ID).value = windowId;
+        options.assignIf(!!windowId, Const.P_WINDOW_ID).value = windowId;
         options.delete("windowId");
     }
 
@@ -484,17 +484,17 @@ export class Implementation {
             /*compliance with Mojarra which automatically adds @this to an execute
              * the spec rev 2.0a however states, if none is issued nothing at all should be sent down
              */
-            options.apply(PARAM_EXECUTE).value = options.getIf(PARAM_EXECUTE).value + " @this";
+            options.assign(PARAM_EXECUTE).value = options.getIf(PARAM_EXECUTE).value + " @this";
             this.transformValues(ctx.getIf(PARAM_PASS_THR).get({}), P_EXECUTE, <string>options.getIf(PARAM_EXECUTE).value, form, <any>elementId);
         } else {
-            ctx.apply(PARAM_PASS_THR, P_EXECUTE).value = elementId;
+            ctx.assign(PARAM_PASS_THR, P_EXECUTE).value = elementId;
         }
     }
 
     private applyClientWindowId(form: DQ, ctx: Config) {
         let clientWindow = jsf.getClientWindow(form.getAsElem(0).value);
         if (clientWindow) {
-            ctx.apply(Const.CTX_PARAM_PASS_THR, Const.P_CLIENTWINDOW).value = clientWindow;
+            ctx.assign(Const.CTX_PARAM_PASS_THR, Const.P_CLIENTWINDOW).value = clientWindow;
         }
     }
 
@@ -539,7 +539,7 @@ export class Implementation {
                     return targetConfig.delete(targetKey);
                 //@all is a pass through case according to the spec
                 case Const.IDENT_ALL:
-                    targetConfig.apply(targetKey).value = Const.IDENT_ALL;
+                    targetConfig.assign(targetKey).value = Const.IDENT_ALL;
                     return targetConfig;
                 //@form pushes the issuing form id into our list
                 case Const.IDENT_FORM:
@@ -559,7 +559,7 @@ export class Implementation {
             }
         }
         //We now add the target as joined list
-        targetConfig.apply(targetKey).value = ret.join(" ");
+        targetConfig.assign(targetKey).value = ret.join(" ");
         return targetConfig;
     }
 

@@ -85,7 +85,7 @@ export class XhrFormData extends Config {
         form.byId(Const.P_VIEWSTATE)
             .ifPresentLazy((elem: DQ) => {
                 let value = elem.inputValue.value;
-                this.applyIf(!!value ,Const.P_VIEWSTATE).value = value;
+                this.assignIf(!!value ,Const.P_VIEWSTATE).value = value;
             });
     }
 
@@ -94,7 +94,7 @@ export class XhrFormData extends Config {
         Stream.of(...splittedEntries)
             .map(line => line.split(/\=/gi))
             .each(keyVal => {
-                this.apply(keyVal [0]).value = keyVal[1] || null;
+                this.assign(keyVal [0]).value = keyVal[1] || null;
             });
     }
 

@@ -37,6 +37,7 @@ import P_PARTIAL_SOURCE = Const.P_PARTIAL_SOURCE;
 import RESPONSE_XML = Const.RESPONSE_XML;
 import resolveSourceElement = ResonseDataResolver.resolveSourceElement;
 import resolveSourceForm = ResonseDataResolver.resolveSourceForm;
+import {IConfig} from "../../ext/monadish/Types";
 
 /**
  * Response processor
@@ -51,7 +52,7 @@ import resolveSourceForm = ResonseDataResolver.resolveSourceForm;
  */
 export class ResponseProcessor implements IResponseProcessor {
 
-    constructor(private request: Config, private externalContext: Config, private internalContext: Config) {
+    constructor(private request: IConfig, private externalContext: IConfig, private internalContext: IConfig) {
 
     }
 
@@ -248,7 +249,7 @@ export class ResponseProcessor implements IResponseProcessor {
         }
     }
 
-    private isAllFormResolution(context: Config) {
+    private isAllFormResolution(context: IConfig) {
         return getLocalOrGlobalConfig(context, "no_portlet_env", false);
     }
 

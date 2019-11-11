@@ -5,6 +5,7 @@ import {DQ} from "../../ext/monadish/DomQuery";
 import {ExtLang} from "./Lang";
 import getMessage = ExtLang.getMessage;
 import makeException = ExtLang.makeException;
+import {IConfig} from "../../ext/monadish/Types";
 
 /**
  * a set of internal code assertions
@@ -13,7 +14,7 @@ import makeException = ExtLang.makeException;
  */
 export module Assertions {
 
-    export function assertRequestIntegrity(options: Config, elem: DQ): void | never {
+    export function assertRequestIntegrity(options: IConfig, elem: DQ): void | never {
         /*assert if the onerror is set and once if it is set it must be of type function*/
         assertFunction(options.getIf(Const.ON_ERROR).value);
         /*assert if the onevent is set and once if it is set it must be of type function*/

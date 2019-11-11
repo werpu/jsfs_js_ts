@@ -1,7 +1,7 @@
-
-import {Config, IValueHolder, Optional} from "../../ext/monadish/Monad";
 import {Const} from "../core/Const";
 import {DomQuery, DQ} from "../../ext/monadish/DomQuery";
+import {Config} from "../../ext/monadish";
+import {IOptional, IValueHolder} from "../../ext/monadish/Types";
 
 declare let window: any;
 
@@ -79,11 +79,11 @@ export class ExtDomquery extends DQ {
         return <string>nonce.value;
     }
 
-    static searchJsfJsFor(item: RegExp): Optional<String> {
+    static searchJsfJsFor(item: RegExp): IOptional<String> {
         return new ExtDomquery(document).searchJsfJsFor(item);
     }
 
-    searchJsfJsFor(rexp: RegExp): Optional<string> {
+    searchJsfJsFor(rexp: RegExp): IOptional<string> {
         //perfect application for lazy stream
         return DQ.querySelectorAll("script").lazyStream
                 .filter(item => {

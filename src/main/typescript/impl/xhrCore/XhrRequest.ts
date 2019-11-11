@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-import {AsyncRunnable} from "../util/AsyncRunnable";
 
+import {AsyncRunnable} from "../util/AsyncRunnable";
+import {Config} from "../../ext/monadish/Monad";
 import {Implementation} from "../AjaxImpl";
 
 import {Const} from "../core/Const";
@@ -25,7 +26,6 @@ import {ErrorData} from "./ErrorData";
 import {EventData} from "./EventData";
 import {DQ} from "../../ext/monadish/DomQuery";
 import {ExtLang} from "../util/Lang";
-import {IConfig} from "../../ext/monadish/Types";
 import failSaveExecute = ExtLang.failSaveExecute;
 import getPromise = ExtLang.getPromise;
 import COMPLETE = Const.COMPLETE;
@@ -47,6 +47,7 @@ import STD_ACCEPT = Const.STD_ACCEPT;
 import REQ_TYPE_GET = Const.REQ_TYPE_GET;
 import ENCODED_URL = Const.ENCODED_URL;
 import BEGIN = Const.BEGIN;
+
 
 /**
  * JSFed XHR Request Wrapper
@@ -70,7 +71,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     private _onEvent: Function;
     private _onError: Function;
 
-    private responseContext: IConfig;
+    private responseContext: Config;
 
     /**
      * Reqired Parameters
@@ -90,8 +91,8 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     constructor(
         private source: DQ,
         private sourceForm: DQ,
-        private requestContext: IConfig,
-        private internalContext: IConfig,
+        private requestContext: Config,
+        private internalContext: Config,
         private partialIdsArray = [],
         private timeout = NO_TIMEOUT,
         private ajaxType = REQ_TYPE_POST,

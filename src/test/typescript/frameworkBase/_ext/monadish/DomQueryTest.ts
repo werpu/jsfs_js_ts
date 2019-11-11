@@ -16,7 +16,7 @@
 
 import {expect} from 'chai';
 import {describe, it} from 'mocha';
-import {ArrayCollector, Config, DomQuery, Lang, LazyStream} from "../../../../../main/typescript/ext/monadish";
+import {ArrayCollector, DomQuery, Lang, LazyStream} from "../../../../../main/typescript/ext/monadish";
 import * as sinon from 'sinon';
 import trim = Lang.trim;
 
@@ -287,7 +287,7 @@ describe('DOMQuery tests', function () {
         DomQuery.byId("id_3").inputValue.value = "hello world";
         expect(DomQuery.byId("id_3").inputValue.value).to.eq("hello world");
 
-        let cfg = new Config(DomQuery.querySelectorAll("form").elements.encodeFormElement());
+        let cfg = DomQuery.querySelectorAll("form").elements.encodeFormElement();
         expect(cfg.getIf("id_1").value).to.eq("booga");
         expect(cfg.getIf("id_2").value).to.eq("id_2_val");
         expect(cfg.getIf("id_3").value).to.eq("hello world");

@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-import {Config, XMLQuery} from "../../ext/monadish";
+import {Config, Optional, XMLQuery} from "../../ext/monadish";
 import {Const} from "../core/Const";
 import {Assertions} from "../util/Assertions";
 import {DQ} from "../../ext/monadish/DomQuery";
-import {IConfig, IOptional} from "../../ext/monadish/Types";
 import CTX_PARAM_SRC_FRM_ID = Const.CTX_PARAM_SRC_FRM_ID;
 import TAG_FORM = Const.TAG_FORM;
 import CTX_PARAM_SRC_CTL_ID = Const.CTX_PARAM_SRC_CTL_ID;
@@ -45,7 +44,7 @@ export module ResonseDataResolver {
      * Throws an error in case of non existent or wrong xml data
      *
      */
-    export function resolveResponseXML(request: IConfig): XMLQuery {
+    export function resolveResponseXML(request: Config): XMLQuery {
         let ret = new XMLQuery(request.getIf(SEL_RESPONSE_XML).value);
         Assertions.assertValidXMLResponse(ret);
 
@@ -82,7 +81,7 @@ export module ResonseDataResolver {
      * @param internalContext internal passthrough fall back
      *
      */
-    export function resolveSourceElement(context: IConfig, internalContext: IConfig): DQ {
+    export function resolveSourceElement(context: Config, internalContext: Config): DQ {
         let elemId = resolveSourceElementId(context, internalContext);
         let elem = DQ.byId(elemId.value);
         return elem;
@@ -96,7 +95,7 @@ export module ResonseDataResolver {
      * @param internalContext
      * @param elem
      */
-    export function resolveSourceForm(internalContext: IConfig, elem: DQ): DQ {
+    export function resolveSourceForm(internalContext: Config, elem: DQ): DQ {
         let sourceFormId = internalContext.getIf(CTX_PARAM_SRC_FRM_ID);
         let sourceForm = new DQ(sourceFormId.isPresent() ? document.forms[sourceFormId.value] : null);
 
@@ -108,7 +107,7 @@ export module ResonseDataResolver {
     }
 
 
-    function resolveSourceElementId(context: IConfig, internalContext: IConfig): IOptional<string> {
+    function resolveSourceElementId(context: Config, internalContext: Config): Optional<string> {
         //?internal context?? used to be external one
         return internalContext.getIf(CTX_PARAM_SRC_CTL_ID)
             .orElseLazy(() => context.getIf(SOURCE, "id").value);

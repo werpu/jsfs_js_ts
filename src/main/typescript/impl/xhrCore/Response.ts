@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Config, DQ, XMLQuery} from "../../ext/monadish";
+import {Config, DQ,XMLQuery} from "../../ext/monadish";
 import {Const} from "../core/Const";
 import {ResponseProcessor} from "./ResponseProcessor";
 import {ResonseDataResolver} from "./ResonseDataResolver";

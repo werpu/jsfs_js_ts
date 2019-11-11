@@ -1,6 +1,6 @@
+import {Config} from "../../ext/monadish";
 import {Const} from "../core/Const";
 import {ExtLang} from "../util/Lang";
-import {IConfig} from "../../ext/monadish/Types";
 import getMessage = ExtLang.getMessage;
 import EVENT = Const.EVENT;
 import P_PARTIAL_SOURCE = Const.P_PARTIAL_SOURCE;
@@ -14,7 +14,7 @@ export class EventData {
     responseText: string;
     responseXML: Document;
 
-    static createFromRequest(request: XMLHttpRequest, context: IConfig, /*event name*/ name: string): EventData {
+    static createFromRequest(request: XMLHttpRequest, context: Config, /*event name*/ name: string): EventData {
 
         let eventData = new EventData();
         let UNKNOWN = getMessage("UNKNOWN");

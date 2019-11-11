@@ -16,9 +16,49 @@
 
 import {Stream, StreamMapper} from "./Stream";
 import {DomQuery} from "./DomQuery";
-import {ICollector, IStreamDataSource} from "./Types";
 
+/**
+ * Every data source wich feeds data into the lazy stream
+ * or stream generally must implement this interface
+ *
+ * It is basically an iteratable to the core
+ */
+export interface IStreamDataSource<T> {
 
+    /**
+     * @returns true if additional data is present
+     */
+    hasNext(): boolean;
+
+    /**
+     * false if not
+     */
+    next(): T;
+
+    /**
+     * resets the position to the beginning
+     */
+    reset(): void;
+}
+
+/**
+ * A collector, needs to be implemented
+ */
+export interface ICollector<T, S> {
+    /**
+     * this method basically takes a single stream element
+     * and does something with it (collecting it one way or the other
+     * in most cases)
+     *
+     * @param element
+     */
+    collect(element: T);
+
+    /**
+     * the final result after all the collecting is done
+     */
+    finalValue: S;
+}
 
 /**
  * implementation of iteratable on top of array
@@ -233,11 +273,9 @@ export class QueryFormDataCollector implements ICollector<DomQuery, FormData> {
     finalValue: FormData = new FormData();
 
     collect(element: DomQuery) {
-        //no value passed down we get an assoc array back
         let toMerge = element.encodeFormElement();
-        if (Object.keys(toMerge)) {
-            let name = element.name.value;
-            this.finalValue.append(name, toMerge[name]);
+        if (toMerge.isPresent()) {
+            this.finalValue.append(element.name.value, toMerge.get(element.name).value);
         }
     }
 }
@@ -251,9 +289,8 @@ export class QueryFormStringCollector implements ICollector<DomQuery, string> {
 
     collect(element: DomQuery) {
         let toMerge = element.encodeFormElement();
-        if (Object.keys(toMerge).length) {
-            let name = element.name.value;
-            this.formData.push([name, toMerge[name]]);
+        if (toMerge.isPresent()) {
+            this.formData.push([element.name.value, toMerge.get(element.name).value]);
         }
     }
 

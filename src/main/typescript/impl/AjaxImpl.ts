@@ -20,7 +20,7 @@ import {IListener} from "./util/ListenerQueue";
 import {Response} from "./xhrCore/Response";
 import {XhrRequest} from "./xhrCore/XhrRequest";
 import {AsynchronouseQueue} from "./util/AsyncQueue";
-import {Optional} from "../ext/monadish/Monad";
+import {Config, Optional} from "../ext/monadish/Monad";
 
 import {Const} from "./core/Const";
 import {Assertions} from "./util/Assertions";
@@ -29,10 +29,9 @@ import {ExtDomquery} from "./util/ExtDomQuery";
 import {ErrorData} from "./xhrCore/ErrorData";
 import {EventData} from "./xhrCore/EventData";
 import {DQ} from "../ext/monadish/DomQuery";
-import {Config, Lang, Stream} from "../ext/monadish";
+import {Lang, Stream} from "../ext/monadish";
 import {AssocArrayCollector} from "../ext/monadish/SourcesCollectors";
 import {ExtLang} from "./util/Lang";
-import {IConfig, IOptional} from "../ext/monadish/Types";
 
 declare var jsf: any;
 
@@ -215,7 +214,7 @@ export module Implementation {
         event = getEvent(event);
 
         //options not set we define a default one with nothing
-        const options: IConfig = new Config(opts).shallowCopy;
+        const options = new Config(opts).shallowCopy;
         const elem = DQ.byId(el || <Element>event.target);
         const elementId = elem.id;
         const requestCtx = new Config({});
@@ -454,7 +453,7 @@ export module Implementation {
          * window ids must be present in all forms
          * or non existent. If they exist all of them must be the same
          */
-        let formWindowId: IOptional<string> = searchRoot.stream.map<string>(getValue).reduce(doubleCheck, INIT);
+        let formWindowId: Optional<string> = searchRoot.stream.map<string>(getValue).reduce(doubleCheck, INIT);
 
         //if the resulting window id is set on altered then we have an unresolvable problem
         assert(formWindowId.value != ALTERED, "Multiple different windowIds found in document");
@@ -491,19 +490,19 @@ export module Implementation {
 
     //----------------------------------------------- Methods ---------------------------------------------------------------------
 
-    function applyWindowId(options: IConfig) {
+    function applyWindowId(options: Config) {
         let windowId = options?.value?.windowId ?? ExtDomquery.windowId;
         options.assignIf(!!windowId, P_WINDOW_ID).value = windowId;
         options.delete("windowId");
     }
 
-    function applyRender(options: IConfig, ctx: Config, form: DQ, elementId: string) {
+    function applyRender(options: Config, ctx: Config, form: DQ, elementId: string) {
         if (options.getIf("render").isPresent()) {
             transformValues(ctx.getIf(CTX_PARAM_PASS_THR).get({}), P_RENDER, <string>options.getIf("render").value, form, <any>elementId);
         }
     }
 
-    function applyExecute(options: IConfig, ctx: IConfig, form: DQ, elementId: string) {
+    function applyExecute(options: Config, ctx: Config, form: DQ, elementId: string) {
         const PARAM_EXECUTE = CTX_PARAM_EXECUTE;
         const PARAM_PASS_THR = CTX_PARAM_PASS_THR;
 
@@ -513,13 +512,13 @@ export module Implementation {
              * the spec rev 2.0a however states, if none is issued nothing at all should be sent down
              */
             options.assign(PARAM_EXECUTE).value = options.getIf(PARAM_EXECUTE).value + " @this";
-            transformValues(<Config> ctx.getIf(PARAM_PASS_THR).get({}), P_EXECUTE, <string>options.getIf(PARAM_EXECUTE).value, form, <any>elementId);
+            transformValues(ctx.getIf(PARAM_PASS_THR).get({}), P_EXECUTE, <string>options.getIf(PARAM_EXECUTE).value, form, <any>elementId);
         } else {
             ctx.assign(PARAM_PASS_THR, P_EXECUTE).value = elementId;
         }
     }
 
-    function applyClientWindowId(form: DQ, ctx: IConfig) {
+    function applyClientWindowId(form: DQ, ctx: Config) {
         let clientWindow = jsf.getClientWindow(form.getAsElem(0).value);
         if (clientWindow) {
             ctx.assign(CTX_PARAM_PASS_THR, P_CLIENTWINDOW).value = clientWindow;
@@ -541,7 +540,7 @@ export module Implementation {
      * @param issuingForm the form where the issuing element originates
      * @param issuingElementId the issuing element
      */
-    function transformValues(targetConfig: IConfig, targetKey: string, userValues: string, issuingForm: DQ, issuingElementId: string): IConfig {
+    function transformValues(targetConfig: Config, targetKey: string, userValues: string, issuingForm: DQ, issuingElementId: string): Config {
         //a cleaner implementation of the transform list method
 
         let iterValues = (userValues) ? trim(userValues).split(/\s+/gi) : [];
@@ -605,12 +604,12 @@ export module Implementation {
         return form
     }
 
-    function resolveTimeout(options: IConfig, requestCtx: Config): number {
+    function resolveTimeout(options: Config, requestCtx: Config): number {
         let getCfg = getLocalOrGlobalConfig;
         return options.getIf(CTX_PARAM_TIMEOUT).value ?? getCfg(requestCtx.value, CTX_PARAM_TIMEOUT, 0);
     }
 
-    function resolveDelay(options: IConfig, requestCtx: Config): number {
+    function resolveDelay(options: Config, requestCtx: Config): number {
         let getCfg = getLocalOrGlobalConfig;
 
         return options.getIf(CTX_PARAM_DELAY).value ?? getCfg(requestCtx.value, CTX_PARAM_DELAY, 0);

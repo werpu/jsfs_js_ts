@@ -15,28 +15,7 @@
  */
 
 import {CancellablePromise} from "./Promise";
-
-import {IOptional, IValueHolder} from "./Types";
-import * as assert from "assert";
 import {Optional} from "./Monad";
-
-class TinyValueHolder<T> implements IValueHolder<T> {
-    private rootData: {[key: string]: T}
-    private key: string;
-
-    constructor(rootData: { [p: string]: any }, key: string) {
-        this.rootData = rootData;
-        this.key = key;
-    }
-
-    set value(newVal: T) {
-        this.rootData[this.key] = newVal;
-    }
-
-    get value(): T {
-        return this.rootData[this.key];
-    }
-}
 
 /**
  * Lang helpers crossported from the apache myfaces project
@@ -62,7 +41,7 @@ export module Lang {
      * @param defaultValue an optional default value if the producer failes to produce anything
      * @returns an Optional of the produced value
      */
-    export function saveResolve<T>(resolverProducer: () => T, defaultValue: T = null): IOptional<T> {
+    export function saveResolve<T>(resolverProducer: () => T, defaultValue: T = null): Optional<T> {
         try {
             let result = resolverProducer();
             return Optional.fromNullable(result ?? defaultValue);
@@ -71,7 +50,7 @@ export module Lang {
         }
     }
 
-    export function saveResolveLazy<T>(resolverProducer: () => T, defaultValue: () => T = null): IOptional<T> {
+    export function saveResolveLazy<T>(resolverProducer: () => T, defaultValue: () => T = null): Optional<T> {
         try {
             let result = resolverProducer();
             return Optional.fromNullable(result ?? defaultValue());
@@ -184,39 +163,6 @@ export module Lang {
         return isString(theType) ? typeof probe == theType : probe instanceof theType;
     }
 
-    /*some hepers if you want to omit parts of the libary for many reasons*/
-
-    /**
-     * performs a deep copy of an object via json serialisation, the easy
-     * way, should also be more performant than doing it by hand
-     */
-    export function deepCopy(theObject: any): any {
-        return JSON.parse(JSON.stringify(theObject));
-    }
-
-    /**
-     * a helper which allows to avoid configs
-     * for simple operation, that way we can take out the entire config handling
-     * to reduce code (needed in myfaces we are going to drop configs there
-     * too heavyweight
-     * @param theObject
-     * @param data
-     */
-    export function val<T>(theObject: {[key: string]: any}, ...data: string[]): IValueHolder<T> {
-        let workPos = theObject;
-        let lastRet = null;
-        assert(data.length, "at least one property must be set othweise it cannot work");
-
-        data.forEach((key: string) => {
-            workPos[key] = workPos?.[key] ?? {};
-            lastRet = new TinyValueHolder(workPos, key);
-            workPos = workPos[key];
-        });
-
-        return lastRet ?? new TinyValueHolder(workPos, null);
-    }
-
-
     /**
      * Backported from dojo
      * a failsafe string determination method
@@ -233,7 +179,5 @@ export module Lang {
     export function isFunc(it: any): boolean {
         return it instanceof Function || typeof it === "function";
     }
-
-
 }
 

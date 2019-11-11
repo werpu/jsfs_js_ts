@@ -19,10 +19,11 @@
 
 import {Lang as LangBase} from "../../ext/monadish/Lang";
 import {Messages} from "../i18n/Messages";
+import {Config, Optional} from "../../ext/monadish/Monad";
 import {CancellablePromise} from "../../ext/monadish/Promise";
 import {DomQuery, DQ} from "../../ext/monadish/DomQuery";
 import {Stream} from "../../ext/monadish";
-import {IConfig, IOptional} from "../../ext/monadish/Types";
+
 
 export module ExtLang {
 
@@ -64,7 +65,7 @@ export module ExtLang {
      * @param defaultValue an optional default value if the producer failes to produce anything
      * @returns an Optional of the produced value
      */
-    export function failSaveResolve<T>(resolverProducer: () => T, defaultValue: T = null): IOptional<T> {
+    export function failSaveResolve<T>(resolverProducer: () => T, defaultValue: T = null): Optional<T> {
         return LangBase.saveResolve(resolverProducer, defaultValue);
     }
 
@@ -189,7 +190,7 @@ export module ExtLang {
      *
      * @return either the config entry or if none is given the default value
      */
-    export function getLocalOrGlobalConfig(localOptions: IConfig, configName: string, defaultValue: any): any {
+    export function getLocalOrGlobalConfig(localOptions: Config, configName: string, defaultValue: any): any {
         return localOptions.value?.myfaces?.config?.[configName] ??
             (<any>window)?.myfaces?.config?.[configName] ??
             defaultValue;

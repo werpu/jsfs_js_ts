@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Config} from "../../../main/typescript/ext/monadish/Config";
+import {Config} from "../../../main/typescript/ext/monadish/Monad";
 import {describe, it} from 'mocha';
 import {expect} from 'chai';
 import * as sinon from 'sinon';

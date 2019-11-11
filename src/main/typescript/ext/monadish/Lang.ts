@@ -98,7 +98,7 @@ export module Lang {
      * @returns an array converted from the object
      */
     export function objToArray<T>(obj: any, offset: number = 0, pack: Array<T> = []): Array<T> {
-        if ("undefined" == typeof obj || null == obj) {
+        if ((obj ?? "__undefined__") == "__undefined__") {
             return pack ?? null;
         }
         //since offset is numeric we cannot use the shortcut due to 0 being false
@@ -128,9 +128,7 @@ export module Lang {
     export function timeout(timeout: number): CancellablePromise {
         let handler: any = null;
         return new CancellablePromise((apply: Function, reject: Function) => {
-            handler = setTimeout(() => {
-                apply();
-            }, timeout);
+            handler = setTimeout(() => apply(), timeout);
         }, () => {
             if (handler) {
                 clearTimeout(handler);
@@ -178,6 +176,33 @@ export module Lang {
 
     export function isFunc(it: any): boolean {
         return it instanceof Function || typeof it === "function";
+    }
+
+    // code from https://developer.mozilla.org/de/docs/Web/JavaScript/Reference/Global_Objects/Object/assign
+    // license https://creativecommons.org/licenses/by-sa/2.5/
+    export function objAssign(target: any, ...theArgs: any) { // .length of function is 2
+        if (target == null) { // TypeError if undefined or null
+            throw new TypeError('Cannot convert undefined or null to object');
+        }
+
+        let to = Object(target);
+        if(Object.assign) {
+            theArgs.forEach(item => Object.assign(to, item));
+            return to;
+        }
+
+        theArgs.forEach(item => {
+            let nextSource = item;
+            if (nextSource != null) { // Skip over if undefined or null
+                for (let nextKey in nextSource) {
+                    // Avoid bugs when hasOwnProperty is shadowed
+                    if (Object.prototype.hasOwnProperty.call(nextSource, nextKey)) {
+                        to[nextKey] = nextSource[nextKey];
+                    }
+                }
+            }
+        });
+        return to;
     }
 }
 

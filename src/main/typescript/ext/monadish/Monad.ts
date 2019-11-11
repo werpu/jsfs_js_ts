@@ -24,6 +24,7 @@
 import {Lang} from "./Lang";
 import {AssocArrayCollector} from "./SourcesCollectors";
 import {Stream} from "./Stream";
+import objAssign = Lang.objAssign;
 
 /**
  * IFunctor interface,
@@ -451,6 +452,10 @@ export class Config extends Optional<any> {
         return new Config(Stream.ofAssoc(this.value).collect(new AssocArrayCollector()));
     }
 
+    get deepCopy(): Config {
+        return new Config(objAssign({}, this.value));
+    }
+
     static fromNullable<T>(value?: any): Config {
         return new Config(value);
     }
@@ -460,9 +465,7 @@ export class Config extends Optional<any> {
      */
     shallowMerge(other: Config, overwrite = true) {
         for (let key in other.value) {
-            if (overwrite && key in this.value) {
-                this.assign(key).value = other.getIf(key).value;
-            } else if (!(key in this.value)) {
+            if (overwrite || !(key in this.value)) {
                 this.assign(key).value = other.getIf(key).value;
             }
         }

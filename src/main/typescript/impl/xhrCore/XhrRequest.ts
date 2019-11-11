@@ -108,42 +108,47 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     start(): AsyncRunnable<XMLHttpRequest> {
 
         let fsExec = failSaveExecute;
+        let xhrObject = this.xhrObject;
+
         try {
 
             let viewState = jsf.getViewState(this.sourceForm.getAsElem(0).value);
-
             let formData: XhrFormData = new XhrFormData(viewState);
 
             this.contentType = formData.isMultipartRequest ? MULTIPART : this.contentType;
 
             //next step the pass through parameters are merged in for post params
-            let passThroughParams = this.requestContext.getIf(CTX_PARAM_PASS_THR);
+            let requestContext = this.requestContext;
+            let passThroughParams = requestContext.getIf(CTX_PARAM_PASS_THR);
             formData.shallowMerge(passThroughParams);
 
-            this.responseContext = passThroughParams.shallowCopy;
+            this.responseContext = passThroughParams.deepCopy;
 
             //we have to shift the internal passthroughs around to build up our response context
-            this.responseContext.assign(CTX_PARAM_MF_INTERNAL).value = this.internalContext.value;
-            //per spec the onevent and onerrors must be passed through to the response
-            this.responseContext.assign(ON_EVENT).value = this.requestContext.getIf(ON_EVENT).value;
-            this.responseContext.assign(ON_ERROR).value = this.requestContext.getIf(ON_ERROR).value;
+            let responseContext = this.responseContext;
 
-            this.xhrObject.open(this.ajaxType, this.resolveFinalUrl(formData), true);
+            responseContext.assign(CTX_PARAM_MF_INTERNAL).value = this.internalContext.value;
+
+            //per spec the onevent and onerrors must be passed through to the response
+            responseContext.assign(ON_EVENT).value = requestContext.getIf(ON_EVENT).value;
+            responseContext.assign(ON_ERROR).value = requestContext.getIf(ON_ERROR).value;
+
+            xhrObject.open(this.ajaxType, this.resolveFinalUrl(formData), true);
 
             //adding timeout
-            this.timeout ? this.xhrObject.timeout = this.timeout : null;
+            this.timeout ? xhrObject.timeout = this.timeout : null;
 
             //a bug in the xhr stub library prevents the setRequestHeader to be properly executed on fake xhr objects
             //normal browsers should resolve this
             //tests can quietly fail on this one
 
-            fsExec(() => this.xhrObject.setRequestHeader(CONTENT_TYPE, `${this.contentType}; charset=utf-8`));
-            fsExec(() => this.xhrObject.setRequestHeader(HEAD_FACES_REQ, VAL_AJAX));
+            fsExec(() => xhrObject.setRequestHeader(CONTENT_TYPE, `${this.contentType}; charset=utf-8`));
+            fsExec(() => xhrObject.setRequestHeader(HEAD_FACES_REQ, VAL_AJAX));
 
             //probably not needed anymore, will test this
             //some webkit based mobile browsers do not follow the w3c spec of
             // setting the accept headers automatically
-            fsExec(() => this.xhrObject.setRequestHeader(REQ_ACCEPT, STD_ACCEPT));
+            fsExec(() => xhrObject.setRequestHeader(REQ_ACCEPT, STD_ACCEPT));
 
             this.sendEvent(BEGIN);
 
@@ -208,19 +213,21 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
      * @param reject
      */
     protected registerXhrCallbacks(resolve: Consumer<any>, reject: Consumer<any>) {
-        this.xhrObject.onabort = () => {
+        let xhrObject = this.xhrObject;
+
+        xhrObject.onabort = () => {
             this.onAbort(resolve, reject);
         };
-        this.xhrObject.ontimeout = () => {
+        xhrObject.ontimeout = () => {
             this.onTimeout(resolve, reject);
         };
-        this.xhrObject.onload = () => {
+        xhrObject.onload = () => {
             this.onSuccess(this.xhrObject, resolve, reject)
         };
-        this.xhrObject.onloadend = () => {
+        xhrObject.onloadend = () => {
             this.onDone(this.xhrObject, resolve, reject);
         };
-        this.xhrObject.onerror = (errorData: any) => {
+        xhrObject.onerror = (errorData: any) => {
             this.onError(errorData, resolve, reject);
         };
     }
@@ -309,11 +316,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     private resolveFinalUrl(formData: XhrFormData) {
         let targetUrl = this.resolveTargetUrl(<HTMLFormElement>this.sourceForm.getAsElem(0).value);
 
-        return targetUrl + (this.isGetRequest() ? "?" + formData.toString() : "");
-    }
-
-    private isGetRequest() {
-        return this.ajaxType == REQ_TYPE_GET;
+        return targetUrl + (this.ajaxType == REQ_TYPE_GET ? "?" + formData.toString() : "");
     }
 
 }

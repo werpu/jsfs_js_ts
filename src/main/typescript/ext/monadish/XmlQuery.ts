@@ -68,10 +68,9 @@ export class XMLQuery extends DomQuery {
     toString(): string {
         let ret = [];
         this.eachElem((node: any) => {
-            if (typeof (<any>window).XMLSerializer != "undefined") {
-                ret.push(new (<any>window).XMLSerializer().serializeToString(node));
-            } else if (typeof node.xml != "undefined") {
-                ret.push(node.xml);
+            let serialized = (<any>window)?.XMLSerializer?.constructor()?.serializeToString(node) ?? node?.xml;
+            if(!!serialized) {
+                ret.push(serialized);
             }
         });
         return ret.join("");

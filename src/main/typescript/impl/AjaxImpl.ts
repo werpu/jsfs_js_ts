@@ -214,7 +214,7 @@ export module Implementation {
         event = getEvent(event);
 
         //options not set we define a default one with nothing
-        const options = new Config(opts).shallowCopy;
+        const options = new Config(opts).deepCopy;
         const elem = DQ.byId(el || <Element>event.target);
         const elementId = elem.id;
         const requestCtx = new Config({});

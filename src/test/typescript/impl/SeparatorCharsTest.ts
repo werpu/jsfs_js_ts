@@ -50,13 +50,14 @@ describe('various tests for get separator char', () => {
         let waitForResult = defaultSeparatorChar("$");
         waitForResult.then((close) => {
             try {
-                let separator = Implementation.separatorChar;
+                let separator = Implementation.getSeparatorChar();
                 console.debug("sep:", separator);
                 expect(separator).to.eq("$");
+                done();
             } finally {
                 Implementation.reset();
                 close();
-                done();
+
             }
         });
 
@@ -67,12 +68,13 @@ describe('various tests for get separator char', () => {
         let waitForResult = defaultSeparatorChar("%21");
         waitForResult.then((close) => {
             try {
-                let separator = Implementation.separatorChar;
+                let separator = Implementation.getSeparatorChar();
                 expect(separator).to.eq("!");
+                done();
             } finally {
                 Implementation.reset();
                 close();
-                done();
+
             }
         });
 

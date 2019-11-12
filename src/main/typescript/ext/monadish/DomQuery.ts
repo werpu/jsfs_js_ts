@@ -1209,7 +1209,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
 
         let res = [];
         res.push(this);
-        res.concat(toInsertParams);
+        res = res.concat(toInsertParams);
         return new DomQuery(...res);
     }
 
@@ -1225,7 +1225,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         });
         let res = [];
         res.push(this);
-        res.concat(toInsertParams);
+        res = res.concat(toInsertParams);
         return new DomQuery(...res);
     }
 
@@ -1412,11 +1412,15 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
                 }
             };
         try {
-            let scriptElements = this.querySelectorAll("script");
-            if (scriptElements == null) return;
-            for (let cnt = 0; cnt < scriptElements.length; cnt++) {
-                execScrpt(scriptElements.getAsElem(cnt).value);
-            }
+            let scriptElements = new DomQuery(this.filterSelector("script"), this.querySelectorAll("script"));
+            //script execution order by relative pos in their dom tree
+            scriptElements.stream
+                .flatMap(item => { return Stream.of(item.values) })
+                .sort((node1, node2) => {
+                    return node1.compareDocumentPosition(node2) - 3; //preceding 2, following == 4
+                })
+                .each(item => execScrpt(item));
+
             if (finalScripts.length) {
                 this.globalEval(finalScripts.join("\n"));
             }
@@ -1481,12 +1485,14 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
                 }
             };
 
-        const scriptElements: DomQuery = this.querySelectorAll("link, style");
-        if (scriptElements == null) return;
-        for (let cnt = 0; cnt < scriptElements.length; cnt++) {
-            let element: any = scriptElements.getAsElem(cnt);
-            execCss(element.value);
-        }
+        const scriptElements: DomQuery =  new DomQuery(this.filterSelector("link, style"), this.querySelectorAll("link, style"));
+
+        scriptElements.stream
+            .flatMap(item => { return Stream.of(item.values) })
+            .sort((node1, node2) => {
+                return node1.compareDocumentPosition(node2) - 3; //preceding 2, following == 4
+            })
+            .each(item => execCss(item));
 
         return this;
     }

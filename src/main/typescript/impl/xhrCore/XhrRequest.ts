@@ -47,6 +47,10 @@ import STD_ACCEPT = Const.STD_ACCEPT;
 import REQ_TYPE_GET = Const.REQ_TYPE_GET;
 import ENCODED_URL = Const.ENCODED_URL;
 import BEGIN = Const.BEGIN;
+import {Assertions} from "../util/Assertions";
+import raiseError = Assertions.raiseError;
+import MALFORMEDXML = Const.MALFORMEDXML;
+import ERROR = Const.ERROR;
 
 
 /**
@@ -72,6 +76,8 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     private _onError: Function;
 
     private responseContext: Config;
+
+    private stopProgress = false;
 
     /**
      * Reqired Parameters
@@ -249,20 +255,46 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     }
 
     protected onSuccess(data: any, resolve: Consumer<any>, reject: Consumer<any>) {
-        //bypass a bug in some testing libraries
-        //normally the attribute is reasdonly but the testing shims make it writable
-        //but in my case do not generate the response xml document object
-        failSaveExecute(() => {
-            if (!this.xhrObject.responseXML) {
-                (<any>this.xhrObject)["responseXML"] = <any>XMLQuery.parseXML(this.xhrObject.responseText).getAsElem(0).value;
-            }
-        });
+
         this.sendEvent(COMPLETE);
+
+        //malforms always result in empty response xml
+        if(!this?.xhrObject?.responseXML) {
+            this.handleMalFormedXML(resolve);
+            return;
+        }
 
         jsf.ajax.response(this.xhrObject, this.responseContext.value ?? {});
     }
 
+    private handleMalFormedXML(resolve: Function) {
+        this.stopProgress = true;
+        let errorData = {
+            type: ERROR,
+            status: MALFORMEDXML,
+            responseCode: 200,
+            responseText: this.xhrObject?.responseText,
+            source: {
+                id: this.source.id.value
+            }
+        };
+        try {
+            this.handleError(errorData);
+        }
+        finally {
+            try {
+                Implementation.sendError(errorData);
+            } finally {
+                resolve(errorData);
+            }
+        }
+        //non blocking non clearing
+    }
+
     protected onDone(data: any, resolve: Consumer<any>, reject: Consumer<any>) {
+        if(this.stopProgress) {
+            return;
+        }
         this.sendEvent(SUCCESS);
         resolve(data);
     }

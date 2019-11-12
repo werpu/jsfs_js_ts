@@ -99,6 +99,38 @@ describe('Tests of the various aspects of the response protocol functionality', 
         done();
     });
 
+
+    it("must have a simple field updated  with the second before update rendering path", function (done) {
+        //DQ.byId("cmd_update_insert").click();
+        let issuer = DQ.byId("cmd_update_insert").click();
+
+        this.respond( XmlResponses.UPDATE_INSERT_2);
+
+        expect(DQ.byId("changesArea")
+            .html()
+            .orElse("fail")
+            .value.indexOf("update succeeded 2") != -1)
+            .to.be.true;
+
+        let pos1 = (<string>DQ.byId(document.body).html()
+            .value).indexOf("insert before succeeded should display before test1");
+        let pos3 = (<string>DQ.byId(document.body).html()
+            .value).indexOf("insert after succeeded should display after test1");
+        let pos2 = (<string>DQ.byId(document.body).html()
+            .value).indexOf("update succeeded 2");
+
+        expect(pos1 != -1).to.be.true;
+
+        expect(pos1 < pos2 && pos2 < pos3).to.be.true;
+
+        let pos4 = (<string>DQ.byId(document.body).html()
+            .value).indexOf("embedded script at update succeed");
+
+        expect(pos4 != -1).to.be.true;
+
+        done();
+    });
+
     it("must have a full body update", function () {
         DQ.byId("cmd_replace").click();
         this.respond(XmlResponses.BODY_REPLACEMENT);

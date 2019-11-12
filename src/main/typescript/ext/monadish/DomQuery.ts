@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 import {Config, Optional, ValueEmbedder} from "./Monad";
 import {XMLQuery} from "./XmlQuery";
 import {IStream, LazyStream, Stream} from "./Stream";
@@ -106,7 +105,7 @@ interface IDomQuery {
     /**
      * The the value in case of inputs as changeable value
      */
-    readonly inputValue: ValueEmbedder<string | boolean>;
+    readonly inputValue: ValueEmbedder<string | boolean>;
     /**
      * the underlying form elements as domquery object
      */
@@ -714,25 +713,25 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
      */
     static fromMarkup(markup: string): DomQuery {
         let domParser: DOMParser = Lang.saveResolve(() => new DOMParser()).value;
-      //  if (domParser) {
-      //      let document = domParser.parseFromString(markup, "text/html");
-      //      return new DomQuery(document);
-      //  } else {
-            //https://developer.mozilla.org/de/docs/Web/API/DOMParser license creative commons
-            const doc = document.implementation.createHTMLDocument("");
-            markup = trim(markup);
-            let lowerMarkup = markup.toLowerCase();
-            if (lowerMarkup.includes('<!doctype') ||
-                lowerMarkup.includes('<html') ||
-                lowerMarkup.includes('<head') || //TODO proper regexps here to avoid embedded tags with same element names to be triggered
-                lowerMarkup.includes('<body')) {
-                doc.documentElement.innerHTML = markup;
-                return new DomQuery(doc.documentElement);
-            } else {
-                doc.body.innerHTML = markup;
-                return new DomQuery(...<Array<Element>>objToArray(doc.body.childNodes));
-            }
-       // }
+        //  if (domParser) {
+        //      let document = domParser.parseFromString(markup, "text/html");
+        //      return new DomQuery(document);
+        //  } else {
+        //https://developer.mozilla.org/de/docs/Web/API/DOMParser license creative commons
+        const doc = document.implementation.createHTMLDocument("");
+        markup = trim(markup);
+        let lowerMarkup = markup.toLowerCase();
+        if (lowerMarkup.includes('<!doctype') ||
+            lowerMarkup.includes('<html') ||
+            lowerMarkup.includes('<head') || //TODO proper regexps here to avoid embedded tags with same element names to be triggered
+            lowerMarkup.includes('<body')) {
+            doc.documentElement.innerHTML = markup;
+            return new DomQuery(doc.documentElement);
+        } else {
+            doc.body.innerHTML = markup;
+            return new DomQuery(...<Array<Element>>objToArray(doc.body.childNodes));
+        }
+        // }
     }
 
     /**
@@ -1057,14 +1056,15 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
     }
 
     each(func: (item: DomQuery, cnt?: number) => any): DomQuery {
-        for (let cnt = 0, len = this.rootNode.length; cnt < len; cnt++) {
-            if(null == this.get(cnt)) {
-                continue;
-            }
-            if (func(this.get(cnt), cnt) === false) {
-                break;
-            }
-        }
+        Stream.of(...this.rootNode)
+            .each((item, cnt) => {
+                //we could use a filter, but for the best performance we dont
+                if(item == null) {
+                    return;
+                }
+                return func(DomQuery.byId(item), cnt);
+            });
+
         return this;
     }
 
@@ -1443,11 +1443,11 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
 
     runCss(): DomQuery {
 
-        const  applyStyle = (item: Element, style: string) => {
+        const applyStyle = (item: Element, style: string) => {
                 let newSS: HTMLStyleElement = document.createElement("style");
                 document.getElementsByTagName("head")[0].appendChild(newSS);
 
-                let styleSheet =  newSS.sheet ?? (<any>newSS).styleSheet;
+                let styleSheet = newSS.sheet ?? (<any>newSS).styleSheet;
 
                 newSS.setAttribute("rel", item.getAttribute("rel") ?? "stylesheet");
                 newSS.setAttribute("type", item.getAttribute("type") ?? "text/css");
@@ -1490,8 +1490,6 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
 
         return this;
     }
-
-
 
     /**
      * fires a click event on the underlying dom elements
@@ -1693,7 +1691,6 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
             }, []).value.join("");
 
     }
-
 
     subNodes(from: number, to?: number): DomQuery {
         if (Optional.fromNullable(to).isAbsent()) {

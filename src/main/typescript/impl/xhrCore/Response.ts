@@ -97,6 +97,16 @@ export module Response {
         });
     }
 
+    let processInsert = function (responseProcessor: IResponseProcessor, node: XMLQuery) {
+         //path1 insert after as child tags
+         if(node.querySelectorAll("before, after").length) {
+             responseProcessor.insertWithSubtags(node);
+         } else { //insert before after with id
+             responseProcessor.insert(node);
+         }
+
+    };
+
     /**
      * next level changes tag
      *
@@ -117,7 +127,7 @@ export module Response {
                         break;
 
                     case CMD_INSERT:
-                        responseProcessor.insert(node);
+                        processInsert(responseProcessor, node);
                         break;
 
                     case CMD_DELETE:

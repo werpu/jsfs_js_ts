@@ -94,6 +94,8 @@ export module Const {
     export const TAG_BEFORE = "before";
     export const TAG_AFTER = "after";
 
+    export const TAG_ATTR = "attribute";
+
 
     export const SEL_VIEWSTATE_ELEM = "[name='" + Const.P_VIEWSTATE + "']";
     export const SEL_RESPONSE_XML = "responseXML";
@@ -104,6 +106,9 @@ export module Const {
     export const ERR_NO_PARTIAL_RESPONSE = "Partial response not set";
 
     export const ATTR_URL = "url";
+    export const ATTR_NAME = "name";
+    export const ATTR_VALUE = "value";
+    export const ATTR_ID = "id";
 
     /*partial response types*/
     export const RESP_PARTIAL = "partial-response";
@@ -135,6 +140,14 @@ export module Const {
 
     export const REASON_EXPIRED = "Expired";
 
+    export const APPLIED_VST = "appliedViewState";
+
     export const RECONNECT_INTERVAL = 500;
     export const MAX_RECONNECT_ATTEMPTS = 25;
+
+    export const HTML_VIEWSTATE = ["<input type='hidden'", "id='", P_VIEWSTATE, "' name='", P_VIEWSTATE, "' value='' />"].join("");
+
+    export const EMPTY_FUNC = Object.freeze(() => {});
+    export const EMPTY_STR = "";
+    export const EMPTY_MAP = Object.freeze({});
 }

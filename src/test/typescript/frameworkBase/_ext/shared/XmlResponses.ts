@@ -32,12 +32,12 @@ export class XmlResponses {
         <update id="changesArea"><![CDATA[
         <div id='changesArea'>update succeeded 2</div><script type='text/javascript'>document.getElementById('evalarea2').innerHTML='embedded script at update succeed';</script>
         ]]></update>
-        <insert id="inserted1" before="changesArea"><![CDATA[
-            <div id='insertbefore'>insert before succeeded should display before test1</div><script type='text/javascript'>document.getElementById('evalarea3').innerHTML='embedded script at insert succeed';</script>
-        ]]></insert>
-        <insert id="inserted2" after="changesArea"><![CDATA[
-            <div  id='insertafter'>insert after succeeded should display after test1</div>
-        ]]></insert>
+        <insert id="inserted1" >
+            <before id='changesArea'><![CDATA[insert before succeeded should display before test1<script type='text/javascript'>document.getElementById('evalarea3').innerHTML='embedded script at insert succeed';</script>]]></before>
+        </insert>    
+        <insert id="inserted2">
+            <after  id='changesArea'><![CDATA[insert after succeeded should display after test1]]></after>
+        </insert>
     </changes>
     </partial-response>
     `;

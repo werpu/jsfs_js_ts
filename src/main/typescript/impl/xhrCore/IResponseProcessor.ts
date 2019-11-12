@@ -92,6 +92,12 @@ export interface IResponseProcessor {
     insert(node: XMLQuery): void;
 
     /**
+     * insert with before, after subtags
+     * @param node
+     */
+    insertWithSubtags(node: XMLQuery);
+
+    /**
      * process the viewState update, update the affected
      * forms with their respective new viewstate values
      *

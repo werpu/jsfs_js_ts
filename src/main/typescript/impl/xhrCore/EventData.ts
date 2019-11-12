@@ -5,6 +5,7 @@ import getMessage = ExtLang.getMessage;
 import EVENT = Const.EVENT;
 import P_PARTIAL_SOURCE = Const.P_PARTIAL_SOURCE;
 import BEGIN = Const.BEGIN;
+import CTX_PARAM_PASS_THR = Const.CTX_PARAM_PASS_THR;
 
 export class EventData {
     type: string;
@@ -21,7 +22,7 @@ export class EventData {
 
         eventData.type = EVENT;
         eventData.status = name;
-        eventData.source = context.getIf(P_PARTIAL_SOURCE).value;
+        eventData.source = context.getIf(P_PARTIAL_SOURCE).orElse(context.getIf(CTX_PARAM_PASS_THR, P_PARTIAL_SOURCE).value).value;
 
         if (name !== BEGIN) {
             eventData.responseCode = request?.status?.toString();

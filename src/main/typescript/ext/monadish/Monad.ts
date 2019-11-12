@@ -525,10 +525,10 @@ export class Config extends Optional<any> {
         let parentVal = this.getClass().fromNullable(null);
         let parentPos = -1;
         let alloc = function (arr: Array<any>, length: number) {
-            if (arr.length < length) {
-                for (let cnt = arr.length; cnt < length; cnt++) {
-                    arr.push({});
-                }
+            let length1 = arr.length;
+            let length2 = length1 + length;
+            for(let cnt = length1; cnt < length2; cnt++) {
+                arr.push({});
             }
         };
 

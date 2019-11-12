@@ -23,6 +23,8 @@ import {PushImpl} from "../impl/PushImpl";
 declare let window: any;
 declare type Context = { [key: string]: any };
 
+let mf_impl = window?.myfaces?._impl ?? {};
+
 export module jsf {
     "use strict";
 
@@ -228,8 +230,13 @@ export module jsf {
 
 }
 
+
+
 //fullfill the window contract
-export module myfaces {
+export module myfaces2 {
+
+    //legacy compatibility
+    export var _impl = mf_impl;
 
     /**
      * AB function similar to mojarra and Primefaces

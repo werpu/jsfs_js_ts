@@ -129,6 +129,7 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
 
     private runEntry() {
         if (this.isEmpty) {
+            this.currentlyRunning = null;
             return;
         }
         this.currentlyRunning = this.dequeue();
@@ -161,7 +162,8 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
     }
 
     private callForNextElementToProcess() {
-        this.eventDispatcher.dispatchEvent(AsynchronouseQueue.EVT_NEXT);
+        this.runEntry();
+        //this.eventDispatcher.dispatchEvent(AsynchronouseQueue.EVT_NEXT);
     }
 
     private processNextElement() {

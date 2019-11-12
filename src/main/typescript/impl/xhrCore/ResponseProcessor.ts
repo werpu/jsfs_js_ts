@@ -37,6 +37,7 @@ import P_PARTIAL_SOURCE = Const.P_PARTIAL_SOURCE;
 import RESPONSE_XML = Const.RESPONSE_XML;
 import resolveSourceElement = ResonseDataResolver.resolveSourceElement;
 import resolveSourceForm = ResonseDataResolver.resolveSourceForm;
+import ON_ERROR = Const.ON_ERROR;
 
 /**
  * Response processor
@@ -128,6 +129,7 @@ export class ResponseProcessor implements IResponseProcessor {
 
         let errorData = ErrorData.fromServerError(mergedErrorData);
 
+        this.externalContext.getIf(ON_ERROR).orElse(() => {}).value(errorData);
         Implementation.sendError(errorData);
     }
 

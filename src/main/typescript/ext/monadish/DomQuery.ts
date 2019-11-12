@@ -714,10 +714,10 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
      */
     static fromMarkup(markup: string): DomQuery {
         let domParser: DOMParser = Lang.saveResolve(() => new DOMParser()).value;
-        if (domParser) {
-            let document = domParser.parseFromString(markup, "text/html");
-            return new DomQuery(document);
-        } else {
+      //  if (domParser) {
+      //      let document = domParser.parseFromString(markup, "text/html");
+      //      return new DomQuery(document);
+      //  } else {
             //https://developer.mozilla.org/de/docs/Web/API/DOMParser license creative commons
             const doc = document.implementation.createHTMLDocument("");
             markup = trim(markup);
@@ -732,7 +732,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
                 doc.body.innerHTML = markup;
                 return new DomQuery(...<Array<Element>>objToArray(doc.body.childNodes));
             }
-        }
+       // }
     }
 
     /**
@@ -820,7 +820,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         }
         let nodes = [];
         for (let cnt = 0; cnt < this.rootNode.length; cnt++) {
-            if (!this.rootNode[cnt].querySelectorAll) {
+            if (!this.rootNode[cnt]?.querySelectorAll) {
                 continue;
             }
             let res = this.rootNode[cnt].querySelectorAll(selector);
@@ -838,7 +838,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
     byId(id: string, includeRoot?: boolean): DomQuery {
         let res: Array<DomQuery> = [];
         for (let cnt = 0; includeRoot && cnt < this.rootNode.length; cnt++) {
-            if (this.rootNode[cnt].id == id) {
+            if (this.rootNode[cnt]?.id == id) {
                 res.push(new DomQuery(this.rootNode[cnt]));
             }
         }
@@ -857,7 +857,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
     byTagName(tagName: string, includeRoot ?: boolean): DomQuery {
         let res = [];
         for (let cnt = 0; includeRoot && cnt < this.rootNode.length; cnt++) {
-            if (this.rootNode[cnt].tagName == tagName) {
+            if (this.rootNode[cnt]?.tagName == tagName) {
                 res.push(new DomQuery(this.rootNode[cnt]));
             }
         }
@@ -1058,6 +1058,9 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
 
     each(func: (item: DomQuery, cnt?: number) => any): DomQuery {
         for (let cnt = 0, len = this.rootNode.length; cnt < len; cnt++) {
+            if(null == this.get(cnt)) {
+                continue;
+            }
             if (func(this.get(cnt), cnt) === false) {
                 break;
             }

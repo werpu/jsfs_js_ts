@@ -113,4 +113,24 @@ describe('tests the addOnEvent and addOnError handling', function () {
         expect(onErrorCalled2).to.eq(1);
     });
 
+    it("must have an id set if there is an emitting element", function () {
+        let onEventCalled1 = 0;
+        let onEventCalled2 = 0;
+
+        let assertSourceExists = (data: any) => {
+            expect(!!data?.source?.id).to.be.true;
+        }
+
+        jsf.ajax.addOnEvent((data: any) => {
+            assertSourceExists(data);
+        });
+        jsf.ajax.addOnEvent((data: any) => {
+            onEventCalled2++;
+
+        });
+        let issuer = DQ.byId("cmd_update_insert").click();
+        this.respond(XmlResponses.UPDATE_INSERT_1);
+
+    });
+
 });

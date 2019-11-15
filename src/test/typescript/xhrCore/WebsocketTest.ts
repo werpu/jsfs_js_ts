@@ -129,7 +129,7 @@ describe('Tests the jsf websocket client side api on high level (generic test wi
                 "",
                 true
             );
-        }).finally(() => {
+        }).then(() => {
             expect(openCalled, "Open must have been called due to autoConnect").to.be.true;
 
 
@@ -178,7 +178,7 @@ describe('Tests the jsf websocket client side api on high level (generic test wi
                 false
             );
             jsf.push.open("blarg");
-        }).finally(() => {
+        }).then(() => {
             expect(openCalled, "Open must have been called due to open").to.be.true;
 
             expect(messageCalled, "on a server response the message must have been called").to.be.true;

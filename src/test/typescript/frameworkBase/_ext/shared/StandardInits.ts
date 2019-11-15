@@ -64,15 +64,7 @@ export module StandardInits {
 </body>
 </html>`;
 
-    export const STD_XML = `
-    <?xml version="1.0" encoding="utf-8"?>
-    <partial-response>
-        <changes>
-            <update id="value_1"><![CDATA[<span id="out1">2</span>]]></update>
-            <update id="javax.faces.ViewState"><![CDATA[j_id1:j_id3]]></update>
-        </changes>
-    </partial-response>
-    `;
+    export const STD_XML = `<?xml version="1.0" encoding="utf-8"?><partial-response><changes><update id="value_1"><![CDATA[<span id="out1">2</span>]]></update><update id="javax.faces.ViewState"><![CDATA[j_id1:j_id3]]></update></changes></partial-response>`;
 
     /**
      * a page containing a jsf.js input with a new separator char
@@ -249,6 +241,9 @@ export module StandardInits {
         (<any>global).window.jsf = data.jsf;
         (<any>global).Implementation = Implementation.Implementation;
         (<any>global).PushImpl = PushImpl.PushImpl;
+        //bypass a bug on windows jsdom, domparser not an auto global but on window only
+        (<any>global).DOMParser =  (<any>global)?.DOMParser ?? window.DOMParser;
+        (<any>global).document = (<any>global)?.document ?? window.document;
     };
 
     /**

@@ -497,10 +497,6 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
                     }
                 } else if (rootNode[cnt] instanceof DomQuery) {
                     this.rootNode.push(...(<any>rootNode[cnt]).values);
-                } else if (isString(rootNode[cnt])) {
-                    let result = DomQuery.querySelectorAll(<string>rootNode[cnt]);
-                    this.rootNode.push(...result.values);
-
                 } else {
                     this.rootNode.push(<any>rootNode[cnt]);
                 }
@@ -732,7 +728,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
             let dummyPlaceHolder = new DomQuery(document.createElement("div"));
 
             //table needs special treatment due to the browsers auto creation
-            if(markup.indexOf("<thead ") == 0 || markup.indexOf("<tbody ") || markup.indexOf("<tfoot ")) {
+            if(markup.indexOf("<thead ") == 0 || markup.indexOf("<tbody ") == 0 || markup.indexOf("<tfoot ") == 0) {
                 dummyPlaceHolder.html(`<table>${markup}</table>` );
                 return dummyPlaceHolder.querySelectorAll("table").get(0).childNodes.detach();
             }
@@ -832,7 +828,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
      * @return a DomQuery with the results
      */
     querySelectorAll(selector): DomQuery {
-        if (this.rootNode.length == 0) {
+        if (!this?.rootNode?.length) {
             return this;
         }
         let nodes = [];
@@ -1206,7 +1202,6 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
 
     insertAfter(...toInsertParams: Array<DomQuery>): DomQuery {
 
-        let processed = [];
 
         this.each(existingItem => {
             let existingElement = existingItem.getAsElem(0).value;
@@ -1348,12 +1343,10 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
 
         let insertAdditionalItems = [];
 
-        for (let cnt = 1; cnt < nodes.length; cnt++) {
-            insertAdditionalItems.push(nodes.get(cnt));
-            this.rootNode.push(nodes.get(cnt).getAsElem(0).value);
+        if(nodes.length > 1) {
+            insertAdditionalItems = insertAdditionalItems.concat(...nodes.values.slice(1));
+            res.push(DomQuery.byId(replaced).insertAfter(new DomQuery(...insertAdditionalItems)));
         }
-
-        res.push(DomQuery.byId(replaced).insertAfter(...insertAdditionalItems));
 
         if (runEmbeddedScripts) {
             this.runScripts();
@@ -1362,7 +1355,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
             this.runCss();
         }
 
-        return new DomQuery(...res);
+        return nodes;
     }
 
     /**

@@ -58,8 +58,10 @@ run
 
 #### On Windows
 
-install python
-set the PYTHON environment variable to your python executable
+if not done yet
+
+* npm install --global --production windows-build-tools
+
 run
  
 * npm install

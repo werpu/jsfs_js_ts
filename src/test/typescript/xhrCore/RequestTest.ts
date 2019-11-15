@@ -22,6 +22,7 @@ import {DomQuery} from "../../../main/typescript/ext/monadish";
 import {Const} from "../../../main/typescript/impl/core/Const";
 import defaultMyFaces = StandardInits.defaultMyFaces;
 import STD_XML = StandardInits.STD_XML;
+import {FakeXMLHttpRequest} from "sinon";
 
 declare var jsf: any;
 declare var Implementation: any;
@@ -195,7 +196,7 @@ describe('Tests after core when it hits response', function () {
 
             let xhrReq = this.requests[0];
 
-            xhrReq.respond(200, {'Content-Type': 'text/xml; charset=utf-8'}, STD_XML);
+            xhrReq.respond(200, {'Content-Type': 'text/xml'}, STD_XML);
             expect(this.jsfAjaxResponse.callCount).to.eq(1);
             expect(globalCnt == 3).to.eq(true);
             expect(localCnt == 3).to.eq(true);

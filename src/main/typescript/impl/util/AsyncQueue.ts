@@ -162,8 +162,8 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
     }
 
     private callForNextElementToProcess() {
-        this.runEntry();
-        //this.eventDispatcher.dispatchEvent(AsynchronouseQueue.EVT_NEXT);
+        //this.runEntry();
+        this.eventDispatcher.dispatchEvent(AsynchronouseQueue.EVT_NEXT);
     }
 
     private processNextElement() {

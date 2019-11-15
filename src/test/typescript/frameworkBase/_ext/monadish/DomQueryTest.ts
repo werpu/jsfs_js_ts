@@ -136,7 +136,7 @@ describe('DOMQuery tests', function () {
     it('outerhtml and eval tests', function () {
         let probe1 = new DomQuery(window.document.body);
         probe1.querySelectorAll("#id_1").outerHTML(`
-            <<div id='barg'>
+            <div id='barg'>
             
             </div>
             <script type="text/javascript">

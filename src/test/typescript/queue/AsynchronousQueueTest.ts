@@ -94,7 +94,7 @@ describe('Asynchronous Queue tests', () => {
         queue.enqueue(probe2);
         queue.enqueue(probe3);
 
-        Promise.all([probe1.value, probe2.value, probe3.value]).finally(() => {
+        Promise.all([probe1.value, probe2.value, probe3.value]).then(() => {
             expect(queue.isEmpty).to.be.true;
             (finallyCnt == 3) ? done() : null
         });

@@ -72,7 +72,7 @@ describe('Tests of the various aspects of the response protocol functionality', 
         //DQ.byId("cmd_update_insert").click();
         let issuer = DQ.byId("cmd_update_insert").click();
 
-        this.respond( XmlResponses.UPDATE_INSERT_1);
+        this.respond(XmlResponses.UPDATE_INSERT_1);
 
         expect(DQ.byId("changesArea")
             .html()
@@ -104,7 +104,7 @@ describe('Tests of the various aspects of the response protocol functionality', 
         //DQ.byId("cmd_update_insert").click();
         let issuer = DQ.byId("cmd_update_insert").click();
 
-        this.respond( XmlResponses.UPDATE_INSERT_2);
+        this.respond(XmlResponses.UPDATE_INSERT_2);
 
         expect(DQ.byId("changesArea")
             .html()
@@ -180,7 +180,7 @@ describe('Tests of the various aspects of the response protocol functionality', 
         let newBody = DQ.byId(document.body);
         let newContent = <string>newBody.html().value;
 
-        expect(newHead.isPresent()," head must exist ").to.be.true;
+        expect(newHead.isPresent(), " head must exist ").to.be.true;
 
         //standard replacement successful
         expect(newContent.indexOf("<h3>Body replacement test successful</h3>") != -1,
@@ -213,7 +213,7 @@ describe('Tests of the various aspects of the response protocol functionality', 
     it("must have processed a proper delete", function () {
         DQ.byId("cmd_delete").click();
 
-        this.respond( XmlResponses.DELETE_1);
+        this.respond(XmlResponses.DELETE_1);
 
         expect(DQ.byId("deletable").isAbsent()).to.be.true;
 
@@ -222,12 +222,46 @@ describe('Tests of the various aspects of the response protocol functionality', 
     it("must have processed a proper eval of a script given in the eval tag", function () {
         let issuer = DQ.byId("cmd_eval").click();
 
-        this.respond( XmlResponses.EVAL_1);
+        this.respond(XmlResponses.EVAL_1);
 
         let resultHTML: string = <string>DQ.byId(document.body).html().value;
         expect(resultHTML.indexOf('eval test succeeded') != -1).to.be.true;
 
     });
+
+    it("must have updated the viewstates properly", function () {
+
+        let issuer = DQ.byId("cmd_eval").click();
+
+        /*js full submit form, coming from the integration tests*/
+        window.document.body.innerHTML = `<form id="j_id__v_0" name="j_id__v_0" method="post" action="/IntegrationJSTest/integrationtestsjasmine/test7-eventtest.jsf"
+      enctype="application/x-www-form-urlencoded"><span id="updatePanel">hello world</span><a href="#"
+                                                                                              onclick="return jsf.util.chain(this, event,'return false;', 'return myfaces.ab(\'j_id_1l\',\'updateTrigger\');');"
+                                                                                              id="updateTrigger"
+                                                                                              name="updateTrigger"
+                                                                                              class="updateTrigger">[Press
+    me for Update]</a><input type="hidden" name="j_id_1l_SUBMIT" value="1">
+</form>`;
+
+
+        jsf.ajax.request(window.document.getElementById("updateTrigger"), null, {
+            render: "updatePanel",
+            execute: "updatePanel updateTrigger"
+        });
+
+        // language=XML
+        this.respond(`<?xml version="1.0" encoding="UTF-8"?>
+            <partial-response id="j_id__v_0">
+                <changes>
+                    <update id="updatePanel"><![CDATA[<span id="updatePanel">hello world</span>]]></update>
+                    <update id="j_id__v_0:javax.faces.ViewState:1"><![CDATA[RTUyRDI0NzE4QzAxM0E5RDAwMDAwMDVD]]></update>
+                </changes>
+            </partial-response>`);
+
+
+        expect(DQ.byId("javax.faces.ViewState").isAbsent()).to.be.false;
+
+    })
 
     //TODO update head all and redirect
 });

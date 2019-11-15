@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Config, Lang, Stream, XMLQuery} from "../../ext/monadish";
+import {Config, DomQuery, Lang, Stream, XMLQuery} from "../../ext/monadish";
 import {Const} from "../core/Const";
 import {Implementation} from "../AjaxImpl";
 import {Assertions} from "../util/Assertions";
@@ -172,21 +172,12 @@ export class ResponseProcessor implements IResponseProcessor {
      * @param cdataBlock
      */
     update(node: XMLQuery, cdataBlock: string) {
-
-
-
         let result = DQ.byId(node.id.value).outerHTML(cdataBlock, false, false);
         let sourceForm = result.parents(TAG_FORM).orElse(result.byTagName(TAG_FORM, true));
 
         this.storeForPostProcessing(sourceForm, result);
     }
 
-    private isViewStateNode(node: XMLQuery) {
-        let separatorchar = (<any>window).jsf.separatorchar;
-        return node.id.value == P_VIEWSTATE ||
-            node.id.value.indexOf([separatorchar, P_VIEWSTATE].join("")) != -1 ||
-            node.id.value.indexOf([P_VIEWSTATE, separatorchar].join("")) != -1;
-    }
 
     delete(node: XMLQuery) {
         DQ.byId(node.id.value).delete();
@@ -268,7 +259,7 @@ export class ResponseProcessor implements IResponseProcessor {
      */
     processViewState(node: XMLQuery): boolean {
         if( this.isViewStateNode(node)) {
-            let viewStateValue = node.innerText();
+            let viewStateValue = node.textContent();
             this.internalContext.assign(APPLIED_VST, node.id.value).value = new ViewState(node.id.value, viewStateValue);
             return true;
         }
@@ -286,9 +277,12 @@ export class ResponseProcessor implements IResponseProcessor {
             .each((item: Array<any>) => {
                 let key = item[0];
                 let value: ViewState =item[1];
-                let affectedForms = value.hasNameSpace ? DQ.byId(value.nameSpace).byTagName(TAG_FORM) : DQ.byTagName(TAG_FORM);
+                let nameSpace = DQ.byId(value.nameSpace).orElse(document.body);
+                let affectedForms = nameSpace.byTagName(TAG_FORM);
+                let affectedForms2 = nameSpace.filter(item => item.tagName.orElse("").value.toLowerCase() == TAG_FORM);
 
-                this.appendViewStateToForms(affectedForms, value.value);
+
+                this.appendViewStateToForms(new DomQuery(affectedForms, affectedForms2), value.value);
             });
     }
 
@@ -334,6 +328,13 @@ export class ResponseProcessor implements IResponseProcessor {
 
     private storeForEval(toBeEvaled: DQ) {
         this.internalContext.assign(UPDATE_ELEMS).value.push(toBeEvaled);
+    }
+
+    private isViewStateNode(node: XMLQuery) {
+        let separatorchar = (<any>window).jsf.separatorchar;
+        return node.id.value == P_VIEWSTATE ||
+            node.id.value.indexOf([separatorchar, P_VIEWSTATE].join("")) != -1 ||
+            node.id.value.indexOf([P_VIEWSTATE, separatorchar].join("")) != -1;
     }
 
 }

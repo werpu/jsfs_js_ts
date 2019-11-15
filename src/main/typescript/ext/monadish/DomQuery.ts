@@ -708,52 +708,48 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
      * @param markup the marku code
      */
     static fromMarkup(markup: string): DomQuery {
-        let domParser: DOMParser = Lang.saveResolve(() => new (<any>window)?.DOMParser()).value;
-        if (domParser) {
-            let document = domParser.parseFromString(markup, "text/html");
-            return new DomQuery(document);
+
+        //https://developer.mozilla.org/de/docs/Web/API/DOMParser license creative commons
+        const doc = document.implementation.createHTMLDocument("");
+        markup = trim(markup);
+        let lowerMarkup = markup.toLowerCase();
+        if (lowerMarkup.includes('<!doctype') ||
+            lowerMarkup.includes('<html') ||
+            lowerMarkup.includes('<head') || //TODO proper regexps here to avoid embedded tags with same element names to be triggered
+            lowerMarkup.includes('<body')) {
+            doc.documentElement.innerHTML = markup;
+            return new DomQuery(doc.documentElement);
         } else {
-            //https://developer.mozilla.org/de/docs/Web/API/DOMParser license creative commons
-            const doc = document.implementation.createHTMLDocument("");
-            markup = trim(markup);
-            let lowerMarkup = markup.toLowerCase();
-            if (lowerMarkup.includes('<!doctype') ||
-                lowerMarkup.includes('<html') ||
-                lowerMarkup.includes('<head') || //TODO proper regexps here to avoid embedded tags with same element names to be triggered
-                lowerMarkup.includes('<body')) {
-                doc.documentElement.innerHTML = markup;
-                return new DomQuery(doc.documentElement);
-            } else {
-                let startsWithTag = function(str: string,tagName: string) {
-                    let tag1 = ["<",tagName,">"].join("");
-                    let tag2 = ["<",tagName," "].join("");
-                    return (str.indexOf(tag1) == 0) || (str.indexOf(tag2) == 0);
-                };
+            let startsWithTag = function (str: string, tagName: string) {
+                let tag1 = ["<", tagName, ">"].join("");
+                let tag2 = ["<", tagName, " "].join("");
+                return (str.indexOf(tag1) == 0) || (str.indexOf(tag2) == 0);
+            };
 
-                let dummyPlaceHolder = new DomQuery(document.createElement("div"));
+            let dummyPlaceHolder = new DomQuery(document.createElement("div"));
 
-                //table needs special treatment due to the browsers auto creation
-                if (startsWithTag(lowerMarkup,"thead")  || startsWithTag(lowerMarkup,"tbody") ) {
-                    dummyPlaceHolder.html(`<table>${markup}</table>`);
-                    return dummyPlaceHolder.querySelectorAll("table").get(0).childNodes.detach();
-                } else if (startsWithTag(lowerMarkup,"tfoot") ) {
-                    dummyPlaceHolder.html(`<table><thead></thead><tbody><tbody${markup}</table>`);
-                    return dummyPlaceHolder.querySelectorAll("table").get(2).childNodes.detach();
-                } else if (startsWithTag(lowerMarkup,"tr") ) {
-                    dummyPlaceHolder.html(`<table><tbody>${markup}</tbody></table>`);
-                    return dummyPlaceHolder.querySelectorAll("tbody").get(0).childNodes.detach();
-                } else if (startsWithTag(lowerMarkup,"td") ) {
-                    dummyPlaceHolder.html(`<table><tbody><tr>${markup}</tr></tbody></table>`);
-                    return dummyPlaceHolder.querySelectorAll("tr").get(0).childNodes.detach();
-                }
-
-                dummyPlaceHolder.html(markup);
-                return dummyPlaceHolder.childNodes.detach();
+            //table needs special treatment due to the browsers auto creation
+            if (startsWithTag(lowerMarkup, "thead") || startsWithTag(lowerMarkup, "tbody")) {
+                dummyPlaceHolder.html(`<table>${markup}</table>`);
+                return dummyPlaceHolder.querySelectorAll("table").get(0).childNodes.detach();
+            } else if (startsWithTag(lowerMarkup, "tfoot")) {
+                dummyPlaceHolder.html(`<table><thead></thead><tbody><tbody${markup}</table>`);
+                return dummyPlaceHolder.querySelectorAll("table").get(2).childNodes.detach();
+            } else if (startsWithTag(lowerMarkup, "tr")) {
+                dummyPlaceHolder.html(`<table><tbody>${markup}</tbody></table>`);
+                return dummyPlaceHolder.querySelectorAll("tbody").get(0).childNodes.detach();
+            } else if (startsWithTag(lowerMarkup, "td")) {
+                dummyPlaceHolder.html(`<table><tbody><tr>${markup}</tr></tbody></table>`);
+                return dummyPlaceHolder.querySelectorAll("tr").get(0).childNodes.detach();
             }
+
+            dummyPlaceHolder.html(markup);
+            return dummyPlaceHolder.childNodes.detach();
         }
+
     }
 
-    
+
     /**
      * returns the nth element as domquery
      * from the internal elements

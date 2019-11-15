@@ -28,7 +28,7 @@ const config: webpack.Configuration = {
 
     plugins: [
         new webpack.SourceMapDevToolPlugin({
-            filename: "[name].js.map"
+            filename: "jsf.js.map"
         }),
         //# sourceMappingURL=http://localhost:8080/IntegrationJSTest/javax.faces.resource/myfaces/api/main.js.map.jsf?ln=scripts
         new CompressionPlugin({

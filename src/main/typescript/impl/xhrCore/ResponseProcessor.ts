@@ -170,7 +170,7 @@ export class ResponseProcessor implements IResponseProcessor {
      * @param cdataBlock
      */
     update(node: XMLQuery, cdataBlock: string) {
-        let result = DQ.byId(node.id.value).outerHTML(cdataBlock);
+        let result = DQ.byId(node.id.value).outerHTML(cdataBlock, false, false);
         let sourceForm = result.parents(TAG_FORM).orElse(result.byTagName(TAG_FORM, true));
 
         this.storeForPostProcessing(sourceForm, result);
@@ -216,11 +216,13 @@ export class ResponseProcessor implements IResponseProcessor {
 
         if (before.isPresent()) {
             let res = DQ.byId(before.value).insertBefore(insertNodes);
-            this.internalContext.assign(UPDATE_ELEMS).value.push(res);
+            this.internalContext.assign(UPDATE_ELEMS).value.push(insertNodes);
         }
         if (after.isPresent()) {
-            let res = DQ.byId(after.value).insertAfter(insertNodes);
-            this.internalContext.assign(UPDATE_ELEMS).value.push(res);
+            let domQuery = DQ.byId(after.value);
+            domQuery.insertAfter(insertNodes);
+
+            this.internalContext.assign(UPDATE_ELEMS).value.push(insertNodes);
         }
     }
 
@@ -232,8 +234,8 @@ export class ResponseProcessor implements IResponseProcessor {
             let insertId = item.attr(ATTR_ID);
             let insertNodes = DQ.fromMarkup(<any>item.cDATAAsString);
             if(insertId.isPresent()) {
-                let res = DQ.byId(insertId.value).insertBefore(insertNodes);
-                this.internalContext.assign(UPDATE_ELEMS).value.push(res);
+                DQ.byId(insertId.value).insertBefore(insertNodes);
+                this.internalContext.assign(UPDATE_ELEMS).value.push(insertNodes);
             }
         });
 
@@ -241,8 +243,8 @@ export class ResponseProcessor implements IResponseProcessor {
             let insertId = item.attr(ATTR_ID);
             let insertNodes = DQ.fromMarkup(<any>item.cDATAAsString);
             if(insertId.isPresent()) {
-                let res = DQ.byId(insertId.value).insertAfter(insertNodes);
-                this.internalContext.assign(UPDATE_ELEMS).value.push(res);
+                DQ.byId(insertId.value).insertAfter(insertNodes);
+                this.internalContext.assign(UPDATE_ELEMS).value.push(insertNodes);
             }
         });
     }

@@ -708,46 +708,52 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
      * @param markup the marku code
      */
     static fromMarkup(markup: string): DomQuery {
-        let domParser: DOMParser = Lang.saveResolve(() => new DOMParser()).value;
-        //  if (domParser) {
-        //      let document = domParser.parseFromString(markup, "text/html");
-        //      return new DomQuery(document);
-        //  } else {
-        //https://developer.mozilla.org/de/docs/Web/API/DOMParser license creative commons
-        const doc = document.implementation.createHTMLDocument("");
-        markup = trim(markup);
-        let lowerMarkup = markup.toLowerCase();
-        if (lowerMarkup.includes('<!doctype') ||
-            lowerMarkup.includes('<html') ||
-            lowerMarkup.includes('<head') || //TODO proper regexps here to avoid embedded tags with same element names to be triggered
-            lowerMarkup.includes('<body')) {
-            doc.documentElement.innerHTML = markup;
-            return new DomQuery(doc.documentElement);
+        let domParser: DOMParser = Lang.saveResolve(() => new (<any>window)?.DOMParser()).value;
+        if (domParser) {
+            let document = domParser.parseFromString(markup, "text/html");
+            return new DomQuery(document);
         } else {
+            //https://developer.mozilla.org/de/docs/Web/API/DOMParser license creative commons
+            const doc = document.implementation.createHTMLDocument("");
+            markup = trim(markup);
+            let lowerMarkup = markup.toLowerCase();
+            if (lowerMarkup.includes('<!doctype') ||
+                lowerMarkup.includes('<html') ||
+                lowerMarkup.includes('<head') || //TODO proper regexps here to avoid embedded tags with same element names to be triggered
+                lowerMarkup.includes('<body')) {
+                doc.documentElement.innerHTML = markup;
+                return new DomQuery(doc.documentElement);
+            } else {
+                let startsWithTag = function(str: string,tagName: string) {
+                    let tag1 = ["<",tagName,">"].join("");
+                    let tag2 = ["<",tagName," "].join("");
+                    return (str.indexOf(tag1) == 0) || (str.indexOf(tag2) == 0);
+                };
 
-            let dummyPlaceHolder = new DomQuery(document.createElement("div"));
+                let dummyPlaceHolder = new DomQuery(document.createElement("div"));
 
-            //table needs special treatment due to the browsers auto creation
-            if(markup.indexOf("<thead ") == 0 || markup.indexOf("<tbody ") == 0 || markup.indexOf("<tfoot ") == 0) {
-                dummyPlaceHolder.html(`<table>${markup}</table>` );
-                return dummyPlaceHolder.querySelectorAll("table").get(0).childNodes.detach();
+                //table needs special treatment due to the browsers auto creation
+                if (startsWithTag(lowerMarkup,"thead")  || startsWithTag(lowerMarkup,"tbody") ) {
+                    dummyPlaceHolder.html(`<table>${markup}</table>`);
+                    return dummyPlaceHolder.querySelectorAll("table").get(0).childNodes.detach();
+                } else if (startsWithTag(lowerMarkup,"tfoot") ) {
+                    dummyPlaceHolder.html(`<table><thead></thead><tbody><tbody${markup}</table>`);
+                    return dummyPlaceHolder.querySelectorAll("table").get(2).childNodes.detach();
+                } else if (startsWithTag(lowerMarkup,"tr") ) {
+                    dummyPlaceHolder.html(`<table><tbody>${markup}</tbody></table>`);
+                    return dummyPlaceHolder.querySelectorAll("tbody").get(0).childNodes.detach();
+                } else if (startsWithTag(lowerMarkup,"td") ) {
+                    dummyPlaceHolder.html(`<table><tbody><tr>${markup}</tr></tbody></table>`);
+                    return dummyPlaceHolder.querySelectorAll("tr").get(0).childNodes.detach();
+                }
+
+                dummyPlaceHolder.html(markup);
+                return dummyPlaceHolder.childNodes.detach();
             }
-
-            if(markup.indexOf("<tr ") == 0) {
-                dummyPlaceHolder.html(`<table><tbody>${markup}</tbody></table>`);
-                return dummyPlaceHolder.querySelectorAll("tbody").get(0).childNodes.detach();
-            }
-
-            if(markup.indexOf("<td ") == 0) {
-                dummyPlaceHolder.html(`<table><tbody><tr>${markup}</tr></tbody></table>`);
-                return dummyPlaceHolder.querySelectorAll("tr").get(0).childNodes.detach();
-            }
-
-            dummyPlaceHolder.html(markup);
-            return  dummyPlaceHolder.childNodes.detach();
         }
     }
 
+    
     /**
      * returns the nth element as domquery
      * from the internal elements
@@ -1073,7 +1079,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         Stream.of(...this.rootNode)
             .each((item, cnt) => {
                 //we could use a filter, but for the best performance we dont
-                if(item == null) {
+                if (item == null) {
                     return;
                 }
                 return func(DomQuery.byId(item), cnt);
@@ -1343,7 +1349,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
 
         let insertAdditionalItems = [];
 
-        if(nodes.length > 1) {
+        if (nodes.length > 1) {
             insertAdditionalItems = insertAdditionalItems.concat(...nodes.values.slice(1));
             res.push(DomQuery.byId(replaced).insertAfter(new DomQuery(...insertAdditionalItems)));
         }
@@ -1426,7 +1432,9 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
             let scriptElements = new DomQuery(this.filterSelector("script"), this.querySelectorAll("script"));
             //script execution order by relative pos in their dom tree
             scriptElements.stream
-                .flatMap(item => { return Stream.of(item.values) })
+                .flatMap(item => {
+                    return Stream.of(item.values)
+                })
                 .sort((node1, node2) => {
                     return node1.compareDocumentPosition(node2) - 3; //preceding 2, following == 4
                 })
@@ -1496,10 +1504,12 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
                 }
             };
 
-        const scriptElements: DomQuery =  new DomQuery(this.filterSelector("link, style"), this.querySelectorAll("link, style"));
+        const scriptElements: DomQuery = new DomQuery(this.filterSelector("link, style"), this.querySelectorAll("link, style"));
 
         scriptElements.stream
-            .flatMap(item => { return Stream.of(item.values) })
+            .flatMap(item => {
+                return Stream.of(item.values)
+            })
             .sort((node1, node2) => {
                 return node1.compareDocumentPosition(node2) - 3; //preceding 2, following == 4
             })

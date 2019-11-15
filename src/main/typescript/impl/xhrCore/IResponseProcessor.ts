@@ -102,7 +102,7 @@ export interface IResponseProcessor {
      * forms with their respective new viewstate values
      *
      */
-    processViewState(node: XMLQuery): void;
+    processViewState(node: XMLQuery): boolean;
 
     /**
      * evals all processed elements of so far

@@ -1334,6 +1334,9 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
      * @param runEmbeddedCss
      */
     outerHTML(markup: string, runEmbeddedScripts ?: boolean, runEmbeddedCss ?: boolean): DomQuery {
+        if(this.isAbsent()) {
+            return;
+        }
         let nodes = DomQuery.fromMarkup(markup);
         let res = [];
         let toReplace = this.getAsElem(0).value;
@@ -1342,6 +1345,10 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         let replaced = firstInsert.getAsElem(0).value;
         parentNode.replaceChild(replaced, toReplace);
         res.push(new DomQuery(replaced));
+        //no replacement possible
+        if(this.isAbsent()) {
+            return this;
+        }
 
         let insertAdditionalItems = [];
 

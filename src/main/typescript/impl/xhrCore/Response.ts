@@ -157,10 +157,7 @@ export module Response {
      * @param responseProcessor
      */
      function processUpdateTag(node: XMLQuery, responseProcessor: IResponseProcessor) {
-        if (node.id.value == P_VIEWSTATE) {
-            responseProcessor.processViewState(node);
-        } else {
-            //branch case we need to drill down further
+        if (!responseProcessor.processViewState(node)) {
             handleElementUpdate(node, responseProcessor);
         }
     }

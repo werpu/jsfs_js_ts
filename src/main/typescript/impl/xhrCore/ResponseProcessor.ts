@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Config, Lang, XMLQuery} from "../../ext/monadish";
+import {Config, Lang, Stream, XMLQuery} from "../../ext/monadish";
 import {Const} from "../core/Const";
 import {Implementation} from "../AjaxImpl";
 import {Assertions} from "../util/Assertions";
@@ -53,6 +53,8 @@ import ATTR_VALUE = Const.ATTR_VALUE;
 import HTML_VIEWSTATE = Const.HTML_VIEWSTATE;
 import APPLIED_VST = Const.APPLIED_VST;
 import ATTR_ID = Const.ATTR_ID;
+
+import {ViewState} from "../core/ImplTypes";
 
 /**
  * Response processor
@@ -170,10 +172,20 @@ export class ResponseProcessor implements IResponseProcessor {
      * @param cdataBlock
      */
     update(node: XMLQuery, cdataBlock: string) {
+
+
+
         let result = DQ.byId(node.id.value).outerHTML(cdataBlock, false, false);
         let sourceForm = result.parents(TAG_FORM).orElse(result.byTagName(TAG_FORM, true));
 
         this.storeForPostProcessing(sourceForm, result);
+    }
+
+    private isViewStateNode(node: XMLQuery) {
+        let separatorchar = (<any>window).jsf.separatorchar;
+        return node.id.value == P_VIEWSTATE ||
+            node.id.value.indexOf([separatorchar, P_VIEWSTATE].join("")) != -1 ||
+            node.id.value.indexOf([P_VIEWSTATE, separatorchar].join("")) != -1;
     }
 
     delete(node: XMLQuery) {
@@ -254,20 +266,13 @@ export class ResponseProcessor implements IResponseProcessor {
      * forms with their respective new viewstate values
      *
      */
-    processViewState(node: XMLQuery) {
-        this.internalContext.assign("appliedViewState").value = node.textContent("");
-
-        let elem = resolveSourceElement(this.externalContext, this.internalContext);
-        let sourceForm = resolveSourceForm(this.internalContext, elem);
-
-        if (sourceForm.isPresent()) {
-            this.internalContext.assign(UPDATE_FORMS).value.push(sourceForm);
-        } else {
-            this.newViewStateElement(sourceForm);
+    processViewState(node: XMLQuery): boolean {
+        if( this.isViewStateNode(node)) {
+            let viewStateValue = node.innerText();
+            this.internalContext.assign(APPLIED_VST, node.id.value).value = new ViewState(node.id.value, viewStateValue);
+            return true;
         }
-        //no source form found is not an error because
-        //we might be able to recover one way or the other
-        //TODO issue a warning for the no source form case
+        return false;
     }
 
     globalEval() {
@@ -277,17 +282,14 @@ export class ResponseProcessor implements IResponseProcessor {
     }
 
     fixViewStates() {
-        if (this.internalContext.getIf(APPLIED_VST).isAbsent()) {
-            return;
-        }
-        let viewState = this.internalContext.getIf(APPLIED_VST).value;
-        if (this.isAllFormResolution(this.externalContext)) {
-            let forms = DQ.querySelectorAll(TAG_FORM);
-            this.appendViewStateToForms(forms, viewState);
-        } else {
-            let updateForms = new DQ(...this.internalContext.getIf(UPDATE_FORMS).value);
-            this.appendViewStateToForms(updateForms, viewState);
-        }
+        Stream.ofAssoc<ViewState>(this.internalContext.getIf(APPLIED_VST).orElse({}).value)
+            .each((item: Array<any>) => {
+                let key = item[0];
+                let value: ViewState =item[1];
+                let affectedForms = value.hasNameSpace ? DQ.byId(value.nameSpace).byTagName(TAG_FORM) : DQ.byTagName(TAG_FORM);
+
+                this.appendViewStateToForms(affectedForms, value.value);
+            });
     }
 
     private isAllFormResolution(context: Config) {

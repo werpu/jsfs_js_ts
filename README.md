@@ -44,3 +44,34 @@ Once it is read for general testing, I will drop the info on how
 to add it to your project.
 
 
+## build
+
+Make sure python 3.x is installed (needed by some build dependencies)
+
+
+
+### General build 
+
+run 
+
+* npm install
+
+#### On Windows
+
+install python
+set the PYTHON environment variable to your python executable
+run
+ 
+* npm install
+
+
+### Tests
+
+run
+
+* npm test
+
+### Test Coverage
+
+* npm coverage
+

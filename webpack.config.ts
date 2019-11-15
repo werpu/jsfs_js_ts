@@ -1,9 +1,9 @@
 import * as webpack from 'webpack';
 import * as path from 'path'
+let CompressionPlugin = require('compression-webpack-plugin');
+
 
 let TerserPlugin = require('terser-webpack-plugin');
-let BrotliPlugin = require('brotli-webpack-plugin');
-let ZopfliPlugin = require("zopfli-webpack-plugin");
 
 let libraryTarget = process.env.TARGET_TYPE || "window";
 
@@ -29,19 +29,13 @@ const config: webpack.Configuration = {
         new webpack.SourceMapDevToolPlugin({
             filename: "[name].js.map"
         }),
-        //# sourceMappingURL=http://localhost:8080/IntegrationJSTest/javax.faces.resource/myfaces/api/main.js.map.jsf?ln=scripts
-        new ZopfliPlugin({
-            asset: "[path].gz[query]",
-            algorithm: "zopfli",
-            test: /\.(js|html)$/,
+        new CompressionPlugin({
+            filename: '[path].gz[query]',
+            algorithm: 'gzip',
+            test: /\.js$|\.css$|\.html$|\.eot?.+$|\.ttf?.+$|\.woff?.+$|\.svg?.+$/,
             threshold: 10240,
-            minRatio: 0.8
-        }),
-        new BrotliPlugin({
-            asset: '[path].br[query]',
-            test: /\.(js|css|html|svg)$/,
-            threshold: 10240,
-            minRatio: 0.8
+            minRatio: 0.3
+
         })
 
     ]

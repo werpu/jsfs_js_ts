@@ -24,10 +24,10 @@ import {IResponseProcessor} from "./IResponseProcessor";
 import {ErrorData} from "./ErrorData";
 import {DQ} from "../../ext/monadish/DomQuery";
 import {ExtLang} from "../util/Lang";
+
+import {ViewState} from "../core/ImplTypes";
 import trim = Lang.trim;
 import getLocalOrGlobalConfig = ExtLang.getLocalOrGlobalConfig;
-import resolveSourceElement = ResonseDataResolver.resolveSourceElement;
-import resolveSourceForm = ResonseDataResolver.resolveSourceForm;
 
 import TAG_HEAD = Const.TAG_HEAD;
 import SEL_SCRIPTS_STYLES = Const.SEL_SCRIPTS_STYLES;
@@ -53,8 +53,6 @@ import ATTR_VALUE = Const.ATTR_VALUE;
 import HTML_VIEWSTATE = Const.HTML_VIEWSTATE;
 import APPLIED_VST = Const.APPLIED_VST;
 import ATTR_ID = Const.ATTR_ID;
-
-import {ViewState} from "../core/ImplTypes";
 
 /**
  * Response processor
@@ -252,10 +250,18 @@ export class ResponseProcessor implements IResponseProcessor {
         });
     }
 
+
+
+    globalEval() {
+        let updateElems = new DQ(...this.internalContext.getIf(UPDATE_ELEMS).value);
+        updateElems.runCss();
+        updateElems.runScripts();
+    }
+
     /**
      * process the viewState update, update the affected
      * forms with their respective new viewstate values
-     *
+     * and store them for later processing
      */
     processViewState(node: XMLQuery): boolean {
         if( this.isViewStateNode(node)) {
@@ -266,23 +272,20 @@ export class ResponseProcessor implements IResponseProcessor {
         return false;
     }
 
-    globalEval() {
-        let updateElems = new DQ(...this.internalContext.getIf(UPDATE_ELEMS).value);
-        updateElems.runCss();
-        updateElems.runScripts();
-    }
-
+    /**
+     * post update step, fix all the viewstates in the affected viewroots
+     * according to the spec
+     */
     fixViewStates() {
         Stream.ofAssoc<ViewState>(this.internalContext.getIf(APPLIED_VST).orElse({}).value)
             .each((item: Array<any>) => {
                 let key = item[0];
-                let value: ViewState =item[1];
+                let value: ViewState = item[1];
                 let nameSpace = DQ.byId(value.nameSpace).orElse(document.body);
-                let affectedForms = nameSpace.byTagName(TAG_FORM);
-                let affectedForms2 = nameSpace.filter(item => item.tagName.orElse("").value.toLowerCase() == TAG_FORM);
+                //we search all child elements
+                let affectedForms = nameSpace.byTagName(TAG_FORM, true);
 
-
-                this.appendViewStateToForms(new DomQuery(affectedForms, affectedForms2), value.value);
+                this.appendViewStateToForms(affectedForms, value.value);
             });
     }
 

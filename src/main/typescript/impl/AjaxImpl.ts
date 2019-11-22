@@ -331,8 +331,9 @@ export module Implementation {
     /**
      * sends an event
      */
-    export function sendEvent(data: EventData) {
+    export function sendEvent(data: EventData, localHandler = function(data: EventData) {}) {
         /*now we serve the queue as well*/
+        localHandler(data);
         eventQueue.forEach(fn => fn(data));
     }
 
@@ -392,8 +393,9 @@ export module Implementation {
      *
      *
      */
-    export function sendError(errorData: any) {
+    export function sendError(errorData: any, localHandler = function(data: any) {}) {
 
+        localHandler(errorData);
         errorQueue.forEach((errorCallback: Function) => {
             errorCallback(errorData);
         });

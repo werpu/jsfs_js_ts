@@ -21,15 +21,14 @@ import {Implementation} from "../AjaxImpl";
 
 import {Const} from "../core/Const";
 import {XhrFormData} from "./XhrFormData";
-import {XMLQuery} from "../../ext/monadish";
 import {ErrorData} from "./ErrorData";
 import {EventData} from "./EventData";
 import {DQ} from "../../ext/monadish/DomQuery";
 import {ExtLang} from "../util/Lang";
+import {Assertions} from "../util/Assertions";
 import failSaveExecute = ExtLang.failSaveExecute;
 import getPromise = ExtLang.getPromise;
 import COMPLETE = Const.COMPLETE;
-import SUCCESS = Const.SUCCESS;
 import NO_TIMEOUT = Const.NO_TIMEOUT;
 import REQ_TYPE_POST = Const.REQ_TYPE_POST;
 import URL_ENCODED = Const.URL_ENCODED;
@@ -47,8 +46,6 @@ import STD_ACCEPT = Const.STD_ACCEPT;
 import REQ_TYPE_GET = Const.REQ_TYPE_GET;
 import ENCODED_URL = Const.ENCODED_URL;
 import BEGIN = Const.BEGIN;
-import {Assertions} from "../util/Assertions";
-import raiseError = Assertions.raiseError;
 import MALFORMEDXML = Const.MALFORMEDXML;
 import ERROR = Const.ERROR;
 
@@ -72,8 +69,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
 
     private xhrPromise: Promise<XMLHttpRequest>;
 
-    private _onEvent: Function;
-    private _onError: Function;
+
 
     private responseContext: Config;
 
@@ -105,10 +101,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         private contentType = URL_ENCODED,
         private xhrObject = new XMLHttpRequest()
     ) {
-        this._onEvent = requestContext.getIf(ON_EVENT).orElse(() => {
-        }).value;
-        this._onError = requestContext.getIf(ON_ERROR).orElse(() => {
-        }).value;
+
     }
 
     start(): AsyncRunnable<XMLHttpRequest> {
@@ -295,7 +288,6 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         if(this.stopProgress) {
             return;
         }
-        this.sendEvent(SUCCESS);
         resolve(data);
     }
 
@@ -312,8 +304,10 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         try {
             //user code error, we might cover
             //this in onError but also we cannot swallow it
-            this._onEvent(eventData);
-            Implementation.sendEvent(eventData);
+            //we need to resolve the local handlers lazyly,
+            //because some frameworks might decorate them over the context in the response
+            let eventHandler = this.resolveHandlerFunc(ON_EVENT);;
+            Implementation.sendEvent(eventData,  eventHandler);
         } catch (e) {
             this.handleError(e);
             throw e;
@@ -323,11 +317,20 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     private handleError(exception) {
         let errorData = ErrorData.fromClient(exception);
 
-        try {
-            this._onError(errorData);
-        } finally {
-            Implementation.sendError(errorData);
-        }
+        let eventHandler = this.resolveHandlerFunc(ON_ERROR);
+        Implementation.sendError(errorData, eventHandler);
+    }
+
+    /**
+     * resolves the event handlers lazly
+     * so that if some decoration happens in between we can deal with it
+     *
+     * @param funcName
+     */
+    private resolveHandlerFunc(funcName: string) {
+        return this.responseContext.getIf(funcName)
+                .orElse(this.requestContext.getIf(funcName).value)
+                .orElse(function () {}).value;
     }
 
     private resolveTargetUrl(srcFormElement: HTMLFormElement) {
@@ -350,5 +353,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
 
         return targetUrl + (this.ajaxType == REQ_TYPE_GET ? "?" + formData.toString() : "");
     }
+
+
 
 }

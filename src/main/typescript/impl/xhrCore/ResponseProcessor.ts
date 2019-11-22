@@ -55,6 +55,9 @@ import APPLIED_VST = Const.APPLIED_VST;
 import ATTR_ID = Const.ATTR_ID;
 
 import {ViewState} from "../core/ImplTypes";
+import {EventData} from "./EventData";
+import SUCCESS = Const.SUCCESS;
+import ON_EVENT = Const.ON_EVENT;
 
 /**
  * Response processor
@@ -173,9 +176,10 @@ export class ResponseProcessor implements IResponseProcessor {
      */
     update(node: XMLQuery, cdataBlock: string) {
         let result = DQ.byId(node.id.value).outerHTML(cdataBlock, false, false);
-        let sourceForm = result.parents(TAG_FORM).orElse(result.byTagName(TAG_FORM, true));
-
-        this.storeForPostProcessing(sourceForm, result);
+        let sourceForm = result?.parents(TAG_FORM).orElse(result.byTagName(TAG_FORM, true));
+        if(sourceForm) {
+            this.storeForPostProcessing(sourceForm, result);
+        }
     }
 
 
@@ -285,6 +289,16 @@ export class ResponseProcessor implements IResponseProcessor {
                 this.appendViewStateToForms(new DomQuery(affectedForms, affectedForms2), value.value);
             });
     }
+
+    done() {
+        let eventData = EventData.createFromRequest(this.request.value, this.externalContext, SUCCESS);
+
+        //because some frameworks might decorate them over the context in the response
+        let eventHandler = this.externalContext.getIf(ON_EVENT).orElse(this.internalContext.getIf(ON_EVENT).value).orElse(function() {}).value;
+        Implementation.sendEvent(eventData,  eventHandler);
+
+    }
+
 
     private isAllFormResolution(context: Config) {
         return getLocalOrGlobalConfig(context, "no_portlet_env", false);

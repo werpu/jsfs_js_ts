@@ -114,4 +114,10 @@ export interface IResponseProcessor {
      * fix the viewstates of all processed forms
      */
     fixViewStates(): void;
+
+    /**
+     * processing done
+     * send last event
+     */
+    done(): void;
 }

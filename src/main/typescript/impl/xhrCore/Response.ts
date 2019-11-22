@@ -97,6 +97,7 @@ export module Response {
                     break;
             }
         });
+        responseProcessor.done();
     }
 
     let processInsert = function (responseProcessor: IResponseProcessor, node: XMLQuery) {

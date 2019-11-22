@@ -23,6 +23,7 @@ import {Const} from "../../../main/typescript/impl/core/Const";
 import defaultMyFaces = StandardInits.defaultMyFaces;
 import STD_XML = StandardInits.STD_XML;
 import {FakeXMLHttpRequest} from "sinon";
+import {ResponseProcessor} from "../../../main/typescript/impl/xhrCore/ResponseProcessor";
 
 declare var jsf: any;
 declare var Implementation: any;
@@ -54,7 +55,7 @@ describe('Tests on the xhr core when it starts to call the request', function ()
             (<any>global).XMLHttpRequest = this.xhr;
             (<any>window).XMLHttpRequest = this.xhr;
 
-            this.jsfAjaxResponse = sinon.stub((<any>global).jsf.ajax, "response");
+            this.jsfAjaxResponse = sinon.spy((<any>global).jsf.ajax, "response");
 
             this.closeIt = () => {
                 (<any>global).XMLHttpRequest = (<any>window).XMLHttpRequest = this.xhr.restore();
@@ -159,7 +160,7 @@ describe('Tests after core when it hits response', function () {
             (<any>global).XMLHttpRequest = this.xhr = sinon.useFakeXMLHttpRequest();
             (<any>window).XMLHttpRequest = this.xhr = sinon.useFakeXMLHttpRequest();
 
-            this.jsfAjaxResponse = sinon.stub((<any>global).jsf.ajax, "response");
+            this.jsfAjaxResponse = sinon.spy((<any>global).jsf.ajax, "response");
 
             this.closeIt = () => {
                 (<any>global).XMLHttpRequest = (<any>window).XMLHttpRequest = this.xhr.restore();
@@ -174,7 +175,7 @@ describe('Tests after core when it hits response', function () {
         this.closeIt();
     });
 
-    it('must have passed all ajax phase events', function (done) {
+    it('must have passed all ajax request phase events', function (done) {
 
         let send = sinon.spy(XMLHttpRequest.prototype, "send");
         let globalCnt = 0;
@@ -198,6 +199,7 @@ describe('Tests after core when it hits response', function () {
 
             xhrReq.respond(200, {'Content-Type': 'text/xml'}, STD_XML);
             expect(this.jsfAjaxResponse.callCount).to.eq(1);
+            //success ommitted due to fake response
             expect(globalCnt == 3).to.eq(true);
             expect(localCnt == 3).to.eq(true);
             done();
@@ -221,6 +223,7 @@ describe('Tests after core when it hits response', function () {
             jsf.ajax.addOnEvent(() => {
                 globalCnt++;
             });
+
 
             jsf.ajax.request(element, null, {
                 execute: "input_1",
@@ -260,6 +263,8 @@ describe('Tests after core when it hits response', function () {
             xhrReq = this.requests[0];
             xhrReq.responsetype = "text/xml";
             xhrReq.respond(200, {'Content-Type': 'text/xml'}, STD_XML);
+
+
 
         } catch (e) {
             console.error(e);

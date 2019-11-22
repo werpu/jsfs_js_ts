@@ -196,7 +196,8 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
 
     finally(func: () => void): AsyncRunnable<XMLHttpRequest> {
         //no ie11 support we probably are going to revert to shims for that one
-        (<any>this.$promise).finally(func);
+        (<any>this.$promise).then(func).catch(func);
+        //(<any>this.$promise).then(func);
         return this;
     }
 

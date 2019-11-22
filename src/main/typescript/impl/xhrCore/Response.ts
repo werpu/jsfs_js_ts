@@ -73,6 +73,8 @@ export module Response {
         //doing any evals even on embedded scripts
         responseProcessor.fixViewStates();
         responseProcessor.globalEval();
+
+        responseProcessor.done();
     }
 
     /**
@@ -97,7 +99,7 @@ export module Response {
                     break;
             }
         });
-        responseProcessor.done();
+
     }
 
     let processInsert = function (responseProcessor: IResponseProcessor, node: XMLQuery) {

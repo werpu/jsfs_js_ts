@@ -186,8 +186,8 @@ export module Lang {
         }
 
         let to = Object(target);
-        if(Object.assign) {
-            theArgs.forEach(item => Object.assign(to, item));
+        if((<any>Object).assign) {
+            theArgs.forEach(item => (<any>Object).assign(to, item));
             return to;
         }
 

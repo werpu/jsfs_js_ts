@@ -296,7 +296,6 @@ export class ResponseProcessor implements IResponseProcessor {
         //because some frameworks might decorate them over the context in the response
         let eventHandler = this.externalContext.getIf(ON_EVENT).orElse(this.internalContext.getIf(ON_EVENT).value).orElse(EMPTY_FUNC).value;
         Implementation.sendEvent(eventData,  eventHandler);
-
     }
 
 
@@ -346,9 +345,9 @@ export class ResponseProcessor implements IResponseProcessor {
 
     private isViewStateNode(node: XMLQuery) {
         let separatorchar = (<any>window).jsf.separatorchar;
-        return node.id.value == P_VIEWSTATE ||
-            node.id.value.indexOf([separatorchar, P_VIEWSTATE].join("")) != -1 ||
-            node.id.value.indexOf([P_VIEWSTATE, separatorchar].join("")) != -1;
+        return "undefined" != typeof node?.id?.value && ( node?.id?.value == P_VIEWSTATE ||
+            node?.id?.value?.indexOf([separatorchar, P_VIEWSTATE].join("")) != -1 ||
+            node?.id?.value?.indexOf([P_VIEWSTATE, separatorchar].join("")) != -1 );
     }
 
 }

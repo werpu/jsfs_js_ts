@@ -1,60 +1,5 @@
 import {AsyncRunnable} from "./AsyncRunnable";
-import {ArrayCollector, Stream} from "../../ext/monadish";
 
-/**
- * we use the dom to decouple the next processing
- * from the calls,
- *
- * that way we do not have any recursive calls within out async
- * queue.
- *
- * we use a shadow dom div as event dispatching element
- * we cannot use the full shadow dom facilities
- * due to ie11 but we at least can use a non attached div.
- *
- */
-class DomEventDispatcher {
-
-    listeners: any = [];
-    shadowElement: HTMLElement;
-
-    constructor() {
-        this.shadowElement = document.createElement("div");
-    }
-
-    addEventListener(theName: string, listener: (Event) => void) {
-        this.listeners.push(listener);
-        this.shadowElement.addEventListener(theName, listener, {
-            capture: true
-        });
-    }
-
-    removeEventListener(theName: string, listener?: (Event) => void) {
-        if (listener) {
-            this.shadowElement.removeEventListener(theName, listener, {
-                capture: true
-            });
-            this.listeners = Stream.of(...this.listeners)
-                        .filter(item => item != listener)
-                        .collect(new ArrayCollector());
-        } else {
-            for (let currListener of this.listeners) {
-                this.shadowElement.removeEventListener(theName, currListener, {
-                    capture: true
-                });
-            }
-            this.listeners = [];
-        }
-    }
-
-    dispatchEvent(theName, data: EventInit = {
-        bubbles: false,
-        cancelable: true,
-        composed: false
-    }) {
-        this.shadowElement.dispatchEvent(new Event(theName, data))
-    }
-}
 
 /**
  * Asynchronous queue which starts to work
@@ -72,15 +17,10 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
 
     private runnableQueue = [];
     private delayTimeout: number;
-    private eventDispatcher = new DomEventDispatcher();
 
     currentlyRunning: AsyncRunnable<any>;
 
     constructor() {
-        //only one Async queue allowed for now!!!!
-        this.eventDispatcher.addEventListener(AsynchronouseQueue.EVT_NEXT, () => {
-            this.processNextElement();
-        })
     }
 
     get isEmpty(): boolean {
@@ -162,8 +102,7 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
     }
 
     private callForNextElementToProcess() {
-        //this.runEntry();
-        this.eventDispatcher.dispatchEvent(AsynchronouseQueue.EVT_NEXT);
+        this.runEntry();
     }
 
     private processNextElement() {

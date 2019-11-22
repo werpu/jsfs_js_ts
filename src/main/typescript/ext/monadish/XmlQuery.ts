@@ -27,6 +27,7 @@ export class XMLQuery extends DomQuery {
 
     constructor(rootNode: Document | string | DomQuery, docType: SupportedType = "text/xml") {
 
+
         let createIe11DomQueryShim = (): DOMParser => {
             //at the time if wroting ie11 is the only relevant browser
             //left withut any DomQuery support

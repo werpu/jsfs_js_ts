@@ -519,7 +519,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
      * returns the id of the first element
      */
     get id(): ValueEmbedder<string> {
-        return new ValueEmbedder<string>(this.getAsElem(0).value, "id");
+        return new ElementAttribute(this.get(0), "id");
     }
 
     /**
@@ -569,7 +569,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
      * the name of the first element
      */
     get name(): ValueEmbedder<string> {
-        return new ValueEmbedder<string>(this.getAsElem(0).value, "name");
+        return new ValueEmbedder(this.getAsElem(0).value, "name");
     }
 
     /**
@@ -713,10 +713,10 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         const doc = document.implementation.createHTMLDocument("");
         markup = trim(markup);
         let lowerMarkup = markup.toLowerCase();
-        if (lowerMarkup.includes('<!doctype') ||
-            lowerMarkup.includes('<html') ||
-            lowerMarkup.includes('<head') || //TODO proper regexps here to avoid embedded tags with same element names to be triggered
-            lowerMarkup.includes('<body')) {
+        if (lowerMarkup.indexOf('<!doctype') != -1 ||
+            lowerMarkup.indexOf('<html') != -1 ||
+            lowerMarkup.indexOf('<head') != -1 || //TODO proper regexps here to avoid embedded tags with same element names to be triggered
+            lowerMarkup.indexOf('<body') != -1) {
             doc.documentElement.innerHTML = markup;
             return new DomQuery(doc.documentElement);
         } else {
@@ -1337,6 +1337,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         if(this.isAbsent()) {
             return;
         }
+
         let nodes = DomQuery.fromMarkup(markup);
         let res = [];
         let toReplace = this.getAsElem(0).value;

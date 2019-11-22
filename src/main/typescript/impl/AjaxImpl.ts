@@ -29,7 +29,7 @@ import {ExtDomquery} from "./util/ExtDomQuery";
 import {ErrorData} from "./xhrCore/ErrorData";
 import {EventData} from "./xhrCore/EventData";
 import {DQ} from "../ext/monadish/DomQuery";
-import {Lang, Stream} from "../ext/monadish";
+import {Lang, Promise, Stream} from "../ext/monadish";
 import {AssocArrayCollector} from "../ext/monadish/SourcesCollectors";
 import {ExtLang} from "./util/Lang";
 
@@ -335,6 +335,10 @@ export module Implementation {
         /*now we serve the queue as well*/
         localHandler(data);
         eventQueue.forEach(fn => fn(data));
+    }
+
+    export function registerPromise() {
+        window["Promise"] = (<any>window)?.Promise ?? Promise;
     }
 
     /**

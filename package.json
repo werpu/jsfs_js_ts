@@ -6,7 +6,8 @@
   "scripts": {
     "test": "mocha -r ts-node/register ./**/test/typescript/**/**/*Test*.ts",
     "coverage": "nyc --reporter=html --reporter=text mocha -r ts-node/register ./**/test/typescript/**/**/*Test*.ts",
-    "build": "webpack -d"
+    "build-production": "webpack -p",
+    "build-development": "webpack --mode=none"
   },
   "keywords": [
     "myfaces",

@@ -7,10 +7,11 @@
       "es2015.promise",
       "dom"
     ],
-    "sourceMap": true,
+    "sourceMap": false,
     "outDir": "../../../target",
     "moduleResolution": "node",
     "module": "commonjs",
+    "inlineSourceMap": false,
     "typeRoots": [
       "../../build/npm/node_modules/@types"
     ]

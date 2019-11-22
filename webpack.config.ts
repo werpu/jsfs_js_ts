@@ -11,6 +11,7 @@ let libraryTarget = process.env.TARGET_TYPE || "window";
 const config: webpack.Configuration = {
     context: __dirname,
     entry: "./src/main/typescript/api/Jsf.ts",
+    devtool: false,
     output: {
         path: path.resolve(__dirname, './dist/' + libraryTarget),
         libraryTarget: libraryTarget,
@@ -22,7 +23,11 @@ const config: webpack.Configuration = {
     module: {
         rules: [
             // all files with a '.ts' or '.tsx' extension will be handled by 'ts-loader'
-            {test: /\.tsx?$/, use: ["ts-loader"], exclude: /node_modules/}
+            {
+                test: /\.tsx?$/, use: [{
+                    loader: "ts-loader"
+                }], exclude: /node_modules/
+            }
         ]
     },
 

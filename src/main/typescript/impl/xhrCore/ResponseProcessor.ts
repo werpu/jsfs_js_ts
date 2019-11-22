@@ -149,7 +149,7 @@ export class ResponseProcessor implements IResponseProcessor {
 
         let errorData = ErrorData.fromServerError(mergedErrorData);
 
-        this.externalContext.getIf(ON_ERROR).orElse(EMPTY_FUNC).value(errorData);
+        this.externalContext.getIf(ON_ERROR).orElse(this.internalContext.getIf(ON_ERROR).value).orElse(EMPTY_FUNC).value(errorData);
         Implementation.sendError(errorData);
     }
 
@@ -294,7 +294,7 @@ export class ResponseProcessor implements IResponseProcessor {
         let eventData = EventData.createFromRequest(this.request.value, this.externalContext, SUCCESS);
 
         //because some frameworks might decorate them over the context in the response
-        let eventHandler = this.externalContext.getIf(ON_EVENT).orElse(this.internalContext.getIf(ON_EVENT).value).orElse(function() {}).value;
+        let eventHandler = this.externalContext.getIf(ON_EVENT).orElse(this.internalContext.getIf(ON_EVENT).value).orElse(EMPTY_FUNC).value;
         Implementation.sendEvent(eventData,  eventHandler);
 
     }

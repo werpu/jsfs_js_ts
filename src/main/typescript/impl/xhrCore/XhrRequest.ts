@@ -48,6 +48,7 @@ import ENCODED_URL = Const.ENCODED_URL;
 import BEGIN = Const.BEGIN;
 import MALFORMEDXML = Const.MALFORMEDXML;
 import ERROR = Const.ERROR;
+import EMPTY_FUNC = Const.EMPTY_FUNC;
 
 
 /**
@@ -272,14 +273,9 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             }
         };
         try {
-            this.handleError(errorData);
-        }
-        finally {
-            try {
-                Implementation.sendError(errorData);
-            } finally {
-                resolve(errorData);
-            }
+            Implementation.sendError(errorData);
+        } finally {
+            resolve(errorData);
         }
         //non blocking non clearing
     }
@@ -330,7 +326,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     private resolveHandlerFunc(funcName: string) {
         return this.responseContext.getIf(funcName)
                 .orElse(this.requestContext.getIf(funcName).value)
-                .orElse(function () {}).value;
+                .orElse(EMPTY_FUNC).value;
     }
 
     private resolveTargetUrl(srcFormElement: HTMLFormElement) {

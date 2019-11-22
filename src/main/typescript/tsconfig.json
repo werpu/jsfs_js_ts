@@ -4,6 +4,7 @@
     "lib": [
       "es5",
       "es2015.collection",
+      "es2015.promise",
       "dom"
     ],
     "sourceMap": true,

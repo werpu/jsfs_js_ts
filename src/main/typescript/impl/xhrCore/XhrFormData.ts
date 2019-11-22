@@ -126,7 +126,8 @@ export class XhrFormData extends Config {
         let entries = [];
         for (let key in this.value) {
             if (this.value.hasOwnProperty(key)) {
-                entries.push(`${encodeURIComponent(key)}=${encodeURIComponent(this.value[key])}`)
+                //key value already encoded so no need to reencode them again
+                entries.push(`${key}=${this.value[key]}`)
             }
         }
         return entries.join("&")

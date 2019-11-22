@@ -65,6 +65,9 @@ export module ResonseDataResolver {
          */
         let externalContext = Config.fromNullable(context);
         let internalContext = externalContext.getIf(CTX_PARAM_MF_INTERNAL);
+        if(!internalContext.isPresent()) {
+            internalContext = Config.fromNullable({});
+        }
 
         /**
          * prepare storage for some deferred operations

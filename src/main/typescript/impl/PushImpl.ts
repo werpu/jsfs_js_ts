@@ -13,9 +13,7 @@ import {Const} from "./core/Const";
  */
 export module PushImpl {
 
-    import REASON_EXPIRED = Const.REASON_EXPIRED;
-    import MAX_RECONNECT_ATTEMPTS = Const.MAX_RECONNECT_ATTEMPTS;
-    import RECONNECT_INTERVAL = Const.RECONNECT_INTERVAL;
+
 
     const URL_PROTOCOL = window.location.protocol.replace("http", "ws") + "//";
 
@@ -170,17 +168,17 @@ export module PushImpl {
 
         onclose(event: any) {
             if (!this.socket
-                || (event.code == 1000 && event.reason == REASON_EXPIRED)
+                || (event.code == 1000 && event.reason == Const.REASON_EXPIRED)
                 || (event.code == 1008)
                 || (!this.reconnectAttempts)
-                || (this.reconnectAttempts >= MAX_RECONNECT_ATTEMPTS)) {
+                || (this.reconnectAttempts >= Const.MAX_RECONNECT_ATTEMPTS)) {
                 let clientIds = clientIdsByTokens[this.channelToken];
                 for (let i = clientIds.length - 1; i >= 0; i--) {
                     let socketClientId = clientIds[i];
                     components[socketClientId]['onclose'](event?.code, this?.channel, event);
                 }
             } else {
-                setTimeout(this.open, RECONNECT_INTERVAL * this.reconnectAttempts++);
+                setTimeout(this.open, Const.RECONNECT_INTERVAL * this.reconnectAttempts++);
             }
         };
 

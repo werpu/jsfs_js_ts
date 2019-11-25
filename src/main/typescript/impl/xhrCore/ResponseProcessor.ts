@@ -29,35 +29,10 @@ import getLocalOrGlobalConfig = ExtLang.getLocalOrGlobalConfig;
 import resolveSourceElement = ResonseDataResolver.resolveSourceElement;
 import resolveSourceForm = ResonseDataResolver.resolveSourceForm;
 
-import TAG_HEAD = Const.TAG_HEAD;
-import SEL_SCRIPTS_STYLES = Const.SEL_SCRIPTS_STYLES;
-import TAG_BODY = Const.TAG_BODY;
-import TAG_FORM = Const.TAG_FORM;
-import SOURCE = Const.SOURCE;
-import ERROR_NAME = Const.ERROR_NAME;
-import ERROR_MESSAGE = Const.ERROR_MESSAGE;
-import P_PARTIAL_SOURCE = Const.P_PARTIAL_SOURCE;
-import RESPONSE_XML = Const.RESPONSE_XML;
-import ON_ERROR = Const.ON_ERROR;
-import TAG_BEFORE = Const.TAG_BEFORE;
-import TAG_AFTER = Const.TAG_AFTER;
-import UPDATE_ELEMS = Const.UPDATE_ELEMS;
-import UPDATE_FORMS = Const.UPDATE_FORMS;
-import SEL_VIEWSTATE_ELEM = Const.SEL_VIEWSTATE_ELEM;
-import P_VIEWSTATE = Const.P_VIEWSTATE;
-import ATTR_URL = Const.ATTR_URL;
-import EMPTY_FUNC = Const.EMPTY_FUNC;
-import TAG_ATTR = Const.TAG_ATTR;
-import ATTR_NAME = Const.ATTR_NAME;
-import ATTR_VALUE = Const.ATTR_VALUE;
-import HTML_VIEWSTATE = Const.HTML_VIEWSTATE;
-import APPLIED_VST = Const.APPLIED_VST;
-import ATTR_ID = Const.ATTR_ID;
 
 import {ViewState} from "../core/ImplTypes";
 import {EventData} from "./EventData";
-import SUCCESS = Const.SUCCESS;
-import ON_EVENT = Const.ON_EVENT;
+
 
 /**
  * Response processor
@@ -77,15 +52,15 @@ export class ResponseProcessor implements IResponseProcessor {
     }
 
     replaceHead(shadowDocument: XMLQuery | DQ) {
-        let shadowHead = shadowDocument.querySelectorAll(TAG_HEAD);
+        let shadowHead = shadowDocument.querySelectorAll(Const.TAG_HEAD);
         if (!shadowHead.isPresent()) {
             return;
         }
         let shadowInnerHTML: string = <string>shadowHead.html().value;
-        let oldHead = DQ.querySelectorAll(TAG_HEAD);
+        let oldHead = DQ.querySelectorAll(Const.TAG_HEAD);
 
         //delete all to avoid script and style overlays
-        oldHead.querySelectorAll(SEL_SCRIPTS_STYLES).delete();
+        oldHead.querySelectorAll(Const.SEL_SCRIPTS_STYLES).delete();
 
         this.storeForEval(shadowHead);
     }
@@ -100,15 +75,15 @@ export class ResponseProcessor implements IResponseProcessor {
      */
     replaceBody(shadowDocument: XMLQuery | DQ) {
 
-        let shadowBody = shadowDocument.querySelectorAll(TAG_BODY);
+        let shadowBody = shadowDocument.querySelectorAll(Const.TAG_BODY);
         if (!shadowBody.isPresent()) {
             return;
         }
 
         let shadowInnerHTML: string = <string>shadowBody.html().value;
 
-        let resultingBody = <DQ>DQ.querySelectorAll(TAG_BODY).html(shadowInnerHTML);
-        let updateForms = resultingBody.querySelectorAll(TAG_FORM);
+        let resultingBody = <DQ>DQ.querySelectorAll(Const.TAG_BODY).html(shadowInnerHTML);
+        let updateForms = resultingBody.querySelectorAll(Const.TAG_FORM);
 
         resultingBody.copyAttrs(shadowBody);
 
@@ -140,16 +115,16 @@ export class ResponseProcessor implements IResponseProcessor {
          */
 
         let mergedErrorData = new Config({});
-        mergedErrorData.assign(SOURCE).value = this.externalContext.getIf(P_PARTIAL_SOURCE).get(0).value;
-        mergedErrorData.assign(ERROR_NAME).value = node.getIf(ERROR_NAME).textContent("");
-        mergedErrorData.assign(ERROR_MESSAGE).value = node.getIf(ERROR_MESSAGE).cDATAAsString;
+        mergedErrorData.assign(Const.SOURCE).value = this.externalContext.getIf(Const.P_PARTIAL_SOURCE).get(0).value;
+        mergedErrorData.assign(Const.ERROR_NAME).value = node.getIf(Const.ERROR_NAME).textContent("");
+        mergedErrorData.assign(Const.ERROR_MESSAGE).value = node.getIf(Const.ERROR_MESSAGE).cDATAAsString;
 
-        let hasResponseXML = this.internalContext.get(RESPONSE_XML).isPresent();
-        mergedErrorData.assignIf(hasResponseXML, RESPONSE_XML).value = this.internalContext.getIf(RESPONSE_XML).value.get(0).value;
+        let hasResponseXML = this.internalContext.get(Const.RESPONSE_XML).isPresent();
+        mergedErrorData.assignIf(hasResponseXML, Const.RESPONSE_XML).value = this.internalContext.getIf(Const.RESPONSE_XML).value.get(0).value;
 
         let errorData = ErrorData.fromServerError(mergedErrorData);
 
-        this.externalContext.getIf(ON_ERROR).orElse(this.internalContext.getIf(ON_ERROR).value).orElse(EMPTY_FUNC).value(errorData);
+        this.externalContext.getIf(Const.ON_ERROR).orElse(this.internalContext.getIf(Const.ON_ERROR).value).orElse(Const.EMPTY_FUNC).value(errorData);
         Implementation.sendError(errorData);
     }
 
@@ -161,7 +136,7 @@ export class ResponseProcessor implements IResponseProcessor {
     redirect(node: XMLQuery) {
         Assertions.assertUrlExists(node);
 
-        let redirectUrl = trim(node.attr(ATTR_URL).value);
+        let redirectUrl = trim(node.attr(Const.ATTR_URL).value);
         if (redirectUrl != "") {
             (<any>window).location.href = redirectUrl;
         }
@@ -176,7 +151,7 @@ export class ResponseProcessor implements IResponseProcessor {
      */
     update(node: XMLQuery, cdataBlock: string) {
         let result = DQ.byId(node.id.value).outerHTML(cdataBlock, false, false);
-        let sourceForm = result?.parents(TAG_FORM).orElse(result.byTagName(TAG_FORM, true));
+        let sourceForm = result?.parents(Const.TAG_FORM).orElse(result.byTagName(Const.TAG_FORM, true));
         if(sourceForm) {
             this.storeForPostProcessing(sourceForm, result);
         }
@@ -195,8 +170,8 @@ export class ResponseProcessor implements IResponseProcessor {
     attributes(node: XMLQuery) {
         let elem = DQ.byId(node.id.value);
 
-        node.byTagName(TAG_ATTR).each((item: XMLQuery) => {
-            elem.attr(item.attr(ATTR_NAME).value).value = item.attr(ATTR_VALUE).value;
+        node.byTagName(Const.TAG_ATTR).each((item: XMLQuery) => {
+            elem.attr(item.attr(Const.ATTR_NAME).value).value = item.attr(Const.ATTR_VALUE).value;
         });
     }
 
@@ -216,42 +191,42 @@ export class ResponseProcessor implements IResponseProcessor {
     insert(node: XMLQuery) {
         //let insertId = node.id; //not used atm
 
-        let before = node.attr(TAG_BEFORE);
-        let after = node.attr(TAG_AFTER);
+        let before = node.attr(Const.TAG_BEFORE);
+        let after = node.attr(Const.TAG_AFTER);
 
         let insertNodes = DQ.fromMarkup(<any>node.cDATAAsString);
 
         if (before.isPresent()) {
             let res = DQ.byId(before.value).insertBefore(insertNodes);
-            this.internalContext.assign(UPDATE_ELEMS).value.push(insertNodes);
+            this.internalContext.assign(Const.UPDATE_ELEMS).value.push(insertNodes);
         }
         if (after.isPresent()) {
             let domQuery = DQ.byId(after.value);
             domQuery.insertAfter(insertNodes);
 
-            this.internalContext.assign(UPDATE_ELEMS).value.push(insertNodes);
+            this.internalContext.assign(Const.UPDATE_ELEMS).value.push(insertNodes);
         }
     }
 
     insertWithSubtags(node: XMLQuery) {
-        let before = node.querySelectorAll(TAG_BEFORE);
-        let after = node.querySelectorAll(TAG_AFTER);
+        let before = node.querySelectorAll(Const.TAG_BEFORE);
+        let after = node.querySelectorAll(Const.TAG_AFTER);
 
         before.each(item => {
-            let insertId = item.attr(ATTR_ID);
+            let insertId = item.attr(Const.ATTR_ID);
             let insertNodes = DQ.fromMarkup(<any>item.cDATAAsString);
             if(insertId.isPresent()) {
                 DQ.byId(insertId.value).insertBefore(insertNodes);
-                this.internalContext.assign(UPDATE_ELEMS).value.push(insertNodes);
+                this.internalContext.assign(Const.UPDATE_ELEMS).value.push(insertNodes);
             }
         });
 
         after.each(item => {
-            let insertId = item.attr(ATTR_ID);
+            let insertId = item.attr(Const.ATTR_ID);
             let insertNodes = DQ.fromMarkup(<any>item.cDATAAsString);
             if(insertId.isPresent()) {
                 DQ.byId(insertId.value).insertAfter(insertNodes);
-                this.internalContext.assign(UPDATE_ELEMS).value.push(insertNodes);
+                this.internalContext.assign(Const.UPDATE_ELEMS).value.push(insertNodes);
             }
         });
     }
@@ -264,26 +239,26 @@ export class ResponseProcessor implements IResponseProcessor {
     processViewState(node: XMLQuery): boolean {
         if( this.isViewStateNode(node)) {
             let viewStateValue = node.textContent();
-            this.internalContext.assign(APPLIED_VST, node.id.value).value = new ViewState(node.id.value, viewStateValue);
+            this.internalContext.assign(Const.APPLIED_VST, node.id.value).value = new ViewState(node.id.value, viewStateValue);
             return true;
         }
         return false;
     }
 
     globalEval() {
-        let updateElems = new DQ(...this.internalContext.getIf(UPDATE_ELEMS).value);
+        let updateElems = new DQ(...this.internalContext.getIf(Const.UPDATE_ELEMS).value);
         updateElems.runCss();
         updateElems.runScripts();
     }
 
     fixViewStates() {
-        Stream.ofAssoc<ViewState>(this.internalContext.getIf(APPLIED_VST).orElse({}).value)
+        Stream.ofAssoc<ViewState>(this.internalContext.getIf(Const.APPLIED_VST).orElse({}).value)
             .each((item: Array<any>) => {
                 let key = item[0];
                 let value: ViewState =item[1];
                 let nameSpace = DQ.byId(value.nameSpace).orElse(document.body);
-                let affectedForms = nameSpace.byTagName(TAG_FORM);
-                let affectedForms2 = nameSpace.filter(item => item.tagName.orElse("").value.toLowerCase() == TAG_FORM);
+                let affectedForms = nameSpace.byTagName(Const.TAG_FORM);
+                let affectedForms2 = nameSpace.filter(item => item.tagName.orElse("").value.toLowerCase() == Const.TAG_FORM);
 
 
                 this.appendViewStateToForms(new DomQuery(affectedForms, affectedForms2), value.value);
@@ -291,10 +266,10 @@ export class ResponseProcessor implements IResponseProcessor {
     }
 
     done() {
-        let eventData = EventData.createFromRequest(this.request.value, this.externalContext, SUCCESS);
+        let eventData = EventData.createFromRequest(this.request.value, this.externalContext, Const.SUCCESS);
 
         //because some frameworks might decorate them over the context in the response
-        let eventHandler = this.externalContext.getIf(ON_EVENT).orElse(this.internalContext.getIf(ON_EVENT).value).orElse(EMPTY_FUNC).value;
+        let eventHandler = this.externalContext.getIf(Const.ON_EVENT).orElse(this.internalContext.getIf(Const.ON_EVENT).value).orElse(Const.EMPTY_FUNC).value;
         Implementation.sendEvent(eventData,  eventHandler);
     }
 
@@ -305,7 +280,7 @@ export class ResponseProcessor implements IResponseProcessor {
 
     private appendViewStateToForms(forms: DQ, viewState: string) {
         forms.each((form: DQ) => {
-            let viewStateElems = form.querySelectorAll(SEL_VIEWSTATE_ELEM)
+            let viewStateElems = form.querySelectorAll(Const.SEL_VIEWSTATE_ELEM)
                 .orElseLazy(() => this.newViewStateElement(form));
 
             viewStateElems.attr("value").value = viewState;
@@ -319,7 +294,7 @@ export class ResponseProcessor implements IResponseProcessor {
      * (usually a form node)
      */
     private newViewStateElement(parent: DQ): DQ {
-        let newViewState = DQ.fromMarkup(HTML_VIEWSTATE);
+        let newViewState = DQ.fromMarkup(Const.HTML_VIEWSTATE);
         newViewState.appendTo(parent);
         return newViewState;
     }
@@ -336,18 +311,18 @@ export class ResponseProcessor implements IResponseProcessor {
     }
 
     private storeForUpdate(updateForms: DQ) {
-        this.internalContext.assign(UPDATE_FORMS).value.push(updateForms);
+        this.internalContext.assign(Const.UPDATE_FORMS).value.push(updateForms);
     }
 
     private storeForEval(toBeEvaled: DQ) {
-        this.internalContext.assign(UPDATE_ELEMS).value.push(toBeEvaled);
+        this.internalContext.assign(Const.UPDATE_ELEMS).value.push(toBeEvaled);
     }
 
     private isViewStateNode(node: XMLQuery) {
         let separatorchar = (<any>window).jsf.separatorchar;
-        return "undefined" != typeof node?.id?.value && ( node?.id?.value == P_VIEWSTATE ||
-            node?.id?.value?.indexOf([separatorchar, P_VIEWSTATE].join("")) != -1 ||
-            node?.id?.value?.indexOf([P_VIEWSTATE, separatorchar].join("")) != -1 );
+        return "undefined" != typeof node?.id?.value && ( node?.id?.value == Const.P_VIEWSTATE ||
+            node?.id?.value?.indexOf([separatorchar, Const.P_VIEWSTATE].join("")) != -1 ||
+            node?.id?.value?.indexOf([Const.P_VIEWSTATE, separatorchar].join("")) != -1 );
     }
 
 }

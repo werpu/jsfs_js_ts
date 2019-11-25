@@ -19,29 +19,13 @@ import {Const} from "../core/Const";
 import {ResponseProcessor} from "./ResponseProcessor";
 import {ResonseDataResolver} from "./ResonseDataResolver";
 import {IResponseProcessor} from "./IResponseProcessor";
-import RESPONSE_XML = Const.RESPONSE_XML;
-import RESP_PARTIAL = Const.RESP_PARTIAL;
-import PARTIAL_ID = Const.PARTIAL_ID;
-import CMD_ERROR = Const.CMD_ERROR;
-import CMD_REDIRECT = Const.CMD_REDIRECT;
-import CMD_CHANGES = Const.CMD_CHANGES;
-import CMD_UPDATE = Const.CMD_UPDATE;
-import CMD_EVAL = Const.CMD_EVAL;
-import CMD_INSERT = Const.CMD_INSERT;
-import CMD_DELETE = Const.CMD_DELETE;
-import CMD_ATTRIBUTES = Const.CMD_ATTRIBUTES;
-import CMD_EXTENSION = Const.CMD_EXTENSION;
-import P_VIEWROOT = Const.P_VIEWROOT;
-import P_VIEWHEAD = Const.P_VIEWHEAD;
-import P_VIEWBODY = Const.P_VIEWBODY;
-import P_VIEWSTATE = Const.P_VIEWSTATE;
+
 
 export module Response {
 
     import resolveResponseXML = ResonseDataResolver.resolveResponseXML;
     import resolveContexts = ResonseDataResolver.resolveContexts;
-    import TAG_BEFORE = Const.TAG_BEFORE;
-    import TAG_AFTER = Const.TAG_AFTER;
+
 
     /**
      * Standardized jsf.js response
@@ -61,10 +45,10 @@ export module Response {
         let responseXML: XMLQuery = resolveResponseXML(req);
         let responseProcessor = new ResponseProcessor(req, externalContext, internalContext);
 
-        internalContext.assign(RESPONSE_XML).value = responseXML;
+        internalContext.assign(Const.RESPONSE_XML).value = responseXML;
 
         //we now process the partial tags, or in none given raise an error
-        responseXML.querySelectorAll(RESP_PARTIAL)
+        responseXML.querySelectorAll(Const.RESP_PARTIAL)
             .each(item => processPartialTag(<XMLQuery>item, responseProcessor, internalContext));
 
         //we now process the viewstates and the evals deferred
@@ -82,19 +66,19 @@ export module Response {
      */
      function processPartialTag(node: XMLQuery, responseProcessor: IResponseProcessor, internalContext) {
 
-        internalContext.assign(PARTIAL_ID).value = node.id;
-        const SEL_SUB_TAGS = [CMD_ERROR, CMD_REDIRECT, CMD_CHANGES].join(",");
+        internalContext.assign(Const.PARTIAL_ID).value = node.id;
+        const SEL_SUB_TAGS = [Const.CMD_ERROR, Const.CMD_REDIRECT, Const.CMD_CHANGES].join(",");
 
         //now we can process the main operations
         node.getIf(SEL_SUB_TAGS).each((node: XMLQuery) => {
             switch (node.tagName.value) {
-                case CMD_ERROR:
+                case Const.CMD_ERROR:
                     responseProcessor.error(node);
                     break;
-                case CMD_REDIRECT:
+                case Const.CMD_REDIRECT:
                     responseProcessor.redirect(node);
                     break;
-                case CMD_CHANGES:
+                case Const.CMD_CHANGES:
                     processChangesTag(node, responseProcessor);
                     break;
             }
@@ -104,7 +88,7 @@ export module Response {
 
     let processInsert = function (responseProcessor: IResponseProcessor, node: XMLQuery) {
          //path1 insert after as child tags
-         if(node.querySelectorAll([TAG_BEFORE, TAG_AFTER].join(",")).length) {
+         if(node.querySelectorAll([Const.TAG_BEFORE, Const.TAG_AFTER].join(",")).length) {
              responseProcessor.insertWithSubtags(node);
          } else { //insert before after with id
              responseProcessor.insert(node);
@@ -119,31 +103,31 @@ export module Response {
      * @param responseProcessor
      */
      function processChangesTag(node: XMLQuery, responseProcessor: IResponseProcessor): boolean {
-        const ALLOWED_TAGS = [CMD_UPDATE, CMD_EVAL, CMD_INSERT, CMD_DELETE, CMD_ATTRIBUTES, CMD_EXTENSION].join(",");
+        const ALLOWED_TAGS = [Const.CMD_UPDATE, Const.CMD_EVAL, Const.CMD_INSERT, Const.CMD_DELETE, Const.CMD_ATTRIBUTES, Const.CMD_EXTENSION].join(",");
         node.getIf(ALLOWED_TAGS).each(
             (node: XMLQuery) => {
                 switch (node.tagName.value) {
-                    case CMD_UPDATE:
+                    case Const.CMD_UPDATE:
                         processUpdateTag(node, responseProcessor);
                         break;
 
-                    case CMD_EVAL:
+                    case Const.CMD_EVAL:
                         responseProcessor.eval(node);
                         break;
 
-                    case CMD_INSERT:
+                    case Const.CMD_INSERT:
                         processInsert(responseProcessor, node);
                         break;
 
-                    case CMD_DELETE:
+                    case Const.CMD_DELETE:
                         responseProcessor.delete(node);
                         break;
 
-                    case CMD_ATTRIBUTES:
+                    case Const.CMD_ATTRIBUTES:
                         responseProcessor.attributes(node);
                         break;
 
-                    case CMD_EXTENSION:
+                    case Const.CMD_EXTENSION:
                         break;
                 }
             }
@@ -174,15 +158,15 @@ export module Response {
      function handleElementUpdate(node: XMLQuery, responseProcessor: IResponseProcessor) {
         let cdataBlock = node.cDATAAsString;
         switch (node.id.value) {
-            case P_VIEWROOT :
+            case Const.P_VIEWROOT :
                 responseProcessor.replaceViewRoot(DQ.fromMarkup(cdataBlock.substring(cdataBlock.indexOf("<html"))));
                 break;
 
-            case P_VIEWHEAD:
+            case Const.P_VIEWHEAD:
                 responseProcessor.replaceHead(DQ.fromMarkup(cdataBlock));
                 break;
 
-            case P_VIEWBODY:
+            case Const.P_VIEWBODY:
                 responseProcessor.replaceBody(DQ.fromMarkup(cdataBlock));
                 break;
 

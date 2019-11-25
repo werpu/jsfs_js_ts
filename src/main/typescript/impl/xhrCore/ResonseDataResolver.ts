@@ -18,14 +18,7 @@ import {Config, Optional, XMLQuery} from "../../ext/monadish";
 import {Const} from "../core/Const";
 import {Assertions} from "../util/Assertions";
 import {DQ} from "../../ext/monadish/DomQuery";
-import CTX_PARAM_SRC_FRM_ID = Const.CTX_PARAM_SRC_FRM_ID;
-import TAG_FORM = Const.TAG_FORM;
-import CTX_PARAM_SRC_CTL_ID = Const.CTX_PARAM_SRC_CTL_ID;
-import SOURCE = Const.SOURCE;
-import CTX_PARAM_MF_INTERNAL = Const.CTX_PARAM_MF_INTERNAL;
-import UPDATE_FORMS = Const.UPDATE_FORMS;
-import UPDATE_ELEMS = Const.UPDATE_ELEMS;
-import SEL_RESPONSE_XML = Const.SEL_RESPONSE_XML;
+
 
 /**
  * Resolver for various aspects of the response data
@@ -45,7 +38,7 @@ export module ResonseDataResolver {
      *
      */
     export function resolveResponseXML(request: Config): XMLQuery {
-        let ret = new XMLQuery(request.getIf(SEL_RESPONSE_XML).value);
+        let ret = new XMLQuery(request.getIf(Const.SEL_RESPONSE_XML).value);
         Assertions.assertValidXMLResponse(ret);
 
         return ret;
@@ -64,7 +57,7 @@ export module ResonseDataResolver {
          * some internal values
          */
         let externalContext = Config.fromNullable(context);
-        let internalContext = externalContext.getIf(CTX_PARAM_MF_INTERNAL);
+        let internalContext = externalContext.getIf(Const.CTX_PARAM_MF_INTERNAL);
         if(!internalContext.isPresent()) {
             internalContext = Config.fromNullable({});
         }
@@ -72,8 +65,8 @@ export module ResonseDataResolver {
         /**
          * prepare storage for some deferred operations
          */
-        internalContext.assign(UPDATE_FORMS).value = [];
-        internalContext.assign(UPDATE_ELEMS).value = [];
+        internalContext.assign(Const.UPDATE_FORMS).value = [];
+        internalContext.assign(Const.UPDATE_ELEMS).value = [];
         return {externalContext, internalContext};
     }
 
@@ -99,12 +92,12 @@ export module ResonseDataResolver {
      * @param elem
      */
     export function resolveSourceForm(internalContext: Config, elem: DQ): DQ {
-        let sourceFormId = internalContext.getIf(CTX_PARAM_SRC_FRM_ID);
+        let sourceFormId = internalContext.getIf(Const.CTX_PARAM_SRC_FRM_ID);
         let sourceForm = new DQ(sourceFormId.isPresent() ? document.forms[sourceFormId.value] : null);
 
-        sourceForm = sourceForm.orElse(elem.parents(TAG_FORM))
-            .orElse(elem.querySelectorAll(TAG_FORM))
-            .orElse(DQ.querySelectorAll(TAG_FORM));
+        sourceForm = sourceForm.orElse(elem.parents(Const.TAG_FORM))
+            .orElse(elem.querySelectorAll(Const.TAG_FORM))
+            .orElse(DQ.querySelectorAll(Const.TAG_FORM));
 
         return sourceForm;
     }
@@ -112,8 +105,8 @@ export module ResonseDataResolver {
 
     function resolveSourceElementId(context: Config, internalContext: Config): Optional<string> {
         //?internal context?? used to be external one
-        return internalContext.getIf(CTX_PARAM_SRC_CTL_ID)
-            .orElseLazy(() => context.getIf(SOURCE, "id").value);
+        return internalContext.getIf(Const.CTX_PARAM_SRC_CTL_ID)
+            .orElseLazy(() => context.getIf(Const.SOURCE, "id").value);
     }
 
 }

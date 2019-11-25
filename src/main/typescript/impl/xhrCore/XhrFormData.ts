@@ -21,7 +21,7 @@ import {Implementation} from "../AjaxImpl";
 import {Stream} from "../../ext/monadish/Stream";
 import {DQ} from "../../ext/monadish/DomQuery";
 import isString = Lang.isString;
-import P_VIEWSTATE = Const.P_VIEWSTATE;
+
 
 declare let jsf: any;
 
@@ -71,7 +71,7 @@ export class XhrFormData extends Config {
 
         this.encodeSubmittableFields(this, <DQ>this.dataSource, this.partialIdsArray);
 
-        if (this.getIf(P_VIEWSTATE).isPresent()) {
+        if (this.getIf(Const.P_VIEWSTATE).isPresent()) {
             return;
         }
 

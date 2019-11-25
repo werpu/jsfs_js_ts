@@ -15,7 +15,7 @@
  */
 
 import {Const} from "./Const";
-import P_VIEWSTATE = Const.P_VIEWSTATE;
+
 
 export interface IdValueHolder {
 
@@ -33,7 +33,7 @@ export class ViewState implements IdValueHolder {
     nameSpace: string;
 
     constructor(public id: string, public value: string) {
-        let viewStatePos = id.indexOf(P_VIEWSTATE);
+        let viewStatePos = id.indexOf(Const.P_VIEWSTATE);
         this.nameSpace = viewStatePos > 0 ? id.substr(0, viewStatePos - 1) : "";
     }
 

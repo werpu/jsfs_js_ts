@@ -27,27 +27,7 @@ import {DQ} from "../../ext/monadish/DomQuery";
 import {ExtLang} from "../util/Lang";
 import {Stream} from "../../ext/monadish";
 import failSaveExecute = ExtLang.failSaveExecute;
-import COMPLETE = Const.COMPLETE;
-import NO_TIMEOUT = Const.NO_TIMEOUT;
-import REQ_TYPE_POST = Const.REQ_TYPE_POST;
-import URL_ENCODED = Const.URL_ENCODED;
-import ON_EVENT = Const.ON_EVENT;
-import ON_ERROR = Const.ON_ERROR;
-import MULTIPART = Const.MULTIPART;
-import CTX_PARAM_PASS_THR = Const.CTX_PARAM_PASS_THR;
-import CTX_PARAM_MF_INTERNAL = Const.CTX_PARAM_MF_INTERNAL;
-import CONTENT_TYPE = Const.CONTENT_TYPE;
-import HEAD_FACES_REQ = Const.HEAD_FACES_REQ;
-import VAL_AJAX = Const.VAL_AJAX;
-import STATE_EVT_TIMEOUT = Const.STATE_EVT_TIMEOUT;
-import REQ_ACCEPT = Const.REQ_ACCEPT;
-import STD_ACCEPT = Const.STD_ACCEPT;
-import REQ_TYPE_GET = Const.REQ_TYPE_GET;
-import ENCODED_URL = Const.ENCODED_URL;
-import BEGIN = Const.BEGIN;
-import MALFORMEDXML = Const.MALFORMEDXML;
-import ERROR = Const.ERROR;
-import EMPTY_FUNC = Const.EMPTY_FUNC;
+
 
 
 /**
@@ -97,9 +77,9 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         private requestContext: Config,
         private internalContext: Config,
         private partialIdsArray = [],
-        private timeout = NO_TIMEOUT,
-        private ajaxType = REQ_TYPE_POST,
-        private contentType = URL_ENCODED,
+        private timeout = Const.NO_TIMEOUT,
+        private ajaxType = Const.REQ_TYPE_POST,
+        private contentType = Const.URL_ENCODED,
         private xhrObject = new XMLHttpRequest()
     ) {
         /*
@@ -119,11 +99,11 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             let viewState = jsf.getViewState(this.sourceForm.getAsElem(0).value);
             let formData: XhrFormData = new XhrFormData(viewState);
 
-            this.contentType = formData.isMultipartRequest ? MULTIPART : this.contentType;
+            this.contentType = formData.isMultipartRequest ? Const.MULTIPART : this.contentType;
 
             //next step the pass through parameters are merged in for post params
             let requestContext = this.requestContext;
-            let passThroughParams = requestContext.getIf(CTX_PARAM_PASS_THR);
+            let passThroughParams = requestContext.getIf(Const.CTX_PARAM_PASS_THR);
             formData.shallowMerge(passThroughParams);
 
             this.responseContext = passThroughParams.deepCopy;
@@ -131,11 +111,11 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             //we have to shift the internal passthroughs around to build up our response context
             let responseContext = this.responseContext;
 
-            responseContext.assign(CTX_PARAM_MF_INTERNAL).value = this.internalContext.value;
+            responseContext.assign(Const.CTX_PARAM_MF_INTERNAL).value = this.internalContext.value;
 
             //per spec the onevent and onerrors must be passed through to the response
-            responseContext.assign(ON_EVENT).value = requestContext.getIf(ON_EVENT).value;
-            responseContext.assign(ON_ERROR).value = requestContext.getIf(ON_ERROR).value;
+            responseContext.assign(Const.ON_EVENT).value = requestContext.getIf(Const.ON_EVENT).value;
+            responseContext.assign(Const.ON_ERROR).value = requestContext.getIf(Const.ON_ERROR).value;
 
             xhrObject.open(this.ajaxType, this.resolveFinalUrl(formData), true);
 
@@ -146,15 +126,15 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             //normal browsers should resolve this
             //tests can quietly fail on this one
 
-            fsExec(() => xhrObject.setRequestHeader(CONTENT_TYPE, `${this.contentType}; charset=utf-8`));
-            fsExec(() => xhrObject.setRequestHeader(HEAD_FACES_REQ, VAL_AJAX));
+            fsExec(() => xhrObject.setRequestHeader(Const.CONTENT_TYPE, `${this.contentType}; charset=utf-8`));
+            fsExec(() => xhrObject.setRequestHeader(Const.HEAD_FACES_REQ, Const.VAL_AJAX));
 
             //probably not needed anymore, will test this
             //some webkit based mobile browsers do not follow the w3c spec of
             // setting the accept headers automatically
-            fsExec(() => xhrObject.setRequestHeader(REQ_ACCEPT, STD_ACCEPT));
+            fsExec(() => xhrObject.setRequestHeader(Const.REQ_ACCEPT, Const.STD_ACCEPT));
 
-            this.sendEvent(BEGIN);
+            this.sendEvent(Const.BEGIN);
 
             this.sendRequest(formData);
 
@@ -245,13 +225,13 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     }
 
     protected onTimeout(resolve: Consumer<any>, reject: Consumer<any>) {
-        this.sendEvent(STATE_EVT_TIMEOUT);
+        this.sendEvent(Const.STATE_EVT_TIMEOUT);
         reject();
     }
 
     protected onSuccess(data: any, resolve: Consumer<any>, reject: Consumer<any>) {
 
-        this.sendEvent(COMPLETE);
+        this.sendEvent(Const.COMPLETE);
 
         //malforms always result in empty response xml
         if(!this?.xhrObject?.responseXML) {
@@ -265,8 +245,8 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     private handleMalFormedXML(resolve: Function) {
         this.stopProgress = true;
         let errorData = {
-            type: ERROR,
-            status: MALFORMEDXML,
+            type: Const.ERROR,
+            status: Const.MALFORMEDXML,
             responseCode: 200,
             responseText: this.xhrObject?.responseText,
             source: {
@@ -303,7 +283,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             //this in onError but also we cannot swallow it
             //we need to resolve the local handlers lazyly,
             //because some frameworks might decorate them over the context in the response
-            let eventHandler = this.resolveHandlerFunc(ON_EVENT);;
+            let eventHandler = this.resolveHandlerFunc(Const.ON_EVENT);;
             Implementation.sendEvent(eventData,  eventHandler);
         } catch (e) {
             this.handleError(e);
@@ -314,7 +294,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     private handleError(exception) {
         let errorData = ErrorData.fromClient(exception);
 
-        let eventHandler = this.resolveHandlerFunc(ON_ERROR);
+        let eventHandler = this.resolveHandlerFunc(Const.ON_ERROR);
         Implementation.sendError(errorData, eventHandler);
     }
 
@@ -327,17 +307,17 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     private resolveHandlerFunc(funcName: string) {
         return this.responseContext.getIf(funcName)
                 .orElse(this.requestContext.getIf(funcName).value)
-                .orElse(EMPTY_FUNC).value;
+                .orElse(Const.EMPTY_FUNC).value;
     }
 
     private resolveTargetUrl(srcFormElement: HTMLFormElement) {
-        return (typeof srcFormElement.elements[ENCODED_URL] == 'undefined') ?
+        return (typeof srcFormElement.elements[Const.ENCODED_URL] == 'undefined') ?
             srcFormElement.action :
-            srcFormElement.elements[ENCODED_URL].value;
+            srcFormElement.elements[Const.ENCODED_URL].value;
     }
 
     protected sendRequest(formData: XhrFormData) {
-        let isPost = this.ajaxType != REQ_TYPE_GET;
+        let isPost = this.ajaxType != Const.REQ_TYPE_GET;
         if(formData.isMultipartRequest) {
             this.xhrObject.send((isPost) ? formData.toFormData() : null);
         } else {
@@ -348,7 +328,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     private resolveFinalUrl(formData: XhrFormData) {
         let targetUrl = this.resolveTargetUrl(<HTMLFormElement>this.sourceForm.getAsElem(0).value);
 
-        return targetUrl + (this.ajaxType == REQ_TYPE_GET ? "?" + formData.toString() : "");
+        return targetUrl + (this.ajaxType == Const.REQ_TYPE_GET ? "?" + formData.toString() : "");
     }
 
 }

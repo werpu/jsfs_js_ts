@@ -2,11 +2,7 @@ import {Config, DQ} from "../../ext/monadish";
 import {Const} from "../core/Const";
 import {ExtLang} from "../util/Lang";
 import getMessage = ExtLang.getMessage;
-import EVENT = Const.EVENT;
-import P_PARTIAL_SOURCE = Const.P_PARTIAL_SOURCE;
-import BEGIN = Const.BEGIN;
-import CTX_PARAM_PASS_THR = Const.CTX_PARAM_PASS_THR;
-import SOURCE = Const.SOURCE;
+
 
 export class EventData {
     type: string;
@@ -21,18 +17,18 @@ export class EventData {
         let eventData = new EventData();
         let UNKNOWN = getMessage("UNKNOWN");
 
-        eventData.type = EVENT;
+        eventData.type = Const.EVENT;
         eventData.status = name;
 
-        let sourceId: string = context.getIf(SOURCE)
-            .orElse(context.getIf(P_PARTIAL_SOURCE).value)
-            .orElse(context.getIf(CTX_PARAM_PASS_THR, P_PARTIAL_SOURCE).value).value;
+        let sourceId: string = context.getIf(Const.SOURCE)
+            .orElse(context.getIf(Const.P_PARTIAL_SOURCE).value)
+            .orElse(context.getIf(Const.CTX_PARAM_PASS_THR, Const.P_PARTIAL_SOURCE).value).value;
         if(sourceId) {
             eventData.source = DQ.byId(sourceId).first().value.value;
         }
 
 
-        if (name !== BEGIN) {
+        if (name !== Const.BEGIN) {
             eventData.responseCode = request?.status?.toString();
             eventData.responseText = request?.responseText;
             eventData.responseXML = request?.responseXML;

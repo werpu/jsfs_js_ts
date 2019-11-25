@@ -20,7 +20,6 @@
 import {Lang as LangBase} from "../../ext/monadish/Lang";
 import {Messages} from "../i18n/Messages";
 import {Config, Optional} from "../../ext/monadish/Monad";
-import {CancellablePromise} from "../../ext/monadish/Promise";
 import {DomQuery, DQ} from "../../ext/monadish/DomQuery";
 import {Stream} from "../../ext/monadish";
 
@@ -30,14 +29,6 @@ export module ExtLang {
      let installedLocale: Messages;
      let nameSpace = "impl/util/Lang/";
 
-    /**
-     * instead of Polyfills we rely on class
-     * producers
-     * @constructor
-     */
-    export function getPromise(): any {
-        return Promise ?? CancellablePromise;
-    }
 
     export function getLanguage(): string {
         //TODO global config override

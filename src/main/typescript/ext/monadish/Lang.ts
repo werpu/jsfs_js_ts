@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import {CancellablePromise} from "./Promise";
 import {Optional} from "./Monad";
 
 /**
@@ -120,35 +119,6 @@ export module Lang {
 
         //in any other case we do a strong string comparison
         return finalSource.toLowerCase() === finalDest.toLowerCase();
-    }
-
-    /*
-     * Promise wrappers for timeout and interval
-     */
-    export function timeout(timeout: number): CancellablePromise {
-        let handler: any = null;
-        return new CancellablePromise((apply: Function, reject: Function) => {
-            handler = setTimeout(() => apply(), timeout);
-        }, () => {
-            if (handler) {
-                clearTimeout(handler);
-                handler = null;
-            }
-        });
-    }
-
-    export function interval(timeout: number): CancellablePromise {
-        let handler: any = null;
-        return new CancellablePromise((apply: Function, reject: Function) => {
-            handler = setInterval(() => {
-                apply();
-            }, timeout);
-        }, () => {
-            if (handler) {
-                clearInterval(handler);
-                handler = null;
-            }
-        });
     }
 
     /**

@@ -25,9 +25,8 @@ import {ErrorData} from "./ErrorData";
 import {EventData} from "./EventData";
 import {DQ} from "../../ext/monadish/DomQuery";
 import {ExtLang} from "../util/Lang";
-import {Assertions} from "../util/Assertions";
+import {Stream} from "../../ext/monadish";
 import failSaveExecute = ExtLang.failSaveExecute;
-import getPromise = ExtLang.getPromise;
 import COMPLETE = Const.COMPLETE;
 import NO_TIMEOUT = Const.NO_TIMEOUT;
 import REQ_TYPE_POST = Const.REQ_TYPE_POST;
@@ -63,18 +62,19 @@ import EMPTY_FUNC = Const.EMPTY_FUNC;
 
 declare let jsf: any;
 
+
+
 export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
-
-    /** predefined method */
-
-
-    private xhrPromise: Promise<XMLHttpRequest>;
-
-
 
     private responseContext: Config;
 
     private stopProgress = false;
+
+    /**
+     * helper support so that we do not have to drag in Promise shims
+     */
+    private catchFuncs: Array<Function> = [];
+    private  thenFunc: Array<Function> = [];
 
     /**
      * Reqired Parameters
@@ -102,7 +102,11 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         private contentType = URL_ENCODED,
         private xhrObject = new XMLHttpRequest()
     ) {
-
+        /*
+        * we omit promises here
+        * some browsers do not support it and we do not need shim code
+        */
+        this.registerXhrCallbacks((data: any) => {this.resolve(data)}, (data: any) => {this.reject(data)});
     }
 
     start(): AsyncRunnable<XMLHttpRequest> {
@@ -169,40 +173,36 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         }
     }
 
-    /*
-     * Promise bindings
-     *
-     * We have to delegate a few calls to our promise
-     * to make the callback from the outside and inside work with our
-     * xhr promise
-     *
-     */
-    protected get $promise(): Promise<any> {
-        if (!this.xhrPromise) {
-            this.xhrPromise = new (getPromise())((resolve: Consumer<any>, reject: Consumer<any>) => {
-                //to allow callback into xhr over promises
-                //we have to register the callbacks
-                //accordingly
-                this.registerXhrCallbacks(resolve, reject);
-            });
-        }
-        return this.xhrPromise;
+    resolve(data: any) {
+        Stream.of(...this.thenFunc).reduce((inputVal: any, thenFunc: any) => {
+            return thenFunc(inputVal);
+        }, data);
     }
 
+    reject(data: any) {
+        Stream.of(...this.catchFuncs).reduce((inputVal: any, catchFunc: any) => {
+            return catchFunc(inputVal);
+        }, data);
+    }
+
+
     catch(func: (data: any) => any): AsyncRunnable<XMLHttpRequest> {
-        this.$promise.catch(func);
+        //this.$promise.catch(func);
+        this.catchFuncs.push(func);
         return this;
     }
 
     finally(func: () => void): AsyncRunnable<XMLHttpRequest> {
         //no ie11 support we probably are going to revert to shims for that one
-        (<any>this.$promise).then(func).catch(func);
-        //(<any>this.$promise).then(func);
+        //(<any>this.$promise).then(func).catch(func);
+        this.catchFuncs.push(func);
+        this.thenFunc.push(func);
         return this;
     }
 
     then(func: (data: any) => any): AsyncRunnable<XMLHttpRequest> {
-        this.$promise.then(func);
+        //this.$promise.then(func);
+        this.thenFunc.push(func);
         return this;
     }
 
@@ -350,7 +350,5 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
 
         return targetUrl + (this.ajaxType == REQ_TYPE_GET ? "?" + formData.toString() : "");
     }
-
-
 
 }

@@ -166,7 +166,7 @@ export class Promise implements IPromise {
                 funcResult = funcResult.flatMap();
                 val = funcResult.value;
                 if (val instanceof Promise) {
-                    //var func = (newVal: any) => {this.resolve(newVal)};
+                    //let func = (newVal: any) => {this.resolve(newVal)};
                     //func.__last__  = true;
                     //val.then(func);
                     this.transferIntoNewPromise(val);
@@ -188,9 +188,9 @@ export class Promise implements IPromise {
             if (this.allFuncs[0].finally) {
                 break;
             }
-            var fn = this.allFuncs.shift();
+            let fn = this.allFuncs.shift();
             if (fn.catch) {
-                var funcResult = Optional.fromNullable(fn.catch(val));
+                let funcResult = Optional.fromNullable(fn.catch(val));
                 if (funcResult.isPresent()) {
                     funcResult = funcResult.flatMap();
                     val = funcResult.value;
@@ -213,7 +213,7 @@ export class Promise implements IPromise {
 
     protected appyFinally() {
         while (this.allFuncs.length) {
-            var fn = this.allFuncs.shift();
+            let fn = this.allFuncs.shift();
             if (fn.finally) {
                 fn.finally();
             }
@@ -236,7 +236,7 @@ export class Promise implements IPromise {
     }
 
     private transferIntoNewPromise(val: any) {
-        for (var cnt = 0; cnt < this.allFuncs.length; cnt++) {
+        for (let cnt = 0; cnt < this.allFuncs.length; cnt++) {
             for (let key in this.allFuncs[cnt]) {
                 val[key](this.allFuncs[cnt][key]);
             }

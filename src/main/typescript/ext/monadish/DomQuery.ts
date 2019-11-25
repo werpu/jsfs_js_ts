@@ -1313,7 +1313,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
 
     /**
      * resolves an attribute holder compared
-     * @param attr
+     * @param attrName the attribute name
      */
     private resolveAttributeHolder(attrName: string = "value"): HTMLFormElement | any {
         let ret = [];
@@ -1338,6 +1338,8 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
             return;
         }
 
+        let focusElementId = document?.activeElement?.id;
+        let caretPosition = (focusElementId) ? DomQuery.getCaretPosition(document.activeElement) : null;
         let nodes = DomQuery.fromMarkup(markup);
         let res = [];
         let toReplace = this.getAsElem(0).value;
@@ -1363,6 +1365,12 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         }
         if (runEmbeddedCss) {
             this.runCss();
+        }
+
+        let focusElement = DomQuery.byId(focusElementId);
+        if(focusElementId && focusElement.isPresent() &&
+            caretPosition != null && "undefined" != typeof caretPosition) {
+            focusElement.eachElem(item => DomQuery.setCaretPosition(item, caretPosition));
         }
 
         return nodes;
@@ -1549,7 +1557,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
      */
     fireEvent(eventName: string) {
         this.eachElem((node: Element) => {
-            var doc;
+            let doc;
             if (node.ownerDocument) {
                 doc = node.ownerDocument;
             } else if (node.nodeType == 9) {
@@ -1561,7 +1569,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
 
             if (node.dispatchEvent) {
                 // Gecko-style approach (now the standard) takes more work
-                var eventClass = "";
+                let eventClass = "";
 
                 // Different events have different event classes.
                 // If this switch statement can't map an eventName to an eventClass,
@@ -1592,7 +1600,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
                 node.dispatchEvent(event);
             } else if ((<any>node).fireEvent) {
                 // IE-old school style, you can drop this if you don't need to support IE8 and lower
-                var event = doc.createEventObject();
+                let event = doc.createEventObject();
                 event.synthetic = true; // allow detection of synthetic events
                 (<any>node).fireEvent("on" + eventName, event);
             }
@@ -1755,6 +1763,35 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
 
     reset() {
         this.pos = -1;
+    }
+
+    //from
+    // http://blog.vishalon.net/index.php/javascript-getting-and-setting-caret-position-in-textarea/
+    static getCaretPosition(ctrl: any) {
+        let caretPos = 0;
+
+        try {
+            if ((<any>document)?.selection) {
+                ctrl.focus();
+                let selection = (<any>document).selection.createRange();
+                //the selection now is start zero
+                selection.moveStart('character', -ctrl.value.length);
+                //the caretposition is the selection start
+                caretPos = selection.text.length;
+            }
+        } catch (e) {
+            //now this is ugly, but not supported input types throw errors for selectionStart
+            //just in case someone dumps this code onto unsupported browsers
+        }
+        return caretPos;
+    }
+
+    static setCaretPosition(ctrl: any, pos: number) {
+            let range = ctrl.createTextRange();
+            range.collapse(true);
+            range.moveEnd('character', pos);
+            range.moveStart('character', pos);
+            range.select();
     }
 }
 

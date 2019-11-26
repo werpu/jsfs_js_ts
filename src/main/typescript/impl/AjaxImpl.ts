@@ -89,16 +89,7 @@ export module Implementation {
     /*error reporting threshold*/
     let threshold = "ERROR";
 
-    //we need to proxy this in the tests
-    export let queueHandler = {
-        /**
-         * public to make it shimmable for tests
-         */
-        addRequestToQueue: function (elem: DQ, form: DQ, reqCtx: Config, respPassThr: Config, delay = 0, timeout = 0) {
-            requestQueue = requestQueue ?? new AsynchronouseQueue<XhrRequest>();
-            requestQueue.enqueue(new XhrRequest(elem, form, reqCtx, respPassThr, [], timeout), delay);
-        }
-    }
+
 
     /**
      * fetches the separator char from the given script tags
@@ -465,6 +456,24 @@ export module Implementation {
         let formData = new XhrFormData(element);
         return formData.toString();
     }
+
+
+    /**
+     * this at the first sight looks like a weird construct, but we need to do it this way
+     * for testing, we cannot proxy addRequestToQueue from the testing frameworks directly
+     * but we need to keep it under unit tests.
+     */
+    export let queueHandler = {
+        /**
+         * public to make it shimmable for tests
+         *
+         * adds a new request to our queue for further processing
+         */
+        addRequestToQueue: function (elem: DQ, form: DQ, reqCtx: Config, respPassThr: Config, delay = 0, timeout = 0) {
+            requestQueue = requestQueue ?? new AsynchronouseQueue<XhrRequest>();
+            requestQueue.enqueue(new XhrRequest(elem, form, reqCtx, respPassThr, [], timeout), delay);
+        }
+    };
 
     //----------------------------------------------- Methods ---------------------------------------------------------------------
 

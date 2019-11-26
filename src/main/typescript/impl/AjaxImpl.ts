@@ -198,7 +198,7 @@ export module Implementation {
 
         Assertions.assertRequestIntegrity(options, elem);
 
-        applyWindowId(options);
+        applyWindowId(options, requestCtx);
 
         requestCtx.assign(Const.CTX_PARAM_PASS_THR).value = fetchPassthroughValues(options.value);
 
@@ -446,12 +446,12 @@ export module Implementation {
     /**
      * collect and encode data for a given form element (must be of type form)
      * find the javax.faces.ViewState element and encode its value as well!
-     * return a concatenated string of the encoded values!
+     * @return a concatenated string of the encoded values!
      *
      * @throws Error in case of the given element not being of type form!
      * https://issues.apache.org/jira/browse/MYFACES-2110
      */
-    export function getViewState(form: Element | string) {
+    export function getViewState(form: Element | string): string {
         /**
          *  typecheck assert!, we opt for strong typing here
          *  because it makes it easier to detect bugs
@@ -468,37 +468,81 @@ export module Implementation {
 
     //----------------------------------------------- Methods ---------------------------------------------------------------------
 
-    function applyWindowId(options: Config) {
+    /**
+     * applies the windowId into our options object
+     * The problem is that the window id can be passed down from various sources
+     * first it can be part of our options otherwise also in our url
+     *
+     * the window id is assigned from followng sources
+     * 1) options value
+     * 2) if no options value is present we look into our url
+     *
+     * The window Id then is stored as
+     * @param options the target options object receiving an new windowId if none is present
+     * @param targetCtx the receiving target context
+     */
+    function applyWindowId(options: Config, targetCtx: Config) {
         let windowId = options?.value?.windowId ?? ExtDomquery.windowId;
-        options.assignIf(!!windowId, Const.P_WINDOW_ID).value = windowId;
+        targetCtx.assignIf(!!windowId, Const.P_WINDOW_ID).value = windowId;
+        //todo still needed
         options.delete("windowId");
     }
 
-    function applyRender(options: Config, ctx: Config, form: DQ, elementId: string) {
-        if (options.getIf("render").isPresent()) {
-            transformValues(ctx.getIf(Const.CTX_PARAM_PASS_THR).get({}), Const.P_RENDER, <string>options.getIf("render").value, form, <any>elementId);
+    /**
+     * the idea is to replace some placeholder parameters with their respective values
+     * placeholder params like  @all, @none, @form, @this need to be replaced by
+     * the values defined by the specification
+     *
+     * This function does it for the render parameters
+     *
+     * @param requestOptions the source options coming in as options object from jsf.ajax.request (options parameter)
+     * @param targetContext the receiving target context
+     * @param issuingForm the issuing form
+     * @param sourceElementId the executing element triggering the jsf.ajax.request (id of it)
+     */
+    function applyRender(requestOptions: Config, targetContext: Config, issuingForm: DQ, sourceElementId: string) {
+        if (requestOptions.getIf("render").isPresent()) {
+            transformValues(targetContext.getIf(Const.CTX_PARAM_PASS_THR).get({}), Const.P_RENDER, <string>requestOptions.getIf("render").value, issuingForm, <any>sourceElementId);
         }
     }
 
-    function applyExecute(options: Config, ctx: Config, form: DQ, elementId: string) {
+    /**
+     * the idea is to replace some placeholder parameters with their respective values
+     * placeholder params like  @all, @none, @form, @this need to be replaced by
+     * the values defined by the specification
+     *
+     * This function does it for the execute parameters
+     *
+     * @param requestOptions the source options coming in as options object from jsf.ajax.request (options parameter)
+     * @param targetContext the receiving target context
+     * @param issuingForm the issuing form
+     * @param sourceElementId the executing element triggering the jsf.ajax.request (id of it)
+     */
+    function applyExecute(requestOptions: Config, targetContext: Config, issuingForm: DQ, sourceElementId: string) {
 
 
-        if (options.getIf(Const.CTX_PARAM_EXECUTE).isPresent()) {
+        if (requestOptions.getIf(Const.CTX_PARAM_EXECUTE).isPresent()) {
             /*the options must be a blank delimited list of strings*/
             /*compliance with Mojarra which automatically adds @this to an execute
              * the spec rev 2.0a however states, if none is issued nothing at all should be sent down
              */
-            options.assign(Const.CTX_PARAM_EXECUTE).value = options.getIf(Const.CTX_PARAM_EXECUTE).value + " @this";
-            transformValues(ctx.getIf(Const.CTX_PARAM_PASS_THR).get({}), Const.P_EXECUTE, <string>options.getIf(Const.CTX_PARAM_EXECUTE).value, form, <any>elementId);
+            requestOptions.assign(Const.CTX_PARAM_EXECUTE).value = requestOptions.getIf(Const.CTX_PARAM_EXECUTE).value + " @this";
+            transformValues(targetContext.getIf(Const.CTX_PARAM_PASS_THR).get({}), Const.P_EXECUTE, <string>requestOptions.getIf(Const.CTX_PARAM_EXECUTE).value, issuingForm, <any>sourceElementId);
         } else {
-            ctx.assign(Const.CTX_PARAM_PASS_THR, Const.P_EXECUTE).value = elementId;
+            targetContext.assign(Const.CTX_PARAM_PASS_THR, Const.P_EXECUTE).value = sourceElementId;
         }
     }
 
-    function applyClientWindowId(form: DQ, ctx: Config) {
+    /**
+     * apply the browser tab where the request was originating from
+     *
+     * @param form the form hosting the client window id
+     * @param targetContext the target context receiving the value
+     */
+    function applyClientWindowId(form: DQ, targetContext: Config) {
         let clientWindow = jsf.getClientWindow(form.getAsElem(0).value);
         if (clientWindow) {
-            ctx.assign(Const.CTX_PARAM_PASS_THR, Const.P_CLIENTWINDOW).value = clientWindow;
+            targetContext.assign(Const.CTX_PARAM_PASS_THR, Const.P_CLIENTWINDOW).value = clientWindow;
         }
     }
 
@@ -567,12 +611,29 @@ export module Implementation {
         return targetConfig;
     }
 
+    /**
+     * filter the options tiven with a blacklist so that only
+     * the values required for passthough land in the ajax request
+     *
+     * @param mappedOpts the options to be filtered
+     */
     function fetchPassthroughValues(mappedOpts: { [key: string]: any }) {
+        //we now can use the full code reduction given by our stream api
+        //to filter
         return Stream.ofAssoc(mappedOpts)
             .filter(item => !(item[0] in BlockFilter))
             .collect(new AssocArrayCollector());
     }
 
+    /**
+     * form resolution the same way our old implementation did
+     * it is either the id or the parent form of the element or an embedded form
+     * of the element
+     *
+     * @param requestCtx
+     * @param elem
+     * @param event
+     */
     function resolveForm(requestCtx: Config, elem: DQ, event: Event): DQ {
         const configId = requestCtx.value?.myfaces?.form ?? Const.MF_NONE; //requestCtx.getIf(MYFACES, "form").orElse(MF_NONE).value;
         let form: DQ = DQ

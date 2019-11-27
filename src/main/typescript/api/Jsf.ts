@@ -15,7 +15,7 @@
  */
 
 ///<reference path='./ApiInterfaces.ts'/>
-///<reference types='../../types/Types'/>
+///<reference types='../../types/TypeDefs'/>
 
 import {Implementation} from "../impl/AjaxImpl";
 import {PushImpl} from "../impl/PushImpl";

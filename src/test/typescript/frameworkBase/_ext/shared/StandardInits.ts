@@ -266,7 +266,7 @@ export module StandardInits {
      */
     let initJSF = async function () {
         // @ts-ignore
-        return import("../../../../../main/typescript/api/jsf").then((data) => {
+        return import("../../../../../main/typescript/api/Jsf").then((data) => {
             let Implementation = require("../../../../../main/typescript/impl/AjaxImpl");
             let PushImpl = require("../../../../../main/typescript/impl/PushImpl");
             applyJsfToGlobals(data, Implementation, PushImpl);

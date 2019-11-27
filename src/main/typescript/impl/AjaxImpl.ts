@@ -74,7 +74,7 @@ export module Implementation {
     import getMessage = ExtLang.getMessage;
     import getForm = ExtLang.getForm;
     import getLocalOrGlobalConfig = ExtLang.getLocalOrGlobalConfig;
-    import getEvent = ExtLang.getEvent;
+    import getEvent = ExtLang.resolveEvent;
     import getGlobalConfig = ExtLang.getGlobalConfig;
     import assert = Assertions.assert;
 
@@ -90,7 +90,6 @@ export module Implementation {
     let threshold = "ERROR";
 
 
-
     /**
      * fetches the separator char from the given script tags
      *
@@ -102,7 +101,10 @@ export module Implementation {
             (separator = ExtDomquery.searchJsfJsFor(/separator=([^&;]*)/).orElse(":").value);
     }
 
-    //for testing only
+    /**
+     * this is for testing purposes only, since AjaxImpl is a module
+     * we need to reset for every unit test its internal states
+     */
     export function reset() {
         globalConfig = myfacesConfig.myfaces.config;
 
@@ -124,6 +126,10 @@ export module Implementation {
             (projectStage = resolveProjectStateFromURL());
     }
 
+    /**
+     * resolves the project stage as url parameter
+     * @return the project stage or null
+     */
     export function resolveProjectStateFromURL(): string | null {
 
         /* run through all script tags and try to find the one that includes jsf.js */
@@ -131,11 +137,19 @@ export module Implementation {
         return (foundStage in ProjectStages) ? foundStage : null;
     }
 
+    /**
+     * implementation of the jsf.util.chain functionality
+     *
+     * @param source
+     * @param event
+     * @param funcs
+     */
     export function chain(source: any, event: Event, ...funcs: EvalFuncs): boolean {
 
         let ret = true;
         let resolveAndExecute = function (func: Function | string) {
             if ("string" != typeof func) {
+                //function is passed down as chain parameter, can be executed as is
                 return (ret = ret && ((<Function>func).call(source, event) !== false));
             } else {
                 //either a function or a string can be passed in case of a string we have to wrap it into another function
@@ -148,6 +162,8 @@ export module Implementation {
             }
         };
 
+        //we can use our stream each functionality to run our chain here..
+        //the no return value == false stop stream functionality is handled by our resolveAndExecute
         <any>Stream.of(...funcs).each(func => resolveAndExecute(func));
         return ret;
     }
@@ -178,31 +194,31 @@ export module Implementation {
          *a local function variable so that we do not have to write the entire namespace
          *all the time
          */
-        event = getEvent(event);
+        const resolvedEvent = getEvent(event);
 
         //options not set we define a default one with nothing
         const options = new Config(opts).deepCopy;
-        const elem = DQ.byId(el || <Element>event.target);
+        const elem = DQ.byId(el || <Element>resolvedEvent.target);
         const elementId = elem.id;
         const requestCtx = new Config({});
         const internalCtx = new Config({});
 
         Assertions.assertRequestIntegrity(options, elem);
 
-        applyWindowId(options, requestCtx);
+        assignWindowId(options, requestCtx);
 
-        requestCtx.assign(Const.CTX_PARAM_PASS_THR).value = fetchPassthroughValues(options.value);
+        requestCtx.assign(Const.CTX_PARAM_PASS_THR).value = filterPassthroughValues(options.value);
 
-        requestCtx.assignIf(!!event, Const.CTX_PARAM_PASS_THR, Const.P_EVT).value = event?.type;
+        requestCtx.assignIf(!!resolvedEvent, Const.CTX_PARAM_PASS_THR, Const.P_EVT).value = resolvedEvent?.type;
 
         /**
          * ajax pass through context with the source
-         * onevent and onerror
+         * onresolvedEvent and onerror
          */
         requestCtx.assign(Const.SOURCE).value = elementId.value;
 
         /**
-         * on event and onError...
+         * on resolvedEvent and onError...
          * those values will be traversed later on
          * also into the response context
          */
@@ -220,8 +236,7 @@ export module Implementation {
          * so that people can use dummy forms and work
          * with detached objects
          */
-        const configId = requestCtx.value?.myfaces?.form ?? Const.MF_NONE;
-        let form: DQ = resolveForm(requestCtx, elem, event);
+        let form: DQ = resolveForm(requestCtx, elem, resolvedEvent);
 
         /**
          * binding contract the javax.faces.source must be set
@@ -262,13 +277,13 @@ export module Implementation {
 
         requestCtx.assign(Const.CTX_PARAM_PASS_THR, form.id.value).value = form.id.value;
 
-        applyClientWindowId(form, requestCtx);
+        assignClientWindowId(form, requestCtx);
 
-        applyExecute(options, requestCtx, form, elementId.value);
-        applyRender(options, requestCtx, form, elementId.value);
+        assignExecute(options, requestCtx, form, elementId.value);
+        assignRender(options, requestCtx, form, elementId.value);
 
-        let delay: number = resolveDelay(options, requestCtx);
-        let timeout: number = resolveTimeout(options, requestCtx);
+        let delay: number = resolveDelay(options);
+        let timeout: number = resolveTimeout(options);
 
         //now we enqueue the request as asynchronous runnable into our request
         //queue and let the queue take over the rest
@@ -298,7 +313,8 @@ export module Implementation {
     /**
      * sends an event
      */
-    export function sendEvent(data: EventData, localHandler = function(data: EventData) {}) {
+    export function sendEvent(data: EventData, localHandler = function (data: EventData) {
+    }) {
         /*now we serve the queue as well*/
         localHandler(data);
         eventQueue.forEach(fn => fn(data));
@@ -360,7 +376,8 @@ export module Implementation {
      *
      *
      */
-    export function sendError(errorData: any, localHandler = function(data: any) {}) {
+    export function sendError(errorData: any, localHandler = function (data: any) {
+    }) {
 
         localHandler(errorData);
         errorQueue.forEach((errorCallback: Function) => {
@@ -449,7 +466,7 @@ export module Implementation {
          */
 
         let element: DQ = DQ.byId(form);
-        if (!element.isTag("form")) {
+        if (!element.isTag(Const.TAG_FORM)) {
             throw new Error(getMessage("ERR_VIEWSTATE"));
         }
 
@@ -478,7 +495,7 @@ export module Implementation {
     //----------------------------------------------- Methods ---------------------------------------------------------------------
 
     /**
-     * applies the windowId into our options object
+     * assigns the windowId into our context object
      * The problem is that the window id can be passed down from various sources
      * first it can be part of our options otherwise also in our url
      *
@@ -490,7 +507,7 @@ export module Implementation {
      * @param options the target options object receiving an new windowId if none is present
      * @param targetCtx the receiving target context
      */
-    function applyWindowId(options: Config, targetCtx: Config) {
+    function assignWindowId(options: Config, targetCtx: Config) {
         let windowId = options?.value?.windowId ?? ExtDomquery.windowId;
         targetCtx.assignIf(!!windowId, Const.P_WINDOW_ID).value = windowId;
         //todo still needed
@@ -509,9 +526,9 @@ export module Implementation {
      * @param issuingForm the issuing form
      * @param sourceElementId the executing element triggering the jsf.ajax.request (id of it)
      */
-    function applyRender(requestOptions: Config, targetContext: Config, issuingForm: DQ, sourceElementId: string) {
+    function assignRender(requestOptions: Config, targetContext: Config, issuingForm: DQ, sourceElementId: string) {
         if (requestOptions.getIf("render").isPresent()) {
-            transformValues(targetContext.getIf(Const.CTX_PARAM_PASS_THR).get({}), Const.P_RENDER, <string>requestOptions.getIf("render").value, issuingForm, <any>sourceElementId);
+            remapDefaultConstants(targetContext.getIf(Const.CTX_PARAM_PASS_THR).get({}), Const.P_RENDER, <string>requestOptions.getIf(Const.RENDER).value, issuingForm, <any>sourceElementId);
         }
     }
 
@@ -527,7 +544,7 @@ export module Implementation {
      * @param issuingForm the issuing form
      * @param sourceElementId the executing element triggering the jsf.ajax.request (id of it)
      */
-    function applyExecute(requestOptions: Config, targetContext: Config, issuingForm: DQ, sourceElementId: string) {
+    function assignExecute(requestOptions: Config, targetContext: Config, issuingForm: DQ, sourceElementId: string) {
 
 
         if (requestOptions.getIf(Const.CTX_PARAM_EXECUTE).isPresent()) {
@@ -535,8 +552,8 @@ export module Implementation {
             /*compliance with Mojarra which automatically adds @this to an execute
              * the spec rev 2.0a however states, if none is issued nothing at all should be sent down
              */
-            requestOptions.assign(Const.CTX_PARAM_EXECUTE).value = requestOptions.getIf(Const.CTX_PARAM_EXECUTE).value + " @this";
-            transformValues(targetContext.getIf(Const.CTX_PARAM_PASS_THR).get({}), Const.P_EXECUTE, <string>requestOptions.getIf(Const.CTX_PARAM_EXECUTE).value, issuingForm, <any>sourceElementId);
+            requestOptions.assign(Const.CTX_PARAM_EXECUTE).value = [requestOptions.getIf(Const.CTX_PARAM_EXECUTE).value, Const.IDENT_THIS].join(" ");
+            remapDefaultConstants(targetContext.getIf(Const.CTX_PARAM_PASS_THR).get({}), Const.P_EXECUTE, <string>requestOptions.getIf(Const.CTX_PARAM_EXECUTE).value, issuingForm, <any>sourceElementId);
         } else {
             targetContext.assign(Const.CTX_PARAM_PASS_THR, Const.P_EXECUTE).value = sourceElementId;
         }
@@ -548,7 +565,7 @@ export module Implementation {
      * @param form the form hosting the client window id
      * @param targetContext the target context receiving the value
      */
-    function applyClientWindowId(form: DQ, targetContext: Config) {
+    function assignClientWindowId(form: DQ, targetContext: Config) {
         let clientWindow = jsf.getClientWindow(form.getAsElem(0).value);
         if (clientWindow) {
             targetContext.assign(Const.CTX_PARAM_PASS_THR, Const.P_CLIENTWINDOW).value = clientWindow;
@@ -570,15 +587,12 @@ export module Implementation {
      * @param issuingForm the form where the issuing element originates
      * @param issuingElementId the issuing element
      */
-    function transformValues(targetConfig: Config, targetKey: string, userValues: string, issuingForm: DQ, issuingElementId: string): Config {
+    function remapDefaultConstants(targetConfig: Config, targetKey: string, userValues: string, issuingForm: DQ, issuingElementId: string): Config {
         //a cleaner implementation of the transform list method
 
         let iterValues = (userValues) ? trim(userValues).split(/\s+/gi) : [];
         let ret = [];
-
         let processed = {};
-
-        //TODO make this code cleaner
 
         //the idea is simply to loop over all values and then replace
         //their generic values and filter out doubles
@@ -626,7 +640,7 @@ export module Implementation {
      *
      * @param mappedOpts the options to be filtered
      */
-    function fetchPassthroughValues(mappedOpts: { [key: string]: any }) {
+    function filterPassthroughValues(mappedOpts: { [key: string]: any }) {
         //we now can use the full code reduction given by our stream api
         //to filter
         return Stream.ofAssoc(mappedOpts)
@@ -651,15 +665,21 @@ export module Implementation {
         return form
     }
 
-    function resolveTimeout(options: Config, requestCtx: Config): number {
+    function resolveTimeout(options: Config): number {
         let getCfg = getLocalOrGlobalConfig;
-        return options.getIf(Const.CTX_PARAM_TIMEOUT).value ?? getCfg(requestCtx.value, Const.CTX_PARAM_TIMEOUT, 0);
+        return options.getIf(Const.CTX_PARAM_TIMEOUT).value ?? getCfg(options.value, Const.CTX_PARAM_TIMEOUT, 0);
     }
 
-    function resolveDelay(options: Config, requestCtx: Config): number {
+    /**
+     * resolve the delay from the options and/or the request context and or the configuration
+     *
+     * @param options ... the options object, in most cases it will host the delay value
+     * @param requestCtx the target context
+     */
+    function resolveDelay(options: Config): number {
         let getCfg = getLocalOrGlobalConfig;
 
-        return options.getIf(Const.CTX_PARAM_DELAY).value ?? getCfg(requestCtx.value, Const.CTX_PARAM_DELAY, 0);
+        return options.getIf(Const.CTX_PARAM_DELAY).value ?? getCfg(options.value, Const.CTX_PARAM_DELAY, 0);
     }
 
 }

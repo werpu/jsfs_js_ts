@@ -109,7 +109,7 @@ export module ExtLang {
      *
      * @return an event object no matter what is incoming
      */
-    export function getEvent(evt: Event): Event {
+    export function resolveEvent(evt: Event): Event {
         return evt ?? <any>window?.event ?? {};
     }
 
@@ -121,7 +121,7 @@ export module ExtLang {
      */
     export function getEventTarget(evt: Event): Element {
         //ie6 and 7 fallback
-        evt = getEvent(evt);
+        let finalEvent = resolveEvent(evt);
         /**
          * evt source is defined in the jsf events
          * seems like some component authors use our code
@@ -131,7 +131,7 @@ export module ExtLang {
          * behavior. I dont use it that way but nevertheless it
          * does not break anything so why not
          * */
-        let t = evt?.srcElement ?? evt?.target ?? (<any>evt)?.source;
+        let t = finalEvent?.srcElement ?? finalEvent?.target ?? (<any>finalEvent)?.source;
         while ((t) && (t.nodeType != 1)) {
             t = t.parentNode;
         }

@@ -44,6 +44,8 @@ export module Const {
 
     export const P_WINDOW_ID = "javax.faces.windowId";
 
+    export const RENDER = "render";
+
     /* message types */
     export const ERROR = "error";
     export const EVENT = "event";

@@ -119,7 +119,7 @@ export class XhrFormData extends Config {
      *
      * @param defaultStr optional default value if nothing is there to encode
      */
-    toString(defaultStr = ""): string {
+    toString(defaultStr = Const.EMPTY_STR): string {
         if (this.isAbsent()) {
             return defaultStr;
         }

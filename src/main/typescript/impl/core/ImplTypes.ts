@@ -34,10 +34,10 @@ export class ViewState implements IdValueHolder {
 
     constructor(public id: string, public value: string) {
         let viewStatePos = id.indexOf(Const.P_VIEWSTATE);
-        this.nameSpace = viewStatePos > 0 ? id.substr(0, viewStatePos - 1) : "";
+        this.nameSpace = viewStatePos > 0 ? id.substr(0, viewStatePos - 1) : Const.EMPTY_STR;
     }
 
     get hasNameSpace(): boolean {
-        return !!(this?.nameSpace ?? "").length;
+        return !!(this?.nameSpace ?? Const.EMPTY_STR).length;
     }
 }

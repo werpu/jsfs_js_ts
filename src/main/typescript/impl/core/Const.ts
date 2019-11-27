@@ -33,18 +33,17 @@ export module Const {
     export const P_VIEWBODY = "javax.faces.ViewBody";
 
 
-    export const P_CLIENTWINDOW = "javax.faces.ClientWindow";
     export const P_AJAX = "javax.faces.partial.ajax";
     export const P_EXECUTE = "javax.faces.partial.execute";
     export const P_RENDER = "javax.faces.partial.render";
     export const P_EVT = "javax.faces.partial.event";
     export const P_CLIENT_WINDOW = "javax.faces.ClientWindow";
     export const P_RESET_VALUES = "javax.faces.partial.resetValues";
-    export const P_WIN_ID = "javax.faces.WindowId";
 
     export const P_WINDOW_ID = "javax.faces.windowId";
 
     export const RENDER = "render";
+    export const WINDOW_ID = "windowId";
 
     /* message types */
     export const ERROR = "error";
@@ -131,9 +130,6 @@ export module Const {
 
     /*partial response types*/
     export const RESP_PARTIAL = "partial-response";
-    export const RESP_TYPE_ERROR = "error";
-    export const RESP_TYPE_REDIRECT = "redirect";
-    export const RESP_TYPE_CHANGES = "changes";
 
     /*partial commands*/
     export const CMD_CHANGES = "changes";
@@ -164,9 +160,10 @@ export module Const {
     export const RECONNECT_INTERVAL = 500;
     export const MAX_RECONNECT_ATTEMPTS = 25;
 
-    export const HTML_VIEWSTATE = ["<input type='hidden'", "id='", P_VIEWSTATE, "' name='", P_VIEWSTATE, "' value='' />"].join("");
-
     export const EMPTY_FUNC = Object.freeze(() => {});
     export const EMPTY_STR = "";
     export const EMPTY_MAP = Object.freeze({});
+
+    export const HTML_VIEWSTATE = ["<input type='hidden'", "id='", P_VIEWSTATE, "' name='", P_VIEWSTATE, "' value='' />"].join(EMPTY_STR);
+
 }

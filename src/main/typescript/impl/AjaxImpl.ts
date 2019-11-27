@@ -402,7 +402,7 @@ export module Implementation {
         /**
          * a set of input elements holding the window id over the entire document
          */
-        let windowIdHolders = searchRoot.querySelectorAll(`form #${Const.P_WIN_ID}`);
+        let windowIdHolders = searchRoot.querySelectorAll(`form #${Const.P_WINDOW_ID}`);
 
         /**
          * lazy helper to fetch the window id from the window url
@@ -510,8 +510,9 @@ export module Implementation {
     function assignWindowId(options: Config, targetCtx: Config) {
         let windowId = options?.value?.windowId ?? ExtDomquery.windowId;
         targetCtx.assignIf(!!windowId, Const.P_WINDOW_ID).value = windowId;
-        //todo still needed
-        options.delete("windowId");
+
+        //todo still needed ??? we clone anyway
+        options.delete(Const.WINDOW_ID);
     }
 
     /**
@@ -527,7 +528,7 @@ export module Implementation {
      * @param sourceElementId the executing element triggering the jsf.ajax.request (id of it)
      */
     function assignRender(requestOptions: Config, targetContext: Config, issuingForm: DQ, sourceElementId: string) {
-        if (requestOptions.getIf("render").isPresent()) {
+        if (requestOptions.getIf(Const.RENDER).isPresent()) {
             remapDefaultConstants(targetContext.getIf(Const.CTX_PARAM_PASS_THR).get({}), Const.P_RENDER, <string>requestOptions.getIf(Const.RENDER).value, issuingForm, <any>sourceElementId);
         }
     }
@@ -568,7 +569,7 @@ export module Implementation {
     function assignClientWindowId(form: DQ, targetContext: Config) {
         let clientWindow = jsf.getClientWindow(form.getAsElem(0).value);
         if (clientWindow) {
-            targetContext.assign(Const.CTX_PARAM_PASS_THR, Const.P_CLIENTWINDOW).value = clientWindow;
+            targetContext.assign(Const.CTX_PARAM_PASS_THR, Const.P_CLIENT_WINDOW).value = clientWindow;
         }
     }
 

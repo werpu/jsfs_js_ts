@@ -116,7 +116,7 @@ export class ResponseProcessor implements IResponseProcessor {
 
         let mergedErrorData = new Config({});
         mergedErrorData.assign(Const.SOURCE).value = this.externalContext.getIf(Const.P_PARTIAL_SOURCE).get(0).value;
-        mergedErrorData.assign(Const.ERROR_NAME).value = node.getIf(Const.ERROR_NAME).textContent("");
+        mergedErrorData.assign(Const.ERROR_NAME).value = node.getIf(Const.ERROR_NAME).textContent(Const.EMPTY_STR);
         mergedErrorData.assign(Const.ERROR_MESSAGE).value = node.getIf(Const.ERROR_MESSAGE).cDATAAsString;
 
         let hasResponseXML = this.internalContext.get(Const.RESPONSE_XML).isPresent();
@@ -137,7 +137,7 @@ export class ResponseProcessor implements IResponseProcessor {
         Assertions.assertUrlExists(node);
 
         let redirectUrl = trim(node.attr(Const.ATTR_URL).value);
-        if (redirectUrl != "") {
+        if (redirectUrl != Const.EMPTY_STR) {
             (<any>window).location.href = redirectUrl;
         }
     }
@@ -258,7 +258,7 @@ export class ResponseProcessor implements IResponseProcessor {
                 let value: ViewState =item[1];
                 let nameSpace = DQ.byId(value.nameSpace).orElse(document.body);
                 let affectedForms = nameSpace.byTagName(Const.TAG_FORM);
-                let affectedForms2 = nameSpace.filter(item => item.tagName.orElse("").value.toLowerCase() == Const.TAG_FORM);
+                let affectedForms2 = nameSpace.filter(item => item.tagName.orElse(Const.EMPTY_STR).value.toLowerCase() == Const.TAG_FORM);
 
 
                 this.appendViewStateToForms(new DomQuery(affectedForms, affectedForms2), value.value);
@@ -321,8 +321,8 @@ export class ResponseProcessor implements IResponseProcessor {
     private isViewStateNode(node: XMLQuery) {
         let separatorchar = (<any>window).jsf.separatorchar;
         return "undefined" != typeof node?.id?.value && ( node?.id?.value == Const.P_VIEWSTATE ||
-            node?.id?.value?.indexOf([separatorchar, Const.P_VIEWSTATE].join("")) != -1 ||
-            node?.id?.value?.indexOf([Const.P_VIEWSTATE, separatorchar].join("")) != -1 );
+            node?.id?.value?.indexOf([separatorchar, Const.P_VIEWSTATE].join(Const.EMPTY_STR)) != -1 ||
+            node?.id?.value?.indexOf([Const.P_VIEWSTATE, separatorchar].join(Const.EMPTY_STR)) != -1 );
     }
 
 }

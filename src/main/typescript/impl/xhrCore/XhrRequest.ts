@@ -328,7 +328,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     private resolveFinalUrl(formData: XhrFormData) {
         let targetUrl = this.resolveTargetUrl(<HTMLFormElement>this.sourceForm.getAsElem(0).value);
 
-        return targetUrl + (this.ajaxType == Const.REQ_TYPE_GET ? "?" + formData.toString() : "");
+        return targetUrl + (this.ajaxType == Const.REQ_TYPE_GET ? "?" + formData.toString() : Const.EMPTY_STR);
     }
 
 }

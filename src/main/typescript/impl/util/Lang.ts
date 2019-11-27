@@ -22,6 +22,7 @@ import {Messages} from "../i18n/Messages";
 import {Config, Optional} from "../../ext/monadish/Monad";
 import {DomQuery, DQ} from "../../ext/monadish/DomQuery";
 import {Stream} from "../../ext/monadish";
+import {Const} from "../core/Const";
 
 
 export module ExtLang {
@@ -82,7 +83,7 @@ export module ExtLang {
         let msg = installedLocale[key] ?? defaultMessage ?? key + " - undefined message";
 
         Stream.of(...templateParams).each((param, cnt) => {
-            msg = msg.replace(new RegExp(["\\{", cnt, "\\}"].join(""), "g"), param);
+            msg = msg.replace(new RegExp(["\\{", cnt, "\\}"].join(Const.EMPTY_STR), "g"), param);
         });
 
         return msg;
@@ -150,7 +151,7 @@ export module ExtLang {
      */
     export function makeException(error: Error, title: string, name: string, callerCls: string, callFunc: string, message: string): Error {
 
-        return new Error(message + (callerCls ?? nameSpace) + callFunc ?? ("" + (<any>arguments).caller.toString()));
+        return new Error(message + (callerCls ?? nameSpace) + callFunc ?? (Const.EMPTY_STR + (<any>arguments).caller.toString()));
 
     }
 

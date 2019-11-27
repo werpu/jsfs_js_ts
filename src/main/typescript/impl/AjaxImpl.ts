@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import * as myfacesConfig from "../api/myfaces";
+import * as myfacesConfig from "../api/Myfaces";
 
 import {IListener} from "./util/ListenerQueue";
 import {Response} from "./xhrCore/Response";

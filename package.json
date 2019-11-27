@@ -8,7 +8,7 @@
     "coverage": "nyc --reporter=html --reporter=text mocha -r ts-node/register ./**/test/typescript/**/**/*Test*.ts",
     "build-production": "webpack --mode production --env.FILE_NAME=jsf",
     "build-development": "webpack --mode none --env.FILE_NAME=jsf-development",
-    "build": "npm run test && npm run build-development && npm run build-production"
+    "build": "npm run build-development && npm run build-production"
   },
   "keywords": [
     "myfaces",

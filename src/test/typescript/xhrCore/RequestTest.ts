@@ -19,11 +19,18 @@ import * as sinon from "sinon";
 import {expect} from "chai";
 import {StandardInits} from "../frameworkBase/_ext/shared/StandardInits";
 import {DomQuery} from "../../../main/typescript/ext/monadish";
-import {Const} from "../../../main/typescript/impl/core/Const";
+import {
+    COMPLETE,
+    P_AJAX,
+    P_EXECUTE,
+    P_PARTIAL_SOURCE,
+    P_RENDER,
+    P_VIEWSTATE,
+    P_WINDOW_ID,
+    SUCCESS
+} from "../../../main/typescript/impl/core/Const";
 import defaultMyFaces = StandardInits.defaultMyFaces;
 import STD_XML = StandardInits.STD_XML;
-import {FakeXMLHttpRequest} from "sinon";
-import {ResponseProcessor} from "../../../main/typescript/impl/xhrCore/ResponseProcessor";
 
 declare var jsf: any;
 declare var Implementation: any;
@@ -115,12 +122,12 @@ describe('Tests on the xhr core when it starts to call the request', function ()
             expect(resultsMap["pass2"]).to.eq("pass2");
             expect(!!resultsMap["render"]).to.be.false;
             expect(!!resultsMap["execute"]).to.be.false;
-            expect(Const.P_WINDOW_ID in resultsMap).to.be.false;
-            expect(Const.P_VIEWSTATE in resultsMap).to.be.true;
-            expect(resultsMap[Const.P_PARTIAL_SOURCE]).to.eq("input_2");
-            expect(resultsMap[Const.P_AJAX]).to.eq("true");
-            expect(resultsMap[Const.P_RENDER]).to.eq("blarg");
-            expect(resultsMap[Const.P_EXECUTE]).to.eq("input_1 input_2");
+            expect(P_WINDOW_ID in resultsMap).to.be.false;
+            expect(P_VIEWSTATE in resultsMap).to.be.true;
+            expect(resultsMap[P_PARTIAL_SOURCE]).to.eq("input_2");
+            expect(resultsMap[P_AJAX]).to.eq("true");
+            expect(resultsMap[P_RENDER]).to.eq("blarg");
+            expect(resultsMap[P_EXECUTE]).to.eq("input_1 input_2");
 
         } finally {
             send.restore();
@@ -232,10 +239,10 @@ describe('Tests after core when it hits response', function () {
                 pass2: "pass2",
                 onevent: (evt: any) => {
                     localCnt++;
-                    if (evt.status == Const.COMPLETE) {
+                    if (evt.status == COMPLETE) {
                         expect(!!xhrReq.responseXML).to.be.true;
                     }
-                    if (evt.status == Const.SUCCESS) {
+                    if (evt.status == SUCCESS) {
                         expect(this.jsfAjaxResponse.callCount).to.eq(1);
 
                         expect(this.jsfAjaxResponse.firstCall.args[0] instanceof XMLHttpRequest).to.be.true;
@@ -245,10 +252,10 @@ describe('Tests after core when it hits response', function () {
                         expect(!!lastArg.onError).to.be.false;
                         expect(lastArg.pass1 == "pass1").to.be.true;
                         expect(lastArg.pass2 == "pass2").to.be.true;
-                        expect(!!lastArg[Const.P_PARTIAL_SOURCE]).to.be.true;
-                        expect(!!lastArg[Const.P_AJAX]).to.be.true;
-                        expect(!!lastArg[Const.P_EXECUTE]).to.be.true;
-                        expect(!!lastArg[Const.P_RENDER]).to.be.true;
+                        expect(!!lastArg[P_PARTIAL_SOURCE]).to.be.true;
+                        expect(!!lastArg[P_AJAX]).to.be.true;
+                        expect(!!lastArg[P_EXECUTE]).to.be.true;
+                        expect(!!lastArg[P_RENDER]).to.be.true;
 
                         expect(this.jsfAjaxResponse.firstCall.args.length).to.eq(2);
 
@@ -299,7 +306,7 @@ describe('Tests after core when it hits response', function () {
                     done();
                 },
                 onevent: (evt: any) => {
-                    if (evt.status == Const.COMPLETE) {
+                    if (evt.status == COMPLETE) {
                         throw Error("This error is wanted, ignore the log");
                     }
                 }

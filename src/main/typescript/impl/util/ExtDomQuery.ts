@@ -1,7 +1,6 @@
-
 import {Config, IValueHolder, Optional} from "../../ext/monadish/Monad";
-import {Const} from "../core/Const";
 import {DomQuery, DQ} from "../../ext/monadish/DomQuery";
+import {EMPTY_STR, P_WINDOW_ID} from "../core/Const";
 
 declare let window: any;
 
@@ -38,7 +37,7 @@ export class ExtDomquery extends DQ {
 
         //byId ($)
         if (this.value.isPresent()) {
-            let result = this.querySelectorAll("form input[name='" + Const.P_WINDOW_ID + "']");
+            let result = this.querySelectorAll("form input[name='" + P_WINDOW_ID + "']");
             if (result.length > 0) {
                 throw Error("Multiple different windowIds found in document");
             }
@@ -87,7 +86,7 @@ export class ExtDomquery extends DQ {
         //perfect application for lazy stream
         return DQ.querySelectorAll("script").lazyStream
                 .filter(item => {
-                    return (item.attr("src").value ?? Const.EMPTY_STR).search(/\/javax\.faces\.resource.*\/jsf\.js.*separator/) != -1;
+                    return (item.attr("src").value ?? EMPTY_STR).search(/\/javax\.faces\.resource.*\/jsf\.js.*separator/) != -1;
                 }).map((item: DQ) => {
                     let result = item.attr("src").value.match(rexp);
                     return decodeURIComponent(result[1]);

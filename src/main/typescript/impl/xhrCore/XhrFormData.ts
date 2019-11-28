@@ -15,12 +15,11 @@
  */
 
 import {Config, Lang} from "../../ext/monadish";
-import {Const} from "../core/Const";
-import {Implementation} from "../AjaxImpl";
 
-import {Stream} from "../../ext/monadish/Stream";
-import {DQ} from "../../ext/monadish/DomQuery";
+import {Stream} from "../../ext/monadish";
+import {DQ} from "../../ext/monadish";
 import isString = Lang.isString;
+import {EMPTY_STR, P_VIEWSTATE} from "../core/Const";
 
 
 declare let jsf: any;
@@ -71,7 +70,7 @@ export class XhrFormData extends Config {
 
         this.encodeSubmittableFields(this, <DQ>this.dataSource, this.partialIdsArray);
 
-        if (this.getIf(Const.P_VIEWSTATE).isPresent()) {
+        if (this.getIf(P_VIEWSTATE).isPresent()) {
             return;
         }
 
@@ -84,10 +83,10 @@ export class XhrFormData extends Config {
     }
 
     private applyViewState(form: DQ) {
-        form.byId(Const.P_VIEWSTATE)
+        form.byId(P_VIEWSTATE)
             .ifPresentLazy((elem: DQ) => {
                 let value = elem.inputValue.value;
-                this.assignIf(!!value ,Const.P_VIEWSTATE).value = value;
+                this.assignIf(!!value ,P_VIEWSTATE).value = value;
             });
     }
 
@@ -119,7 +118,7 @@ export class XhrFormData extends Config {
      *
      * @param defaultStr optional default value if nothing is there to encode
      */
-    toString(defaultStr = Const.EMPTY_STR): string {
+    toString(defaultStr = EMPTY_STR): string {
         if (this.isAbsent()) {
             return defaultStr;
         }

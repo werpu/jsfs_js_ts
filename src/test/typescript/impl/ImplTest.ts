@@ -21,9 +21,9 @@ import * as sinon from 'sinon';
 
 import {DomQuery} from "../../../main/typescript/ext/monadish/DomQuery";
 
-import {Const} from "../../../main/typescript/impl/core/Const";
 import {StandardInits} from "../frameworkBase/_ext/shared/StandardInits";
 import defaultMyFaces = StandardInits.defaultMyFaces;
+import {P_EXECUTE, P_RENDER} from "../../../main/typescript/impl/core/Const";
 
 sinon.reset();
 
@@ -64,9 +64,9 @@ describe('jsf.ajax.request test suite', () => {
             const argElement = <Config>addRequestToQueue.args[0][2];
             const context = (<Config>addRequestToQueue.args[0][2]);
 
-            expect(context.getIf("passThrgh", Const.P_RENDER).value).eq("@all");
+            expect(context.getIf("passThrgh", P_RENDER).value).eq("@all");
             //Execute issuing form due to @form and always the issuing element
-            expect(context.getIf("passThrgh", Const.P_EXECUTE).value).eq("blarg input_2");
+            expect(context.getIf("passThrgh", P_EXECUTE).value).eq("blarg input_2");
         } finally {
             //once done we restore the proper state
             addRequestToQueue.restore();

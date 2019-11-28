@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import {Const} from "./Const";
 
+import {EMPTY_STR, P_VIEWSTATE} from "./Const";
 
 export interface IdValueHolder {
 
@@ -33,11 +33,11 @@ export class ViewState implements IdValueHolder {
     nameSpace: string;
 
     constructor(public id: string, public value: string) {
-        let viewStatePos = id.indexOf(Const.P_VIEWSTATE);
-        this.nameSpace = viewStatePos > 0 ? id.substr(0, viewStatePos - 1) : Const.EMPTY_STR;
+        let viewStatePos = id.indexOf(P_VIEWSTATE);
+        this.nameSpace = viewStatePos > 0 ? id.substr(0, viewStatePos - 1) : EMPTY_STR;
     }
 
     get hasNameSpace(): boolean {
-        return !!(this?.nameSpace ?? Const.EMPTY_STR).length;
+        return !!(this?.nameSpace ?? EMPTY_STR).length;
     }
 }

@@ -5,7 +5,7 @@
 //TODO still work in progress
 //this is a 1:1 port for the time being
 import {jsf} from "../api/Jsf";
-import {Const} from "./core/Const";
+import {MAX_RECONNECT_ATTEMPTS, REASON_EXPIRED, RECONNECT_INTERVAL} from "./core/Const";
 
 
 /**
@@ -168,17 +168,17 @@ export module PushImpl {
 
         onclose(event: any) {
             if (!this.socket
-                || (event.code == 1000 && event.reason == Const.REASON_EXPIRED)
+                || (event.code == 1000 && event.reason == REASON_EXPIRED)
                 || (event.code == 1008)
                 || (!this.reconnectAttempts)
-                || (this.reconnectAttempts >= Const.MAX_RECONNECT_ATTEMPTS)) {
+                || (this.reconnectAttempts >= MAX_RECONNECT_ATTEMPTS)) {
                 let clientIds = clientIdsByTokens[this.channelToken];
                 for (let i = clientIds.length - 1; i >= 0; i--) {
                     let socketClientId = clientIds[i];
                     components[socketClientId]['onclose'](event?.code, this?.channel, event);
                 }
             } else {
-                setTimeout(this.open, Const.RECONNECT_INTERVAL * this.reconnectAttempts++);
+                setTimeout(this.open, RECONNECT_INTERVAL * this.reconnectAttempts++);
             }
         };
 

@@ -20,7 +20,7 @@ import {IListener} from "./util/ListenerQueue";
 import {Response} from "./xhrCore/Response";
 import {XhrRequest} from "./xhrCore/XhrRequest";
 import {AsynchronouseQueue} from "./util/AsyncQueue";
-import {Config, Optional} from "../ext/monadish/Monad";
+import {AssocArrayCollector, Config, DQ, Lang, Optional, Stream} from "../ext/monadish";
 
 import {Const} from "./core/Const";
 import {Assertions} from "./util/Assertions";
@@ -28,9 +28,6 @@ import {XhrFormData} from "./xhrCore/XhrFormData";
 import {ExtDomquery} from "./util/ExtDomQuery";
 import {ErrorData} from "./xhrCore/ErrorData";
 import {EventData} from "./xhrCore/EventData";
-import {DQ} from "../ext/monadish/DomQuery";
-import {Lang, Stream} from "../ext/monadish";
-import {AssocArrayCollector} from "../ext/monadish/SourcesCollectors";
 import {ExtLang} from "./util/Lang";
 
 declare var jsf: any;
@@ -179,9 +176,9 @@ export module Implementation {
      *  <li> all requests must be queued with a client side request queue to ensure the request ordering!</li>
      * </ul>
      *
-     * @param {String|Node} elem any dom element no matter being it html or jsf, from which the event is emitted
-     * @param {|Event|} event any javascript event supported by that object
-     * @param {|Object|} options  map of options being pushed into the ajax cycle
+     * @param el any dom element no matter being it html or jsf, from which the event is emitted
+     * @param event any javascript event supported by that object
+     * @param opts  map of options being pushed into the ajax cycle
      *
      *
      * a) transformArguments out of the function
@@ -300,18 +297,32 @@ export module Implementation {
         Response.processResponse(request, context);
     }
 
+    /**
+     * adds an error handler to the error queue
+     *
+     * @param errorListener the error listener handler
+     */
     export function addOnError(errorListener: IListener<ErrorData>) {
         /*error handling already done in the assert of the queue*/
         errorQueue.push(errorListener);
     }
 
+    /**
+     * adds an event handler to the event queue
+     *
+     * @param eventListener the event listener handler
+     */
     export function addOnEvent(eventListener: IListener<EventData>) {
         /*error handling already done in the assert of the queue*/
         eventQueue.push(eventListener);
     }
 
+    // noinspection JSUnusedLocalSymbols
     /**
-     * sends an event
+     * sends an event to the event handlers
+     *
+     * @param data the event data object hosting the event data according to the spec @see EventData for what is reachable
+     * @param localHandler an optional event handler, which is processed before the event handler chain
      */
     export function sendEvent(data: EventData, localHandler = function (data: EventData) {
     }) {
@@ -352,20 +363,11 @@ export module Implementation {
         }
     }
 
+    // noinspection JSUnusedLocalSymbols
     /**
      * implementation triggering the error chain
      *
-     * @param {Object} request the request object which comes from the xhr cycle
-     * @param {Object} context (Map) the context object being pushed over the xhr cycle keeping additional metadata
-     * @param {String} errorName the error name
-     * @param {String} errorMessage the error name
-     * @param {String} responseCode response Code
-     * @param {String} responseMessage response Message
      *
-     * @param {String} serverErrorName the server error name in case of a server error
-     * @param {String} serverErrorMessage the server error message in case of a server error
-     * @param {String} caller optional caller reference for extended error messages
-     * @param {String} callFunc optional caller Function reference for extended error messages
      *
      *  handles the errors, in case of an onError exists within the context the onError is called as local error handler
      *  the registered error handlers in the queue receiv an error message to be dealt with
@@ -374,9 +376,10 @@ export module Implementation {
      *  note: we have additional functionality here, via the global config myfaces.config.defaultErrorOutput a function can be provided
      *  which changes the default output behavior from alert to something else
      *
-     *
+     * @param errorData the error data to be displayed
+     * @param localHandler an optional local error handler which has to be processed before the error handler queue
      */
-    export function sendError(errorData: any, localHandler = function (data: any) {
+    export function sendError(errorData: ErrorData, localHandler = function (data: any) {
     }) {
 
         localHandler(errorData);
@@ -388,9 +391,10 @@ export module Implementation {
     }
 
     /**
-     * @return the client window id of the current window, if one is given
+     * @node optional element or id defining a rootnode where an element with the id "javax.faces.windowId" is hosted
+     * @return the client window id of the current window, if one is given if none is found, null is returned
      */
-    export function getClientWindow(node ?: Element | string): string {
+    export function getClientWindow(node ?: Element | string): string | null {
         const ALTERED = "___mf_id_altered__";
         const INIT = "___init____";
 
@@ -398,11 +402,6 @@ export module Implementation {
          * the search root for the dom element search
          */
         let searchRoot = new DQ(node || document.body);
-
-        /**
-         * a set of input elements holding the window id over the entire document
-         */
-        let windowIdHolders = searchRoot.querySelectorAll(`form #${Const.P_WINDOW_ID}`);
 
         /**
          * lazy helper to fetch the window id from the window url
@@ -660,10 +659,9 @@ export module Implementation {
      */
     function resolveForm(requestCtx: Config, elem: DQ, event: Event): DQ {
         const configId = requestCtx.value?.myfaces?.form ?? Const.MF_NONE; //requestCtx.getIf(MYFACES, "form").orElse(MF_NONE).value;
-        let form: DQ = DQ
+        return DQ
             .byId(configId)
             .orElseLazy(() => getForm(elem.getAsElem(0).value, event));
-        return form
     }
 
     function resolveTimeout(options: Config): number {
@@ -675,7 +673,6 @@ export module Implementation {
      * resolve the delay from the options and/or the request context and or the configuration
      *
      * @param options ... the options object, in most cases it will host the delay value
-     * @param requestCtx the target context
      */
     function resolveDelay(options: Config): number {
         let getCfg = getLocalOrGlobalConfig;

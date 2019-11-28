@@ -61,6 +61,15 @@ export module ExtLang {
         return LangBase.saveResolve(resolverProducer, defaultValue);
     }
 
+    /**
+     * under some conditions it makes sense to swallow errors and return a default value in the error case
+     * classical example the optional resolution of values in a chain (thankfully now covered by Typescript itself)
+     * another example which we have in our system is that some operations fail only under test due to test framework
+     * limitations while they cannot fail in the real world.
+     *
+     * @param resolverProducer a producer function which produces a value in the non error case
+     * @param defaultValue the default value in case of a fail of the function
+     */
     export function failSaveExecute<T>(resolverProducer: () => any, defaultValue: T = null): void {
         LangBase.saveResolve(resolverProducer, defaultValue);
     }
@@ -191,7 +200,19 @@ export module ExtLang {
 
     /**
      * fetches the form in an unprecise manner depending
-     * on an element or event target
+     * on an element or event target.
+     *
+     * The idea is that according to the jsf spec
+     * the enclosing form of the issuing element needs to be fetched.
+     *
+     * This is fine, but since then html5 came into the picture with the form attribute the element
+     * can be anywhere referencing its parent form.
+     *
+     * Also theoretically you can have the case of an issuing element enclosing a set of forms
+     * (not really often used, but theoretically it could be input button allows to embed html for instance)
+     *
+     * So the idea is not to limit the issuing form determination to the spec case
+     * but also cover the theoretical and html5 corner case.
      *
      * @param elem
      * @param event
@@ -227,6 +248,12 @@ export module ExtLang {
         return form;
     }
 
+    /**
+     * assert that the form exists and throw an exception in the case it does not
+     * (TODO move this into the assertions)
+     *
+     * @param form the form to check for
+     */
     function assertFormExists(form: DomQuery): void | never {
         if (form.isAbsent()) {
             throw makeException(new Error(), null, null, "Impl", "getForm", getMessage("ERR_FORM"));

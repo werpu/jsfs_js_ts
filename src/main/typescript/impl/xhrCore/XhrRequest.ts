@@ -91,7 +91,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
 
     start(): AsyncRunnable<XMLHttpRequest> {
 
-        let fsExec = failSaveExecute;
+        let ignoreErr = failSaveExecute;
         let xhrObject = this.xhrObject;
 
         try {
@@ -126,13 +126,13 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             //normal browsers should resolve this
             //tests can quietly fail on this one
 
-            fsExec(() => xhrObject.setRequestHeader(Const.CONTENT_TYPE, `${this.contentType}; charset=utf-8`));
-            fsExec(() => xhrObject.setRequestHeader(Const.HEAD_FACES_REQ, Const.VAL_AJAX));
+            ignoreErr(() => xhrObject.setRequestHeader(Const.CONTENT_TYPE, `${this.contentType}; charset=utf-8`));
+            ignoreErr(() => xhrObject.setRequestHeader(Const.HEAD_FACES_REQ, Const.VAL_AJAX));
 
             //probably not needed anymore, will test this
             //some webkit based mobile browsers do not follow the w3c spec of
             // setting the accept headers automatically
-            fsExec(() => xhrObject.setRequestHeader(Const.REQ_ACCEPT, Const.STD_ACCEPT));
+            ignoreErr(() => xhrObject.setRequestHeader(Const.REQ_ACCEPT, Const.STD_ACCEPT));
 
             this.sendEvent(Const.BEGIN);
 
@@ -254,7 +254,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             }
         };
         try {
-            Implementation.sendError(errorData);
+            Implementation.sendError(<any>errorData);
         } finally {
             resolve(errorData);
         }

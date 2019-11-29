@@ -749,7 +749,6 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
 
     }
 
-
     /**
      * returns the nth element as domquery
      * from the internal elements
@@ -1204,7 +1203,6 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
 
     insertAfter(...toInsertParams: Array<DomQuery>): DomQuery {
 
-
         this.each(existingItem => {
             let existingElement = existingItem.getAsElem(0).value;
             let rootNode = existingElement.parentNode;
@@ -1334,7 +1332,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
      * @param runEmbeddedCss
      */
     outerHTML(markup: string, runEmbeddedScripts ?: boolean, runEmbeddedCss ?: boolean): DomQuery {
-        if(this.isAbsent()) {
+        if (this.isAbsent()) {
             return;
         }
 
@@ -1349,7 +1347,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         parentNode.replaceChild(replaced, toReplace);
         res.push(new DomQuery(replaced));
         //no replacement possible
-        if(this.isAbsent()) {
+        if (this.isAbsent()) {
             return this;
         }
 
@@ -1368,7 +1366,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         }
 
         let focusElement = DomQuery.byId(focusElementId);
-        if(focusElementId && focusElement.isPresent() &&
+        if (focusElementId && focusElement.isPresent() &&
             caretPosition != null && "undefined" != typeof caretPosition) {
             focusElement.eachElem(item => DomQuery.setCaretPosition(item, caretPosition));
         }
@@ -1787,11 +1785,9 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
     }
 
     static setCaretPosition(ctrl: any, pos: number) {
-            let range = ctrl.createTextRange();
-            range.collapse(true);
-            range.moveEnd('character', pos);
-            range.moveStart('character', pos);
-            range.select();
+        ctrl.focus();
+        //the selection range is our caret position
+        ctrl.setSelectionRange(pos, pos);
     }
 }
 

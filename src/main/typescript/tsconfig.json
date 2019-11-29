@@ -4,14 +4,13 @@
     "lib": [
       "es5",
       "es2015.collection",
-      "es2015.promise",
       "dom"
     ],
     "sourceMap": false,
     "outDir": "../../../target",
     "moduleResolution": "node",
     "module": "commonjs",
-    "inlineSourceMap": false,
+    "sourceMap": true,
     "typeRoots": [
       "../../build/npm/node_modules/@types"
     ]

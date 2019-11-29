@@ -101,10 +101,6 @@ export module jsf {
         return Implementation.getSeparatorChar();
     }
 
-    //We hook the old namespace system into our npm system
-    if ("undefined" == window.jsf) {
-        window.jsf = jsf;
-    }
 
     export module ajax {
         "use strict";
@@ -228,19 +224,25 @@ export module jsf {
 
     }
 
+    //We hook the old namespace system into our npm system
+    //if ("undefined" == window.jsf) {
+    //    window.jsf = jsf;
+    //}
+
+
 }
 
 
 
 //fullfill the window contract
-export module myfaces2 {
+export module myfaces {
 
     //legacy compatibility
     export var _impl = mf_impl;
 
     /**
      * AB function similar to mojarra and Primefaces
-     * not part of the spec but a convenience accesor method
+     * not part of the spec but a convenience accessor method
      * Code provided by Thomas Andraschko
      *
      * @param source the event source
@@ -262,6 +264,12 @@ export module myfaces2 {
         }
 
         jsf.ajax.request(source, event, options);
+    }
+
+    //We hook the old namespace system into our npm system
+    if ("undefined" == window?.myfaces?.ab) {
+        window["myfaces"] = window.myfaces ?? {} ;
+        window.myfaces["ab"] = ab;
     }
 }
 

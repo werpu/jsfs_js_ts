@@ -10,7 +10,7 @@ with IE11 being the future the baseline for the moment.
 
 It uses functional constructs on micro scale
 to keep the maintainability and uses 
-my own MonaDish project as core framework base, to avoid
+my own [mona-dish](https://github.com/werpu/mona-dish/) project as core framework base, to avoid
 unnecessary colliding dependencies.
 
 I might roll in MonaDish in the future
@@ -25,29 +25,29 @@ approach, Webpack can take care of the packaging.
 Having smaller code parts makes it easier to test certain
 aspects of the implementation.
 
-Also one additional aspect of the new implementation will be
-that it will be covered entirely by unit tests.
+Also one additional aspect of the new implementation it has a proper
+test coverage via unit tests.
 
 This was also severely lacking in my old implementation
 where I just ran a set of 20 integration tests on macro scale.
 
 ## Status
 
-ATM I am about 70% done with the core implementation, so stay tuned
-something working will be available in a few weeks.
+ATM I am function complete, and the code
+can be tested (alpha stage)
+I probably will make a release before 2020.
 
 
 ## Usage
 
-For the time being I am working on it, so it cannot be used.
-Once it is read for general testing, I will drop the info on how
-to add it to your project.
+It still is a work in progress, but for testing purposes
+it can be used (check the dist directory for builds, I consider
+stable enough for testing, or your own builds)
 
 
 ## build
 
 Make sure python 3.x is installed (needed by some build dependencies)
-
 
 
 ### General build 

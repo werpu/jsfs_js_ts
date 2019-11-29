@@ -65,7 +65,7 @@ export class ErrorData extends EventData {
         return new ErrorData(source, name, message, responseText, responseCode, null, "UNKNOWN", ErrorType.HTTP_ERROR);
     }
 
-    static fromGeneric(context: Config, errorCode: number, errorType: String): ErrorData {
+    static fromGeneric(context: Config, errorCode: number, errorType: ErrorType = ErrorType.SERVER_ERROR): ErrorData {
 
         let UNKNOWN = "UNKNOWN";
         let getMsg = this.getMsg;
@@ -76,7 +76,7 @@ export class ErrorData extends EventData {
         let status = getMsg(context, STATUS);
         let responseText = getMsg(context, RESPONSE_TEXT);
         let responseXML = getMsg(context, RESPONSE_XML);
-        return new ErrorData(source, name, errorMessage, responseText, responseXML, errorCode + EMPTY_STR, status, ErrorType.SERVER_ERROR);
+        return new ErrorData(source, name, errorMessage, responseText, responseXML, errorCode + EMPTY_STR, status, errorType);
     }
 
     private static getMsg(context, param) {
@@ -85,7 +85,7 @@ export class ErrorData extends EventData {
     }
 
     static fromServerError(context: Config): ErrorData {
-        return this.fromGeneric(context, -1, ErrorType.SERVER_ERROR);
+        return this.fromGeneric(context, -1);
     }
 
 }

@@ -16,7 +16,7 @@
 
 import {Config, DQ, XMLQuery} from "../../ext/monadish";
 import {ResponseProcessor} from "./ResponseProcessor";
-import {ResonseDataResolver} from "./ResonseDataResolver";
+
 import {IResponseProcessor} from "./IResponseProcessor";
 import {
     CMD_ATTRIBUTES,
@@ -37,12 +37,10 @@ import {
     TAG_AFTER,
     TAG_BEFORE
 } from "../core/Const";
+import {resolveContexts, resolveResponseXML} from "./ResonseDataResolver";
 
 
 export module Response {
-
-    import resolveResponseXML = ResonseDataResolver.resolveResponseXML;
-    import resolveContexts = ResonseDataResolver.resolveContexts;
 
 
     /**

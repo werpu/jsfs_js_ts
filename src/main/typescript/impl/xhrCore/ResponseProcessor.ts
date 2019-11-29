@@ -14,21 +14,20 @@
  * limitations under the License.
  */
 
-import {Config, DomQuery, Lang, Stream, XMLQuery} from "../../ext/monadish";
+import {Config, DomQuery, DQ, Lang, Stream, XMLQuery} from "../../ext/monadish";
 import {Implementation} from "../AjaxImpl";
 import {Assertions} from "../util/Assertions";
 import {IResponseProcessor} from "./IResponseProcessor";
 import {ErrorData} from "./ErrorData";
-import {DQ} from "../../ext/monadish";
 import {ExtLang} from "../util/Lang";
-
 
 import {ViewState} from "../core/ImplTypes";
 import {EventData} from "./EventData";
 import {
     APPLIED_VST,
     ATTR_ID,
-    ATTR_NAME, ATTR_URL,
+    ATTR_NAME,
+    ATTR_URL,
     ATTR_VALUE,
     EMPTY_FUNC,
     EMPTY_STR,
@@ -56,7 +55,6 @@ import {
 import trim = Lang.trim;
 import getLocalOrGlobalConfig = ExtLang.getLocalOrGlobalConfig;
 
-
 /**
  * Response processor
  *
@@ -67,6 +65,8 @@ import getLocalOrGlobalConfig = ExtLang.getLocalOrGlobalConfig;
  * which are executed on a single leaf node per operation
  * and present the core functionality of our response
  *
+ * Note the response processor is stateful hence we bundle it in a class
+ * to reduce code we keep references tot contexts in place
  */
 export class ResponseProcessor implements IResponseProcessor {
 
@@ -172,11 +172,10 @@ export class ResponseProcessor implements IResponseProcessor {
     update(node: XMLQuery, cdataBlock: string) {
         let result = DQ.byId(node.id.value).outerHTML(cdataBlock, false, false);
         let sourceForm = result?.parents(TAG_FORM).orElse(result.byTagName(TAG_FORM, true));
-        if(sourceForm) {
+        if (sourceForm) {
             this.storeForPostProcessing(sourceForm, result);
         }
     }
-
 
     delete(node: XMLQuery) {
         DQ.byId(node.id.value).delete();
@@ -217,7 +216,7 @@ export class ResponseProcessor implements IResponseProcessor {
         let insertNodes = DQ.fromMarkup(<any>node.cDATAAsString);
 
         if (before.isPresent()) {
-            let res = DQ.byId(before.value).insertBefore(insertNodes);
+            DQ.byId(before.value).insertBefore(insertNodes);
             this.internalContext.assign(UPDATE_ELEMS).value.push(insertNodes);
         }
         if (after.isPresent()) {
@@ -228,6 +227,11 @@ export class ResponseProcessor implements IResponseProcessor {
         }
     }
 
+    /**
+     * handler for the case &lt;insert <&lt; before id="...
+     *
+     * @param node the node hosting the insert data
+     */
     insertWithSubtags(node: XMLQuery) {
         let before = node.querySelectorAll(TAG_BEFORE);
         let after = node.querySelectorAll(TAG_AFTER);
@@ -235,7 +239,7 @@ export class ResponseProcessor implements IResponseProcessor {
         before.each(item => {
             let insertId = item.attr(ATTR_ID);
             let insertNodes = DQ.fromMarkup(<any>item.cDATAAsString);
-            if(insertId.isPresent()) {
+            if (insertId.isPresent()) {
                 DQ.byId(insertId.value).insertBefore(insertNodes);
                 this.internalContext.assign(UPDATE_ELEMS).value.push(insertNodes);
             }
@@ -244,7 +248,7 @@ export class ResponseProcessor implements IResponseProcessor {
         after.each(item => {
             let insertId = item.attr(ATTR_ID);
             let insertNodes = DQ.fromMarkup(<any>item.cDATAAsString);
-            if(insertId.isPresent()) {
+            if (insertId.isPresent()) {
                 DQ.byId(insertId.value).insertAfter(insertNodes);
                 this.internalContext.assign(UPDATE_ELEMS).value.push(insertNodes);
             }
@@ -257,7 +261,7 @@ export class ResponseProcessor implements IResponseProcessor {
      *
      */
     processViewState(node: XMLQuery): boolean {
-        if( this.isViewStateNode(node)) {
+        if (ResponseProcessor.isViewStateNode(node)) {
             let viewStateValue = node.textContent();
             this.internalContext.assign(APPLIED_VST, node.id.value).value = new ViewState(node.id.value, viewStateValue);
             return true;
@@ -265,16 +269,21 @@ export class ResponseProcessor implements IResponseProcessor {
         return false;
     }
 
+    /**
+     * generic global eval which runs the embedded css and scripts
+     */
     globalEval() {
         let updateElems = new DQ(...this.internalContext.getIf(UPDATE_ELEMS).value);
         updateElems.runCss();
         updateElems.runScripts();
     }
 
+    /**
+     * post processing viewstate fixing
+     */
     fixViewStates() {
         Stream.ofAssoc<ViewState>(this.internalContext.getIf(APPLIED_VST).orElse({}).value)
             .each((item: Array<any>) => {
-                let key = item[0];
                 let value: ViewState =item[1];
                 let nameSpace = DQ.byId(value.nameSpace).orElse(document.body);
                 let affectedForms = nameSpace.byTagName(TAG_FORM);
@@ -285,23 +294,27 @@ export class ResponseProcessor implements IResponseProcessor {
             });
     }
 
+    /**
+     * all processing done we can close the request and send the appropriate events
+     */
     done() {
         let eventData = EventData.createFromRequest(this.request.value, this.externalContext, SUCCESS);
 
         //because some frameworks might decorate them over the context in the response
         let eventHandler = this.externalContext.getIf(ON_EVENT).orElse(this.internalContext.getIf(ON_EVENT).value).orElse(EMPTY_FUNC).value;
-        Implementation.sendEvent(eventData,  eventHandler);
+        Implementation.sendEvent(eventData, eventHandler);
     }
 
-
-    private isAllFormResolution(context: Config) {
-        return getLocalOrGlobalConfig(context, "no_portlet_env", false);
-    }
-
+    /**
+     * proper viewstate -> form assignment
+     *
+     * @param forms the forms to append the viewstate to
+     * @param viewState the final viewstate
+     */
     private appendViewStateToForms(forms: DQ, viewState: string) {
         forms.each((form: DQ) => {
             let viewStateElems = form.querySelectorAll(SEL_VIEWSTATE_ELEM)
-                .orElseLazy(() => this.newViewStateElement(form));
+                .orElseLazy(() => ResponseProcessor.newViewStateElement(form));
 
             viewStateElems.attr("value").value = viewState;
         });
@@ -313,7 +326,7 @@ export class ResponseProcessor implements IResponseProcessor {
      * @param parent, the parent node to attach the viewstate element to
      * (usually a form node)
      */
-    private newViewStateElement(parent: DQ): DQ {
+    private static newViewStateElement(parent: DQ): DQ {
         let newViewState = DQ.fromMarkup(HTML_VIEWSTATE);
         newViewState.appendTo(parent);
         return newViewState;
@@ -330,19 +343,35 @@ export class ResponseProcessor implements IResponseProcessor {
         this.storeForEval(toBeEvaled);
     }
 
+    /**
+     * helper to store a given form for the update post processing (viewstate)
+     *
+     * @param updateForms the dom query object pointing to the forms which need to be updated
+     */
     private storeForUpdate(updateForms: DQ) {
         this.internalContext.assign(UPDATE_FORMS).value.push(updateForms);
     }
 
+    /**
+     * same for eval (js and css)
+     *
+     * @param toBeEvaled
+     */
     private storeForEval(toBeEvaled: DQ) {
         this.internalContext.assign(UPDATE_ELEMS).value.push(toBeEvaled);
     }
 
-    private isViewStateNode(node: XMLQuery) {
-        let separatorchar = (<any>window).jsf.separatorchar;
-        return "undefined" != typeof node?.id?.value && ( node?.id?.value == P_VIEWSTATE ||
-            node?.id?.value?.indexOf([separatorchar, P_VIEWSTATE].join(EMPTY_STR)) != -1 ||
-            node?.id?.value?.indexOf([P_VIEWSTATE, separatorchar].join(EMPTY_STR)) != -1 );
+    /**
+     * check whether a given XMLQuery node is an explicit viewstate node
+     *
+     * @param node the node to check
+     * @returns true of it ii
+     */
+    private static isViewStateNode(node: XMLQuery): boolean {
+        let separatorChar = (<any>window).jsf.separatorchar;
+        return "undefined" != typeof node?.id?.value && (node?.id?.value == P_VIEWSTATE ||
+            node?.id?.value?.indexOf([separatorChar, P_VIEWSTATE].join(EMPTY_STR)) != -1 ||
+            node?.id?.value?.indexOf([P_VIEWSTATE, separatorChar].join(EMPTY_STR)) != -1);
     }
 
 }

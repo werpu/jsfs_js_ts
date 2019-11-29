@@ -23,6 +23,7 @@ import {Config, Optional} from "../../ext/monadish/Monad";
 import {DomQuery, DQ} from "../../ext/monadish/DomQuery";
 import {Stream} from "../../ext/monadish";
 import {EMPTY_STR} from "../core/Const";
+import {getEventTarget} from "../xhrCore/RequestDataResolver";
 
 
 export module ExtLang {
@@ -110,43 +111,6 @@ export module ExtLang {
         return [key, val].join(delimiter);
     }
 
-    /**
-     * determines the correct event depending
-     * on the browsers state
-     *
-     * @param evt incoming event object (note not all browsers
-     * have this)
-     *
-     * @return an event object no matter what is incoming
-     */
-    export function resolveEvent(evt: Event): Event {
-        return evt ?? <any>window?.event ?? {};
-    }
-
-    /**
-     * cross port from the dojo lib
-     * browser save event resolution
-     * @param evt the event object
-     * (with a fallback for ie events if none is present)
-     */
-    export function getEventTarget(evt: Event): Element {
-        //ie6 and 7 fallback
-        let finalEvent = resolveEvent(evt);
-        /**
-         * evt source is defined in the jsf events
-         * seems like some component authors use our code
-         * so we add it here see also
-         * https://issues.apache.org/jira/browse/MYFACES-2458
-         * not entirely a bug but makes sense to add this
-         * behavior. I dont use it that way but nevertheless it
-         * does not break anything so why not
-         * */
-        let t = finalEvent?.srcElement ?? finalEvent?.target ?? (<any>finalEvent)?.source;
-        while ((t) && (t.nodeType != 1)) {
-            t = t.parentNode;
-        }
-        return t;
-    }
 
     /**
      * creates an exeption with additional internal parameters
@@ -180,22 +144,7 @@ export module ExtLang {
         return (<any>window)?.myfaces?.config?.[configName] ?? defaultValue;
     }
 
-    /**
-     * gets the local or global options with local ones having higher priority
-     * if no local or global one was found then the default value is given back
-     *
-     * @param {String} configName the name of the configuration entry
-     * @param {String} localOptions the local options root for the configuration myfaces as default marker is added implicitely
-     *
-     * @param {Object} defaultValue
-     *
-     * @return either the config entry or if none is given the default value
-     */
-    export function getLocalOrGlobalConfig(localOptions: Config, configName: string, defaultValue: any): any {
-        return localOptions.value?.myfaces?.config?.[configName] ??
-            (<any>window)?.myfaces?.config?.[configName] ??
-            defaultValue;
-    };
+
 
 
     /**
@@ -222,7 +171,7 @@ export module ExtLang {
         const FORM = "form";
 
         let queryElem = new DQ(elem);
-        let eventTarget = new DQ(ExtLang.getEventTarget(event));
+        let eventTarget = new DQ(getEventTarget(event));
 
         if (queryElem.isTag(FORM)) {
             return queryElem;
@@ -249,6 +198,23 @@ export module ExtLang {
     }
 
     /**
+     * gets the local or global options with local ones having higher priority
+     * if no local or global one was found then the default value is given back
+     *
+     * @param {String} configName the name of the configuration entry
+     * @param {String} localOptions the local options root for the configuration myfaces as default marker is added implicitely
+     *
+     * @param {Object} defaultValue
+     *
+     * @return either the config entry or if none is given the default value
+     */
+    export function getLocalOrGlobalConfig(localOptions: Config, configName: string, defaultValue: any): any {
+        return localOptions.value?.myfaces?.config?.[configName] ??
+            (<any>window)?.myfaces?.config?.[configName] ??
+            defaultValue;
+    }
+
+    /**
      * assert that the form exists and throw an exception in the case it does not
      * (TODO move this into the assertions)
      *
@@ -259,5 +225,7 @@ export module ExtLang {
             throw makeException(new Error(), null, null, "Impl", "getForm", getMessage("ERR_FORM"));
         }
     }
+
+
 
 }

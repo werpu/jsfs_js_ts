@@ -77,3 +77,52 @@ run
 
 * npm coverage
 
+
+
+### Changelist compared to the original implementation
+
+* *no_portlet_env* is no more
+the configuration parameter 'no_portlet_env' has become obsolete with 
+jsf 2.3 which introduced a proper namespaced viewstate handling
+so it is gone now
+
+* pps disabled for the moment
+
+we had a special pps handling introduced in myfaces, a feature
+probably never used (you basically could reduce the parameters
+sent down by sending a list of pps ids). I have disabled it for the time being.
+The code still is in there for the moment, but will be dropped
+if no demand arises to enable it again.
+
+* legacy browsers
+
+In order to improve the maintainability I have dropped a lot
+of shim and legacy code which was needed to support old browsers.
+Since our main aim is long term maintainability there is a clear cut.
+The lowest supported browser for the moment is Internet Explorer 11 
+older browsers are now cut off. This should suffice for most if 
+not all important environments. If you still use an older browser than 
+IE11 you still can revert to the old codebase for the time being
+(final cutoff point probably will come within the next few years)
+
+IE11 might be cut off in the future, depending on the business requirements 
+by the myfaces users
+
+* performance
+
+Given that we now have faster browsers and end user devices in the mobile
+area than 10 years ago, my main focus was maintainability.
+Maintainability and readability now comes before performance. So I sacrificed some
+of the performance to achieve it.
+Given that the most critical performance hits do not happen in the ajax area
+this is a sacrifice I can live with for the time being.
+
+* Client side i18n
+
+The client side i18n error message translations have become more
+of a liability than a feature.
+For the time being all client side errors are reported in english.
+I can reintroduce them, if there is a real demand.
+But the size and maintainability tradeoff compared to what they
+bring was not worth it to keep them anymore.
+ 

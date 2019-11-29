@@ -1,8 +1,5 @@
 import {Config, DQ} from "../../ext/monadish";
 import {BEGIN, CTX_PARAM_PASS_THR, EVENT, P_PARTIAL_SOURCE, SOURCE} from "../core/Const";
-import {ExtLang} from "../util/Lang";
-import getMessage = ExtLang.getMessage;
-
 
 export class EventData {
     type: string;
@@ -15,7 +12,6 @@ export class EventData {
     static createFromRequest(request: XMLHttpRequest, context: Config, /*event name*/ name: string): EventData {
 
         let eventData = new EventData();
-        let UNKNOWN = getMessage("UNKNOWN");
 
         eventData.type = EVENT;
         eventData.status = name;

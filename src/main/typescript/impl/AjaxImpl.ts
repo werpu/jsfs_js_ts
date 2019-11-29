@@ -28,18 +28,15 @@ import {ErrorData} from "./xhrCore/ErrorData";
 import {EventData} from "./xhrCore/EventData";
 import {ExtLang} from "./util/Lang";
 import {
-    CTX_PARAM_DELAY,
     CTX_PARAM_EXECUTE,
     CTX_PARAM_PASS_THR,
     CTX_PARAM_SRC_CTL_ID,
     CTX_PARAM_SRC_FRM_ID,
-    CTX_PARAM_TIMEOUT,
     CTX_PARAM_TR_TYPE,
     IDENT_ALL,
     IDENT_FORM,
     IDENT_NONE,
     IDENT_THIS,
-    MF_NONE,
     MYFACES,
     ON_ERROR,
     ON_EVENT,
@@ -54,9 +51,14 @@ import {
     RENDER,
     REQ_TYPE_POST,
     SOURCE,
-    TAG_FORM,
-    WINDOW_ID
+    TAG_FORM
 } from "./core/Const";
+import {
+    resolveDefaults,
+    resolveDelay,
+    resolveForm,
+    resolveTimeout
+} from "./xhrCore/RequestDataResolver";
 
 declare var jsf: any;
 
@@ -97,12 +99,8 @@ export module Implementation {
 
     import trim = Lang.trim;
     import getMessage = ExtLang.getMessage;
-    import getForm = ExtLang.getForm;
-    import getLocalOrGlobalConfig = ExtLang.getLocalOrGlobalConfig;
-    import getEvent = ExtLang.resolveEvent;
     import getGlobalConfig = ExtLang.getGlobalConfig;
     import assert = Assertions.assert;
-
 
     let globalConfig = myfacesConfig.myfaces.config;
 
@@ -113,7 +111,6 @@ export module Implementation {
     export let requestQueue: AsynchronouseQueue<XhrRequest> = null;
     /*error reporting threshold*/
     let threshold = "ERROR";
-
 
     /**
      * fetches the separator char from the given script tags
@@ -208,29 +205,25 @@ export module Implementation {
      * @param event any javascript event supported by that object
      * @param opts  map of options being pushed into the ajax cycle
      *
-     *
      * a) transformArguments out of the function
      * b) passThrough handling with a map copy with a filter map block map
      */
     export function request(el: ElemDef, event?: Event, opts ?: Options) {
 
-        /*
-         *namespace remap for our local function context we mix the entire function namespace into
-         *a local function variable so that we do not have to write the entire namespace
-         *all the time
-         */
-        const resolvedEvent = getEvent(event);
-
-        //options not set we define a default one with nothing
-        const options = new Config(opts).deepCopy;
-        const elem = DQ.byId(el || <Element>resolvedEvent.target);
-        const elementId = elem.id;
-        const requestCtx = new Config({});
-        const internalCtx = new Config({});
+        const {
+            resolvedEvent,
+            options,
+            elem,
+            elementId,
+            requestCtx,
+            internalCtx,
+            windowId,
+            isResetValues
+        } = resolveDefaults(event, opts, el);
 
         Assertions.assertRequestIntegrity(options, elem);
 
-        assignWindowId(options, requestCtx);
+        requestCtx.assignIf(!!windowId, P_WINDOW_ID).value = windowId;
 
         requestCtx.assign(CTX_PARAM_PASS_THR).value = filterPassthroughValues(options.value);
 
@@ -285,8 +278,7 @@ export module Implementation {
          * the value has to be explicitly true, according to
          * the specs jsdoc
          */
-        requestCtx.assignIf(true === options.value?.resetValues,
-            CTX_PARAM_PASS_THR, P_RESET_VALUES).value = true;
+        requestCtx.assignIf(isResetValues, CTX_PARAM_PASS_THR, P_RESET_VALUES).value = true;
 
         //additional meta information to speed things up, note internal non jsf
         //pass through options are stored under _mfInternal in the context
@@ -501,7 +493,6 @@ export module Implementation {
         return formData.toString();
     }
 
-
     /**
      * this at the first sight looks like a weird construct, but we need to do it this way
      * for testing, we cannot proxy addRequestToQueue from the testing frameworks directly
@@ -520,27 +511,6 @@ export module Implementation {
     };
 
     //----------------------------------------------- Methods ---------------------------------------------------------------------
-
-    /**
-     * assigns the windowId into our context object
-     * The problem is that the window id can be passed down from various sources
-     * first it can be part of our options otherwise also in our url
-     *
-     * the window id is assigned from followng sources
-     * 1) options value
-     * 2) if no options value is present we look into our url
-     *
-     * The window Id then is stored as
-     * @param options the target options object receiving an new windowId if none is present
-     * @param targetCtx the receiving target context
-     */
-    function assignWindowId(options: Config, targetCtx: Config) {
-        let windowId = options?.value?.windowId ?? ExtDomquery.windowId;
-        targetCtx.assignIf(!!windowId, P_WINDOW_ID).value = windowId;
-
-        //todo still needed ??? we clone anyway
-        options.delete(WINDOW_ID);
-    }
 
     /**
      * the idea is to replace some placeholder parameters with their respective values
@@ -573,7 +543,6 @@ export module Implementation {
      * @param sourceElementId the executing element triggering the jsf.ajax.request (id of it)
      */
     function assignExecute(requestOptions: Config, targetContext: Config, issuingForm: DQ, sourceElementId: string) {
-
 
         if (requestOptions.getIf(CTX_PARAM_EXECUTE).isPresent()) {
             /*the options must be a blank delimited list of strings*/
@@ -674,38 +643,6 @@ export module Implementation {
         return Stream.ofAssoc(mappedOpts)
             .filter(item => !(item[0] in BlockFilter))
             .collect(new AssocArrayCollector());
-    }
-
-    /**
-     * form resolution the same way our old implementation did
-     * it is either the id or the parent form of the element or an embedded form
-     * of the element
-     *
-     * @param requestCtx
-     * @param elem
-     * @param event
-     */
-    function resolveForm(requestCtx: Config, elem: DQ, event: Event): DQ {
-        const configId = requestCtx.value?.myfaces?.form ?? MF_NONE; //requestCtx.getIf(MYFACES, "form").orElse(MF_NONE).value;
-        return DQ
-            .byId(configId)
-            .orElseLazy(() => getForm(elem.getAsElem(0).value, event));
-    }
-
-    function resolveTimeout(options: Config): number {
-        let getCfg = getLocalOrGlobalConfig;
-        return options.getIf(CTX_PARAM_TIMEOUT).value ?? getCfg(options.value, CTX_PARAM_TIMEOUT, 0);
-    }
-
-    /**
-     * resolve the delay from the options and/or the request context and or the configuration
-     *
-     * @param options ... the options object, in most cases it will host the delay value
-     */
-    function resolveDelay(options: Config): number {
-        let getCfg = getLocalOrGlobalConfig;
-
-        return options.getIf(CTX_PARAM_DELAY).value ?? getCfg(options.value, CTX_PARAM_DELAY, 0);
     }
 
 }

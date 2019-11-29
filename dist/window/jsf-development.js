@@ -3463,6 +3463,7 @@ var ExtDomQuery_1 = __webpack_require__(/*! ./util/ExtDomQuery */ "./src/main/ty
 var ErrorData_1 = __webpack_require__(/*! ./xhrCore/ErrorData */ "./src/main/typescript/impl/xhrCore/ErrorData.ts");
 var Lang_1 = __webpack_require__(/*! ./util/Lang */ "./src/main/typescript/impl/util/Lang.ts");
 var Const_1 = __webpack_require__(/*! ./core/Const */ "./src/main/typescript/impl/core/Const.ts");
+var RequestDataResolver_1 = __webpack_require__(/*! ./xhrCore/RequestDataResolver */ "./src/main/typescript/impl/xhrCore/RequestDataResolver.ts");
 /*
  * allowed project stages
  */
@@ -3500,9 +3501,6 @@ var Implementation;
 (function (Implementation) {
     var trim = monadish_1.Lang.trim;
     var getMessage = Lang_1.ExtLang.getMessage;
-    var getForm = Lang_1.ExtLang.getForm;
-    var getLocalOrGlobalConfig = Lang_1.ExtLang.getLocalOrGlobalConfig;
-    var getEvent = Lang_1.ExtLang.resolveEvent;
     var getGlobalConfig = Lang_1.ExtLang.getGlobalConfig;
     var assert = Assertions_1.Assertions.assert;
     var globalConfig = myfacesConfig.myfaces.config;
@@ -3616,15 +3614,16 @@ var Implementation;
          *a local function variable so that we do not have to write the entire namespace
          *all the time
          */
-        var resolvedEvent = getEvent(event);
+        var resolvedEvent = RequestDataResolver_1.resolveEvent(event);
         //options not set we define a default one with nothing
         var options = new monadish_1.Config(opts).deepCopy;
         var elem = monadish_1.DQ.byId(el || resolvedEvent.target);
         var elementId = elem.id;
         var requestCtx = new monadish_1.Config({});
         var internalCtx = new monadish_1.Config({});
+        var windowId = RequestDataResolver_1.resolveWindowId(options);
         Assertions_1.Assertions.assertRequestIntegrity(options, elem);
-        assignWindowId(options, requestCtx);
+        requestCtx.assignIf(!!windowId, Const_1.P_WINDOW_ID).value = windowId;
         requestCtx.assign(Const_1.CTX_PARAM_PASS_THR).value = filterPassthroughValues(options.value);
         requestCtx.assignIf(!!resolvedEvent, Const_1.CTX_PARAM_PASS_THR, Const_1.P_EVT).value = (_a = resolvedEvent) === null || _a === void 0 ? void 0 : _a.type;
         /**
@@ -3650,7 +3649,7 @@ var Implementation;
          * so that people can use dummy forms and work
          * with detached objects
          */
-        var form = resolveForm(requestCtx, elem, resolvedEvent);
+        var form = RequestDataResolver_1.resolveForm(requestCtx, elem, resolvedEvent);
         /**
          * binding contract the javax.faces.source must be set
          */
@@ -3685,8 +3684,8 @@ var Implementation;
         assignClientWindowId(form, requestCtx);
         assignExecute(options, requestCtx, form, elementId.value);
         assignRender(options, requestCtx, form, elementId.value);
-        var delay = resolveDelay(options);
-        var timeout = resolveTimeout(options);
+        var delay = RequestDataResolver_1.resolveDelay(options);
+        var timeout = RequestDataResolver_1.resolveTimeout(options);
         //now we enqueue the request as asynchronous runnable into our request
         //queue and let the queue take over the rest
         Implementation.queueHandler.addRequestToQueue(elem, form, requestCtx, internalCtx, delay, timeout);
@@ -3893,26 +3892,6 @@ var Implementation;
     };
     //----------------------------------------------- Methods ---------------------------------------------------------------------
     /**
-     * assigns the windowId into our context object
-     * The problem is that the window id can be passed down from various sources
-     * first it can be part of our options otherwise also in our url
-     *
-     * the window id is assigned from followng sources
-     * 1) options value
-     * 2) if no options value is present we look into our url
-     *
-     * The window Id then is stored as
-     * @param options the target options object receiving an new windowId if none is present
-     * @param targetCtx the receiving target context
-     */
-    function assignWindowId(options, targetCtx) {
-        var _a, _b, _c;
-        var windowId = (_c = (_b = (_a = options) === null || _a === void 0 ? void 0 : _a.value) === null || _b === void 0 ? void 0 : _b.windowId, (_c !== null && _c !== void 0 ? _c : ExtDomQuery_1.ExtDomquery.windowId));
-        targetCtx.assignIf(!!windowId, Const_1.P_WINDOW_ID).value = windowId;
-        //todo still needed ??? we clone anyway
-        options.delete(Const_1.WINDOW_ID);
-    }
-    /**
      * the idea is to replace some placeholder parameters with their respective values
      * placeholder params like  @all, @none, @form, @this need to be replaced by
      * the values defined by the specification
@@ -4037,37 +4016,6 @@ var Implementation;
         return monadish_1.Stream.ofAssoc(mappedOpts)
             .filter(function (item) { return !(item[0] in BlockFilter); })
             .collect(new monadish_1.AssocArrayCollector());
-    }
-    /**
-     * form resolution the same way our old implementation did
-     * it is either the id or the parent form of the element or an embedded form
-     * of the element
-     *
-     * @param requestCtx
-     * @param elem
-     * @param event
-     */
-    function resolveForm(requestCtx, elem, event) {
-        var _a, _b, _c;
-        var configId = (_c = (_b = (_a = requestCtx.value) === null || _a === void 0 ? void 0 : _a.myfaces) === null || _b === void 0 ? void 0 : _b.form, (_c !== null && _c !== void 0 ? _c : Const_1.MF_NONE)); //requestCtx.getIf(MYFACES, "form").orElse(MF_NONE).value;
-        return monadish_1.DQ
-            .byId(configId)
-            .orElseLazy(function () { return getForm(elem.getAsElem(0).value, event); });
-    }
-    function resolveTimeout(options) {
-        var _a;
-        var getCfg = getLocalOrGlobalConfig;
-        return _a = options.getIf(Const_1.CTX_PARAM_TIMEOUT).value, (_a !== null && _a !== void 0 ? _a : getCfg(options.value, Const_1.CTX_PARAM_TIMEOUT, 0));
-    }
-    /**
-     * resolve the delay from the options and/or the request context and or the configuration
-     *
-     * @param options ... the options object, in most cases it will host the delay value
-     */
-    function resolveDelay(options) {
-        var _a;
-        var getCfg = getLocalOrGlobalConfig;
-        return _a = options.getIf(Const_1.CTX_PARAM_DELAY).value, (_a !== null && _a !== void 0 ? _a : getCfg(options.value, Const_1.CTX_PARAM_DELAY, 0));
     }
 })(Implementation = exports.Implementation || (exports.Implementation = {}));
 
@@ -5005,6 +4953,7 @@ var Messages_1 = __webpack_require__(/*! ../i18n/Messages */ "./src/main/typescr
 var DomQuery_1 = __webpack_require__(/*! ../../ext/monadish/DomQuery */ "./src/main/typescript/ext/monadish/DomQuery.ts");
 var monadish_1 = __webpack_require__(/*! ../../ext/monadish */ "./src/main/typescript/ext/monadish/index.ts");
 var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
+var RequestDataResolver_1 = __webpack_require__(/*! ../xhrCore/RequestDataResolver */ "./src/main/typescript/impl/xhrCore/RequestDataResolver.ts");
 var ExtLang;
 (function (ExtLang) {
     var installedLocale;
@@ -5092,46 +5041,6 @@ var ExtLang;
     }
     ExtLang.keyValToStr = keyValToStr;
     /**
-     * determines the correct event depending
-     * on the browsers state
-     *
-     * @param evt incoming event object (note not all browsers
-     * have this)
-     *
-     * @return an event object no matter what is incoming
-     */
-    function resolveEvent(evt) {
-        var _a, _b;
-        return _b = (evt !== null && evt !== void 0 ? evt : (_a = window) === null || _a === void 0 ? void 0 : _a.event), (_b !== null && _b !== void 0 ? _b : {});
-    }
-    ExtLang.resolveEvent = resolveEvent;
-    /**
-     * cross port from the dojo lib
-     * browser save event resolution
-     * @param evt the event object
-     * (with a fallback for ie events if none is present)
-     */
-    function getEventTarget(evt) {
-        var _a, _b, _c, _d, _e;
-        //ie6 and 7 fallback
-        var finalEvent = resolveEvent(evt);
-        /**
-         * evt source is defined in the jsf events
-         * seems like some component authors use our code
-         * so we add it here see also
-         * https://issues.apache.org/jira/browse/MYFACES-2458
-         * not entirely a bug but makes sense to add this
-         * behavior. I dont use it that way but nevertheless it
-         * does not break anything so why not
-         * */
-        var t = (_d = (_b = (_a = finalEvent) === null || _a === void 0 ? void 0 : _a.srcElement, (_b !== null && _b !== void 0 ? _b : (_c = finalEvent) === null || _c === void 0 ? void 0 : _c.target)), (_d !== null && _d !== void 0 ? _d : (_e = finalEvent) === null || _e === void 0 ? void 0 : _e.source));
-        while ((t) && (t.nodeType != 1)) {
-            t = t.parentNode;
-        }
-        return t;
-    }
-    ExtLang.getEventTarget = getEventTarget;
-    /**
      * creates an exeption with additional internal parameters
      * for extra information
      *
@@ -5164,23 +5073,6 @@ var ExtLang;
     }
     ExtLang.getGlobalConfig = getGlobalConfig;
     /**
-     * gets the local or global options with local ones having higher priority
-     * if no local or global one was found then the default value is given back
-     *
-     * @param {String} configName the name of the configuration entry
-     * @param {String} localOptions the local options root for the configuration myfaces as default marker is added implicitely
-     *
-     * @param {Object} defaultValue
-     *
-     * @return either the config entry or if none is given the default value
-     */
-    function getLocalOrGlobalConfig(localOptions, configName, defaultValue) {
-        var _a, _b, _c, _d, _e, _f, _g, _h;
-        return _h = (_d = (_c = (_b = (_a = localOptions.value) === null || _a === void 0 ? void 0 : _a.myfaces) === null || _b === void 0 ? void 0 : _b.config) === null || _c === void 0 ? void 0 : _c[configName], (_d !== null && _d !== void 0 ? _d : (_g = (_f = (_e = window) === null || _e === void 0 ? void 0 : _e.myfaces) === null || _f === void 0 ? void 0 : _f.config) === null || _g === void 0 ? void 0 : _g[configName])), (_h !== null && _h !== void 0 ? _h : defaultValue);
-    }
-    ExtLang.getLocalOrGlobalConfig = getLocalOrGlobalConfig;
-    ;
-    /**
      * fetches the form in an unprecise manner depending
      * on an element or event target.
      *
@@ -5202,7 +5094,7 @@ var ExtLang;
     function getForm(elem, event) {
         var FORM = "form";
         var queryElem = new DomQuery_1.DQ(elem);
-        var eventTarget = new DomQuery_1.DQ(ExtLang.getEventTarget(event));
+        var eventTarget = new DomQuery_1.DQ(RequestDataResolver_1.getEventTarget(event));
         if (queryElem.isTag(FORM)) {
             return queryElem;
         }
@@ -5223,6 +5115,22 @@ var ExtLang;
         return form;
     }
     ExtLang.getForm = getForm;
+    /**
+     * gets the local or global options with local ones having higher priority
+     * if no local or global one was found then the default value is given back
+     *
+     * @param {String} configName the name of the configuration entry
+     * @param {String} localOptions the local options root for the configuration myfaces as default marker is added implicitely
+     *
+     * @param {Object} defaultValue
+     *
+     * @return either the config entry or if none is given the default value
+     */
+    function getLocalOrGlobalConfig(localOptions, configName, defaultValue) {
+        var _a, _b, _c, _d, _e, _f, _g, _h;
+        return _h = (_d = (_c = (_b = (_a = localOptions.value) === null || _a === void 0 ? void 0 : _a.myfaces) === null || _b === void 0 ? void 0 : _b.config) === null || _c === void 0 ? void 0 : _c[configName], (_d !== null && _d !== void 0 ? _d : (_g = (_f = (_e = window) === null || _e === void 0 ? void 0 : _e.myfaces) === null || _f === void 0 ? void 0 : _f.config) === null || _g === void 0 ? void 0 : _g[configName])), (_h !== null && _h !== void 0 ? _h : defaultValue);
+    }
+    ExtLang.getLocalOrGlobalConfig = getLocalOrGlobalConfig;
     /**
      * assert that the form exists and throw an exception in the case it does not
      * (TODO move this into the assertions)
@@ -5380,6 +5288,153 @@ exports.EventData = EventData;
 
 /***/ }),
 
+/***/ "./src/main/typescript/impl/xhrCore/RequestDataResolver.ts":
+/*!*****************************************************************!*\
+  !*** ./src/main/typescript/impl/xhrCore/RequestDataResolver.ts ***!
+  \*****************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/* Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+var monadish_1 = __webpack_require__(/*! ../../ext/monadish */ "./src/main/typescript/ext/monadish/index.ts");
+var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
+var Lang_1 = __webpack_require__(/*! ../util/Lang */ "./src/main/typescript/impl/util/Lang.ts");
+var ExtDomQuery_1 = __webpack_require__(/*! ../util/ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
+/**
+ * Resolver functions for various aspects of the request data
+ *
+ * stateless because it might be called from various
+ * parts of the response classes
+ */
+/**
+ * resolves the event handlers lazly
+ * so that if some decoration happens in between we can deal with it
+ *
+ * @param funcName
+ */
+function resolveHandlerFunc(requestContext, responseContext, funcName) {
+    return responseContext.getIf(funcName)
+        .orElse(requestContext.getIf(funcName).value)
+        .orElse(Const_1.EMPTY_FUNC).value;
+}
+exports.resolveHandlerFunc = resolveHandlerFunc;
+function resolveTargetUrl(srcFormElement) {
+    return (typeof srcFormElement.elements[Const_1.ENCODED_URL] == 'undefined') ?
+        srcFormElement.action :
+        srcFormElement.elements[Const_1.ENCODED_URL].value;
+}
+exports.resolveTargetUrl = resolveTargetUrl;
+function resolveFinalUrl(sourceForm, formData, ajaxType) {
+    if (ajaxType === void 0) { ajaxType = Const_1.REQ_TYPE_POST; }
+    var targetUrl = this.resolveTargetUrl(sourceForm.getAsElem(0).value);
+    return targetUrl + (ajaxType == Const_1.REQ_TYPE_GET ? "?" + formData.toString() : Const_1.EMPTY_STR);
+}
+exports.resolveFinalUrl = resolveFinalUrl;
+/**
+ * form resolution the same way our old implementation did
+ * it is either the id or the parent form of the element or an embedded form
+ * of the element
+ *
+ * @param requestCtx
+ * @param elem
+ * @param event
+ */
+function resolveForm(requestCtx, elem, event) {
+    var _a, _b, _c;
+    var configId = (_c = (_b = (_a = requestCtx.value) === null || _a === void 0 ? void 0 : _a.myfaces) === null || _b === void 0 ? void 0 : _b.form, (_c !== null && _c !== void 0 ? _c : Const_1.MF_NONE)); //requestCtx.getIf(MYFACES, "form").orElse(MF_NONE).value;
+    return monadish_1.DQ
+        .byId(configId)
+        .orElseLazy(function () { return Lang_1.ExtLang.getForm(elem.getAsElem(0).value, event); });
+}
+exports.resolveForm = resolveForm;
+function resolveTimeout(options) {
+    var _a;
+    var getCfg = Lang_1.ExtLang.getLocalOrGlobalConfig;
+    return _a = options.getIf(Const_1.CTX_PARAM_TIMEOUT).value, (_a !== null && _a !== void 0 ? _a : getCfg(options.value, Const_1.CTX_PARAM_TIMEOUT, 0));
+}
+exports.resolveTimeout = resolveTimeout;
+/**
+ * resolve the delay from the options and/or the request context and or the configuration
+ *
+ * @param options ... the options object, in most cases it will host the delay value
+ */
+function resolveDelay(options) {
+    var _a;
+    var getCfg = Lang_1.ExtLang.getLocalOrGlobalConfig;
+    return _a = options.getIf(Const_1.CTX_PARAM_DELAY).value, (_a !== null && _a !== void 0 ? _a : getCfg(options.value, Const_1.CTX_PARAM_DELAY, 0));
+}
+exports.resolveDelay = resolveDelay;
+/**
+ * resolves the window Id from various sources
+ *
+ * @param options
+ */
+function resolveWindowId(options) {
+    var _a, _b, _c;
+    return _c = (_b = (_a = options) === null || _a === void 0 ? void 0 : _a.value) === null || _b === void 0 ? void 0 : _b.windowId, (_c !== null && _c !== void 0 ? _c : ExtDomQuery_1.ExtDomquery.windowId);
+}
+exports.resolveWindowId = resolveWindowId;
+/**
+ * determines the correct event depending
+ * on the browsers state
+ *
+ * @param evt incoming event object (note not all browsers
+ * have this)
+ *
+ * @return an event object no matter what is incoming
+ */
+function resolveEvent(evt) {
+    var _a, _b;
+    return _b = (evt !== null && evt !== void 0 ? evt : (_a = window) === null || _a === void 0 ? void 0 : _a.event), (_b !== null && _b !== void 0 ? _b : {});
+}
+exports.resolveEvent = resolveEvent;
+/**
+ * cross port from the dojo lib
+ * browser save event resolution
+ * @param evt the event object
+ * (with a fallback for ie events if none is present)
+ */
+function getEventTarget(evt) {
+    var _a, _b, _c, _d, _e;
+    //ie6 and 7 fallback
+    var finalEvent = this.resolveEvent(evt);
+    /**
+     * evt source is defined in the jsf events
+     * seems like some component authors use our code
+     * so we add it here see also
+     * https://issues.apache.org/jira/browse/MYFACES-2458
+     * not entirely a bug but makes sense to add this
+     * behavior. I dont use it that way but nevertheless it
+     * does not break anything so why not
+     * */
+    var t = (_d = (_b = (_a = finalEvent) === null || _a === void 0 ? void 0 : _a.srcElement, (_b !== null && _b !== void 0 ? _b : (_c = finalEvent) === null || _c === void 0 ? void 0 : _c.target)), (_d !== null && _d !== void 0 ? _d : (_e = finalEvent) === null || _e === void 0 ? void 0 : _e.source));
+    while ((t) && (t.nodeType != 1)) {
+        t = t.parentNode;
+    }
+    return t;
+}
+exports.getEventTarget = getEventTarget;
+
+
+/***/ }),
+
 /***/ "./src/main/typescript/impl/xhrCore/ResonseDataResolver.ts":
 /*!*****************************************************************!*\
   !*** ./src/main/typescript/impl/xhrCore/ResonseDataResolver.ts ***!
@@ -5410,88 +5465,85 @@ var Assertions_1 = __webpack_require__(/*! ../util/Assertions */ "./src/main/typ
 var monadish_2 = __webpack_require__(/*! ../../ext/monadish */ "./src/main/typescript/ext/monadish/index.ts");
 var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 /**
- * Resolver for various aspects of the response data
+ * Resolver functions for various aspects of the response data
  *
  * stateless because it might be called from various
  * parts of the response classes
  */
-var ResonseDataResolver;
-(function (ResonseDataResolver) {
+/**
+ * fetches the response XML
+ * as XML Query object
+ *
+ * @param request the request hosting the responseXML
+ *
+ * Throws an error in case of non existent or wrong xml data
+ *
+ */
+function resolveResponseXML(request) {
+    var ret = new monadish_1.XMLQuery(request.getIf(Const_1.SEL_RESPONSE_XML).value);
+    Assertions_1.Assertions.assertValidXMLResponse(ret);
+    return ret;
+}
+exports.resolveResponseXML = resolveResponseXML;
+/**
+ * Splits the incoming passthrough context apart
+ * in an internal and an external nomalized context
+ * the internal one is just for our internal processing
+ *
+ * @param context the root context as associative array
+ */
+function resolveContexts(context) {
     /**
-     * fetches the response XML
-     * as XML Query object
-     *
-     * @param request the request hosting the responseXML
-     *
-     * Throws an error in case of non existent or wrong xml data
-     *
+     * we split the context apart into the external one and
+     * some internal values
      */
-    function resolveResponseXML(request) {
-        var ret = new monadish_1.XMLQuery(request.getIf(Const_1.SEL_RESPONSE_XML).value);
-        Assertions_1.Assertions.assertValidXMLResponse(ret);
-        return ret;
+    var externalContext = monadish_1.Config.fromNullable(context);
+    var internalContext = externalContext.getIf(Const_1.CTX_PARAM_MF_INTERNAL);
+    if (!internalContext.isPresent()) {
+        internalContext = monadish_1.Config.fromNullable({});
     }
-    ResonseDataResolver.resolveResponseXML = resolveResponseXML;
     /**
-     * Splits the incoming passthrough context apart
-     * in an internal and an external nomalized context
-     * the internal one is just for our internal processing
-     *
-     * @param context the root context as associative array
+     * prepare storage for some deferred operations
      */
-    function resolveContexts(context) {
-        /**
-         * we split the context apart into the external one and
-         * some internal values
-         */
-        var externalContext = monadish_1.Config.fromNullable(context);
-        var internalContext = externalContext.getIf(Const_1.CTX_PARAM_MF_INTERNAL);
-        if (!internalContext.isPresent()) {
-            internalContext = monadish_1.Config.fromNullable({});
-        }
-        /**
-         * prepare storage for some deferred operations
-         */
-        internalContext.assign(Const_1.UPDATE_FORMS).value = [];
-        internalContext.assign(Const_1.UPDATE_ELEMS).value = [];
-        return { externalContext: externalContext, internalContext: internalContext };
-    }
-    ResonseDataResolver.resolveContexts = resolveContexts;
-    /**
-     * fetches the source element out of our conexts
-     *
-     * @param context the external context which shpuld host the source id
-     * @param internalContext internal passthrough fall back
-     *
-     */
-    function resolveSourceElement(context, internalContext) {
-        var elemId = resolveSourceElementId(context, internalContext);
-        return monadish_2.DQ.byId(elemId.value);
-    }
-    ResonseDataResolver.resolveSourceElement = resolveSourceElement;
-    /**
-     * fetches the source form if it still exists
-     * also embedded forms and parent forms are taken into consideration
-     * as fallbacks
-     *
-     * @param internalContext
-     * @param elem
-     */
-    function resolveSourceForm(internalContext, elem) {
-        var sourceFormId = internalContext.getIf(Const_1.CTX_PARAM_SRC_FRM_ID);
-        var sourceForm = new monadish_2.DQ(sourceFormId.isPresent() ? document.forms[sourceFormId.value] : null);
-        sourceForm = sourceForm.orElse(elem.parents(Const_1.TAG_FORM))
-            .orElse(elem.querySelectorAll(Const_1.TAG_FORM))
-            .orElse(monadish_2.DQ.querySelectorAll(Const_1.TAG_FORM));
-        return sourceForm;
-    }
-    ResonseDataResolver.resolveSourceForm = resolveSourceForm;
-    function resolveSourceElementId(context, internalContext) {
-        //?internal context?? used to be external one
-        return internalContext.getIf(Const_1.CTX_PARAM_SRC_CTL_ID)
-            .orElseLazy(function () { return context.getIf(Const_1.SOURCE, "id").value; });
-    }
-})(ResonseDataResolver = exports.ResonseDataResolver || (exports.ResonseDataResolver = {}));
+    internalContext.assign(Const_1.UPDATE_FORMS).value = [];
+    internalContext.assign(Const_1.UPDATE_ELEMS).value = [];
+    return { externalContext: externalContext, internalContext: internalContext };
+}
+exports.resolveContexts = resolveContexts;
+/**
+ * fetches the source element out of our conexts
+ *
+ * @param context the external context which shpuld host the source id
+ * @param internalContext internal passthrough fall back
+ *
+ */
+function resolveSourceElement(context, internalContext) {
+    var elemId = resolveSourceElementId(context, internalContext);
+    return monadish_2.DQ.byId(elemId.value);
+}
+exports.resolveSourceElement = resolveSourceElement;
+/**
+ * fetches the source form if it still exists
+ * also embedded forms and parent forms are taken into consideration
+ * as fallbacks
+ *
+ * @param internalContext
+ * @param elem
+ */
+function resolveSourceForm(internalContext, elem) {
+    var sourceFormId = internalContext.getIf(Const_1.CTX_PARAM_SRC_FRM_ID);
+    var sourceForm = new monadish_2.DQ(sourceFormId.isPresent() ? document.forms[sourceFormId.value] : null);
+    sourceForm = sourceForm.orElse(elem.parents(Const_1.TAG_FORM))
+        .orElse(elem.querySelectorAll(Const_1.TAG_FORM))
+        .orElse(monadish_2.DQ.querySelectorAll(Const_1.TAG_FORM));
+    return sourceForm;
+}
+exports.resolveSourceForm = resolveSourceForm;
+function resolveSourceElementId(context, internalContext) {
+    //?internal context?? used to be external one
+    return internalContext.getIf(Const_1.CTX_PARAM_SRC_CTL_ID)
+        .orElseLazy(function () { return context.getIf(Const_1.SOURCE, "id").value; });
+}
 
 
 /***/ }),
@@ -5523,12 +5575,10 @@ var ResonseDataResolver;
 Object.defineProperty(exports, "__esModule", { value: true });
 var monadish_1 = __webpack_require__(/*! ../../ext/monadish */ "./src/main/typescript/ext/monadish/index.ts");
 var ResponseProcessor_1 = __webpack_require__(/*! ./ResponseProcessor */ "./src/main/typescript/impl/xhrCore/ResponseProcessor.ts");
-var ResonseDataResolver_1 = __webpack_require__(/*! ./ResonseDataResolver */ "./src/main/typescript/impl/xhrCore/ResonseDataResolver.ts");
 var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
+var ResonseDataResolver_1 = __webpack_require__(/*! ./ResonseDataResolver */ "./src/main/typescript/impl/xhrCore/ResonseDataResolver.ts");
 var Response;
 (function (Response) {
-    var resolveResponseXML = ResonseDataResolver_1.ResonseDataResolver.resolveResponseXML;
-    var resolveContexts = ResonseDataResolver_1.ResonseDataResolver.resolveContexts;
     /**
      * Standardized jsf.js response
      * this one is called straight from jsf.js.response
@@ -5542,8 +5592,8 @@ var Response;
      */
     function processResponse(request, context) {
         var req = monadish_1.Config.fromNullable(request);
-        var _a = resolveContexts(context), externalContext = _a.externalContext, internalContext = _a.internalContext;
-        var responseXML = resolveResponseXML(req);
+        var _a = ResonseDataResolver_1.resolveContexts(context), externalContext = _a.externalContext, internalContext = _a.internalContext;
+        var responseXML = ResonseDataResolver_1.resolveResponseXML(req);
         var responseProcessor = new ResponseProcessor_1.ResponseProcessor(req, externalContext, internalContext);
         internalContext.assign(Const_1.RESPONSE_XML).value = responseXML;
         //we now process the partial tags, or in none given raise an error
@@ -6172,13 +6222,14 @@ exports.XhrFormData = XhrFormData;
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+var monadish_1 = __webpack_require__(/*! ../../ext/monadish */ "./src/main/typescript/ext/monadish/index.ts");
 var AjaxImpl_1 = __webpack_require__(/*! ../AjaxImpl */ "./src/main/typescript/impl/AjaxImpl.ts");
 var XhrFormData_1 = __webpack_require__(/*! ./XhrFormData */ "./src/main/typescript/impl/xhrCore/XhrFormData.ts");
 var ErrorData_1 = __webpack_require__(/*! ./ErrorData */ "./src/main/typescript/impl/xhrCore/ErrorData.ts");
 var EventData_1 = __webpack_require__(/*! ./EventData */ "./src/main/typescript/impl/xhrCore/EventData.ts");
 var Lang_1 = __webpack_require__(/*! ../util/Lang */ "./src/main/typescript/impl/util/Lang.ts");
-var monadish_1 = __webpack_require__(/*! ../../ext/monadish */ "./src/main/typescript/ext/monadish/index.ts");
 var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
+var RequestDataResolver_1 = __webpack_require__(/*! ./RequestDataResolver */ "./src/main/typescript/impl/xhrCore/RequestDataResolver.ts");
 var failSaveExecute = Lang_1.ExtLang.failSaveExecute;
 var XhrRequest = /** @class */ (function () {
     /**
@@ -6243,7 +6294,7 @@ var XhrRequest = /** @class */ (function () {
             //per spec the onevent and onerrors must be passed through to the response
             responseContext.assign(Const_1.ON_EVENT).value = requestContext.getIf(Const_1.ON_EVENT).value;
             responseContext.assign(Const_1.ON_ERROR).value = requestContext.getIf(Const_1.ON_ERROR).value;
-            xhrObject.open(this.ajaxType, this.resolveFinalUrl(formData), true);
+            xhrObject.open(this.ajaxType, RequestDataResolver_1.resolveFinalUrl(this.sourceForm, formData, this.ajaxType), true);
             //adding timeout
             this.timeout ? xhrObject.timeout = this.timeout : null;
             //a bug in the xhr stub library prevents the setRequestHeader to be properly executed on fake xhr objects
@@ -6388,7 +6439,7 @@ var XhrRequest = /** @class */ (function () {
             //this in onError but also we cannot swallow it
             //we need to resolve the local handlers lazyly,
             //because some frameworks might decorate them over the context in the response
-            var eventHandler = this.resolveHandlerFunc(Const_1.ON_EVENT);
+            var eventHandler = RequestDataResolver_1.resolveHandlerFunc(this.requestContext, this.responseContext, Const_1.ON_EVENT);
             ;
             AjaxImpl_1.Implementation.sendEvent(eventData, eventHandler);
         }
@@ -6399,24 +6450,8 @@ var XhrRequest = /** @class */ (function () {
     };
     XhrRequest.prototype.handleError = function (exception) {
         var errorData = ErrorData_1.ErrorData.fromClient(exception);
-        var eventHandler = this.resolveHandlerFunc(Const_1.ON_ERROR);
+        var eventHandler = RequestDataResolver_1.resolveHandlerFunc(this.requestContext, this.responseContext, Const_1.ON_ERROR);
         AjaxImpl_1.Implementation.sendError(errorData, eventHandler);
-    };
-    /**
-     * resolves the event handlers lazly
-     * so that if some decoration happens in between we can deal with it
-     *
-     * @param funcName
-     */
-    XhrRequest.prototype.resolveHandlerFunc = function (funcName) {
-        return this.responseContext.getIf(funcName)
-            .orElse(this.requestContext.getIf(funcName).value)
-            .orElse(Const_1.EMPTY_FUNC).value;
-    };
-    XhrRequest.prototype.resolveTargetUrl = function (srcFormElement) {
-        return (typeof srcFormElement.elements[Const_1.ENCODED_URL] == 'undefined') ?
-            srcFormElement.action :
-            srcFormElement.elements[Const_1.ENCODED_URL].value;
     };
     XhrRequest.prototype.sendRequest = function (formData) {
         var isPost = this.ajaxType != Const_1.REQ_TYPE_GET;
@@ -6426,10 +6461,6 @@ var XhrRequest = /** @class */ (function () {
         else {
             this.xhrObject.send((isPost) ? formData.toString() : null);
         }
-    };
-    XhrRequest.prototype.resolveFinalUrl = function (formData) {
-        var targetUrl = this.resolveTargetUrl(this.sourceForm.getAsElem(0).value);
-        return targetUrl + (this.ajaxType == Const_1.REQ_TYPE_GET ? "?" + formData.toString() : Const_1.EMPTY_STR);
     };
     return XhrRequest;
 }());

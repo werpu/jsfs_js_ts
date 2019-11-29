@@ -14,27 +14,20 @@
  * limitations under the License.
  */
 
-
 import {AsyncRunnable} from "../util/AsyncRunnable";
-import {Config} from "../../ext/monadish";
+import {Config, DQ, Stream} from "../../ext/monadish";
 import {Implementation} from "../AjaxImpl";
-
 
 import {XhrFormData} from "./XhrFormData";
 import {ErrorData} from "./ErrorData";
 import {EventData} from "./EventData";
-import {DQ} from "../../ext/monadish";
 import {ExtLang} from "../util/Lang";
-import {Stream} from "../../ext/monadish";
 import {
     BEGIN,
     COMPLETE,
     CONTENT_TYPE,
     CTX_PARAM_MF_INTERNAL,
     CTX_PARAM_PASS_THR,
-    EMPTY_FUNC,
-    EMPTY_STR,
-    ENCODED_URL,
     ERROR,
     HEAD_FACES_REQ,
     MALFORMEDXML,
@@ -50,8 +43,8 @@ import {
     URL_ENCODED,
     VAL_AJAX
 } from "../core/Const";
+import {resolveFinalUrl, resolveHandlerFunc} from "./RequestDataResolver";
 import failSaveExecute = ExtLang.failSaveExecute;
-
 
 /**
  * JSFed XHR Request Wrapper
@@ -140,7 +133,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             responseContext.assign(ON_EVENT).value = requestContext.getIf(ON_EVENT).value;
             responseContext.assign(ON_ERROR).value = requestContext.getIf(ON_ERROR).value;
 
-            xhrObject.open(this.ajaxType, this.resolveFinalUrl(formData), true);
+            xhrObject.open(this.ajaxType, resolveFinalUrl(this.sourceForm, formData, this.ajaxType), true);
 
             //adding timeout
             this.timeout ? xhrObject.timeout = this.timeout : null;
@@ -306,7 +299,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             //this in onError but also we cannot swallow it
             //we need to resolve the local handlers lazyly,
             //because some frameworks might decorate them over the context in the response
-            let eventHandler = this.resolveHandlerFunc(ON_EVENT);;
+            let eventHandler = resolveHandlerFunc(this.requestContext, this.responseContext, ON_EVENT);;
             Implementation.sendEvent(eventData,  eventHandler);
         } catch (e) {
             this.handleError(e);
@@ -317,27 +310,11 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     private handleError(exception) {
         let errorData = ErrorData.fromClient(exception);
 
-        let eventHandler = this.resolveHandlerFunc(ON_ERROR);
+        let eventHandler = resolveHandlerFunc(this.requestContext, this.responseContext, ON_ERROR);
         Implementation.sendError(errorData, eventHandler);
     }
 
-    /**
-     * resolves the event handlers lazly
-     * so that if some decoration happens in between we can deal with it
-     *
-     * @param funcName
-     */
-    private resolveHandlerFunc(funcName: string) {
-        return this.responseContext.getIf(funcName)
-                .orElse(this.requestContext.getIf(funcName).value)
-                .orElse(EMPTY_FUNC).value;
-    }
 
-    private resolveTargetUrl(srcFormElement: HTMLFormElement) {
-        return (typeof srcFormElement.elements[ENCODED_URL] == 'undefined') ?
-            srcFormElement.action :
-            srcFormElement.elements[ENCODED_URL].value;
-    }
 
     protected sendRequest(formData: XhrFormData) {
         let isPost = this.ajaxType != REQ_TYPE_GET;
@@ -346,12 +323,6 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         } else {
             this.xhrObject.send((isPost) ? formData.toString() : null);
         }
-    }
-
-    private resolveFinalUrl(formData: XhrFormData) {
-        let targetUrl = this.resolveTargetUrl(<HTMLFormElement>this.sourceForm.getAsElem(0).value);
-
-        return targetUrl + (this.ajaxType == REQ_TYPE_GET ? "?" + formData.toString() : EMPTY_STR);
     }
 
 }

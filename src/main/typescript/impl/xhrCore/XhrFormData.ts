@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import {Config, Lang} from "../../ext/monadish";
 
 import {Stream} from "../../ext/monadish";
@@ -22,29 +21,21 @@ import isString = Lang.isString;
 import {EMPTY_STR, P_VIEWSTATE} from "../core/Const";
 
 
-declare let jsf: any;
-
 /**
- * we simplify now compared to the old form handling
- * given that we have a configuration in place we can recycle that
- * for the entire parameter generation
- * then we have two fallbacks one for the non multipart case
- * the other one for the multipart case
+ * A unified form data class
+ * which builds upon our configuration.
  *
- * From outside we work on a single form configuration
- * which we can use like any other config
- *
- * TODO make this code smaller we might have
- * enough leverage in the streams collectors
- * api just to do that.
+ * We cannot use standard html5 forms everywhere
+ * due to api constraints on the HTML Form object in IE11
+ * and due to the url encoding constraint given by the jsf.js spec
  */
 export class XhrFormData extends Config {
 
     /**
-     * by the time we hit this code, datasource alöready must be of type form
+     * data collector from a given form
      *
-     * @param dataSource either a form as domquery object or an encoded url string
-     * @param partialIdsArray partial ids to collect
+     * @param dataSource either a form as DomQuery object or an encoded url string
+     * @param partialIdsArray partial ids to collect, to reduce the data sent down
      */
     constructor(private dataSource: DQ | string, private partialIdsArray?: string[]) {
         super({});
@@ -52,7 +43,7 @@ export class XhrFormData extends Config {
         //a call from getViewState passes the form element as datasource
         //so we have two call points
         if (isString(dataSource)) {
-            this.handleStringSource();
+            this.assignEncodedString(<string>this.dataSource);
         } else {
             this.handleFormSource();
         }
@@ -67,7 +58,6 @@ export class XhrFormData extends Config {
          * Enhancement partial page submit
          *
          */
-
         this.encodeSubmittableFields(this, <DQ>this.dataSource, this.partialIdsArray);
 
         if (this.getIf(P_VIEWSTATE).isPresent()) {
@@ -77,25 +67,27 @@ export class XhrFormData extends Config {
         this.applyViewState(<DQ>this.dataSource);
     }
 
-    private handleStringSource() {
-        this.mergeEncodedString(<string>this.dataSource);
-        return;
-    }
-
+    /**
+     * special case viewstate handling
+     *
+     * @param form the form holding the viewstate value
+     */
     private applyViewState(form: DQ) {
-        form.byId(P_VIEWSTATE)
-            .ifPresentLazy((elem: DQ) => {
-                let value = elem.inputValue.value;
-                this.assignIf(!!value ,P_VIEWSTATE).value = value;
-            });
+        let viewState = form.byId(P_VIEWSTATE).inputValue;
+        this.assignIf(viewState.isPresent() ,P_VIEWSTATE).value = viewState.value;
     }
 
-    mergeEncodedString(encoded: string) {
-        let splittedEntries = encoded.split(/\&/gi);
-        Stream.of(...splittedEntries)
-            .map(line => line.split(/\=/gi))
+    /**
+     * assignes a url encoded string to this xhrFormData object
+     * as key value entry
+     * @param encoded
+     */
+    assignEncodedString(encoded: string) {
+        let keyValueEntries = encoded.split(/&/gi);
+        Stream.of(...keyValueEntries)
+            .map(line => line.split(/=/gi))
             .each(keyVal => {
-                this.assign(keyVal [0]).value = keyVal[1] || null;
+                this.assign(keyVal [0]).value = keyVal[1] ?? null;
             });
     }
 
@@ -144,9 +136,6 @@ export class XhrFormData extends Config {
         if (this.partialIdsArray && this.partialIdsArray.length) {
             //in case of our myfaces reduced ppr we only
             //only submit the partials
-
-            //TODO maybe also the window id and other defaults lets see
-            //this is not a spec case anyway
             this._value = {};
             toEncode = new DQ(...this.partialIdsArray);
 
@@ -159,6 +148,9 @@ export class XhrFormData extends Config {
         this.shallowMerge(toEncode.querySelectorAll("input, checkbox, select, textarea").encodeFormElement());
     }
 
+    /**
+     * checks if the given datasource is a multipart request source
+     */
     get isMultipartRequest(): boolean {
         return  this.dataSource instanceof DQ && (<DQ> this.dataSource).querySelectorAll("input[type='file']").isPresent();
     }

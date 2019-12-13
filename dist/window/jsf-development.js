@@ -3603,25 +3603,12 @@ var Implementation;
      * @param event any javascript event supported by that object
      * @param opts  map of options being pushed into the ajax cycle
      *
-     *
      * a) transformArguments out of the function
      * b) passThrough handling with a map copy with a filter map block map
      */
     function request(el, event, opts) {
-        var _a, _b, _c, _d, _e;
-        /*
-         *namespace remap for our local function context we mix the entire function namespace into
-         *a local function variable so that we do not have to write the entire namespace
-         *all the time
-         */
-        var resolvedEvent = RequestDataResolver_1.resolveEvent(event);
-        //options not set we define a default one with nothing
-        var options = new monadish_1.Config(opts).deepCopy;
-        var elem = monadish_1.DQ.byId(el || resolvedEvent.target);
-        var elementId = elem.id;
-        var requestCtx = new monadish_1.Config({});
-        var internalCtx = new monadish_1.Config({});
-        var windowId = RequestDataResolver_1.resolveWindowId(options);
+        var _a, _b, _c, _d;
+        var _e = RequestDataResolver_1.resolveDefaults(event, opts, el), resolvedEvent = _e.resolvedEvent, options = _e.options, elem = _e.elem, elementId = _e.elementId, requestCtx = _e.requestCtx, internalCtx = _e.internalCtx, windowId = _e.windowId, isResetValues = _e.isResetValues;
         Assertions_1.Assertions.assertRequestIntegrity(options, elem);
         requestCtx.assignIf(!!windowId, Const_1.P_WINDOW_ID).value = windowId;
         requestCtx.assign(Const_1.CTX_PARAM_PASS_THR).value = filterPassthroughValues(options.value);
@@ -3669,7 +3656,7 @@ var Implementation;
          * the value has to be explicitly true, according to
          * the specs jsdoc
          */
-        requestCtx.assignIf(true === ((_e = options.value) === null || _e === void 0 ? void 0 : _e.resetValues), Const_1.CTX_PARAM_PASS_THR, Const_1.P_RESET_VALUES).value = true;
+        requestCtx.assignIf(isResetValues, Const_1.CTX_PARAM_PASS_THR, Const_1.P_RESET_VALUES).value = true;
         //additional meta information to speed things up, note internal non jsf
         //pass through options are stored under _mfInternal in the context
         internalCtx.assign(Const_1.CTX_PARAM_SRC_FRM_ID).value = form.id.value;
@@ -5221,6 +5208,7 @@ var ErrorData = /** @class */ (function (_super) {
         return new ErrorData(source, name, message, responseText, responseCode, null, "UNKNOWN", ErrorType.HTTP_ERROR);
     };
     ErrorData.fromGeneric = function (context, errorCode, errorType) {
+        if (errorType === void 0) { errorType = ErrorType.SERVER_ERROR; }
         var UNKNOWN = "UNKNOWN";
         var getMsg = this.getMsg;
         var source = getMsg(context, Const_1.SOURCE);
@@ -5229,14 +5217,14 @@ var ErrorData = /** @class */ (function (_super) {
         var status = getMsg(context, Const_1.STATUS);
         var responseText = getMsg(context, Const_1.RESPONSE_TEXT);
         var responseXML = getMsg(context, Const_1.RESPONSE_XML);
-        return new ErrorData(source, name, errorMessage, responseText, responseXML, errorCode + Const_1.EMPTY_STR, status, ErrorType.SERVER_ERROR);
+        return new ErrorData(source, name, errorMessage, responseText, responseXML, errorCode + Const_1.EMPTY_STR, status, errorType);
     };
     ErrorData.getMsg = function (context, param) {
         var UNKNOWN = "UNKNOWN";
         return getMessage(context.getIf(param).orElse(UNKNOWN).value);
     };
     ErrorData.fromServerError = function (context) {
-        return this.fromGeneric(context, -1, ErrorType.SERVER_ERROR);
+        return this.fromGeneric(context, -1);
     };
     return ErrorData;
 }(EventData_1.EventData));
@@ -5257,15 +5245,12 @@ exports.ErrorData = ErrorData;
 Object.defineProperty(exports, "__esModule", { value: true });
 var monadish_1 = __webpack_require__(/*! ../../ext/monadish */ "./src/main/typescript/ext/monadish/index.ts");
 var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
-var Lang_1 = __webpack_require__(/*! ../util/Lang */ "./src/main/typescript/impl/util/Lang.ts");
-var getMessage = Lang_1.ExtLang.getMessage;
 var EventData = /** @class */ (function () {
     function EventData() {
     }
     EventData.createFromRequest = function (request, context, /*event name*/ name) {
         var _a, _b, _c, _d;
         var eventData = new EventData();
-        var UNKNOWN = getMessage("UNKNOWN");
         eventData.type = Const_1.EVENT;
         eventData.status = name;
         var sourceId = context.getIf(Const_1.SOURCE)
@@ -5431,6 +5416,32 @@ function getEventTarget(evt) {
     return t;
 }
 exports.getEventTarget = getEventTarget;
+/**
+ * resolves a bunch of default values
+ * which can be further processed from the given
+ * call parameters of jsf.ajax.request
+ *
+ * @param event
+ * @param opts
+ * @param el
+ */
+function resolveDefaults(event, opts, el) {
+    if (opts === void 0) { opts = {}; }
+    if (el === void 0) { el = null; }
+    var _a;
+    var resolvedEvent = resolveEvent(event);
+    //deep copy the options, so that further transformations to not backfire into the callers
+    var options = new monadish_1.Config(opts).deepCopy;
+    var elem = monadish_1.DQ.byId(el || resolvedEvent.target);
+    var elementId = elem.id;
+    var requestCtx = new monadish_1.Config({});
+    var internalCtx = new monadish_1.Config({});
+    var windowId = resolveWindowId(options);
+    var isResetValues = true === ((_a = options.value) === null || _a === void 0 ? void 0 : _a.resetValues);
+    return { resolvedEvent: resolvedEvent, options: options, elem: elem, elementId: elementId, requestCtx: requestCtx, internalCtx: internalCtx, windowId: windowId, isResetValues: isResetValues };
+}
+exports.resolveDefaults = resolveDefaults;
+;
 
 
 /***/ }),
@@ -5746,13 +5757,10 @@ var monadish_1 = __webpack_require__(/*! ../../ext/monadish */ "./src/main/types
 var AjaxImpl_1 = __webpack_require__(/*! ../AjaxImpl */ "./src/main/typescript/impl/AjaxImpl.ts");
 var Assertions_1 = __webpack_require__(/*! ../util/Assertions */ "./src/main/typescript/impl/util/Assertions.ts");
 var ErrorData_1 = __webpack_require__(/*! ./ErrorData */ "./src/main/typescript/impl/xhrCore/ErrorData.ts");
-var monadish_2 = __webpack_require__(/*! ../../ext/monadish */ "./src/main/typescript/ext/monadish/index.ts");
-var Lang_1 = __webpack_require__(/*! ../util/Lang */ "./src/main/typescript/impl/util/Lang.ts");
 var ImplTypes_1 = __webpack_require__(/*! ../core/ImplTypes */ "./src/main/typescript/impl/core/ImplTypes.ts");
 var EventData_1 = __webpack_require__(/*! ./EventData */ "./src/main/typescript/impl/xhrCore/EventData.ts");
 var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 var trim = monadish_1.Lang.trim;
-var getLocalOrGlobalConfig = Lang_1.ExtLang.getLocalOrGlobalConfig;
 /**
  * Response processor
  *
@@ -5763,6 +5771,8 @@ var getLocalOrGlobalConfig = Lang_1.ExtLang.getLocalOrGlobalConfig;
  * which are executed on a single leaf node per operation
  * and present the core functionality of our response
  *
+ * Note the response processor is stateful hence we bundle it in a class
+ * to reduce code we keep references tot contexts in place
  */
 var ResponseProcessor = /** @class */ (function () {
     function ResponseProcessor(request, externalContext, internalContext) {
@@ -5775,7 +5785,7 @@ var ResponseProcessor = /** @class */ (function () {
         if (!shadowHead.isPresent()) {
             return;
         }
-        var oldHead = monadish_2.DQ.querySelectorAll(Const_1.TAG_HEAD);
+        var oldHead = monadish_1.DQ.querySelectorAll(Const_1.TAG_HEAD);
         //delete all to avoid script and style overlays
         oldHead.querySelectorAll(Const_1.SEL_SCRIPTS_STYLES).delete();
         this.storeForEval(shadowHead);
@@ -5794,7 +5804,7 @@ var ResponseProcessor = /** @class */ (function () {
             return;
         }
         var shadowInnerHTML = shadowBody.html().value;
-        var resultingBody = monadish_2.DQ.querySelectorAll(Const_1.TAG_BODY).html(shadowInnerHTML);
+        var resultingBody = monadish_1.DQ.querySelectorAll(Const_1.TAG_BODY).html(shadowInnerHTML);
         var updateForms = resultingBody.querySelectorAll(Const_1.TAG_FORM);
         resultingBody.copyAttrs(shadowBody);
         this.storeForPostProcessing(updateForms, resultingBody);
@@ -5805,7 +5815,7 @@ var ResponseProcessor = /** @class */ (function () {
      * @param node the node to eval
      */
     ResponseProcessor.prototype.eval = function (node) {
-        monadish_2.DQ.globalEval(node.cDATAAsString);
+        monadish_1.DQ.globalEval(node.cDATAAsString);
     };
     /**
      * processes an incoming error from the response
@@ -5849,14 +5859,14 @@ var ResponseProcessor = /** @class */ (function () {
      */
     ResponseProcessor.prototype.update = function (node, cdataBlock) {
         var _a;
-        var result = monadish_2.DQ.byId(node.id.value).outerHTML(cdataBlock, false, false);
+        var result = monadish_1.DQ.byId(node.id.value).outerHTML(cdataBlock, false, false);
         var sourceForm = (_a = result) === null || _a === void 0 ? void 0 : _a.parents(Const_1.TAG_FORM).orElse(result.byTagName(Const_1.TAG_FORM, true));
         if (sourceForm) {
             this.storeForPostProcessing(sourceForm, result);
         }
     };
     ResponseProcessor.prototype.delete = function (node) {
-        monadish_2.DQ.byId(node.id.value).delete();
+        monadish_1.DQ.byId(node.id.value).delete();
     };
     /**
      * attributes leaf tag... process the attributes
@@ -5864,7 +5874,7 @@ var ResponseProcessor = /** @class */ (function () {
      * @param node
      */
     ResponseProcessor.prototype.attributes = function (node) {
-        var elem = monadish_2.DQ.byId(node.id.value);
+        var elem = monadish_1.DQ.byId(node.id.value);
         node.byTagName(Const_1.TAG_ATTR).each(function (item) {
             elem.attr(item.attr(Const_1.ATTR_NAME).value).value = item.attr(Const_1.ATTR_VALUE).value;
         });
@@ -5885,34 +5895,39 @@ var ResponseProcessor = /** @class */ (function () {
         //let insertId = node.id; //not used atm
         var before = node.attr(Const_1.TAG_BEFORE);
         var after = node.attr(Const_1.TAG_AFTER);
-        var insertNodes = monadish_2.DQ.fromMarkup(node.cDATAAsString);
+        var insertNodes = monadish_1.DQ.fromMarkup(node.cDATAAsString);
         if (before.isPresent()) {
-            var res = monadish_2.DQ.byId(before.value).insertBefore(insertNodes);
+            monadish_1.DQ.byId(before.value).insertBefore(insertNodes);
             this.internalContext.assign(Const_1.UPDATE_ELEMS).value.push(insertNodes);
         }
         if (after.isPresent()) {
-            var domQuery = monadish_2.DQ.byId(after.value);
+            var domQuery = monadish_1.DQ.byId(after.value);
             domQuery.insertAfter(insertNodes);
             this.internalContext.assign(Const_1.UPDATE_ELEMS).value.push(insertNodes);
         }
     };
+    /**
+     * handler for the case &lt;insert <&lt; before id="...
+     *
+     * @param node the node hosting the insert data
+     */
     ResponseProcessor.prototype.insertWithSubtags = function (node) {
         var _this = this;
         var before = node.querySelectorAll(Const_1.TAG_BEFORE);
         var after = node.querySelectorAll(Const_1.TAG_AFTER);
         before.each(function (item) {
             var insertId = item.attr(Const_1.ATTR_ID);
-            var insertNodes = monadish_2.DQ.fromMarkup(item.cDATAAsString);
+            var insertNodes = monadish_1.DQ.fromMarkup(item.cDATAAsString);
             if (insertId.isPresent()) {
-                monadish_2.DQ.byId(insertId.value).insertBefore(insertNodes);
+                monadish_1.DQ.byId(insertId.value).insertBefore(insertNodes);
                 _this.internalContext.assign(Const_1.UPDATE_ELEMS).value.push(insertNodes);
             }
         });
         after.each(function (item) {
             var insertId = item.attr(Const_1.ATTR_ID);
-            var insertNodes = monadish_2.DQ.fromMarkup(item.cDATAAsString);
+            var insertNodes = monadish_1.DQ.fromMarkup(item.cDATAAsString);
             if (insertId.isPresent()) {
-                monadish_2.DQ.byId(insertId.value).insertAfter(insertNodes);
+                monadish_1.DQ.byId(insertId.value).insertAfter(insertNodes);
                 _this.internalContext.assign(Const_1.UPDATE_ELEMS).value.push(insertNodes);
             }
         });
@@ -5923,44 +5938,54 @@ var ResponseProcessor = /** @class */ (function () {
      *
      */
     ResponseProcessor.prototype.processViewState = function (node) {
-        if (this.isViewStateNode(node)) {
+        if (ResponseProcessor.isViewStateNode(node)) {
             var viewStateValue = node.textContent();
             this.internalContext.assign(Const_1.APPLIED_VST, node.id.value).value = new ImplTypes_1.ViewState(node.id.value, viewStateValue);
             return true;
         }
         return false;
     };
+    /**
+     * generic global eval which runs the embedded css and scripts
+     */
     ResponseProcessor.prototype.globalEval = function () {
-        var updateElems = new (monadish_2.DQ.bind.apply(monadish_2.DQ, __spreadArrays([void 0], this.internalContext.getIf(Const_1.UPDATE_ELEMS).value)))();
+        var updateElems = new (monadish_1.DQ.bind.apply(monadish_1.DQ, __spreadArrays([void 0], this.internalContext.getIf(Const_1.UPDATE_ELEMS).value)))();
         updateElems.runCss();
         updateElems.runScripts();
     };
+    /**
+     * post processing viewstate fixing
+     */
     ResponseProcessor.prototype.fixViewStates = function () {
         var _this = this;
         monadish_1.Stream.ofAssoc(this.internalContext.getIf(Const_1.APPLIED_VST).orElse({}).value)
             .each(function (item) {
-            var key = item[0];
             var value = item[1];
-            var nameSpace = monadish_2.DQ.byId(value.nameSpace).orElse(document.body);
+            var nameSpace = monadish_1.DQ.byId(value.nameSpace).orElse(document.body);
             var affectedForms = nameSpace.byTagName(Const_1.TAG_FORM);
             var affectedForms2 = nameSpace.filter(function (item) { return item.tagName.orElse(Const_1.EMPTY_STR).value.toLowerCase() == Const_1.TAG_FORM; });
             _this.appendViewStateToForms(new monadish_1.DomQuery(affectedForms, affectedForms2), value.value);
         });
     };
+    /**
+     * all processing done we can close the request and send the appropriate events
+     */
     ResponseProcessor.prototype.done = function () {
         var eventData = EventData_1.EventData.createFromRequest(this.request.value, this.externalContext, Const_1.SUCCESS);
         //because some frameworks might decorate them over the context in the response
         var eventHandler = this.externalContext.getIf(Const_1.ON_EVENT).orElse(this.internalContext.getIf(Const_1.ON_EVENT).value).orElse(Const_1.EMPTY_FUNC).value;
         AjaxImpl_1.Implementation.sendEvent(eventData, eventHandler);
     };
-    ResponseProcessor.prototype.isAllFormResolution = function (context) {
-        return getLocalOrGlobalConfig(context, "no_portlet_env", false);
-    };
+    /**
+     * proper viewstate -> form assignment
+     *
+     * @param forms the forms to append the viewstate to
+     * @param viewState the final viewstate
+     */
     ResponseProcessor.prototype.appendViewStateToForms = function (forms, viewState) {
-        var _this = this;
         forms.each(function (form) {
             var viewStateElems = form.querySelectorAll(Const_1.SEL_VIEWSTATE_ELEM)
-                .orElseLazy(function () { return _this.newViewStateElement(form); });
+                .orElseLazy(function () { return ResponseProcessor.newViewStateElement(form); });
             viewStateElems.attr("value").value = viewState;
         });
     };
@@ -5970,8 +5995,8 @@ var ResponseProcessor = /** @class */ (function () {
      * @param parent, the parent node to attach the viewstate element to
      * (usually a form node)
      */
-    ResponseProcessor.prototype.newViewStateElement = function (parent) {
-        var newViewState = monadish_2.DQ.fromMarkup(Const_1.HTML_VIEWSTATE);
+    ResponseProcessor.newViewStateElement = function (parent) {
+        var newViewState = monadish_1.DQ.fromMarkup(Const_1.HTML_VIEWSTATE);
         newViewState.appendTo(parent);
         return newViewState;
     };
@@ -5985,18 +6010,34 @@ var ResponseProcessor = /** @class */ (function () {
         this.storeForUpdate(updateForms);
         this.storeForEval(toBeEvaled);
     };
+    /**
+     * helper to store a given form for the update post processing (viewstate)
+     *
+     * @param updateForms the dom query object pointing to the forms which need to be updated
+     */
     ResponseProcessor.prototype.storeForUpdate = function (updateForms) {
         this.internalContext.assign(Const_1.UPDATE_FORMS).value.push(updateForms);
     };
+    /**
+     * same for eval (js and css)
+     *
+     * @param toBeEvaled
+     */
     ResponseProcessor.prototype.storeForEval = function (toBeEvaled) {
         this.internalContext.assign(Const_1.UPDATE_ELEMS).value.push(toBeEvaled);
     };
-    ResponseProcessor.prototype.isViewStateNode = function (node) {
+    /**
+     * check whether a given XMLQuery node is an explicit viewstate node
+     *
+     * @param node the node to check
+     * @returns true of it ii
+     */
+    ResponseProcessor.isViewStateNode = function (node) {
         var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
-        var separatorchar = window.jsf.separatorchar;
+        var separatorChar = window.jsf.separatorchar;
         return "undefined" != typeof ((_b = (_a = node) === null || _a === void 0 ? void 0 : _a.id) === null || _b === void 0 ? void 0 : _b.value) && (((_d = (_c = node) === null || _c === void 0 ? void 0 : _c.id) === null || _d === void 0 ? void 0 : _d.value) == Const_1.P_VIEWSTATE ||
-            ((_g = (_f = (_e = node) === null || _e === void 0 ? void 0 : _e.id) === null || _f === void 0 ? void 0 : _f.value) === null || _g === void 0 ? void 0 : _g.indexOf([separatorchar, Const_1.P_VIEWSTATE].join(Const_1.EMPTY_STR))) != -1 ||
-            ((_k = (_j = (_h = node) === null || _h === void 0 ? void 0 : _h.id) === null || _j === void 0 ? void 0 : _j.value) === null || _k === void 0 ? void 0 : _k.indexOf([Const_1.P_VIEWSTATE, separatorchar].join(Const_1.EMPTY_STR))) != -1);
+            ((_g = (_f = (_e = node) === null || _e === void 0 ? void 0 : _e.id) === null || _f === void 0 ? void 0 : _f.value) === null || _g === void 0 ? void 0 : _g.indexOf([separatorChar, Const_1.P_VIEWSTATE].join(Const_1.EMPTY_STR))) != -1 ||
+            ((_k = (_j = (_h = node) === null || _h === void 0 ? void 0 : _h.id) === null || _j === void 0 ? void 0 : _j.value) === null || _k === void 0 ? void 0 : _k.indexOf([Const_1.P_VIEWSTATE, separatorChar].join(Const_1.EMPTY_STR))) != -1);
     };
     return ResponseProcessor;
 }());
@@ -6014,21 +6055,6 @@ exports.ResponseProcessor = ResponseProcessor;
 
 "use strict";
 
-/* Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to you under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
@@ -6050,32 +6076,41 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     return r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+/* Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 var monadish_1 = __webpack_require__(/*! ../../ext/monadish */ "./src/main/typescript/ext/monadish/index.ts");
 var monadish_2 = __webpack_require__(/*! ../../ext/monadish */ "./src/main/typescript/ext/monadish/index.ts");
 var monadish_3 = __webpack_require__(/*! ../../ext/monadish */ "./src/main/typescript/ext/monadish/index.ts");
 var isString = monadish_1.Lang.isString;
 var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 /**
- * we simplify now compared to the old form handling
- * given that we have a configuration in place we can recycle that
- * for the entire parameter generation
- * then we have two fallbacks one for the non multipart case
- * the other one for the multipart case
+ * A unified form data class
+ * which builds upon our configuration.
  *
- * From outside we work on a single form configuration
- * which we can use like any other config
- *
- * TODO make this code smaller we might have
- * enough leverage in the streams collectors
- * api just to do that.
+ * We cannot use standard html5 forms everywhere
+ * due to api constraints on the HTML Form object in IE11
+ * and due to the url encoding constraint given by the jsf.js spec
  */
 var XhrFormData = /** @class */ (function (_super) {
     __extends(XhrFormData, _super);
     /**
-     * by the time we hit this code, datasource alöready must be of type form
+     * data collector from a given form
      *
-     * @param dataSource either a form as domquery object or an encoded url string
-     * @param partialIdsArray partial ids to collect
+     * @param dataSource either a form as DomQuery object or an encoded url string
+     * @param partialIdsArray partial ids to collect, to reduce the data sent down
      */
     function XhrFormData(dataSource, partialIdsArray) {
         var _this = _super.call(this, {}) || this;
@@ -6085,7 +6120,7 @@ var XhrFormData = /** @class */ (function (_super) {
         //a call from getViewState passes the form element as datasource
         //so we have two call points
         if (isString(dataSource)) {
-            _this.handleStringSource();
+            _this.assignEncodedString(_this.dataSource);
         }
         else {
             _this.handleFormSource();
@@ -6107,24 +6142,27 @@ var XhrFormData = /** @class */ (function (_super) {
         }
         this.applyViewState(this.dataSource);
     };
-    XhrFormData.prototype.handleStringSource = function () {
-        this.mergeEncodedString(this.dataSource);
-        return;
-    };
+    /**
+     * special case viewstate handling
+     *
+     * @param form the form holding the viewstate value
+     */
     XhrFormData.prototype.applyViewState = function (form) {
-        var _this = this;
-        form.byId(Const_1.P_VIEWSTATE)
-            .ifPresentLazy(function (elem) {
-            var value = elem.inputValue.value;
-            _this.assignIf(!!value, Const_1.P_VIEWSTATE).value = value;
-        });
+        var viewState = form.byId(Const_1.P_VIEWSTATE).inputValue;
+        this.assignIf(viewState.isPresent(), Const_1.P_VIEWSTATE).value = viewState.value;
     };
-    XhrFormData.prototype.mergeEncodedString = function (encoded) {
+    /**
+     * assignes a url encoded string to this xhrFormData object
+     * as key value entry
+     * @param encoded
+     */
+    XhrFormData.prototype.assignEncodedString = function (encoded) {
         var _this = this;
-        var splittedEntries = encoded.split(/\&/gi);
-        monadish_2.Stream.of.apply(monadish_2.Stream, splittedEntries).map(function (line) { return line.split(/\=/gi); })
+        var keyValueEntries = encoded.split(/&/gi);
+        monadish_2.Stream.of.apply(monadish_2.Stream, keyValueEntries).map(function (line) { return line.split(/=/gi); })
             .each(function (keyVal) {
-            _this.assign(keyVal[0]).value = keyVal[1] || null;
+            var _a;
+            _this.assign(keyVal[0]).value = (_a = keyVal[1], (_a !== null && _a !== void 0 ? _a : null));
         });
     };
     // noinspection JSUnusedGlobalSymbols
@@ -6170,8 +6208,6 @@ var XhrFormData = /** @class */ (function (_super) {
         if (this.partialIdsArray && this.partialIdsArray.length) {
             //in case of our myfaces reduced ppr we only
             //only submit the partials
-            //TODO maybe also the window id and other defaults lets see
-            //this is not a spec case anyway
             this._value = {};
             toEncode = new (monadish_3.DQ.bind.apply(monadish_3.DQ, __spreadArrays([void 0], this.partialIdsArray)))();
         }
@@ -6184,6 +6220,9 @@ var XhrFormData = /** @class */ (function (_super) {
         this.shallowMerge(toEncode.querySelectorAll("input, checkbox, select, textarea").encodeFormElement());
     };
     Object.defineProperty(XhrFormData.prototype, "isMultipartRequest", {
+        /**
+         * checks if the given datasource is a multipart request source
+         */
         get: function () {
             return this.dataSource instanceof monadish_3.DQ && this.dataSource.querySelectorAll("input[type='file']").isPresent();
         },

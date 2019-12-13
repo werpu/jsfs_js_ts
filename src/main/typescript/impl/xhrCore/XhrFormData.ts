@@ -85,9 +85,12 @@ export class XhrFormData extends Config {
     assignEncodedString(encoded: string) {
         let keyValueEntries = encoded.split(/&/gi);
         Stream.of(...keyValueEntries)
-            .map(line => line.split(/=/gi))
+            //split only the first =
+            .map(line => line.split(/=(.*)/gi))
+            //special case of having keys without values
+            .map(keyVal => keyVal.length < 3 ? [keyVal?.[0] ?? [], keyVal?.[1] ?? []] : keyVal)
             .each(keyVal => {
-                this.assign(keyVal [0]).value = keyVal[1] ?? null;
+                this.assign(keyVal [0]).value = keyVal.splice(1).join("") ?? "";
             });
     }
 

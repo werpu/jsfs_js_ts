@@ -94,4 +94,26 @@ describe("test for proper request param patterns identical to the old implementa
     })
 
 
+    it("must handle base64 encoded strings properly as request data", function() {
+        let probe = "YWFhYWFhc1Rlc3RpdCDDpGtvNDU5NjczMDA9PSsrNDU5MGV3b3UkJiUmLyQmJQ==";
+        DQ.byId("javax.faces.ViewState").inputValue.value = probe;
+        DQ.byId("cmd_update_insert2").click();
+        let requestBody = this.requests[0].requestBody;
+        //We check if the base64 encoded string matches the original
+        let formData = new XhrFormData(requestBody);
+
+        expect(formData.getIf("javax.faces.ViewState").value == probe).to.be.true;
+    });
+
+
+    it("must handle empty parameters properly", function() {
+        let probe = "";
+        DQ.byId("javax.faces.ViewState").inputValue.value = probe;
+        DQ.byId("cmd_update_insert2").click();
+        let requestBody = this.requests[0].requestBody;
+        //We check if the base64 encoded string matches the original
+        let formData = new XhrFormData(requestBody);
+
+        expect(formData.getIf("javax.faces.ViewState").value == probe).to.be.true;
+    });
 });

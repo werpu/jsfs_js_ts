@@ -6159,10 +6159,12 @@ var XhrFormData = /** @class */ (function (_super) {
     XhrFormData.prototype.assignEncodedString = function (encoded) {
         var _this = this;
         var keyValueEntries = encoded.split(/&/gi);
-        monadish_2.Stream.of.apply(monadish_2.Stream, keyValueEntries).map(function (line) { return line.split(/=/gi); })
+        monadish_2.Stream.of.apply(monadish_2.Stream, keyValueEntries).map(function (line) { return line.split(/=(.*)/gi); })
+            //special case of having keys without values
+            .map(function (keyVal) { var _a, _b, _c, _d; return keyVal.length < 3 ? [(_b = (_a = keyVal) === null || _a === void 0 ? void 0 : _a[0], (_b !== null && _b !== void 0 ? _b : [])), (_d = (_c = keyVal) === null || _c === void 0 ? void 0 : _c[1], (_d !== null && _d !== void 0 ? _d : []))] : keyVal; })
             .each(function (keyVal) {
             var _a;
-            _this.assign(keyVal[0]).value = (_a = keyVal[1], (_a !== null && _a !== void 0 ? _a : null));
+            _this.assign(keyVal[0]).value = (_a = keyVal.splice(1).join(""), (_a !== null && _a !== void 0 ? _a : ""));
         });
     };
     // noinspection JSUnusedGlobalSymbols

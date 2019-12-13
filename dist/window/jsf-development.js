@@ -6112,10 +6112,12 @@ var XhrFormData = /** @class */ (function (_super) {
      * @param dataSource either a form as DomQuery object or an encoded url string
      * @param partialIdsArray partial ids to collect, to reduce the data sent down
      */
-    function XhrFormData(dataSource, partialIdsArray) {
+    function XhrFormData(dataSource, partialIdsArray, encode) {
+        if (encode === void 0) { encode = true; }
         var _this = _super.call(this, {}) || this;
         _this.dataSource = dataSource;
         _this.partialIdsArray = partialIdsArray;
+        _this.encode = encode;
         //a call to getViewState before must pass the encoded line
         //a call from getViewState passes the form element as datasource
         //so we have two call points
@@ -6163,8 +6165,8 @@ var XhrFormData = /** @class */ (function (_super) {
             //special case of having keys without values
             .map(function (keyVal) { var _a, _b, _c, _d; return keyVal.length < 3 ? [(_b = (_a = keyVal) === null || _a === void 0 ? void 0 : _a[0], (_b !== null && _b !== void 0 ? _b : [])), (_d = (_c = keyVal) === null || _c === void 0 ? void 0 : _c[1], (_d !== null && _d !== void 0 ? _d : []))] : keyVal; })
             .each(function (keyVal) {
-            var _a;
-            _this.assign(keyVal[0]).value = (_a = keyVal.splice(1).join(""), (_a !== null && _a !== void 0 ? _a : ""));
+            var _a, _b, _c;
+            _this.assign(keyVal[0]).value = (_c = (_b = (_a = keyVal) === null || _a === void 0 ? void 0 : _a.splice(1)) === null || _b === void 0 ? void 0 : _b.join(""), (_c !== null && _c !== void 0 ? _c : ""));
         });
     };
     // noinspection JSUnusedGlobalSymbols
@@ -6194,7 +6196,7 @@ var XhrFormData = /** @class */ (function (_super) {
         for (var key in this.value) {
             if (this.value.hasOwnProperty(key)) {
                 //key value already encoded so no need to reencode them again
-                entries.push(key + "=" + this.value[key]);
+                entries.push(encodeURIComponent(key) + "=" + encodeURIComponent(this.value[key]));
             }
         }
         return entries.join("&");
@@ -6322,7 +6324,8 @@ var XhrRequest = /** @class */ (function () {
         var xhrObject = this.xhrObject;
         try {
             var viewState = jsf.getViewState(this.sourceForm.getAsElem(0).value);
-            var formData = new XhrFormData_1.XhrFormData(viewState);
+            //encoded we need to decode
+            var formData = new XhrFormData_1.XhrFormData(decodeURIComponent(viewState));
             this.contentType = formData.isMultipartRequest ? Const_1.MULTIPART : this.contentType;
             //next step the pass through parameters are merged in for post params
             var requestContext = this.requestContext;

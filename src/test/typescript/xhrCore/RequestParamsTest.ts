@@ -102,7 +102,7 @@ describe("test for proper request param patterns identical to the old implementa
         //We check if the base64 encoded string matches the original
         let formData = new XhrFormData(requestBody);
 
-        expect(formData.getIf("javax.faces.ViewState").value == probe).to.be.true;
+        expect(decodeURIComponent(formData.getIf("javax.faces.ViewState").value) == probe).to.be.true;
     });
 
 
@@ -114,6 +114,19 @@ describe("test for proper request param patterns identical to the old implementa
         //We check if the base64 encoded string matches the original
         let formData = new XhrFormData(requestBody);
 
-        expect(formData.getIf("javax.faces.ViewState").value == probe).to.be.true;
+        expect(decodeURIComponent(formData.getIf("javax.faces.ViewState").value) == probe).to.be.true;
+    });
+
+    //KssbpZfCe+0lwDhgMRQ44wRFkaM1o1lbMMUO3lini5YhXWm6
+
+    it("must handle base64 special cases properly (+ in encoding)", function() {
+        let probe = "KssbpZfCe+0lwDhgMRQ44wRFkaM1o1lbMMUO3lini5YhXWm6";
+        DQ.byId("javax.faces.ViewState").inputValue.value = probe;
+        DQ.byId("cmd_update_insert2").click();
+        let requestBody = this.requests[0].requestBody;
+        //We check if the base64 encoded string matches the original
+        let formData = new XhrFormData(requestBody);
+
+        expect(decodeURIComponent(formData.getIf("javax.faces.ViewState").value) == probe).to.be.true;
     });
 });

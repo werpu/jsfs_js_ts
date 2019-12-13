@@ -113,7 +113,8 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         try {
 
             let viewState = jsf.getViewState(this.sourceForm.getAsElem(0).value);
-            let formData: XhrFormData = new XhrFormData(viewState);
+            //encoded we need to decode
+            let formData: XhrFormData = new XhrFormData(decodeURIComponent(viewState));
 
             this.contentType = formData.isMultipartRequest ? MULTIPART : this.contentType;
 

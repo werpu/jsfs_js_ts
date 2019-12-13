@@ -37,7 +37,7 @@ export class XhrFormData extends Config {
      * @param dataSource either a form as DomQuery object or an encoded url string
      * @param partialIdsArray partial ids to collect, to reduce the data sent down
      */
-    constructor(private dataSource: DQ | string, private partialIdsArray?: string[]) {
+    constructor(private dataSource: DQ | string, private partialIdsArray?: string[], private encode = true) {
         super({});
         //a call to getViewState before must pass the encoded line
         //a call from getViewState passes the form element as datasource
@@ -90,7 +90,7 @@ export class XhrFormData extends Config {
             //special case of having keys without values
             .map(keyVal => keyVal.length < 3 ? [keyVal?.[0] ?? [], keyVal?.[1] ?? []] : keyVal)
             .each(keyVal => {
-                this.assign(keyVal [0]).value = keyVal.splice(1).join("") ?? "";
+                this.assign(keyVal [0]).value = keyVal?.splice(1)?.join("") ?? "";
             });
     }
 
@@ -121,7 +121,7 @@ export class XhrFormData extends Config {
         for (let key in this.value) {
             if (this.value.hasOwnProperty(key)) {
                 //key value already encoded so no need to reencode them again
-                entries.push(`${key}=${this.value[key]}`)
+                entries.push(`${encodeURIComponent(key)}=${encodeURIComponent(this.value[key])}`)
             }
         }
         return entries.join("&")

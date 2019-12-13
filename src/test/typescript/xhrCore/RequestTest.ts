@@ -127,7 +127,7 @@ describe('Tests on the xhr core when it starts to call the request', function ()
             expect(resultsMap[P_PARTIAL_SOURCE]).to.eq("input_2");
             expect(resultsMap[P_AJAX]).to.eq("true");
             expect(resultsMap[P_RENDER]).to.eq("blarg");
-            expect(resultsMap[P_EXECUTE]).to.eq("input_1 input_2");
+            expect(resultsMap[P_EXECUTE]).to.eq("input_1%20input_2");
 
         } finally {
             send.restore();

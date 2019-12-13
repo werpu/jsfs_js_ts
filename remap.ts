@@ -29,16 +29,18 @@ const replace = require('replace-in-file');
 const args = process.argv.slice(2);
 // and remap it into our proper option
 const buildStage = (args[0] == "--development") ? "-development" : "";
+console.log("fixing mapping file references for jsf");
 
 let option = {
     //development
     files: 'dist/**/*.js',
-    from: /jsf([^\.]*)\.js\.map/g,
-    to: `jsf${buildStage}.js.map\n//# sourceMappingURL=jsf${buildStage}.js.map.jsf?ln=scripts,`
+    from: /jsf([^\.\n]*)\.js\.map/g,
+    to: `jsf${buildStage}.js.map\n//# sourceMappingURL=jsf${buildStage}.js.map.jsf?ln=scripts`
 }
 
 try {
     const result = replace.sync(option);
+    console.log("mapping file references fixed!");
     console.log('Replacement results:', result);
 } catch (error) {
     console.error('Error occurred:', error);

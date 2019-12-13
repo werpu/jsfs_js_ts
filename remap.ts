@@ -34,7 +34,7 @@ console.log("fixing mapping file references for jsf");
 let option = {
     //development
     files: 'dist/**/*.js',
-    from: /jsf([^\.\n]*)\.js\.map/g,
+    from: (buildStage == "-development") ? /jsf-development.js\.map/g : /jsf.js\.map/g,
     to: `jsf${buildStage}.js.map\n//# sourceMappingURL=jsf${buildStage}.js.map.jsf?ln=scripts`
 }
 

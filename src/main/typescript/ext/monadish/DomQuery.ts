@@ -1720,13 +1720,15 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
 
     get cDATAAsString(): string {
         let cDataBlock = [];
+        let TYPE_CDATA_BLOCK = 4;
         // response may contain several blocks
         return this.stream
             .flatMap(item => item.childNodes.stream).reduce((reduced: Array<any>, item: DomQuery) => {
-                reduced.push((<any>item?.value?.value)?.data ?? "");
+                if (item?.value?.value?.nodeType == TYPE_CDATA_BLOCK) {
+                    reduced.push((<any>item?.value?.value)?.data ?? "");
+                }
                 return reduced;
             }, []).value.join("");
-
     }
 
     subNodes(from: number, to?: number): DomQuery {

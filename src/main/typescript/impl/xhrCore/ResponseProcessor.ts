@@ -262,7 +262,7 @@ export class ResponseProcessor implements IResponseProcessor {
      */
     processViewState(node: XMLQuery): boolean {
         if (ResponseProcessor.isViewStateNode(node)) {
-            let viewStateValue = node.textContent();
+            let viewStateValue = node.cDATAAsString;
             this.internalContext.assign(APPLIED_VST, node.id.value).value = new ViewState(node.id.value, viewStateValue);
             return true;
         }

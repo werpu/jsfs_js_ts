@@ -261,7 +261,49 @@ describe('Tests of the various aspects of the response protocol functionality', 
 
         expect(DQ.byId("javax.faces.ViewState").isAbsent()).to.be.false;
 
-    })
+        expect((<HTMLInputElement>document.getElementById("javax.faces.ViewState")).value == "RTUyRDI0NzE4QzAxM0E5RDAwMDAwMDVD").to.be.true;
+        expect(DQ.byId("javax.faces.ViewState").inputValue.value == "RTUyRDI0NzE4QzAxM0E5RDAwMDAwMDVD").to.be.true;
+    });
+
+
+    it("must have updated the viewstates properly with lenient update block", function () {
+
+        let issuer = DQ.byId("cmd_eval").click();
+
+        /*js full submit form, coming from the integration tests*/
+        window.document.body.innerHTML = `<form id="j_id__v_0" name="j_id__v_0" method="post" action="/IntegrationJSTest/integrationtestsjasmine/test7-eventtest.jsf"
+      enctype="application/x-www-form-urlencoded"><span id="updatePanel">hello world</span><a href="#"
+                                                                                              onclick="return jsf.util.chain(this, event,'return false;', 'return myfaces.ab(\'j_id_1l\',\'updateTrigger\');');"
+                                                                                              id="updateTrigger"
+                                                                                              name="updateTrigger"
+                                                                                              class="updateTrigger">[Press
+    me for Update]</a><input type="hidden" name="j_id_1l_SUBMIT" value="1">
+</form>`;
+
+
+        jsf.ajax.request(window.document.getElementById("updateTrigger"), null, {
+            render: "updatePanel",
+            execute: "updatePanel updateTrigger"
+        });
+
+        // language=XML
+        this.respond(`<?xml version="1.0" encoding="UTF-8"?>
+            <partial-response id="j_id__v_0">
+                <changes>
+                    <update id="updatePanel"><![CDATA[<span id="updatePanel">hello world</span>]]></update>
+                    <update id="j_id__v_0:javax.faces.ViewState:1"><![CDATA[RTUyRDI0NzE4QzAxM0E5RDAwMDAwMDVD]]><!-- 
+                        Some random junk which is sent by the server
+                    --></update>
+                </changes>
+            </partial-response>`);
+
+
+        expect(DQ.byId("javax.faces.ViewState").isAbsent()).to.be.false;
+
+        expect((<HTMLInputElement>document.getElementById("javax.faces.ViewState")).value == "RTUyRDI0NzE4QzAxM0E5RDAwMDAwMDVD").to.be.true;
+        expect(DQ.byId("javax.faces.ViewState").inputValue.value == "RTUyRDI0NzE4QzAxM0E5RDAwMDAwMDVD").to.be.true;
+    });
+
 
     //TODO update head all and redirect
 });

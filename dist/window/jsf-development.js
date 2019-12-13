@@ -1773,11 +1773,14 @@ var DomQuery = /** @class */ (function () {
     Object.defineProperty(DomQuery.prototype, "cDATAAsString", {
         get: function () {
             var cDataBlock = [];
+            var TYPE_CDATA_BLOCK = 4;
             // response may contain several blocks
             return this.stream
                 .flatMap(function (item) { return item.childNodes.stream; }).reduce(function (reduced, item) {
-                var _a, _b, _c, _d;
-                reduced.push((_d = (_c = (_b = (_a = item) === null || _a === void 0 ? void 0 : _a.value) === null || _b === void 0 ? void 0 : _b.value) === null || _c === void 0 ? void 0 : _c.data, (_d !== null && _d !== void 0 ? _d : "")));
+                var _a, _b, _c, _d, _e, _f, _g;
+                if (((_c = (_b = (_a = item) === null || _a === void 0 ? void 0 : _a.value) === null || _b === void 0 ? void 0 : _b.value) === null || _c === void 0 ? void 0 : _c.nodeType) == TYPE_CDATA_BLOCK) {
+                    reduced.push((_g = (_f = (_e = (_d = item) === null || _d === void 0 ? void 0 : _d.value) === null || _e === void 0 ? void 0 : _e.value) === null || _f === void 0 ? void 0 : _f.data, (_g !== null && _g !== void 0 ? _g : "")));
+                }
                 return reduced;
             }, []).value.join("");
         },
@@ -5939,7 +5942,7 @@ var ResponseProcessor = /** @class */ (function () {
      */
     ResponseProcessor.prototype.processViewState = function (node) {
         if (ResponseProcessor.isViewStateNode(node)) {
-            var viewStateValue = node.textContent();
+            var viewStateValue = node.cDATAAsString;
             this.internalContext.assign(Const_1.APPLIED_VST, node.id.value).value = new ImplTypes_1.ViewState(node.id.value, viewStateValue);
             return true;
         }

@@ -25,12 +25,6 @@
 //does pretty much what grep and awk do on unix systems
 const replace = require('replace-in-file');
 
-/**
- * options for development
- * and production build replacement
- */
-const options = [, ]
-
 // we ned to fetch the proper argument
 const args = process.argv.slice(2);
 // and remap it into our proper option
@@ -39,12 +33,13 @@ const buildStage = (args[0] == "--development") ? "-development" : "";
 let option = {
     //development
     files: 'dist/**/*.js',
-        from: /jsf${buildStage}\.js\.map/g,
+    from: /jsf([^\.]*)\.js\.map/g,
     to: `jsf${buildStage}.js.map\n//# sourceMappingURL=jsf${buildStage}.js.map.jsf?ln=scripts,`
 }
 
 try {
-    replace.sync(option);
+    const result = replace.sync(option);
+    console.log('Replacement results:', result);
 } catch (error) {
     console.error('Error occurred:', error);
 }

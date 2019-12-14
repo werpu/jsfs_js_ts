@@ -23,9 +23,9 @@ export class ExtDomquery extends DQ {
         return new ExtDomquery(document.body).nonce;
     }
 
-    get windowId() {
+    get windowId(): string | null {
 
-        const fetchWindowIdFromURL = function () {
+        const fetchWindowIdFromURL = function (): string | null {
             let href = window.location.href;
             let windowId = "windowId";
             let regex = new RegExp("[\\?&]" + windowId + "=([^&#\\;]*)");
@@ -67,7 +67,9 @@ export class ExtDomquery extends DQ {
             return curScript.attr("nonce").value;
         }
 
-        let nonceScript = DQ.querySelectorAll("script[src], link[src]").lazyStream
+        let nonceScript = DQ
+            .querySelectorAll("script[src], link[src]")
+            .lazyStream
             .filter((item) => item.attr("nonce").value != null && item.attr("src") != null)
             .map((item => !item.attr("src").value.match(/jsf\.js\?ln=javax\.faces/gi)))
             .first();

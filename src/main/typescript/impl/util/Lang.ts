@@ -27,12 +27,10 @@ import {Stream} from "../../ext/monadish";
 import {EMPTY_STR} from "../core/Const";
 import {getEventTarget} from "../xhrCore/RequestDataResolver";
 
-
 export module ExtLang {
 
-     let installedLocale: Messages;
-     let nameSpace = "impl/util/Lang/";
-
+    let installedLocale: Messages;
+    let nameSpace = "impl/util/Lang/";
 
     export function getLanguage(): string {
         //TODO global config override
@@ -101,8 +99,6 @@ export module ExtLang {
         return msg;
     }
 
-
-
     /**
      * transforms a key value pair into a string
      * @param key the key
@@ -112,7 +108,6 @@ export module ExtLang {
     export function keyValToStr(key: string, val: string, delimiter: string = "\n") {
         return [key, val].join(delimiter);
     }
-
 
     /**
      * creates an exeption with additional internal parameters
@@ -146,9 +141,6 @@ export module ExtLang {
          */
         return (<any>window)?.myfaces?.config?.[configName] ?? defaultValue;
     }
-
-
-
 
     /**
      * fetches the form in an unprecise manner depending
@@ -228,7 +220,5 @@ export module ExtLang {
             throw makeException(new Error(), null, null, "Impl", "getForm", getMessage("ERR_FORM"));
         }
     }
-
-
 
 }

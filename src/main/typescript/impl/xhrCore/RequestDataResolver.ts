@@ -138,15 +138,13 @@ export function getEventTarget(evt: Event): Element {
  * @param el
  */
 export function resolveDefaults(event: Event, opts: any = {}, el: Element | string = null) {
-    const resolvedEvent = event;
-
     //deep copy the options, so that further transformations to not backfire into the callers
-    const options = new Config(opts).deepCopy;
-    const elem = DQ.byId(el || <Element>resolvedEvent.target);
-    const elementId = elem.id;
-    const requestCtx = new Config({});
-    const internalCtx = new Config({});
-    const windowId = resolveWindowId(options);
-    const isResetValues = true === options.value?.resetValues;
+    const resolvedEvent = event,
+        options = new Config(opts).deepCopy,
+        elem = DQ.byId(el || <Element>resolvedEvent.target),
+        elementId = elem.id, requestCtx = new Config({}),
+        internalCtx = new Config({}), windowId = resolveWindowId(options),
+        isResetValues = true === options.value?.resetValues;
+
     return {resolvedEvent, options, elem, elementId, requestCtx, internalCtx, windowId, isResetValues};
 }

@@ -1,6 +1,5 @@
 import {AsyncRunnable} from "./AsyncRunnable";
 
-
 /**
  * Asynchronous queue which starts to work
  * through the callbacks until the queue is empty
@@ -13,7 +12,6 @@ import {AsyncRunnable} from "./AsyncRunnable";
  * for normal promises if needed.
  */
 export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
-    static EVT_NEXT = "__mf_queue_next__";
 
     private runnableQueue = [];
     private delayTimeout: number;

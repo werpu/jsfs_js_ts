@@ -24,6 +24,25 @@ import objToArray = Lang.objToArray;
 import isString = Lang.isString;
 import equalsIgnoreCase = Lang.equalsIgnoreCase;
 
+/**
+ *
+ *        // - submit checkboxes and radio inputs only if checked
+ if ((tagName != "select" && elemType != "button"
+ && elemType != "reset" && elemType != "submit" && elemType != "image")
+ && ((elemType != "checkbox" && elemType != "radio"
+ */
+
+enum Submittables {
+    SELECT = "select",
+    BUTTON = "button",
+    SUBMIT = "submit",
+    RESET = "reset",
+    IMAGE = "image",
+    RADIO = "radio",
+    CHECKBOX = "checkbox"
+
+}
+
 // @ts-ignore supression needed here due to fromnullable
 export class ElementAttribute extends ValueEmbedder<string> {
 
@@ -452,6 +471,21 @@ interface IDomQuery {
      * @param to
      */
     subNodes(from: number, to?: number): DomQuery;
+
+    /**
+     * creates a shadow roots from the existing dom elements in this query
+     * only working on supported browsers, or if a shim is installed
+     * unlike Promises I wont do my own shim on top here
+     */
+    createShadowRoot(): DomQuery;
+
+    /**
+     * attach shadow elements
+     * 1:1 mapping from attach shadow
+     *
+     * @param modeParams
+     */
+    attachShadow(modeParams: { [key: string]: string }): DomQuery
 }
 
 /**
@@ -869,12 +903,14 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
      * @param includeRoot
      */
     byTagName(tagName: string, includeRoot ?: boolean): DomQuery {
-        let res = [];
-        for (let cnt = 0; includeRoot && cnt < this.rootNode.length; cnt++) {
-            if (this.rootNode[cnt]?.tagName == tagName) {
-                res.push(new DomQuery(this.rootNode[cnt]));
-            }
+        let res: Array<Element | DomQuery> = [];
+        if(includeRoot) {
+            res = Stream.of<any>(...(this?.rootNode ?? []))
+                .filter(element => element?.tagName == tagName)
+                .reduce<Array<Element | DomQuery>>((reduction: any, item: Element) => reduction.concat([item]),  res)
+                .value;
         }
+
         res = res.concat(this.querySelectorAll(tagName));
         return new DomQuery(...res);
     }
@@ -1055,6 +1091,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
     }
 
     eachElem(func: (item: Element, cnt?: number) => any): DomQuery {
+
         for (let cnt = 0, len = this.rootNode.length; cnt < len; cnt++) {
             if (func(this.rootNode[cnt], cnt) === false) {
                 break;
@@ -1699,11 +1736,21 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
                 // rules:
                 // - don't submit no selects (processed above), buttons, reset buttons, submit buttons,
                 // - submit checkboxes and radio inputs only if checked
-                if ((tagName != "select" && elemType != "button"
-                    && elemType != "reset" && elemType != "submit" && elemType != "image")
-                    && ((elemType != "checkbox" && elemType != "radio") || element.checked)) {
+                if (
+                    (
+                        tagName != Submittables.SELECT &&
+                        elemType != Submittables.BUTTON &&
+                        elemType != Submittables.RESET &&
+                        elemType != Submittables.SUBMIT &&
+                        elemType != Submittables.IMAGE
+                    ) && (
+                        (
+                            elemType != Submittables.CHECKBOX && elemType != Submittables.RADIO) ||
+                        element.checked
+                    )
+                ) {
                     let files: any = (<any>element.value).files;
-                    if (files && files.length) {
+                    if (files?.length) {
                         //xhr level2
                         target.assign(name).value = files[0];
                     } else {
@@ -1715,7 +1762,6 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         });
 
         return target;
-
     }
 
     get cDATAAsString(): string {
@@ -1764,6 +1810,33 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
 
     reset() {
         this.pos = -1;
+    }
+
+    createShadowRoot(): DomQuery {
+        let shadowRoots: DomQuery[] = [];
+        this.eachElem((item: Element) => {
+            let shadowElement: DomQuery;
+            if ((<any>item)?.createShadowRoot) {
+                shadowElement = DomQuery.byId((<any>item).createShadowRoot());
+            } else {
+                throw Error("Shadow dom creation not supported by the browser, please use a shim, to gain this functionality")
+            }
+        });
+
+        return new DomQuery(...shadowRoots);
+    }
+
+    attachShadow(params: { [key: string]: string }): DomQuery {
+        let shadowRoots: DomQuery[] = [];
+        this.eachElem((item: Element) => {
+            let shadowElement: DomQuery;
+            if ((<any>item)?.attachShadow) {
+                shadowElement = DomQuery.byId((<any>item).attachShadow(params));
+            } else {
+                //throw error (Shadow dom creation not supported by the browser, please use a shim, to gain this functionality)
+            }
+        });
+        return new DomQuery(...shadowRoots);
     }
 
     //from

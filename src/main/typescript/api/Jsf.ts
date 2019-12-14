@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-///<reference path='./ApiInterfaces.ts'/>
 ///<reference types='../../types/typedefs'/>
 
 import {Implementation} from "../impl/AjaxImpl";
@@ -153,7 +152,7 @@ export module jsf {
          *
          * @param {function} errorListener error handler must be of the format <i>function errorListener(&lt;errorData&gt;)</i>
          */
-        export function addOnError(errorFunc: (data: _apiInterfaces.ErrorData) => void) {
+        export function addOnError(errorFunc: (data: ErrorData) => void) {
             Implementation.addOnError(<any>errorFunc);
         }
 
@@ -163,7 +162,7 @@ export module jsf {
          *
          * @param {function} eventListener event must be of the format <i>function eventListener(&lt;eventData&gt;)</i>
          */
-        export function addOnEvent(eventFunc: (data: _apiInterfaces.EventData) => void) {
+        export function addOnEvent(eventFunc: (data: EventData) => void) {
             Implementation.addOnEvent(<any>eventFunc);
         }
     }
@@ -264,12 +263,6 @@ export module myfaces {
         }
 
         jsf.ajax.request(source, event, options);
-    }
-
-    //We hook the old namespace system into our npm system
-    if ("undefined" == window?.myfaces?.ab) {
-        window["myfaces"] = window.myfaces ?? {} ;
-        window.myfaces["ab"] = ab;
     }
 }
 

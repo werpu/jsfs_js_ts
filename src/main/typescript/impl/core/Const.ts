@@ -168,4 +168,4 @@ export const APPLIED_VST = "appliedViewState";
 export const RECONNECT_INTERVAL = 500;
 export const MAX_RECONNECT_ATTEMPTS = 25;
 
-
+export const UNKNOWN = "UNKNOWN";

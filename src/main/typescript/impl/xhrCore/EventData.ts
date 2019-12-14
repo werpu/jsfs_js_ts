@@ -19,10 +19,9 @@ export class EventData {
         let sourceId: string = context.getIf(SOURCE)
             .orElse(context.getIf(P_PARTIAL_SOURCE).value)
             .orElse(context.getIf(CTX_PARAM_PASS_THR, P_PARTIAL_SOURCE).value).value;
-        if(sourceId) {
+        if (sourceId) {
             eventData.source = DQ.byId(sourceId).first().value.value;
         }
-
 
         if (name !== BEGIN) {
             eventData.responseCode = request?.status?.toString();

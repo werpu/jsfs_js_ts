@@ -51,7 +51,9 @@ export module Assertions {
      * internal helper which raises an error in the
      * format we need for further processing
      *
+     * @param error
      * @param message the message
+     * @param caller
      * @param title the title of the error (optional)
      * @param name the name of the error (optional)
      */

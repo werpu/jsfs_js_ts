@@ -1,4 +1,5 @@
 import {XMLQuery} from "../../ext/monadish";
+// noinspection TypeScriptPreferShortImport
 import {DQ} from "../../ext/monadish/DomQuery";
 
 /**
@@ -33,8 +34,6 @@ export interface IResponseProcessor {
     /**
      * processes an incoming error from the response
      * which is hosted under the &lt;error&gt; tag
-     * @param request the current request
-     * @param context the contect object
      * @param node the node in the xml hosting the error message
      */
     error(node: XMLQuery): void;
@@ -42,17 +41,12 @@ export interface IResponseProcessor {
     /**
      * process the redirect operation
      *
-     * @param request
-     * @param context
-     * @param internalContext
      * @param node
      */
     redirect(node: XMLQuery): void;
 
     /**
      * processes the update operation and updates the node with the cdata block
-     * @param context
-     * @param internalContext
      * @param node
      * @param cdataBlock
      */
@@ -69,9 +63,6 @@ export interface IResponseProcessor {
     /**
      * attributes leaf tag... process the attributes
      *
-     * @param request
-     * @param context
-     * @param internalContext
      * @param node
      */
     attributes(node: XMLQuery): void;

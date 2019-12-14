@@ -1,4 +1,13 @@
-import {EMPTY_STR, ERROR_MESSAGE, ERROR_NAME, RESPONSE_TEXT, RESPONSE_XML, SOURCE, STATUS} from "../core/Const";
+import {
+    EMPTY_STR,
+    ERROR_MESSAGE,
+    ERROR_NAME,
+    RESPONSE_TEXT,
+    RESPONSE_XML,
+    SOURCE,
+    STATUS,
+    UNKNOWN
+} from "../core/Const";
 import {Config} from "../../ext/monadish";
 
 import {EventData} from "./EventData";
@@ -67,7 +76,6 @@ export class ErrorData extends EventData {
 
     static fromGeneric(context: Config, errorCode: number, errorType: ErrorType = ErrorType.SERVER_ERROR): ErrorData {
 
-        let UNKNOWN = "UNKNOWN";
         let getMsg = this.getMsg;
 
         let source = getMsg(context, SOURCE);
@@ -80,7 +88,6 @@ export class ErrorData extends EventData {
     }
 
     private static getMsg(context, param) {
-        let UNKNOWN = "UNKNOWN";
         return getMessage(context.getIf(param).orElse(UNKNOWN).value);
     }
 

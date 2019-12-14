@@ -53,7 +53,6 @@ import {
     UPDATE_FORMS
 } from "../core/Const";
 import trim = Lang.trim;
-import getLocalOrGlobalConfig = ExtLang.getLocalOrGlobalConfig;
 
 /**
  * Response processor
@@ -284,11 +283,10 @@ export class ResponseProcessor implements IResponseProcessor {
     fixViewStates() {
         Stream.ofAssoc<ViewState>(this.internalContext.getIf(APPLIED_VST).orElse({}).value)
             .each((item: Array<any>) => {
-                let value: ViewState =item[1];
+                let value: ViewState = item[1];
                 let nameSpace = DQ.byId(value.nameSpace).orElse(document.body);
                 let affectedForms = nameSpace.byTagName(TAG_FORM);
                 let affectedForms2 = nameSpace.filter(item => item.tagName.orElse(EMPTY_STR).value.toLowerCase() == TAG_FORM);
-
 
                 this.appendViewStateToForms(new DomQuery(affectedForms, affectedForms2), value.value);
             });

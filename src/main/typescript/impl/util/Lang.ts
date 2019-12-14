@@ -19,7 +19,9 @@
 
 import {Lang as LangBase} from "../../ext/monadish/Lang";
 import {Messages} from "../i18n/Messages";
+// noinspection TypeScriptPreferShortImport
 import {Config, Optional} from "../../ext/monadish/Monad";
+// noinspection TypeScriptPreferShortImport
 import {DomQuery, DQ} from "../../ext/monadish/DomQuery";
 import {Stream} from "../../ext/monadish";
 import {EMPTY_STR} from "../core/Const";
@@ -116,6 +118,7 @@ export module ExtLang {
      * creates an exeption with additional internal parameters
      * for extra information
      *
+     * @param error
      * @param {String} title the exception title
      * @param {String} name  the exception name
      * @param {String} callerCls the caller class

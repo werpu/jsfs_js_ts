@@ -69,7 +69,7 @@ export class ExtDomquery extends DQ {
 
         let nonceScript = DQ.querySelectorAll("script[src], link[src]").lazyStream
             .filter((item) => item.attr("nonce").value != null && item.attr("src") != null)
-            .map((item => !item.attr("src").value.match(/jsf\.js\?ln\=javax\.faces/gi)))
+            .map((item => !item.attr("src").value.match(/jsf\.js\?ln=javax\.faces/gi)))
             .first();
 
         if (nonceScript.isPresent()) {

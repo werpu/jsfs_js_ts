@@ -104,12 +104,4 @@ export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
     private callForNextElementToProcess() {
         this.runEntry();
     }
-
-    private processNextElement() {
-        this.currentlyRunning = null;
-        if (!this.isEmpty) {
-            this.runEntry();
-        }
-    }
-
 }

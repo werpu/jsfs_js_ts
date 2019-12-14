@@ -40,6 +40,8 @@ import {ExtDomquery} from "../util/ExtDomQuery";
  * resolves the event handlers lazly
  * so that if some decoration happens in between we can deal with it
  *
+ * @param requestContext
+ * @param responseContext
  * @param funcName
  */
 export function resolveHandlerFunc(requestContext: Config, responseContext: Config, funcName: string) {
@@ -102,19 +104,6 @@ export function resolveWindowId(options: Config) {
 }
 
 /**
- * determines the correct event depending
- * on the browsers state
- *
- * @param evt incoming event object (note not all browsers
- * have this)
- *
- * @return an event object no matter what is incoming
- */
-export function resolveEvent(evt: Event): Event {
-    return evt ?? <any>window?.event ?? {};
-}
-
-/**
  * cross port from the dojo lib
  * browser save event resolution
  * @param evt the event object
@@ -122,7 +111,7 @@ export function resolveEvent(evt: Event): Event {
  */
 export function getEventTarget(evt: Event): Element {
     //ie6 and 7 fallback
-    let finalEvent = this.resolveEvent(evt);
+    let finalEvent = evt;
     /**
      * evt source is defined in the jsf events
      * seems like some component authors use our code
@@ -149,7 +138,7 @@ export function getEventTarget(evt: Event): Element {
  * @param el
  */
 export function resolveDefaults(event: Event, opts: any = {}, el: Element | string = null) {
-    const resolvedEvent = resolveEvent(event);
+    const resolvedEvent = event;
 
     //deep copy the options, so that further transformations to not backfire into the callers
     const options = new Config(opts).deepCopy;
@@ -160,4 +149,4 @@ export function resolveDefaults(event: Event, opts: any = {}, el: Element | stri
     const windowId = resolveWindowId(options);
     const isResetValues = true === options.value?.resetValues;
     return {resolvedEvent, options, elem, elementId, requestCtx, internalCtx, windowId, isResetValues};
-};
+}

@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import * as myfacesConfig from "../api/Myfaces";
-
 import {IListener} from "./util/ListenerQueue";
 import {Response} from "./xhrCore/Response";
 import {XhrRequest} from "./xhrCore/XhrRequest";
@@ -102,7 +100,7 @@ export module Implementation {
     import getGlobalConfig = ExtLang.getGlobalConfig;
     import assert = Assertions.assert;
 
-    let globalConfig = myfacesConfig.myfaces.config;
+
 
     let projectStage: string = null;
     let separator: string = null;
@@ -118,7 +116,7 @@ export module Implementation {
      * @return {char} the separator char for the given script tags
      */
     export function getSeparatorChar(): string {
-        return this?.globalConfig?.separator ??
+        return resolveGlobalConfig()?.separator ??
             this?.separator ??
             (separator = ExtDomquery.searchJsfJsFor(/separator=([^&;]*)/).orElse(":").value);
     }
@@ -128,8 +126,6 @@ export module Implementation {
      * we need to reset for every unit test its internal states
      */
     export function reset() {
-        globalConfig = myfacesConfig.myfaces.config;
-
         projectStage = null;
         separator = null;
         eventQueue = [];
@@ -143,7 +139,7 @@ export module Implementation {
      * The value for it comes from the requestInternal parameter of the jsf.js script called "stage".
      */
     export function getProjectStage(): string | null {
-        return this?.globalConfig?.projectStage ??
+        return resolveGlobalConfig()?.projectStage ??
             this?.projectStage ??
             (projectStage = resolveProjectStateFromURL());
     }
@@ -632,7 +628,7 @@ export module Implementation {
     }
 
     /**
-     * filter the options tiven with a blacklist so that only
+     * filter the options given with a blacklist so that only
      * the values required for passthough land in the ajax request
      *
      * @param mappedOpts the options to be filtered
@@ -643,6 +639,10 @@ export module Implementation {
         return Stream.ofAssoc(mappedOpts)
             .filter(item => !(item[0] in BlockFilter))
             .collect(new AssocArrayCollector());
+    }
+
+    function resolveGlobalConfig(): any {
+        return  window?.[MYFACES]?.config ?? {};
     }
 
 }

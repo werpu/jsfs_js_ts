@@ -58,8 +58,6 @@ import failSaveExecute = ExtLang.failSaveExecute;
 
 declare let jsf: any;
 
-
-
 export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
 
     private responseContext: Config;
@@ -70,7 +68,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
      * helper support so that we do not have to drag in Promise shims
      */
     private catchFuncs: Array<Function> = [];
-    private  thenFunc: Array<Function> = [];
+    private thenFunc: Array<Function> = [];
 
     /**
      * Reqired Parameters
@@ -102,7 +100,11 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         * we omit promises here
         * some browsers do not support it and we do not need shim code
         */
-        this.registerXhrCallbacks((data: any) => {this.resolve(data)}, (data: any) => {this.reject(data)});
+        this.registerXhrCallbacks((data: any) => {
+            this.resolve(data)
+        }, (data: any) => {
+            this.reject(data)
+        });
     }
 
     start(): AsyncRunnable<XMLHttpRequest> {
@@ -182,7 +184,6 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         }, data);
     }
 
-
     catch(func: (data: any) => any): AsyncRunnable<XMLHttpRequest> {
         //this.$promise.catch(func);
         this.catchFuncs.push(func);
@@ -251,7 +252,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         this.sendEvent(COMPLETE);
 
         //malforms always result in empty response xml
-        if(!this?.xhrObject?.responseXML) {
+        if (!this?.xhrObject?.responseXML) {
             this.handleMalFormedXML(resolve);
             return;
         }
@@ -279,7 +280,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     }
 
     protected onDone(data: any, resolve: Consumer<any>, reject: Consumer<any>) {
-        if(this.stopProgress) {
+        if (this.stopProgress) {
             return;
         }
         resolve(data);
@@ -300,8 +301,9 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             //this in onError but also we cannot swallow it
             //we need to resolve the local handlers lazyly,
             //because some frameworks might decorate them over the context in the response
-            let eventHandler = resolveHandlerFunc(this.requestContext, this.responseContext, ON_EVENT);;
-            Implementation.sendEvent(eventData,  eventHandler);
+            let eventHandler = resolveHandlerFunc(this.requestContext, this.responseContext, ON_EVENT);
+
+            Implementation.sendEvent(eventData, eventHandler);
         } catch (e) {
             this.handleError(e);
             throw e;
@@ -315,11 +317,9 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         Implementation.sendError(errorData, eventHandler);
     }
 
-
-
     protected sendRequest(formData: XhrFormData) {
         let isPost = this.ajaxType != REQ_TYPE_GET;
-        if(formData.isMultipartRequest) {
+        if (formData.isMultipartRequest) {
             this.xhrObject.send((isPost) ? formData.toFormData() : null);
         } else {
             this.xhrObject.send((isPost) ? formData.toString() : null);

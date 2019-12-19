@@ -19,10 +19,7 @@
 import {Implementation} from "../impl/AjaxImpl";
 import {PushImpl} from "../impl/PushImpl";
 
-declare let window: any;
 declare type Context = { [key: string]: any };
-
-let mf_impl = window?.myfaces?._impl ?? {};
 
 export module jsf {
     "use strict";
@@ -88,8 +85,8 @@ export module jsf {
 
     /**
      * returns the window identifier for the given node / window
-     * @param {optional String | DomNode}  the node for which the client identifier has to be determined
      * @return the window identifier or null if none is found
+     * @param rootNode
      */
     export function getClientWindow(rootNode?: Element | string): string {
         return Implementation.getClientWindow(rootNode);
@@ -235,9 +232,6 @@ export module jsf {
 
 //fullfill the window contract
 export module myfaces {
-
-    //legacy compatibility
-    export var _impl = mf_impl;
 
     /**
      * AB function similar to mojarra and Primefaces

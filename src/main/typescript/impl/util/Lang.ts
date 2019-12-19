@@ -24,7 +24,7 @@ import {Config, Optional} from "../../ext/monadish/Monad";
 // noinspection TypeScriptPreferShortImport
 import {DomQuery, DQ} from "../../ext/monadish/DomQuery";
 import {Stream} from "../../ext/monadish";
-import {EMPTY_STR} from "../core/Const";
+import {EMPTY_STR, TAG_FORM} from "../core/Const";
 import {getEventTarget} from "../xhrCore/RequestDataResolver";
 
 export module ExtLang {
@@ -143,7 +143,7 @@ export module ExtLang {
     }
 
     /**
-     * fetches the form in an unprecise manner depending
+     * fetches the form in an fuzzy manner depending
      * on an element or event target.
      *
      * The idea is that according to the jsf spec
@@ -163,28 +163,26 @@ export module ExtLang {
      */
     export function getForm(elem: Element, event ?: Event): DQ | never {
 
-        const FORM = "form";
-
         let queryElem = new DQ(elem);
         let eventTarget = new DQ(getEventTarget(event));
 
-        if (queryElem.isTag(FORM)) {
+        if (queryElem.isTag(TAG_FORM)) {
             return queryElem;
         }
 
         //html 5 for handling
-        if (queryElem.attr(FORM).isPresent()) {
-            let formId = queryElem.attr(FORM).value;
+        if (queryElem.attr(TAG_FORM).isPresent()) {
+            let formId = queryElem.attr(TAG_FORM).value;
             let foundForm = DQ.byId(formId);
             if (foundForm.isPresent()) {
                 return foundForm;
             }
         }
 
-        let form = queryElem.parents(FORM)
-            .orElseLazy(() => queryElem.byTagName(FORM, true))
-            .orElseLazy(() => eventTarget.parents(FORM))
-            .orElseLazy(() => eventTarget.byTagName(FORM))
+        let form = queryElem.parents(TAG_FORM)
+            .orElseLazy(() => queryElem.byTagName(TAG_FORM, true))
+            .orElseLazy(() => eventTarget.parents(TAG_FORM))
+            .orElseLazy(() => eventTarget.byTagName(TAG_FORM))
             .first();
 
         assertFormExists(form);

@@ -1860,10 +1860,21 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         return caretPos;
     }
 
+    /**
+     * sets the caret position
+     *
+     * @param ctrl the control to set the caret position to
+     * @param pos the position to set
+     *
+     * note if the control does not have any selectable and focusable behavior
+     * calling this method does nothing (silent fail)
+     *
+     */
     static setCaretPosition(ctrl: any, pos: number) {
-        ctrl.focus();
+        ctrl?.focus ? ctrl?.focus() : null;
         //the selection range is our caret position
-        ctrl.setSelectionRange(pos, pos);
+
+        ctrl?.setSelectiongRange ? ctrl?.setSelectiongRange(pos, pos) : null;
     }
 }
 

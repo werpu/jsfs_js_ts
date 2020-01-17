@@ -117,12 +117,10 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             r[k] = a[j];
     return r;
 };
-var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", { value: true });
 ///<reference types='../../types/typedefs'/>
 var AjaxImpl_1 = __webpack_require__(/*! ../impl/AjaxImpl */ "./src/main/typescript/impl/AjaxImpl.ts");
 var PushImpl_1 = __webpack_require__(/*! ../impl/PushImpl */ "./src/main/typescript/impl/PushImpl.ts");
-var mf_impl = (_c = (_b = (_a = window) === null || _a === void 0 ? void 0 : _a.myfaces) === null || _b === void 0 ? void 0 : _b._impl, (_c !== null && _c !== void 0 ? _c : {}));
 var jsf;
 (function (jsf) {
     "use strict";
@@ -185,8 +183,8 @@ var jsf;
     jsf.getViewState = getViewState;
     /**
      * returns the window identifier for the given node / window
-     * @param {optional String | DomNode}  the node for which the client identifier has to be determined
      * @return the window identifier or null if none is found
+     * @param rootNode
      */
     function getClientWindow(rootNode) {
         return AjaxImpl_1.Implementation.getClientWindow(rootNode);
@@ -323,8 +321,6 @@ var jsf;
 //fullfill the window contract
 var myfaces;
 (function (myfaces) {
-    //legacy compatibility
-    myfaces._impl = mf_impl;
     /**
      * AB function similar to mojarra and Primefaces
      * not part of the spec but a convenience accessor method
@@ -1833,10 +1829,21 @@ var DomQuery = /** @class */ (function () {
         }
         return caretPos;
     };
+    /**
+     * sets the caret position
+     *
+     * @param ctrl the control to set the caret position to
+     * @param pos the position to set
+     *
+     * note if the control does not have any selectable and focusable behavior
+     * calling this method does nothing (silent fail)
+     *
+     */
     DomQuery.setCaretPosition = function (ctrl, pos) {
-        ctrl.focus();
+        var _a, _b, _c, _d;
+        ((_a = ctrl) === null || _a === void 0 ? void 0 : _a.focus) ? (_b = ctrl) === null || _b === void 0 ? void 0 : _b.focus() : null;
         //the selection range is our caret position
-        ctrl.setSelectionRange(pos, pos);
+        ((_c = ctrl) === null || _c === void 0 ? void 0 : _c.setSelectiongRange) ? (_d = ctrl) === null || _d === void 0 ? void 0 : _d.setSelectiongRange(pos, pos) : null;
     };
     DomQuery.absent = new DomQuery();
     return DomQuery;
@@ -5062,7 +5069,7 @@ var ExtLang;
     }
     ExtLang.getGlobalConfig = getGlobalConfig;
     /**
-     * fetches the form in an unprecise manner depending
+     * fetches the form in an fuzzy manner depending
      * on an element or event target.
      *
      * The idea is that according to the jsf spec
@@ -5081,24 +5088,23 @@ var ExtLang;
      * @param event
      */
     function getForm(elem, event) {
-        var FORM = "form";
         var queryElem = new DomQuery_1.DQ(elem);
         var eventTarget = new DomQuery_1.DQ(RequestDataResolver_1.getEventTarget(event));
-        if (queryElem.isTag(FORM)) {
+        if (queryElem.isTag(Const_1.TAG_FORM)) {
             return queryElem;
         }
         //html 5 for handling
-        if (queryElem.attr(FORM).isPresent()) {
-            var formId = queryElem.attr(FORM).value;
+        if (queryElem.attr(Const_1.TAG_FORM).isPresent()) {
+            var formId = queryElem.attr(Const_1.TAG_FORM).value;
             var foundForm = DomQuery_1.DQ.byId(formId);
             if (foundForm.isPresent()) {
                 return foundForm;
             }
         }
-        var form = queryElem.parents(FORM)
-            .orElseLazy(function () { return queryElem.byTagName(FORM, true); })
-            .orElseLazy(function () { return eventTarget.parents(FORM); })
-            .orElseLazy(function () { return eventTarget.byTagName(FORM); })
+        var form = queryElem.parents(Const_1.TAG_FORM)
+            .orElseLazy(function () { return queryElem.byTagName(Const_1.TAG_FORM, true); })
+            .orElseLazy(function () { return eventTarget.parents(Const_1.TAG_FORM); })
+            .orElseLazy(function () { return eventTarget.byTagName(Const_1.TAG_FORM); })
             .first();
         assertFormExists(form);
         return form;

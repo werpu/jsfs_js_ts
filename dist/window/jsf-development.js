@@ -2511,17 +2511,27 @@ var Config = /** @class */ (function (_super) {
      * simple merge for the root configs
      */
     Config.prototype.shallowMerge = function (other, overwrite, withAppend) {
+        var _this = this;
         if (overwrite === void 0) { overwrite = true; }
         if (withAppend === void 0) { withAppend = false; }
-        for (var key in other.value) {
-            if (overwrite || !(key in this.value)) {
+        var _loop_1 = function (key) {
+            if (overwrite || !(key in this_1.value)) {
                 if (!withAppend) {
-                    this.assign(key).value = other.getIf(key).value;
+                    this_1.assign(key).value = other.getIf(key).value;
                 }
                 else {
-                    this.append(key).value = other.getIf(key).value;
+                    if (Array.isArray(other.getIf(key).value)) {
+                        Stream_1.Stream.of.apply(Stream_1.Stream, other.getIf(key).value).each(function (item) { return _this.append(key).value = item; });
+                    }
+                    else {
+                        this_1.append(key).value = other.getIf(key).value;
+                    }
                 }
             }
+        };
+        var this_1 = this;
+        for (var key in other.value) {
+            _loop_1(key);
         }
     };
     /**

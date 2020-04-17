@@ -98,9 +98,6 @@ export class Monad<T> implements IMonad<T, Monad<any>>, IValueHolder<T> {
 
 }
 
-
-
-
 /**
  * optional implementation, an optional is basically an implementation of a Monad with additional syntactic
  * sugar on top
@@ -318,21 +315,19 @@ export class Optional<T> extends Monad<T> {
      * the resolution goes towards absent
      */
     resolve<V>(resolver: (item: T) => V): Optional<V> {
-        if(this.isAbsent()) {
+        if (this.isAbsent()) {
             return Optional.absent;
         }
         try {
             return Optional.fromNullable(resolver(this.value))
-        } catch(e) {
+        } catch (e) {
             return Optional.absent;
         }
     }
 
 }
 
-
 // --------------------- From here onwards we break out the sideffects free limits ------------
-
 
 /**
  * ValueEmbedder is the writeable version
@@ -345,7 +340,7 @@ export class Optional<T> extends Monad<T> {
 export class ValueEmbedder<T> extends Optional<T> implements IValueHolder<T> {
 
     /*default value for absent*/
-    static absent =  ValueEmbedder.fromNullable(null);
+    static absent = ValueEmbedder.fromNullable(null);
 
     protected key: string;
 
@@ -360,7 +355,7 @@ export class ValueEmbedder<T> extends Optional<T> implements IValueHolder<T> {
     }
 
     set value(newVal: T) {
-        if(!this._value) {
+        if (!this._value) {
             return;
         }
         this._value[this.key] = newVal
@@ -399,8 +394,6 @@ export class ValueEmbedder<T> extends Optional<T> implements IValueHolder<T> {
 
 }
 
-
-
 /**
  * specialized value embedder
  * for our Configuration
@@ -418,7 +411,7 @@ class ConfigEntry<T> extends ValueEmbedder<T> {
     constructor(rootElem: any, key: any, arrPos?: number) {
         super(rootElem, key);
 
-        this.arrPos =  arrPos ?? -1;
+        this.arrPos = arrPos ?? -1;
     }
 
     get value() {
@@ -470,11 +463,15 @@ export class Config extends Optional<any> {
      */
     shallowMerge(other: Config, overwrite = true, withAppend = false) {
         for (let key in other.value) {
-            if (overwrite || !(key in this.value)) {
-                if(!withAppend) {
+            if (overwrite || !(key in this.value)) {
+                if (!withAppend) {
                     this.assign(key).value = other.getIf(key).value;
                 } else {
-                    this.append(key).value = other.getIf(key).value;
+                    if (Array.isArray(other.getIf(key).value)) {
+                        Stream.of(...other.getIf(key).value).each(item => this.append(key).value = item);
+                    } else {
+                        this.append(key).value = other.getIf(key).value;
+                    }
                 }
             }
         }
@@ -505,14 +502,14 @@ export class Config extends Optional<any> {
         this.buildPath(keys);
 
         let finalKeyArrPos = this.arrayIndex(lastKey);
-        if(finalKeyArrPos > -1) {
+        if (finalKeyArrPos > -1) {
             throw Error("Append only possible on non array properties, use assign on indexed data");
         }
-        let value = <any> this.getIf(...keys).value;
-        if(!Array.isArray(value)) {
+        let value = <any>this.getIf(...keys).value;
+        if (!Array.isArray(value)) {
             value = this.assign(...keys).value = [value];
         }
-        if(pathExists) {
+        if (pathExists) {
             value.push({});
         }
         finalKeyArrPos = value.length - 1;
@@ -525,12 +522,11 @@ export class Config extends Optional<any> {
     }
 
     appendIf(condition: boolean, ...keys): IValueHolder<any> {
-        if(!condition) {
+        if (!condition) {
             return {value: null};
         }
         return this.append(...keys);
     }
-
 
     assign(...keys): IValueHolder<any> {
         if (keys.length < 1) {
@@ -551,7 +547,6 @@ export class Config extends Optional<any> {
     assignIf(condition: boolean, ...keys: Array<any>): IValueHolder<any> {
         return condition ? this.assign(...keys) : {value: null};
     }
-
 
     getIf(...keys: Array<string>): Config {
         return this.getClass().fromNullable(super.getIf.apply(this, keys).value);
@@ -593,7 +588,7 @@ export class Config extends Optional<any> {
         let alloc = function (arr: Array<any>, length: number) {
             let length1 = arr.length;
             let length2 = length1 + length;
-            for(let cnt = length1; cnt < length2; cnt++) {
+            for (let cnt = length1; cnt < length2; cnt++) {
                 arr.push({});
             }
         };

@@ -410,6 +410,9 @@ class ConfigEntry<T> extends ValueEmbedder<T> {
     /*default value for absent*/
     static absent = ConfigEntry.fromNullable(null);
 
+    /**
+     * arrayed value positions
+     */
     arrPos: number;
 
     constructor(rootElem: any, key: any, arrPos?: number) {
@@ -465,13 +468,69 @@ export class Config extends Optional<any> {
     /**
      * simple merge for the root configs
      */
-    shallowMerge(other: Config, overwrite = true) {
+    shallowMerge(other: Config, overwrite = true, withAppend = false) {
         for (let key in other.value) {
             if (overwrite || !(key in this.value)) {
-                this.assign(key).value = other.getIf(key).value;
+                if(!withAppend) {
+                    this.assign(key).value = other.getIf(key).value;
+                } else {
+                    this.append(key).value = other.getIf(key).value;
+                }
             }
         }
     }
+
+    /**
+     * assigns a single value as array, or appends it
+     * to an existing value mapping a single value to array
+     *
+     *
+     * usage myConfig.append("foobaz").value = "newValue"
+     *       myConfig.append("foobaz").value = "newValue2"
+     *
+     * resulting in myConfig.foobaz == ["newValue, newValue2"]
+     *
+     * @param keys
+     */
+    append(...keys): IValueHolder<any> {
+        let noKeys = keys.length < 1;
+        if (noKeys) {
+            return;
+        }
+
+        let lastKey = keys[keys.length - 1];
+        let currKey, finalKey = this.keyVal(lastKey);
+
+        let pathExists = this.getIf(...keys).isPresent();
+        this.buildPath(keys);
+
+        let finalKeyArrPos = this.arrayIndex(lastKey);
+        if(finalKeyArrPos > -1) {
+            throw Error("Append only possible on non array properties, use assign on indexed data");
+        }
+        let value = <any> this.getIf(...keys).value;
+        if(!Array.isArray(value)) {
+            value = this.assign(...keys).value = [value];
+        }
+        if(pathExists) {
+            value.push({});
+        }
+        finalKeyArrPos = value.length - 1;
+
+        let retVal = new ConfigEntry(keys.length == 1 ? this.value : this.getIf.apply(this, keys.slice(0, keys.length - 1)).value,
+            lastKey, finalKeyArrPos
+        );
+
+        return retVal;
+    }
+
+    appendIf(condition: boolean, ...keys): IValueHolder<any> {
+        if(!condition) {
+            return {value: null};
+        }
+        return this.append(...keys);
+    }
+
 
     assign(...keys): IValueHolder<any> {
         if (keys.length < 1) {
@@ -522,6 +581,11 @@ export class Config extends Optional<any> {
         this._value = val;
     }
 
+    /**
+     * builds the config path
+     *
+     * @param keys a sequential array of keys containing either a key name or an array reference name[<index>]
+     */
     private buildPath(keys: Array<any>): Config {
         let val = this;
         let parentVal = this.getClass().fromNullable(null);

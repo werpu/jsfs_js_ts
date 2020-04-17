@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Config, Lang} from "../../ext/monadish";
+import {ArrayCollector, Config, Lang} from "../../ext/monadish";
 
 import {Stream} from "../../ext/monadish";
 import {DQ} from "../../ext/monadish";
@@ -74,7 +74,7 @@ export class XhrFormData extends Config {
      */
     private applyViewState(form: DQ) {
         let viewState = form.byId(P_VIEWSTATE).inputValue;
-        this.assignIf(viewState.isPresent() ,P_VIEWSTATE).value = viewState.value;
+        this.appendIf(viewState.isPresent() ,P_VIEWSTATE).value = viewState.value;
     }
 
     /**
@@ -90,7 +90,7 @@ export class XhrFormData extends Config {
             //special case of having keys without values
             .map(keyVal => keyVal.length < 3 ? [keyVal?.[0] ?? [], keyVal?.[1] ?? []] : keyVal)
             .each(keyVal => {
-                this.assign(keyVal [0]).value = keyVal?.splice(1)?.join("") ?? "";
+                this.append(keyVal[0]).value = keyVal?.splice(1)?.join("") ?? "";
             });
     }
 
@@ -102,7 +102,7 @@ export class XhrFormData extends Config {
         let ret: any = new FormData();
         for (let key in this.value) {
             if (this.value.hasOwnProperty(key)) {
-                ret.append(key, this.value[key])
+                Stream.of(...this.value[key]).each(item => ret.append(key, item));
             }
         }
         return ret;
@@ -117,13 +117,21 @@ export class XhrFormData extends Config {
         if (this.isAbsent()) {
             return defaultStr;
         }
-        let entries = [];
-        for (let key in this.value) {
+        let entries = Stream.of(...Object.keys(this.value))
+            .filter(key => this.value.hasOwnProperty(key))
+            .flatMap(key => Stream.of(...this.value[key]).map(val => [key, val]).collect(new ArrayCollector()))
+            .map(keyVal => {
+                return `${encodeURIComponent(keyVal[0])}=${encodeURIComponent(keyVal[1])}`;
+            })
+            .collect(new ArrayCollector());
+       /* for (let key in this.value) {
             if (this.value.hasOwnProperty(key)) {
                 //key value already encoded so no need to reencode them again
-                entries.push(`${encodeURIComponent(key)}=${encodeURIComponent(this.value[key])}`)
+                Stream.of(...this.value[key]).each(item => {
+                    entries.push(`${encodeURIComponent(key)}=${encodeURIComponent(item)}`);
+                });
             }
-        }
+        }*/
         return entries.join("&")
     }
 

@@ -87,11 +87,11 @@ describe("test for proper request param patterns identical to the old implementa
         DQ.byId("cmd_update_insert2").click();
 
         let requestBody = this.requests[0].requestBody;
-        let formData = new XhrFormData(requestBody)
+        let formData = new XhrFormData(requestBody);
 
         expect(matches(formData.value, UPDATE_INSERT_2)).to.be.true;
 
-    })
+    });
 
 
     it("must handle base64 encoded strings properly as request data", function() {

@@ -290,7 +290,9 @@ export class QueryFormStringCollector implements ICollector<DomQuery, string> {
     collect(element: DomQuery) {
         let toMerge = element.encodeFormElement();
         if (toMerge.isPresent()) {
-            this.formData.push([element.name.value, toMerge.get(element.name).value]);
+            Stream.of(...toMerge.value).each(item => {
+                this.formData.push([element.name.value, item]);
+            });
         }
     }
 

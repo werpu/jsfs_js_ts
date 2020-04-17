@@ -123,7 +123,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             //next step the pass through parameters are merged in for post params
             let requestContext = this.requestContext;
             let passThroughParams = requestContext.getIf(CTX_PARAM_PASS_THR);
-            formData.shallowMerge(passThroughParams);
+            formData.shallowMerge(passThroughParams, true, true);
 
             this.responseContext = passThroughParams.deepCopy;
 

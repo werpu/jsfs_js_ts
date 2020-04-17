@@ -975,10 +975,9 @@ var DomQuery = /** @class */ (function () {
      * @param clazz the style class to append
      */
     DomQuery.prototype.addClass = function (clazz) {
-        var _this = this;
         this.each(function (item) {
             var oldClass = item.attr("class").value || "";
-            if (!_this.hasClass(clazz)) {
+            if (!item.hasClass(clazz)) {
                 item.attr("class").value = trim(oldClass + " " + clazz);
                 return;
             }
@@ -991,9 +990,8 @@ var DomQuery = /** @class */ (function () {
      * @param clazz
      */
     DomQuery.prototype.removeClass = function (clazz) {
-        var _this = this;
         this.each(function (item) {
-            if (_this.hasClass(clazz)) {
+            if (item.hasClass(clazz)) {
                 var oldClass = item.attr("class").value || "";
                 var newClasses = [];
                 var oldClasses = oldClass.split(/\s+/gi);
@@ -1706,7 +1704,7 @@ var DomQuery = /** @class */ (function () {
                             //let subBuf = [];
                             if (selectElem.options[u].selected) {
                                 var elementOption = selectElem.options[u];
-                                target.assign(name).value = (elementOption.getAttribute("value") != null) ?
+                                target.append(name).value = (elementOption.getAttribute("value") != null) ?
                                     elementOption.value : elementOption.text;
                             }
                         }
@@ -1725,10 +1723,10 @@ var DomQuery = /** @class */ (function () {
                     var files = element.value.files;
                     if (files === null || files === void 0 ? void 0 : files.length) {
                         //xhr level2
-                        target.assign(name).value = files[0];
+                        target.append(name).value = files[0];
                     }
                     else {
-                        target.assign(name).value = element.inputValue.value;
+                        target.append(name).value = element.inputValue.value;
                     }
                 }
             }
@@ -2512,13 +2510,69 @@ var Config = /** @class */ (function (_super) {
     /**
      * simple merge for the root configs
      */
-    Config.prototype.shallowMerge = function (other, overwrite) {
+    Config.prototype.shallowMerge = function (other, overwrite, withAppend) {
         if (overwrite === void 0) { overwrite = true; }
+        if (withAppend === void 0) { withAppend = false; }
         for (var key in other.value) {
             if (overwrite || !(key in this.value)) {
-                this.assign(key).value = other.getIf(key).value;
+                if (!withAppend) {
+                    this.assign(key).value = other.getIf(key).value;
+                }
+                else {
+                    this.append(key).value = other.getIf(key).value;
+                }
             }
         }
+    };
+    /**
+     * assigns a single value as array, or appends it
+     * to an existing value mapping a single value to array
+     *
+     *
+     * usage myConfig.append("foobaz").value = "newValue"
+     *       myConfig.append("foobaz").value = "newValue2"
+     *
+     * resulting in myConfig.foobaz == ["newValue, newValue2"]
+     *
+     * @param keys
+     */
+    Config.prototype.append = function () {
+        var keys = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            keys[_i] = arguments[_i];
+        }
+        var noKeys = keys.length < 1;
+        if (noKeys) {
+            return;
+        }
+        var lastKey = keys[keys.length - 1];
+        var currKey, finalKey = this.keyVal(lastKey);
+        var pathExists = this.getIf.apply(this, keys).isPresent();
+        this.buildPath(keys);
+        var finalKeyArrPos = this.arrayIndex(lastKey);
+        if (finalKeyArrPos > -1) {
+            throw Error("Append only possible on non array properties, use assign on indexed data");
+        }
+        var value = this.getIf.apply(this, keys).value;
+        if (!Array.isArray(value)) {
+            value = this.assign.apply(this, keys).value = [value];
+        }
+        if (pathExists) {
+            value.push({});
+        }
+        finalKeyArrPos = value.length - 1;
+        var retVal = new ConfigEntry(keys.length == 1 ? this.value : this.getIf.apply(this, keys.slice(0, keys.length - 1)).value, lastKey, finalKeyArrPos);
+        return retVal;
+    };
+    Config.prototype.appendIf = function (condition) {
+        var keys = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            keys[_i - 1] = arguments[_i];
+        }
+        if (!condition) {
+            return { value: null };
+        }
+        return this.append.apply(this, keys);
     };
     Config.prototype.assign = function () {
         var keys = [];
@@ -2567,6 +2621,11 @@ var Config = /** @class */ (function (_super) {
     Config.prototype.setVal = function (val) {
         this._value = val;
     };
+    /**
+     * builds the config path
+     *
+     * @param keys a sequential array of keys containing either a key name or an array reference name[<index>]
+     */
     Config.prototype.buildPath = function (keys) {
         var val = this;
         var parentVal = this.getClass().fromNullable(null);
@@ -2862,9 +2921,12 @@ var QueryFormStringCollector = /** @class */ (function () {
         this.formData = [];
     }
     QueryFormStringCollector.prototype.collect = function (element) {
+        var _this = this;
         var toMerge = element.encodeFormElement();
         if (toMerge.isPresent()) {
-            this.formData.push([element.name.value, toMerge.get(element.name).value]);
+            Stream_1.Stream.of.apply(Stream_1.Stream, toMerge.value).each(function (item) {
+                _this.formData.push([element.name.value, item]);
+            });
         }
     };
     Object.defineProperty(QueryFormStringCollector.prototype, "finalValue", {
@@ -6131,7 +6193,7 @@ var XhrFormData = /** @class */ (function (_super) {
      */
     XhrFormData.prototype.applyViewState = function (form) {
         var viewState = form.byId(Const_1.P_VIEWSTATE).inputValue;
-        this.assignIf(viewState.isPresent(), Const_1.P_VIEWSTATE).value = viewState.value;
+        this.appendIf(viewState.isPresent(), Const_1.P_VIEWSTATE).value = viewState.value;
     };
     /**
      * assignes a url encoded string to this xhrFormData object
@@ -6146,7 +6208,7 @@ var XhrFormData = /** @class */ (function (_super) {
             .map(function (keyVal) { var _a, _b; return keyVal.length < 3 ? [(_a = keyVal === null || keyVal === void 0 ? void 0 : keyVal[0]) !== null && _a !== void 0 ? _a : [], (_b = keyVal === null || keyVal === void 0 ? void 0 : keyVal[1]) !== null && _b !== void 0 ? _b : []] : keyVal; })
             .each(function (keyVal) {
             var _a, _b;
-            _this.assign(keyVal[0]).value = (_b = (_a = keyVal === null || keyVal === void 0 ? void 0 : keyVal.splice(1)) === null || _a === void 0 ? void 0 : _a.join("")) !== null && _b !== void 0 ? _b : "";
+            _this.append(keyVal[0]).value = (_b = (_a = keyVal === null || keyVal === void 0 ? void 0 : keyVal.splice(1)) === null || _a === void 0 ? void 0 : _a.join("")) !== null && _b !== void 0 ? _b : "";
         });
     };
     // noinspection JSUnusedGlobalSymbols
@@ -6155,10 +6217,14 @@ var XhrFormData = /** @class */ (function (_super) {
      */
     XhrFormData.prototype.toFormData = function () {
         var ret = new FormData();
-        for (var key in this.value) {
-            if (this.value.hasOwnProperty(key)) {
-                ret.append(key, this.value[key]);
+        var _loop_1 = function (key) {
+            if (this_1.value.hasOwnProperty(key)) {
+                monadish_2.Stream.of.apply(monadish_2.Stream, this_1.value[key]).each(function (item) { return ret.append(key, item); });
             }
+        };
+        var this_1 = this;
+        for (var key in this.value) {
+            _loop_1(key);
         }
         return ret;
     };
@@ -6168,17 +6234,25 @@ var XhrFormData = /** @class */ (function (_super) {
      * @param defaultStr optional default value if nothing is there to encode
      */
     XhrFormData.prototype.toString = function (defaultStr) {
+        var _this = this;
         if (defaultStr === void 0) { defaultStr = Const_1.EMPTY_STR; }
         if (this.isAbsent()) {
             return defaultStr;
         }
-        var entries = [];
-        for (var key in this.value) {
-            if (this.value.hasOwnProperty(key)) {
-                //key value already encoded so no need to reencode them again
-                entries.push(encodeURIComponent(key) + "=" + encodeURIComponent(this.value[key]));
-            }
-        }
+        var entries = monadish_2.Stream.of.apply(monadish_2.Stream, Object.keys(this.value)).filter(function (key) { return _this.value.hasOwnProperty(key); })
+            .flatMap(function (key) { return monadish_2.Stream.of.apply(monadish_2.Stream, _this.value[key]).map(function (val) { return [key, val]; }).collect(new monadish_1.ArrayCollector()); })
+            .map(function (keyVal) {
+            return encodeURIComponent(keyVal[0]) + "=" + encodeURIComponent(keyVal[1]);
+        })
+            .collect(new monadish_1.ArrayCollector());
+        /* for (let key in this.value) {
+             if (this.value.hasOwnProperty(key)) {
+                 //key value already encoded so no need to reencode them again
+                 Stream.of(...this.value[key]).each(item => {
+                     entries.push(`${encodeURIComponent(key)}=${encodeURIComponent(item)}`);
+                 });
+             }
+         }*/
         return entries.join("&");
     };
     /**
@@ -6314,7 +6388,7 @@ var XhrRequest = /** @class */ (function () {
             //next step the pass through parameters are merged in for post params
             var requestContext = this.requestContext;
             var passThroughParams = requestContext.getIf(Const_1.CTX_PARAM_PASS_THR);
-            formData.shallowMerge(passThroughParams);
+            formData.shallowMerge(passThroughParams, true, true);
             this.responseContext = passThroughParams.deepCopy;
             //we have to shift the internal passthroughs around to build up our response context
             var responseContext = this.responseContext;

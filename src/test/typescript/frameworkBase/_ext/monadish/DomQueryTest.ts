@@ -288,11 +288,11 @@ describe('DOMQuery tests', function () {
         expect(DomQuery.byId("id_3").inputValue.value).to.eq("hello world");
 
         let cfg = DomQuery.querySelectorAll("form").elements.encodeFormElement();
-        expect(cfg.getIf("id_1").value).to.eq("booga");
-        expect(cfg.getIf("id_2").value).to.eq("id_2_val");
-        expect(cfg.getIf("id_3").value).to.eq("hello world");
-        expect(cfg.getIf("cc_1").value).to.eq("Mastercard");
-        expect(cfg.getIf("val_5").value).to.eq("akaka");
+        expect(cfg.getIf("id_1").value[0]).to.eq("booga");
+        expect(cfg.getIf("id_2").value[0]).to.eq("id_2_val");
+        expect(cfg.getIf("id_3").value[0]).to.eq("hello world");
+        expect(cfg.getIf("cc_1").value[0]).to.eq("Mastercard");
+        expect(cfg.getIf("val_5").value[0]).to.eq("akaka");
     })
 
     it("must have a proper loadScriptEval execution", function (done) {

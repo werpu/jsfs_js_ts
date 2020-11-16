@@ -281,6 +281,10 @@ describe('Tests after core when it hits response', function () {
         }
     });
 
+    it('it must have handled the form data correctly', function(done) {
+       //TODO add proxy here
+    });
+
     it('it must have called onError in the error case', function (done) {
         //on hold until it is clear why sinon is not giving me the response XML as expected
 

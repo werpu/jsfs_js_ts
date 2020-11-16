@@ -85,6 +85,27 @@ export module StandardInits {
 </body>
 </html>`;
 
+    /**
+     * a page simulating basically a simple jsf form
+     */
+    const HTML_FILE_FORM_DEFAULT = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<form id="blarg" enctype="multipart/form-data">
+    <input type="file"></input>
+    <input type="text" id="input_1" name="input_1" value="input_1_val"></input>
+    <input type="hidden" id="javax.faces.ViewState" name="javax.faces.ViewState" value="blubbblubblubb"></input>
+    <input type="button" id="input_2" name="input_2" value="input_1_val"></input>
+</form>
+</body>
+</html>`;
+
+
+
     export const STD_XML = `<?xml version="1.0" encoding="utf-8"?><partial-response><changes><update id="value_1"><![CDATA[<span id="out1">2</span>]]></update><update id="javax.faces.ViewState"><![CDATA[j_id1:j_id3]]></update></changes></partial-response>`;
 
     /**

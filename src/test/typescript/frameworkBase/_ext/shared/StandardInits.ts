@@ -49,7 +49,6 @@ export module StandardInits {
 </html>`;
 
 
-
     export const HTML_SHADOW = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -240,7 +239,14 @@ export module StandardInits {
     }
 
     export function shadowDomMyFaces(withJsf = true): Promise<() => void> {
-        return <Promise<() => void>> init(HTML_SHADOW, withJsf);
+        return <Promise<() => void>>init(HTML_SHADOW, withJsf).then((close) => {
+            let shadow = DomQuery.byId(<any>window.document).byId("shadowDomArea").attachShadow();
+            shadow.innerHtml = `
+                <input type="button" id="input_3" name="input_3" value="input_3_val" onclick="emitPPR(this, ('undefined' == typeof event)? null: event, 'shadowContent');"></input>
+                <div id="shadowContent">before update</div>
+            `;
+            return close;
+        });
     }
 
     export function protocolPage(withJsf = true): Promise<() => void> {
@@ -271,7 +277,7 @@ export module StandardInits {
         (<any>global).Implementation = Implementation.Implementation;
         (<any>global).PushImpl = PushImpl.PushImpl;
         //bypass a bug on windows jsdom, domparser not an auto global but on window only
-        (<any>global).DOMParser =  (<any>global)?.DOMParser ?? window.DOMParser;
+        (<any>global).DOMParser = (<any>global)?.DOMParser ?? window.DOMParser;
         (<any>global).document = (<any>global)?.document ?? window.document;
     };
 
@@ -280,7 +286,7 @@ export module StandardInits {
      * @param clean
      * @param template
      */
-    let initJSDOM = async function ( template: string) {
+    let initJSDOM = async function (template: string) {
         // @ts-ignore
         return import('jsdom-global').then((domIt) => {
             return domIt(template, {
@@ -316,8 +322,8 @@ export module StandardInits {
 
     /**
      * entry point which initializes the test system with a template and with or without jsf
-     * 
-     * @param template 
+     *
+     * @param template
      * @param withJsf
      */
     async function init(template: string, withJsf = true): Promise<() => void> {

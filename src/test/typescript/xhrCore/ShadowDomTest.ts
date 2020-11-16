@@ -74,13 +74,25 @@ describe('shadow dom testsuite', () => {
         //const addRequestToQueue = sinon.stub(Impl.queueHandler, "addRequestToQueue");
 
         expect(DomQuery.querySelectorAll("#shadowDomArea").length).to.eq(1);
-        let shadow = DomQuery.byId(<any>window.document).byId("shadowDomArea").attachShadow();
-        shadow.innerHtml = `
-                <input type="button" id="input_3" name="input_3" value="input_3_val" onclick="emitPPR(this, ('undefined' == typeof event)? null: event, 'shadowContent');"></input>
-                <div id="shadowContent">before update</div>
-            `;
+        expect(DomQuery.querySelectorAll("* /shadow/ #shadowContent").length).to.eq(1);
 
 
+        DomQuery.byId("input_1", true).addEventListener("click", (event: Event) => {
+            jsf.ajax.request(event.target, event, {render: 'shadowDomArea', execute: '@this'})
+        }).click();
+        this.respond(XmlResponses.SHADOW_DOM_UPDATE);
+
+        //check if element is updated
+        expect(DomQuery.byId("shadowContent", true).innerHtml).to.eq("after update");
+        /*shadow dom in place now lets do an update on the element*/
+    });
+
+
+    it("shadow dom updated triggered from outside", function() {
+        const Impl = Implementation;
+        //const addRequestToQueue = sinon.stub(Impl.queueHandler, "addRequestToQueue");
+
+        expect(DomQuery.querySelectorAll("#shadowDomArea").length).to.eq(1);
         expect(DomQuery.querySelectorAll("* /shadow/ #shadowContent").length).to.eq(1);
 
 
@@ -88,7 +100,6 @@ describe('shadow dom testsuite', () => {
             jsf.ajax.request(event.target, event, {render: 'shadowDomArea', execute: '@this'})
         }).click();
         this.respond(XmlResponses.SHADOW_DOM_UPDATE);
-
 
         //check if element is updated
         expect(DomQuery.byId("shadowContent", true).innerHtml).to.eq("after update");

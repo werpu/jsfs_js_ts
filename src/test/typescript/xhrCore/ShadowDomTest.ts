@@ -77,7 +77,7 @@ describe('shadow dom testsuite', () => {
         expect(DomQuery.querySelectorAll("* /shadow/ #shadowContent").length).to.eq(1);
 
         DomQuery.byId("input_1", true).addEventListener("click", (event: Event) => {
-            jsf.ajax.request(event.target, event, {render: 'shadowDomArea', execute: '@this'})
+            jsf.ajax.request(event.target, event, {render: 'shadowContent', execute: '@this'})
         }).click();
         this.respond(XmlResponses.SHADOW_DOM_UPDATE);
 
@@ -96,7 +96,7 @@ describe('shadow dom testsuite', () => {
 
 
         DomQuery.byId("input_3", true).addEventListener("click", (event: Event) => {
-            jsf.ajax.request(event.target, event, {render: 'shadowDomArea', execute: '@this'})
+            jsf.ajax.request(event.target, event, {render: 'shadowContent', execute: '@this'})
         }).click();
         this.respond(XmlResponses.SHADOW_DOM_UPDATE);
 

@@ -639,7 +639,25 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         }).filter(item => !!item).collect(new DomQueryCollector());
 
         return elements
-            .orElseLazy(() => this.querySelectorAll("input, select, textarea, fieldset"));
+            .orElseLazy(() => this.querySelectorAll("input, checkbox, select, textarea"));
+    }
+
+    get deepElements(): DomQuery {
+
+        let query = [];
+        let elemStr = "input, select, textarea, checkbox";
+        let prefix = "";
+        for(let cnt = 0; cnt < 5; cnt++) {
+            query.push(prefix + "input, select, textarea, checkbox");
+            prefix = prefix + " * /shadow/ ";
+        }
+
+        let found = Stream.of(...query)
+            .map(query => this.querySelectorAll(query))
+            .filter(item => !item.isAbsent())
+            .collect(new ArrayCollector());
+
+        return new DomQuery(...found);
     }
 
     /**

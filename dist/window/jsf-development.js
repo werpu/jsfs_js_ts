@@ -650,7 +650,18 @@ var DomQuery = /** @class */ (function () {
                 return new Stream_1.Stream(formElement.elements ? objToArray(formElement.elements) : []);
             }).filter(function (item) { return !!item; }).collect(new DomQueryCollector());
             return elements
-                .orElseLazy(function () { return _this.querySelectorAll("input, select, textarea, fieldset"); });
+                .orElseLazy(function () { return _this.querySelectorAll("input, checkbox, select, textarea"); });
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "deepElements", {
+        get: function () {
+            var query = [];
+            for (var cnt = 0; cnt < 5; cnt++) {
+                query.push("input, select, textarea, checkbox");
+            }
+            return this.querySelectorAll(query.join(" /shadow/ "));
         },
         enumerable: true,
         configurable: true
@@ -6341,7 +6352,7 @@ var XhrFormData = /** @class */ (function (_super) {
             toEncode = parentItem;
         }
         //lets encode the form elements
-        this.shallowMerge(toEncode.querySelectorAll("input, checkbox, select, textarea").encodeFormElement());
+        this.shallowMerge(toEncode.deepElements.encodeFormElement());
     };
     Object.defineProperty(XhrFormData.prototype, "isMultipartRequest", {
         /**

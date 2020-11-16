@@ -76,7 +76,6 @@ describe('shadow dom testsuite', () => {
         expect(DomQuery.querySelectorAll("#shadowDomArea").length).to.eq(1);
         expect(DomQuery.querySelectorAll("* /shadow/ #shadowContent").length).to.eq(1);
 
-
         DomQuery.byId("input_1", true).addEventListener("click", (event: Event) => {
             jsf.ajax.request(event.target, event, {render: 'shadowDomArea', execute: '@this'})
         }).click();

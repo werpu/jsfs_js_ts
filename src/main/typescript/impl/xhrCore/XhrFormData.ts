@@ -156,7 +156,8 @@ export class XhrFormData extends Config {
         }
 
         //lets encode the form elements
-        this.shallowMerge(toEncode.querySelectorAll("input, checkbox, select, textarea").encodeFormElement());
+
+        this.shallowMerge(toEncode.deepElements.encodeFormElement());
     }
 
     /**

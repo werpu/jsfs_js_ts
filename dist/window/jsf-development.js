@@ -399,6 +399,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 var Monad_1 = __webpack_require__(/*! ./Monad */ "./src/main/typescript/ext/monadish/Monad.ts");
 var Stream_1 = __webpack_require__(/*! ./Stream */ "./src/main/typescript/ext/monadish/Stream.ts");
+var SourcesCollectors_1 = __webpack_require__(/*! ./SourcesCollectors */ "./src/main/typescript/ext/monadish/SourcesCollectors.ts");
 var Lang_1 = __webpack_require__(/*! ./Lang */ "./src/main/typescript/ext/monadish/Lang.ts");
 var trim = Lang_1.Lang.trim;
 var objToArray = Lang_1.Lang.objToArray;
@@ -657,11 +658,18 @@ var DomQuery = /** @class */ (function () {
     });
     Object.defineProperty(DomQuery.prototype, "deepElements", {
         get: function () {
+            var _this = this;
             var query = [];
+            var elemStr = "input, select, textarea, checkbox";
+            var prefix = "";
             for (var cnt = 0; cnt < 5; cnt++) {
-                query.push("input, select, textarea, checkbox");
+                query.push(prefix + "input, select, textarea, checkbox");
+                prefix = prefix + " * /shadow/ ";
             }
-            return this.querySelectorAll(query.join(" /shadow/ "));
+            var found = Stream_1.Stream.of.apply(Stream_1.Stream, query).map(function (query) { return _this.querySelectorAll(query); })
+                .filter(function (item) { return !item.isAbsent(); })
+                .collect(new SourcesCollectors_1.ArrayCollector());
+            return new (DomQuery.bind.apply(DomQuery, __spreadArrays([void 0], found)))();
         },
         enumerable: true,
         configurable: true

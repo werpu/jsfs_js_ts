@@ -22,9 +22,7 @@ import * as sinon from "sinon";
 
 import {XmlResponses} from "../frameworkBase/_ext/shared/XmlResponses";
 import {expect} from "chai";
-import protocolPage = StandardInits.protocolPage;
-import {DomQuery, DQ} from "../../../main/typescript/ext/monadish/DomQuery";
-import {Optional} from "../../../main/typescript/ext/monadish";
+import {DomQuery} from "../../../main/typescript/ext/monadish/DomQuery";
 import shadowDomMyFaces = StandardInits.shadowDomMyFaces;
 
 

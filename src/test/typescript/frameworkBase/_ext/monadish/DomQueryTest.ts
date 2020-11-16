@@ -252,7 +252,8 @@ describe('DOMQuery tests', function () {
 </form>
        `;
 
-        let length = DomQuery.querySelectorAll("form").elements.length;
+        let elements = DomQuery.querySelectorAll("form").elements;
+        let length = elements.length;
         expect(length == 8).to.be.true;
         let length1 = DomQuery.querySelectorAll("body").elements.length;
         expect(length1 == 8).to.be.true;

@@ -639,16 +639,16 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         }).filter(item => !!item).collect(new DomQueryCollector());
 
         return elements
-            .orElseLazy(() => this.querySelectorAll("input, checkbox, select, textarea"));
+            .orElseLazy(() => this.querySelectorAll("input, checkbox, select, textarea, fieldset"));
     }
 
     get deepElements(): DomQuery {
 
         let query = [];
-        let elemStr = "input, select, textarea, checkbox";
+        let elemStr = "input, select, textarea, checkbox, fieldset";
         let prefix = "";
         for(let cnt = 0; cnt < 5; cnt++) {
-            query.push(prefix + "input, select, textarea, checkbox");
+            query.push(prefix + "input, select, textarea, checkbox, fieldset");
             prefix = prefix + " * /shadow/ ";
         }
 

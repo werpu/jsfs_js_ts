@@ -17,12 +17,13 @@
 import {Config, Optional, ValueEmbedder} from "./Monad";
 import {XMLQuery} from "./XmlQuery";
 import {IStream, LazyStream, Stream} from "./Stream";
-import {ICollector, IStreamDataSource} from "./SourcesCollectors";
+import {ArrayCollector, ICollector, IStreamDataSource} from "./SourcesCollectors";
 import {Lang} from "./Lang";
 import trim = Lang.trim;
 import objToArray = Lang.objToArray;
 import isString = Lang.isString;
 import equalsIgnoreCase = Lang.equalsIgnoreCase;
+
 
 /**
  *
@@ -273,6 +274,15 @@ interface IDomQuery {
     html(inval?: string): DomQuery | Optional<string>;
 
     /**
+     * dispatch event on all children
+     * just a delegated dispatchevent from the standard
+     * dom working on all queried elements in the monad level
+     *
+     * @param evt the event to be dispatched
+     */
+    dispatchEvent(evt: Event): DomQuery;
+
+    /**
      * easy node traversal, you can pass
      * a set of node selectors which are joined as direct childs
      *
@@ -472,12 +482,6 @@ interface IDomQuery {
      */
     subNodes(from: number, to?: number): DomQuery;
 
-    /**
-     * creates a shadow roots from the existing dom elements in this query
-     * only working on supported browsers, or if a shim is installed
-     * unlike Promises I wont do my own shim on top here
-     */
-    createShadowRoot(): DomQuery;
 
     /**
      * attach shadow elements
@@ -516,7 +520,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
 
     pos = -1;
 
-    constructor(...rootNode: Array<Element | DomQuery | Document | Array<any> | string>) {
+    constructor(...rootNode: Array<Element | ShadowRoot | DomQuery | Document | Array<any> | string>) {
 
         if (Optional.fromNullable(rootNode).isAbsent() || !rootNode.length) {
             return;
@@ -687,11 +691,12 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
     }
 
     get asArray(): Array<DomQuery> {
-        let ret: Array<DomQuery> = [];
-        this.each((item) => {
-            ret.push(item);
-        });
-        return ret;
+        return [].concat(this.rootNode.filter(item => item != null)
+            .map(item => DomQuery.byId(item)));
+    }
+
+    get asNodeArray(): Array<DomQuery> {
+        return [].concat(this.rootNode.filter(item => item != null));
     }
 
     /**
@@ -701,7 +706,12 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
      * @returns a results dom query object
      */
     static querySelectorAll(selector: string): DomQuery {
-        return new DomQuery(document).querySelectorAll(selector);
+        if(selector.indexOf("/shadow/") != -1) {
+            return new DomQuery(document)._querySelectorAllDeep(selector);
+        } else {
+            return new DomQuery(document)._querySelectorAll(selector);
+        }
+
     }
 
     /**
@@ -710,9 +720,9 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
      * @param selector id
      * @return a DomQuery containing the found elements
      */
-    static byId(selector: string | DomQuery | Element): DomQuery {
+    static byId(selector: string | DomQuery | Element, deep = false): DomQuery {
         if (isString(selector)) {
-            return new DomQuery(document).byId(<string>selector);
+            return (!deep) ?  new DomQuery(document).byId(<string>selector) : new DomQuery(document).byIdDeep(<string> selector);
         } else {
             return new DomQuery(<any>selector);
         }
@@ -856,13 +866,22 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         });
     }
 
+    querySelectorAll(selector): DomQuery {
+        //We could merge both methods, but for now this is more readable
+        if(selector.indexOf("/shadow/") != -1) {
+            return this._querySelectorAllDeep(selector);
+        } else {
+            return this._querySelectorAll(selector);
+        }
+    }
+
     /**
-     * query selector all on the existing dom query object
+     * query selector all on the existing dom queryX object
      *
      * @param selector the standard selector
      * @return a DomQuery with the results
      */
-    querySelectorAll(selector): DomQuery {
+    private _querySelectorAll(selector): DomQuery {
         if (!this?.rootNode?.length) {
             return this;
         }
@@ -878,6 +897,30 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         return new DomQuery(...nodes);
     }
 
+    /*deep with a selector and a peudo /shadow/ marker to break into the next level*/
+    private _querySelectorAllDeep(selector): DomQuery {
+        if (!this?.rootNode?.length) {
+            return this;
+        }
+
+        let nodes = [];
+        let foundNodes: DomQuery = new DomQuery(...this.rootNode);
+        let selectors = selector.split(/\/shadow\//);
+
+        for(let cnt2 = 0; cnt2 < selectors.length; cnt2++) {
+            if(selectors[cnt2] == ""){
+                continue;
+            }
+            let levelSelector = selectors[cnt2];
+            foundNodes = foundNodes.querySelectorAll(levelSelector);
+            if(cnt2 <  selectors.length - 1) {
+                foundNodes = foundNodes.shadowRoot;
+            }
+        }
+
+        return foundNodes;
+    }
+
     /**
      * core byId method
      * @param id the id to search for
@@ -885,15 +928,50 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
      */
     byId(id: string, includeRoot?: boolean): DomQuery {
         let res: Array<DomQuery> = [];
-        for (let cnt = 0; includeRoot && cnt < this.rootNode.length; cnt++) {
-            if (this.rootNode[cnt]?.id == id) {
-                res.push(new DomQuery(this.rootNode[cnt]));
-            }
+        if(includeRoot) {
+            res = res.concat(
+                (this?.rootNode || [] )
+                    .filter(item => id == item.id)
+                    .map(item => new DomQuery(item))
+            );
         }
+
         //for some strange kind of reason the # selector fails
         //on hidden elements we use the attributes match selector
         //that works
         res = res.concat(this.querySelectorAll(`[id="${id}"]`));
+        return new DomQuery(...res);
+    }
+
+
+    byIdDeep(id: string, includeRoot?: boolean): DomQuery {
+        let res: Array<DomQuery> = [];
+        if(includeRoot) {
+            res = res.concat(
+                (this?.rootNode || [] )
+                    .filter(item => id == item.id)
+                    .map(item => new DomQuery(item))
+            );
+        }
+
+        //for some strange kind of reason the # selector fails
+        //on hidden elements we use the attributes match selector
+        //that works
+
+        let isolation: DomQuery = this;
+        if(res.length) {
+            return new DomQuery(...res);
+        }
+        do {
+            let found: DomQuery = isolation.querySelectorAll(`[id="${id}"]`);
+            if (found.length) {
+                res.push(found);
+                return new DomQuery(...res);
+            }
+            isolation = isolation.querySelectorAll("* /shadow/");
+
+        } while(res.length == 0 && isolation?.length);
+
         return new DomQuery(...res);
     }
 
@@ -904,11 +982,10 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
      */
     byTagName(tagName: string, includeRoot ?: boolean): DomQuery {
         let res: Array<Element | DomQuery> = [];
-        if(includeRoot) {
-            res = Stream.of<any>(...(this?.rootNode ?? []))
+        if (includeRoot) {
+            res = (this?.rootNode ?? [])
                 .filter(element => element?.tagName == tagName)
-                .reduce<Array<Element | DomQuery>>((reduction: any, item: Element) => reduction.concat([item]),  res)
-                .value;
+                .reduce<Array<Element | DomQuery>>((reduction: any, item: Element) => reduction.concat([item]), res);
         }
 
         res = res.concat(this.querySelectorAll(tagName));
@@ -932,21 +1009,10 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
      */
     hasClass(clazz: string) {
         let hasIt = false;
-
-        this.each((item) => {
-            let oldClass = item.attr("class").value || "";
-            if (oldClass.toLowerCase().indexOf(clazz.toLowerCase()) == -1) {
-                return;
-            } else {
-                let oldClasses = oldClass.split(/\s+/gi);
-                let found = false;
-                for (let cnt = 0; cnt < oldClasses.length && !found; cnt++) {
-                    found = oldClasses[cnt].toLowerCase() == clazz.toLowerCase();
-                }
-                hasIt = hasIt || found;
-                if (hasIt) {
-                    return false;
-                }
+        this.eachElem(node => {
+            hasIt = node.classList.contains(clazz);
+            if (hasIt) {
+                return false;
             }
         });
         return hasIt;
@@ -958,13 +1024,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
      * @param clazz the style class to append
      */
     addClass(clazz: string): DomQuery {
-        this.each((item) => {
-            let oldClass = item.attr("class").value || "";
-            if (!item.hasClass(clazz)) {
-                item.attr("class").value = trim(oldClass + " " + clazz);
-                return;
-            }
-        });
+        this.eachElem(item => item.classList.add(clazz))
         return this;
     }
 
@@ -974,19 +1034,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
      * @param clazz
      */
     removeClass(clazz: string): DomQuery {
-        this.each((item) => {
-            if (item.hasClass(clazz)) {
-                let oldClass = item.attr("class").value || "";
-                let newClasses = [];
-                let oldClasses = oldClass.split(/\s+/gi);
-                for (let cnt = 0; cnt < oldClasses.length; cnt++) {
-                    if (oldClasses[cnt].toLowerCase() != clazz.toLowerCase()) {
-                        newClasses.push(oldClasses[cnt]);
-                    }
-                }
-                item.attr("class").value = newClasses.join(" ");
-            }
-        });
+        this.eachElem(item => item.classList.remove(clazz));
         return this;
     }
 
@@ -1012,6 +1060,14 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         }
         this.innerHtml = inval;
 
+        return this;
+    }
+
+    /**
+     * Standard dispatch event method, delegated from node
+     */
+    dispatchEvent(evt: Event): DomQuery {
+        this.eachElem(elem => elem.dispatchEvent(evt));
         return this;
     }
 
@@ -1368,7 +1424,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
      * @param runEmbeddedScripts
      * @param runEmbeddedCss
      */
-    outerHTML(markup: string, runEmbeddedScripts ?: boolean, runEmbeddedCss ?: boolean): DomQuery {
+    outerHTML(markup: string, runEmbeddedScripts ?: boolean, runEmbeddedCss ?: boolean, deep=false): DomQuery {
         if (this.isAbsent()) {
             return;
         }
@@ -1479,12 +1535,8 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
             let scriptElements = new DomQuery(this.filterSelector("script"), this.querySelectorAll("script"));
             //script execution order by relative pos in their dom tree
             scriptElements.stream
-                .flatMap(item => {
-                    return Stream.of(item.values)
-                })
-                .sort((node1, node2) => {
-                    return node1.compareDocumentPosition(node2) - 3; //preceding 2, following == 4
-                })
+                .flatMap(item => Stream.of(item.values))
+                .sort((node1, node2) => node1.compareDocumentPosition(node2) - 3) //preceding 2, following == 4)
                 .each(item => execScrpt(item));
 
             if (finalScripts.length) {
@@ -1538,10 +1590,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
                     //compliant browsers know child nodes
                     let childNodes: NodeList = item.childNodes;
                     if (childNodes) {
-                        const len = childNodes.length;
-                        for (let cnt = 0; cnt < len; cnt++) {
-                            innerText.push((<Element>childNodes[cnt]).innerHTML || (<CharacterData>childNodes[cnt]).data);
-                        }
+                        childNodes.forEach(child => innerText.push((<Element>child).innerHTML || (<CharacterData>child).data));
                         //non compliant ones innerHTML
                     } else if (item.innerHTML) {
                         innerText.push(item.innerHTML);
@@ -1554,12 +1603,8 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         const scriptElements: DomQuery = new DomQuery(this.filterSelector("link, style"), this.querySelectorAll("link, style"));
 
         scriptElements.stream
-            .flatMap(item => {
-                return Stream.of(item.values)
-            })
-            .sort((node1, node2) => {
-                return node1.compareDocumentPosition(node2) - 3; //preceding 2, following == 4
-            })
+            .flatMap(item => Stream.of(item.values))
+            .sort((node1, node2) => node1.compareDocumentPosition(node2) - 3)
             .each(item => execCss(item));
 
         return this;
@@ -1574,16 +1619,12 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
     }
 
     addEventListener(type: string, listener: (evt: Event) => void, options?: boolean | EventListenerOptions): DomQuery {
-        this.eachElem((node: Element) => {
-            node.addEventListener(type, listener, options);
-        });
+        this.eachElem((node: Element) => node.addEventListener(type, listener, options));
         return this;
     }
 
     removeEventListener(type: string, listener: (evt: Event) => void, options?: boolean | EventListenerOptions): DomQuery {
-        this.eachElem((node: Element) => {
-            node.removeEventListener(type, listener, options);
-        });
+        this.eachElem((node: Element) => node.removeEventListener(type, listener, options));
         return this;
     }
 
@@ -1768,14 +1809,17 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         let cDataBlock = [];
         let TYPE_CDATA_BLOCK = 4;
 
+        let res: any = this.lazyStream.flatMap(item => {
+            return item.childNodes.stream
+        }).filter(item => {
+            return item?.value?.value?.nodeType == TYPE_CDATA_BLOCK;
+        }).reduce((reduced: Array<any>, item: DomQuery) => {
+            reduced.push((<any>item?.value?.value)?.data ?? "");
+            return reduced;
+        }, []).value;
+
         // response may contain several blocks
-        return this.lazyStream
-            .flatMap(item => item.childNodes.stream)
-            .filter(item => item?.value?.value?.nodeType == TYPE_CDATA_BLOCK)
-            .reduce((reduced: Array<any>, item: DomQuery) => {
-                reduced.push((<any>item?.value?.value)?.data ?? "");
-                return reduced;
-            }, []).value.join("");
+        return res.join("");
     }
 
     subNodes(from: number, to?: number): DomQuery {
@@ -1812,31 +1856,49 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         this.pos = -1;
     }
 
-    createShadowRoot(): DomQuery {
-        let shadowRoots: DomQuery[] = [];
-        this.eachElem((item: Element) => {
-            let shadowElement: DomQuery;
-            if ((<any>item)?.createShadowRoot) {
-                shadowElement = DomQuery.byId((<any>item).createShadowRoot());
-            } else {
-                throw Error("Shadow dom creation not supported by the browser, please use a shim, to gain this functionality")
-            }
-        });
-
-        return new DomQuery(...shadowRoots);
-    }
-
-    attachShadow(params: { [key: string]: string }): DomQuery {
+    attachShadow(params: { [key: string]: string } = {mode: "open"}): DomQuery {
         let shadowRoots: DomQuery[] = [];
         this.eachElem((item: Element) => {
             let shadowElement: DomQuery;
             if ((<any>item)?.attachShadow) {
                 shadowElement = DomQuery.byId((<any>item).attachShadow(params));
+                shadowRoots.push(shadowElement);
             } else {
-                //throw error (Shadow dom creation not supported by the browser, please use a shim, to gain this functionality)
+                throw new Error("Shadow dom creation not supported by the browser, please use a shim, to gain this functionality");
             }
         });
         return new DomQuery(...shadowRoots);
+    }
+
+    /**
+     * returns the embedded shadow elements
+     */
+    get shadowElements(): DomQuery {
+        let shadowElements = this.querySelectorAll("*")
+            .filter(item => item.hasShadow);
+
+
+        let mapped: Array<ShadowRoot> = (shadowElements.allElems() || []).map(element => element.shadowRoot);
+        return new DomQuery(...mapped);
+    }
+
+    get shadowRoot(): DomQuery {
+        let shadowRoots = [];
+        for(let cnt = 0; cnt < this.rootNode.length; cnt++) {
+            if(this.rootNode[cnt].shadowRoot) {
+                shadowRoots.push(this.rootNode[cnt].shadowRoot);
+            }
+        }
+        return new DomQuery(...shadowRoots);
+    }
+
+    get hasShadow(): boolean {
+        for(let cnt = 0; cnt < this.rootNode.length; cnt++) {
+            if(this.rootNode[cnt].shadowRoot) {
+                return true;
+            }
+        }
+        return false;
     }
 
     //from

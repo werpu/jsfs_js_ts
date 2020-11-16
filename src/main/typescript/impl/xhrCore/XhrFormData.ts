@@ -73,7 +73,7 @@ export class XhrFormData extends Config {
      * @param form the form holding the viewstate value
      */
     private applyViewState(form: DQ) {
-        let viewState = form.byId(P_VIEWSTATE).inputValue;
+        let viewState = form.byId(P_VIEWSTATE, true).inputValue;
         this.appendIf(viewState.isPresent() ,P_VIEWSTATE).value = viewState.value;
     }
 

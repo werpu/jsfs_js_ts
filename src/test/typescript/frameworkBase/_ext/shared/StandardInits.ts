@@ -15,6 +15,8 @@
  */
 
 
+import {DomQuery} from "../../../../../main/typescript/ext/monadish";
+
 declare let jsf: any;
 
 /**
@@ -43,6 +45,26 @@ export module StandardInits {
 <div id="id_2" booga="blarg"></div>
 <div id="id_3"></div>
 <div id="id_4"></div>
+</body>
+</html>`;
+
+
+
+    export const HTML_SHADOW = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<form id="blarg">
+    <input type="text" id="input_1" name="input_1" value="input_1_val"></input>
+    <input type="hidden" id="javax.faces.ViewState" name="javax.faces.ViewState" value="blubbblubblubb"></input>
+    <input type="button" id="input_2" name="input_2" value="input_1_val"></input>
+    <div id="shadowDomArea">
+            <input type="button" id="input_3" name="input_3" value="input_3_val"></input>
+    </div>
+</form>
 </body>
 </html>`;
 
@@ -131,6 +153,8 @@ export module StandardInits {
         
         <div id="attributeChange">attributes changes area</div>
     
+    
+    
     </div>
 
     <h2>Call actions via normal ppr</h2>
@@ -177,7 +201,8 @@ export module StandardInits {
         var target = "./test.mockup";
 
         function emitPPR(source, event, action, useIframe, formName) {
-            console.debug("enitting;");
+            debugger;
+            console.debug("emitting;");
             document.getElementById(formName || "form1").action = target;
 
             jsf.ajax.request(/*String|Dom Node*/ source, /*|EVENT|*/ (window.event) ? window.event : event, /*{|OPTIONS|}*/ {op: action});
@@ -212,6 +237,10 @@ export module StandardInits {
 
     export function defaultMyFaces(withJsf = true): Promise<() => void> {
         return init(HTML_FORM_DEFAULT, withJsf);
+    }
+
+    export function shadowDomMyFaces(withJsf = true): Promise<() => void> {
+        return <Promise<() => void>> init(HTML_SHADOW, withJsf);
     }
 
     export function protocolPage(withJsf = true): Promise<() => void> {

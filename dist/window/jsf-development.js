@@ -715,11 +715,15 @@ var DomQuery = /** @class */ (function () {
     });
     Object.defineProperty(DomQuery.prototype, "asArray", {
         get: function () {
-            var ret = [];
-            this.each(function (item) {
-                ret.push(item);
-            });
-            return ret;
+            return [].concat(this.rootNode.filter(function (item) { return item != null; })
+                .map(function (item) { return DomQuery.byId(item); }));
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "asNodeArray", {
+        get: function () {
+            return [].concat(this.rootNode.filter(function (item) { return item != null; }));
         },
         enumerable: true,
         configurable: true
@@ -731,7 +735,12 @@ var DomQuery = /** @class */ (function () {
      * @returns a results dom query object
      */
     DomQuery.querySelectorAll = function (selector) {
-        return new DomQuery(document).querySelectorAll(selector);
+        if (selector.indexOf("/shadow/") != -1) {
+            return new DomQuery(document)._querySelectorAllDeep(selector);
+        }
+        else {
+            return new DomQuery(document)._querySelectorAll(selector);
+        }
     };
     /**
      * byId producer
@@ -739,9 +748,10 @@ var DomQuery = /** @class */ (function () {
      * @param selector id
      * @return a DomQuery containing the found elements
      */
-    DomQuery.byId = function (selector) {
+    DomQuery.byId = function (selector, deep) {
+        if (deep === void 0) { deep = false; }
         if (isString(selector)) {
-            return new DomQuery(document).byId(selector);
+            return (!deep) ? new DomQuery(document).byId(selector) : new DomQuery(document).byIdDeep(selector);
         }
         else {
             return new DomQuery(selector);
@@ -877,13 +887,22 @@ var DomQuery = /** @class */ (function () {
             }
         });
     };
+    DomQuery.prototype.querySelectorAll = function (selector) {
+        //We could merge both methods, but for now this is more readable
+        if (selector.indexOf("/shadow/") != -1) {
+            return this._querySelectorAllDeep(selector);
+        }
+        else {
+            return this._querySelectorAll(selector);
+        }
+    };
     /**
-     * query selector all on the existing dom query object
+     * query selector all on the existing dom queryX object
      *
      * @param selector the standard selector
      * @return a DomQuery with the results
      */
-    DomQuery.prototype.querySelectorAll = function (selector) {
+    DomQuery.prototype._querySelectorAll = function (selector) {
         var _a, _b;
         if (!((_a = this === null || this === void 0 ? void 0 : this.rootNode) === null || _a === void 0 ? void 0 : _a.length)) {
             return this;
@@ -898,23 +917,67 @@ var DomQuery = /** @class */ (function () {
         }
         return new (DomQuery.bind.apply(DomQuery, __spreadArrays([void 0], nodes)))();
     };
+    /*deep with a selector and a peudo /shadow/ marker to break into the next level*/
+    DomQuery.prototype._querySelectorAllDeep = function (selector) {
+        var _a;
+        if (!((_a = this === null || this === void 0 ? void 0 : this.rootNode) === null || _a === void 0 ? void 0 : _a.length)) {
+            return this;
+        }
+        var nodes = [];
+        var foundNodes = new (DomQuery.bind.apply(DomQuery, __spreadArrays([void 0], this.rootNode)))();
+        var selectors = selector.split(/\/shadow\//);
+        for (var cnt2 = 0; cnt2 < selectors.length; cnt2++) {
+            if (selectors[cnt2] == "") {
+                continue;
+            }
+            var levelSelector = selectors[cnt2];
+            foundNodes = foundNodes.querySelectorAll(levelSelector);
+            if (cnt2 < selectors.length - 1) {
+                foundNodes = foundNodes.shadowRoot;
+            }
+        }
+        return foundNodes;
+    };
     /**
      * core byId method
      * @param id the id to search for
      * @param includeRoot also match the root element?
      */
     DomQuery.prototype.byId = function (id, includeRoot) {
-        var _a;
         var res = [];
-        for (var cnt = 0; includeRoot && cnt < this.rootNode.length; cnt++) {
-            if (((_a = this.rootNode[cnt]) === null || _a === void 0 ? void 0 : _a.id) == id) {
-                res.push(new DomQuery(this.rootNode[cnt]));
-            }
+        if (includeRoot) {
+            res = res.concat(((this === null || this === void 0 ? void 0 : this.rootNode) || [])
+                .filter(function (item) { return id == item.id; })
+                .map(function (item) { return new DomQuery(item); }));
         }
         //for some strange kind of reason the # selector fails
         //on hidden elements we use the attributes match selector
         //that works
         res = res.concat(this.querySelectorAll("[id=\"" + id + "\"]"));
+        return new (DomQuery.bind.apply(DomQuery, __spreadArrays([void 0], res)))();
+    };
+    DomQuery.prototype.byIdDeep = function (id, includeRoot) {
+        var res = [];
+        if (includeRoot) {
+            res = res.concat(((this === null || this === void 0 ? void 0 : this.rootNode) || [])
+                .filter(function (item) { return id == item.id; })
+                .map(function (item) { return new DomQuery(item); }));
+        }
+        //for some strange kind of reason the # selector fails
+        //on hidden elements we use the attributes match selector
+        //that works
+        var isolation = this;
+        if (res.length) {
+            return new (DomQuery.bind.apply(DomQuery, __spreadArrays([void 0], res)))();
+        }
+        do {
+            var found = isolation.querySelectorAll("[id=\"" + id + "\"]");
+            if (found.length) {
+                res.push(found);
+                return new (DomQuery.bind.apply(DomQuery, __spreadArrays([void 0], res)))();
+            }
+            isolation = isolation.querySelectorAll("* /shadow/");
+        } while (res.length == 0 && (isolation === null || isolation === void 0 ? void 0 : isolation.length));
         return new (DomQuery.bind.apply(DomQuery, __spreadArrays([void 0], res)))();
     };
     /**
@@ -926,9 +989,9 @@ var DomQuery = /** @class */ (function () {
         var _a;
         var res = [];
         if (includeRoot) {
-            res = Stream_1.Stream.of.apply(Stream_1.Stream, ((_a = this === null || this === void 0 ? void 0 : this.rootNode) !== null && _a !== void 0 ? _a : [])).filter(function (element) { return (element === null || element === void 0 ? void 0 : element.tagName) == tagName; })
-                .reduce(function (reduction, item) { return reduction.concat([item]); }, res)
-                .value;
+            res = ((_a = this === null || this === void 0 ? void 0 : this.rootNode) !== null && _a !== void 0 ? _a : [])
+                .filter(function (element) { return (element === null || element === void 0 ? void 0 : element.tagName) == tagName; })
+                .reduce(function (reduction, item) { return reduction.concat([item]); }, res);
         }
         res = res.concat(this.querySelectorAll(tagName));
         return new (DomQuery.bind.apply(DomQuery, __spreadArrays([void 0], res)))();
@@ -950,21 +1013,10 @@ var DomQuery = /** @class */ (function () {
      */
     DomQuery.prototype.hasClass = function (clazz) {
         var hasIt = false;
-        this.each(function (item) {
-            var oldClass = item.attr("class").value || "";
-            if (oldClass.toLowerCase().indexOf(clazz.toLowerCase()) == -1) {
-                return;
-            }
-            else {
-                var oldClasses = oldClass.split(/\s+/gi);
-                var found = false;
-                for (var cnt = 0; cnt < oldClasses.length && !found; cnt++) {
-                    found = oldClasses[cnt].toLowerCase() == clazz.toLowerCase();
-                }
-                hasIt = hasIt || found;
-                if (hasIt) {
-                    return false;
-                }
+        this.eachElem(function (node) {
+            hasIt = node.classList.contains(clazz);
+            if (hasIt) {
+                return false;
             }
         });
         return hasIt;
@@ -975,13 +1027,7 @@ var DomQuery = /** @class */ (function () {
      * @param clazz the style class to append
      */
     DomQuery.prototype.addClass = function (clazz) {
-        this.each(function (item) {
-            var oldClass = item.attr("class").value || "";
-            if (!item.hasClass(clazz)) {
-                item.attr("class").value = trim(oldClass + " " + clazz);
-                return;
-            }
-        });
+        this.eachElem(function (item) { return item.classList.add(clazz); });
         return this;
     };
     /**
@@ -990,19 +1036,7 @@ var DomQuery = /** @class */ (function () {
      * @param clazz
      */
     DomQuery.prototype.removeClass = function (clazz) {
-        this.each(function (item) {
-            if (item.hasClass(clazz)) {
-                var oldClass = item.attr("class").value || "";
-                var newClasses = [];
-                var oldClasses = oldClass.split(/\s+/gi);
-                for (var cnt = 0; cnt < oldClasses.length; cnt++) {
-                    if (oldClasses[cnt].toLowerCase() != clazz.toLowerCase()) {
-                        newClasses.push(oldClasses[cnt]);
-                    }
-                }
-                item.attr("class").value = newClasses.join(" ");
-            }
-        });
+        this.eachElem(function (item) { return item.classList.remove(clazz); });
         return this;
     };
     /**
@@ -1025,6 +1059,13 @@ var DomQuery = /** @class */ (function () {
             return this.isPresent() ? Monad_1.Optional.fromNullable(this.innerHtml) : Monad_1.Optional.absent;
         }
         this.innerHtml = inval;
+        return this;
+    };
+    /**
+     * Standard dispatch event method, delegated from node
+     */
+    DomQuery.prototype.dispatchEvent = function (evt) {
+        this.eachElem(function (elem) { return elem.dispatchEvent(evt); });
         return this;
     };
     Object.defineProperty(DomQuery.prototype, "innerHtml", {
@@ -1376,7 +1417,8 @@ var DomQuery = /** @class */ (function () {
      * @param runEmbeddedScripts
      * @param runEmbeddedCss
      */
-    DomQuery.prototype.outerHTML = function (markup, runEmbeddedScripts, runEmbeddedCss) {
+    DomQuery.prototype.outerHTML = function (markup, runEmbeddedScripts, runEmbeddedCss, deep) {
+        if (deep === void 0) { deep = false; }
         var _a;
         if (this.isAbsent()) {
             return;
@@ -1477,12 +1519,8 @@ var DomQuery = /** @class */ (function () {
             var scriptElements = new DomQuery(this.filterSelector("script"), this.querySelectorAll("script"));
             //script execution order by relative pos in their dom tree
             scriptElements.stream
-                .flatMap(function (item) {
-                return Stream_1.Stream.of(item.values);
-            })
-                .sort(function (node1, node2) {
-                return node1.compareDocumentPosition(node2) - 3; //preceding 2, following == 4
-            })
+                .flatMap(function (item) { return Stream_1.Stream.of(item.values); })
+                .sort(function (node1, node2) { return node1.compareDocumentPosition(node2) - 3; }) //preceding 2, following == 4)
                 .each(function (item) { return execScrpt(item); });
             if (finalScripts.length) {
                 this.globalEval(finalScripts.join("\n"));
@@ -1529,30 +1567,23 @@ var DomQuery = /** @class */ (function () {
                 applyStyle(item, "@import url('" + item.getAttribute("href") + "');");
             }
             else if (tagName && equalsIgnoreCase(tagName, "style") && equalsIgnoreCase(item.getAttribute("type"), "text/css")) {
-                var innerText = [];
+                var innerText_1 = [];
                 //compliant browsers know child nodes
                 var childNodes = item.childNodes;
                 if (childNodes) {
-                    var len = childNodes.length;
-                    for (var cnt = 0; cnt < len; cnt++) {
-                        innerText.push(childNodes[cnt].innerHTML || childNodes[cnt].data);
-                    }
+                    childNodes.forEach(function (child) { return innerText_1.push(child.innerHTML || child.data); });
                     //non compliant ones innerHTML
                 }
                 else if (item.innerHTML) {
-                    innerText.push(item.innerHTML);
+                    innerText_1.push(item.innerHTML);
                 }
-                applyStyle(item, innerText.join(""));
+                applyStyle(item, innerText_1.join(""));
             }
         };
         var scriptElements = new DomQuery(this.filterSelector("link, style"), this.querySelectorAll("link, style"));
         scriptElements.stream
-            .flatMap(function (item) {
-            return Stream_1.Stream.of(item.values);
-        })
-            .sort(function (node1, node2) {
-            return node1.compareDocumentPosition(node2) - 3; //preceding 2, following == 4
-        })
+            .flatMap(function (item) { return Stream_1.Stream.of(item.values); })
+            .sort(function (node1, node2) { return node1.compareDocumentPosition(node2) - 3; })
             .each(function (item) { return execCss(item); });
         return this;
     };
@@ -1564,15 +1595,11 @@ var DomQuery = /** @class */ (function () {
         return this;
     };
     DomQuery.prototype.addEventListener = function (type, listener, options) {
-        this.eachElem(function (node) {
-            node.addEventListener(type, listener, options);
-        });
+        this.eachElem(function (node) { return node.addEventListener(type, listener, options); });
         return this;
     };
     DomQuery.prototype.removeEventListener = function (type, listener, options) {
-        this.eachElem(function (node) {
-            node.removeEventListener(type, listener, options);
-        });
+        this.eachElem(function (node) { return node.removeEventListener(type, listener, options); });
         return this;
     };
     /**
@@ -1737,15 +1764,18 @@ var DomQuery = /** @class */ (function () {
         get: function () {
             var cDataBlock = [];
             var TYPE_CDATA_BLOCK = 4;
-            // response may contain several blocks
-            return this.lazyStream
-                .flatMap(function (item) { return item.childNodes.stream; })
-                .filter(function (item) { var _a, _b; return ((_b = (_a = item === null || item === void 0 ? void 0 : item.value) === null || _a === void 0 ? void 0 : _a.value) === null || _b === void 0 ? void 0 : _b.nodeType) == TYPE_CDATA_BLOCK; })
-                .reduce(function (reduced, item) {
+            var res = this.lazyStream.flatMap(function (item) {
+                return item.childNodes.stream;
+            }).filter(function (item) {
+                var _a, _b;
+                return ((_b = (_a = item === null || item === void 0 ? void 0 : item.value) === null || _a === void 0 ? void 0 : _a.value) === null || _b === void 0 ? void 0 : _b.nodeType) == TYPE_CDATA_BLOCK;
+            }).reduce(function (reduced, item) {
                 var _a, _b, _c;
                 reduced.push((_c = (_b = (_a = item === null || item === void 0 ? void 0 : item.value) === null || _a === void 0 ? void 0 : _a.value) === null || _b === void 0 ? void 0 : _b.data) !== null && _c !== void 0 ? _c : "");
                 return reduced;
-            }, []).value.join("");
+            }, []).value;
+            // response may contain several blocks
+            return res.join("");
         },
         enumerable: true,
         configurable: true
@@ -1777,34 +1807,60 @@ var DomQuery = /** @class */ (function () {
     DomQuery.prototype.reset = function () {
         this.pos = -1;
     };
-    DomQuery.prototype.createShadowRoot = function () {
-        var shadowRoots = [];
-        this.eachElem(function (item) {
-            var _a;
-            var shadowElement;
-            if ((_a = item) === null || _a === void 0 ? void 0 : _a.createShadowRoot) {
-                shadowElement = DomQuery.byId(item.createShadowRoot());
-            }
-            else {
-                throw Error("Shadow dom creation not supported by the browser, please use a shim, to gain this functionality");
-            }
-        });
-        return new (DomQuery.bind.apply(DomQuery, __spreadArrays([void 0], shadowRoots)))();
-    };
     DomQuery.prototype.attachShadow = function (params) {
+        if (params === void 0) { params = { mode: "open" }; }
         var shadowRoots = [];
         this.eachElem(function (item) {
             var _a;
             var shadowElement;
             if ((_a = item) === null || _a === void 0 ? void 0 : _a.attachShadow) {
                 shadowElement = DomQuery.byId(item.attachShadow(params));
+                shadowRoots.push(shadowElement);
             }
             else {
-                //throw error (Shadow dom creation not supported by the browser, please use a shim, to gain this functionality)
+                throw new Error("Shadow dom creation not supported by the browser, please use a shim, to gain this functionality");
             }
         });
         return new (DomQuery.bind.apply(DomQuery, __spreadArrays([void 0], shadowRoots)))();
     };
+    Object.defineProperty(DomQuery.prototype, "shadowElements", {
+        /**
+         * returns the embedded shadow elements
+         */
+        get: function () {
+            var shadowElements = this.querySelectorAll("*")
+                .filter(function (item) { return item.hasShadow; });
+            var mapped = (shadowElements.allElems() || []).map(function (element) { return element.shadowRoot; });
+            return new (DomQuery.bind.apply(DomQuery, __spreadArrays([void 0], mapped)))();
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "shadowRoot", {
+        get: function () {
+            var shadowRoots = [];
+            for (var cnt = 0; cnt < this.rootNode.length; cnt++) {
+                if (this.rootNode[cnt].shadowRoot) {
+                    shadowRoots.push(this.rootNode[cnt].shadowRoot);
+                }
+            }
+            return new (DomQuery.bind.apply(DomQuery, __spreadArrays([void 0], shadowRoots)))();
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "hasShadow", {
+        get: function () {
+            for (var cnt = 0; cnt < this.rootNode.length; cnt++) {
+                if (this.rootNode[cnt].shadowRoot) {
+                    return true;
+                }
+            }
+            return false;
+        },
+        enumerable: true,
+        configurable: true
+    });
     //from
     // http://blog.vishalon.net/index.php/javascript-getting-and-setting-caret-position-in-textarea/
     DomQuery.getCaretPosition = function (ctrl) {
@@ -3925,7 +3981,7 @@ var Implementation;
          *  typecheck assert!, we opt for strong typing here
          *  because it makes it easier to detect bugs
          */
-        var element = monadish_1.DQ.byId(form);
+        var element = monadish_1.DQ.byId(form, true);
         if (!element.isTag(Const_1.TAG_FORM)) {
             throw new Error(getMessage("ERR_VIEWSTATE"));
         }
@@ -4949,7 +5005,7 @@ var ExtDomquery = /** @class */ (function (_super) {
                 .map((function (item) { return !item.attr("src").value.match(/jsf\.js\?ln=javax\.faces/gi); }))
                 .first();
             if (nonceScript.isPresent()) {
-                nonce.value = DomQuery_1.DomQuery.byId(nonceScript.value).attr("nonce").value;
+                nonce.value = DomQuery_1.DomQuery.byId(nonceScript.value, true).attr("nonce").value;
             }
             return nonce.value;
         },
@@ -5163,7 +5219,7 @@ var ExtLang;
         //html 5 for handling
         if (queryElem.attr(Const_1.TAG_FORM).isPresent()) {
             var formId = queryElem.attr(Const_1.TAG_FORM).value;
-            var foundForm = DomQuery_1.DQ.byId(formId);
+            var foundForm = DomQuery_1.DQ.byId(formId, true);
             if (foundForm.isPresent()) {
                 return foundForm;
             }
@@ -5330,7 +5386,7 @@ var EventData = /** @class */ (function () {
             .orElse(context.getIf(Const_1.P_PARTIAL_SOURCE).value)
             .orElse(context.getIf(Const_1.CTX_PARAM_PASS_THR, Const_1.P_PARTIAL_SOURCE).value).value;
         if (sourceId) {
-            eventData.source = monadish_1.DQ.byId(sourceId).first().value.value;
+            eventData.source = monadish_1.DQ.byId(sourceId, true).first().value.value;
         }
         if (name !== Const_1.BEGIN) {
             eventData.responseCode = (_a = request === null || request === void 0 ? void 0 : request.status) === null || _a === void 0 ? void 0 : _a.toString();
@@ -5420,7 +5476,7 @@ function resolveForm(requestCtx, elem, event) {
     var _a, _b, _c;
     var configId = (_c = (_b = (_a = requestCtx.value) === null || _a === void 0 ? void 0 : _a.myfaces) === null || _b === void 0 ? void 0 : _b.form) !== null && _c !== void 0 ? _c : Const_1.MF_NONE; //requestCtx.getIf(MYFACES, "form").orElse(MF_NONE).value;
     return monadish_1.DQ
-        .byId(configId)
+        .byId(configId, true)
         .orElseLazy(function () { return Lang_1.ExtLang.getForm(elem.getAsElem(0).value, event); });
 }
 exports.resolveForm = resolveForm;
@@ -5491,7 +5547,7 @@ function resolveDefaults(event, opts, el) {
     if (el === void 0) { el = null; }
     var _a;
     //deep copy the options, so that further transformations to not backfire into the callers
-    var resolvedEvent = event, options = new monadish_1.Config(opts).deepCopy, elem = monadish_1.DQ.byId(el || resolvedEvent.target), elementId = elem.id, requestCtx = new monadish_1.Config({}), internalCtx = new monadish_1.Config({}), windowId = resolveWindowId(options), isResetValues = true === ((_a = options.value) === null || _a === void 0 ? void 0 : _a.resetValues);
+    var resolvedEvent = event, options = new monadish_1.Config(opts).deepCopy, elem = monadish_1.DQ.byId(el || resolvedEvent.target, true), elementId = elem.id, requestCtx = new monadish_1.Config({}), internalCtx = new monadish_1.Config({}), windowId = resolveWindowId(options), isResetValues = true === ((_a = options.value) === null || _a === void 0 ? void 0 : _a.resetValues);
     return { resolvedEvent: resolvedEvent, options: options, elem: elem, elementId: elementId, requestCtx: requestCtx, internalCtx: internalCtx, windowId: windowId, isResetValues: isResetValues };
 }
 exports.resolveDefaults = resolveDefaults;
@@ -5583,7 +5639,7 @@ exports.resolveContexts = resolveContexts;
  */
 function resolveSourceElement(context, internalContext) {
     var elemId = resolveSourceElementId(context, internalContext);
-    return monadish_2.DQ.byId(elemId.value);
+    return monadish_2.DQ.byId(elemId.value, true);
 }
 exports.resolveSourceElement = resolveSourceElement;
 /**
@@ -5911,14 +5967,14 @@ var ResponseProcessor = /** @class */ (function () {
      * @param cdataBlock the cdata block with the new html code
      */
     ResponseProcessor.prototype.update = function (node, cdataBlock) {
-        var result = monadish_1.DQ.byId(node.id.value).outerHTML(cdataBlock, false, false);
+        var result = monadish_1.DQ.byId(node.id.value, true).outerHTML(cdataBlock, false, false);
         var sourceForm = result === null || result === void 0 ? void 0 : result.parents(Const_1.TAG_FORM).orElse(result.byTagName(Const_1.TAG_FORM, true));
         if (sourceForm) {
             this.storeForPostProcessing(sourceForm, result);
         }
     };
     ResponseProcessor.prototype.delete = function (node) {
-        monadish_1.DQ.byId(node.id.value).delete();
+        monadish_1.DQ.byId(node.id.value, true).delete();
     };
     /**
      * attributes leaf tag... process the attributes
@@ -5926,7 +5982,7 @@ var ResponseProcessor = /** @class */ (function () {
      * @param node
      */
     ResponseProcessor.prototype.attributes = function (node) {
-        var elem = monadish_1.DQ.byId(node.id.value);
+        var elem = monadish_1.DQ.byId(node.id.value, true);
         node.byTagName(Const_1.TAG_ATTR).each(function (item) {
             elem.attr(item.attr(Const_1.ATTR_NAME).value).value = item.attr(Const_1.ATTR_VALUE).value;
         });
@@ -5949,11 +6005,11 @@ var ResponseProcessor = /** @class */ (function () {
         var after = node.attr(Const_1.TAG_AFTER);
         var insertNodes = monadish_1.DQ.fromMarkup(node.cDATAAsString);
         if (before.isPresent()) {
-            monadish_1.DQ.byId(before.value).insertBefore(insertNodes);
+            monadish_1.DQ.byId(before.value, true).insertBefore(insertNodes);
             this.internalContext.assign(Const_1.UPDATE_ELEMS).value.push(insertNodes);
         }
         if (after.isPresent()) {
-            var domQuery = monadish_1.DQ.byId(after.value);
+            var domQuery = monadish_1.DQ.byId(after.value, true);
             domQuery.insertAfter(insertNodes);
             this.internalContext.assign(Const_1.UPDATE_ELEMS).value.push(insertNodes);
         }
@@ -5971,7 +6027,7 @@ var ResponseProcessor = /** @class */ (function () {
             var insertId = item.attr(Const_1.ATTR_ID);
             var insertNodes = monadish_1.DQ.fromMarkup(item.cDATAAsString);
             if (insertId.isPresent()) {
-                monadish_1.DQ.byId(insertId.value).insertBefore(insertNodes);
+                monadish_1.DQ.byId(insertId.value, true).insertBefore(insertNodes);
                 _this.internalContext.assign(Const_1.UPDATE_ELEMS).value.push(insertNodes);
             }
         });
@@ -5979,7 +6035,7 @@ var ResponseProcessor = /** @class */ (function () {
             var insertId = item.attr(Const_1.ATTR_ID);
             var insertNodes = monadish_1.DQ.fromMarkup(item.cDATAAsString);
             if (insertId.isPresent()) {
-                monadish_1.DQ.byId(insertId.value).insertAfter(insertNodes);
+                monadish_1.DQ.byId(insertId.value, true).insertAfter(insertNodes);
                 _this.internalContext.assign(Const_1.UPDATE_ELEMS).value.push(insertNodes);
             }
         });
@@ -6013,7 +6069,7 @@ var ResponseProcessor = /** @class */ (function () {
         monadish_1.Stream.ofAssoc(this.internalContext.getIf(Const_1.APPLIED_VST).orElse({}).value)
             .each(function (item) {
             var value = item[1];
-            var nameSpace = monadish_1.DQ.byId(value.nameSpace).orElse(document.body);
+            var nameSpace = monadish_1.DQ.byId(value.nameSpace, true).orElse(document.body);
             var affectedForms = nameSpace.byTagName(Const_1.TAG_FORM);
             var affectedForms2 = nameSpace.filter(function (item) { return item.tagName.orElse(Const_1.EMPTY_STR).value.toLowerCase() == Const_1.TAG_FORM; });
             _this.appendViewStateToForms(new monadish_1.DomQuery(affectedForms, affectedForms2), value.value);
@@ -6202,7 +6258,7 @@ var XhrFormData = /** @class */ (function (_super) {
      * @param form the form holding the viewstate value
      */
     XhrFormData.prototype.applyViewState = function (form) {
-        var viewState = form.byId(Const_1.P_VIEWSTATE).inputValue;
+        var viewState = form.byId(Const_1.P_VIEWSTATE, true).inputValue;
         this.appendIf(viewState.isPresent(), Const_1.P_VIEWSTATE).value = viewState.value;
     };
     /**

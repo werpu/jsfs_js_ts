@@ -480,7 +480,7 @@ export module Implementation {
          *  because it makes it easier to detect bugs
          */
 
-        let element: DQ = DQ.byId(form);
+        let element: DQ = DQ.byId(form, true);
         if (!element.isTag(TAG_FORM)) {
             throw new Error(getMessage("ERR_VIEWSTATE"));
         }

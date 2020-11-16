@@ -74,7 +74,7 @@ export function resolveFinalUrl(sourceForm: DomQuery, formData: XhrFormData, aja
 export function resolveForm(requestCtx: Config, elem: DQ, event: Event): DQ {
     const configId = requestCtx.value?.myfaces?.form ?? MF_NONE; //requestCtx.getIf(MYFACES, "form").orElse(MF_NONE).value;
     return DQ
-        .byId(configId)
+        .byId(configId, true)
         .orElseLazy(() => ExtLang.getForm(elem.getAsElem(0).value, event));
 }
 
@@ -141,7 +141,7 @@ export function resolveDefaults(event: Event, opts: any = {}, el: Element | stri
     //deep copy the options, so that further transformations to not backfire into the callers
     const resolvedEvent = event,
         options = new Config(opts).deepCopy,
-        elem = DQ.byId(el || <Element>resolvedEvent.target),
+        elem = DQ.byId(el || <Element>resolvedEvent.target, true),
         elementId = elem.id, requestCtx = new Config({}),
         internalCtx = new Config({}), windowId = resolveWindowId(options),
         isResetValues = true === options.value?.resetValues;

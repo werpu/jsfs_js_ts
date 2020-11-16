@@ -26,6 +26,12 @@ export class XmlResponses {
     </partial-response>
     `;
 
+    static SHADOW_DOM_UPDATE=`
+        <partial-response>
+            <changes><update id="shadowContent"><![CDATA[<div id="shadowContent">after update</div>]]></update></changes>
+        </partial-response>           
+    `;
+
     static UPDATE_INSERT_2 = `
     <partial-response>
     <changes>

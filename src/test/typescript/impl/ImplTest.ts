@@ -123,7 +123,10 @@ describe('jsf.ajax.request test suite', () => {
         expect(!!called["func4"]).to.be.true;
         expect(!!called["func5"]).to.be.false;
 
-    })
+    });
+
+
+
 
 });
 

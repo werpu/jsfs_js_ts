@@ -87,7 +87,7 @@ export function resolveContexts(context: { [p: string]: any }): any {
  */
 export function resolveSourceElement(context: Config, internalContext: Config): DQ {
     let elemId = resolveSourceElementId(context, internalContext);
-    return DQ.byId(elemId.value);
+    return DQ.byId(elemId.value, true);
 }
 
 /**

@@ -75,7 +75,7 @@ export class ExtDomquery extends DQ {
             .first();
 
         if (nonceScript.isPresent()) {
-            nonce.value = DomQuery.byId(nonceScript.value).attr("nonce").value;
+            nonce.value = DomQuery.byId(nonceScript.value, true).attr("nonce").value;
         }
         return <string>nonce.value;
     }

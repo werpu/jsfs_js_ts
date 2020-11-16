@@ -173,7 +173,7 @@ export module ExtLang {
         //html 5 for handling
         if (queryElem.attr(TAG_FORM).isPresent()) {
             let formId = queryElem.attr(TAG_FORM).value;
-            let foundForm = DQ.byId(formId);
+            let foundForm = DQ.byId(formId, true);
             if (foundForm.isPresent()) {
                 return foundForm;
             }

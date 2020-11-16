@@ -20,7 +20,7 @@ export class EventData {
             .orElse(context.getIf(P_PARTIAL_SOURCE).value)
             .orElse(context.getIf(CTX_PARAM_PASS_THR, P_PARTIAL_SOURCE).value).value;
         if (sourceId) {
-            eventData.source = DQ.byId(sourceId).first().value.value;
+            eventData.source = DQ.byId(sourceId, true).first().value.value;
         }
 
         if (name !== BEGIN) {

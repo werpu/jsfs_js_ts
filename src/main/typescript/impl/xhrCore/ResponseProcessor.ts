@@ -169,7 +169,7 @@ export class ResponseProcessor implements IResponseProcessor {
      * @param cdataBlock the cdata block with the new html code
      */
     update(node: XMLQuery, cdataBlock: string) {
-        let result = DQ.byId(node.id.value).outerHTML(cdataBlock, false, false);
+        let result = DQ.byId(node.id.value, true).outerHTML(cdataBlock, false, false);
         let sourceForm = result?.parents(TAG_FORM).orElse(result.byTagName(TAG_FORM, true));
         if (sourceForm) {
             this.storeForPostProcessing(sourceForm, result);
@@ -177,7 +177,7 @@ export class ResponseProcessor implements IResponseProcessor {
     }
 
     delete(node: XMLQuery) {
-        DQ.byId(node.id.value).delete();
+        DQ.byId(node.id.value, true).delete();
     }
 
     /**
@@ -186,7 +186,7 @@ export class ResponseProcessor implements IResponseProcessor {
      * @param node
      */
     attributes(node: XMLQuery) {
-        let elem = DQ.byId(node.id.value);
+        let elem = DQ.byId(node.id.value, true);
 
         node.byTagName(TAG_ATTR).each((item: XMLQuery) => {
             elem.attr(item.attr(ATTR_NAME).value).value = item.attr(ATTR_VALUE).value;
@@ -215,11 +215,11 @@ export class ResponseProcessor implements IResponseProcessor {
         let insertNodes = DQ.fromMarkup(<any>node.cDATAAsString);
 
         if (before.isPresent()) {
-            DQ.byId(before.value).insertBefore(insertNodes);
+            DQ.byId(before.value, true).insertBefore(insertNodes);
             this.internalContext.assign(UPDATE_ELEMS).value.push(insertNodes);
         }
         if (after.isPresent()) {
-            let domQuery = DQ.byId(after.value);
+            let domQuery = DQ.byId(after.value, true);
             domQuery.insertAfter(insertNodes);
 
             this.internalContext.assign(UPDATE_ELEMS).value.push(insertNodes);
@@ -239,7 +239,7 @@ export class ResponseProcessor implements IResponseProcessor {
             let insertId = item.attr(ATTR_ID);
             let insertNodes = DQ.fromMarkup(<any>item.cDATAAsString);
             if (insertId.isPresent()) {
-                DQ.byId(insertId.value).insertBefore(insertNodes);
+                DQ.byId(insertId.value, true).insertBefore(insertNodes);
                 this.internalContext.assign(UPDATE_ELEMS).value.push(insertNodes);
             }
         });
@@ -248,7 +248,7 @@ export class ResponseProcessor implements IResponseProcessor {
             let insertId = item.attr(ATTR_ID);
             let insertNodes = DQ.fromMarkup(<any>item.cDATAAsString);
             if (insertId.isPresent()) {
-                DQ.byId(insertId.value).insertAfter(insertNodes);
+                DQ.byId(insertId.value, true).insertAfter(insertNodes);
                 this.internalContext.assign(UPDATE_ELEMS).value.push(insertNodes);
             }
         });
@@ -284,7 +284,7 @@ export class ResponseProcessor implements IResponseProcessor {
         Stream.ofAssoc<ViewState>(this.internalContext.getIf(APPLIED_VST).orElse({}).value)
             .each((item: Array<any>) => {
                 let value: ViewState = item[1];
-                let nameSpace = DQ.byId(value.nameSpace).orElse(document.body);
+                let nameSpace = DQ.byId(value.nameSpace, true).orElse(document.body);
                 let affectedForms = nameSpace.byTagName(TAG_FORM);
                 let affectedForms2 = nameSpace.filter(item => item.tagName.orElse(EMPTY_STR).value.toLowerCase() == TAG_FORM);
 

@@ -633,37 +633,37 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
     }
 
     get elements(): DomQuery {
-        let elements: DomQuery = this.stream.flatMap((item: DomQuery) => {
-            let formElement: HTMLFormElement = <HTMLFormElement>item.value.value;
-            return new Stream(formElement.elements ? objToArray(formElement.elements) : []);
-        }).filter(item => !!item).collect(new DomQueryCollector());
-
-        return elements
-            .orElseLazy(() => this.querySelectorAll("input, checkbox, select, textarea, fieldset"));
+        //a simple querySelectorAll should suffice
+        return this.querySelectorAll("input, checkbox, select, textarea, fieldset");
     }
 
     get deepElements(): DomQuery {
-
-
         let elemStr = "input, select, textarea, checkbox, fieldset";
         return this.querySelectorallDeep(elemStr);
     }
 
-    querySelectorallDeep(elemStr: string) {
-        let query = [];
-        let prefix = "";
-        for (let cnt = 0; cnt < 5; cnt++) {
-            query.push(prefix + elemStr);
-            prefix = prefix + " * /shadow/ ";
+    /**
+     * a deep search which treats the single isolated shadow doms
+     * separately and runs the query on earch shadow dom
+     * @param queryStr
+     */
+    querySelectorallDeep(queryStr: string): DomQuery {
+        let found: Array<DomQuery> = [];
+        let queryRes = this.querySelectorAll(queryStr);
+        if(queryRes.length) {
+            found.push(queryRes);
         }
-
-        let found = Stream.of(...query)
-            .map(query => this.querySelectorAll(query))
-            .filter(item => !item.isAbsent())
-            .collect(new ArrayCollector());
-
+        let shadowRoots = this.querySelectorAll("*").shadowRoot;
+        if(shadowRoots.length) {
+            let shadowRes = shadowRoots.querySelectorallDeep(queryStr);
+            if(shadowRes.length) {
+                found.push(shadowRes);
+            }
+        }
         return new DomQuery(...found);
     }
+
+
 
     /**
      * todo align this api with the rest of the apis
@@ -714,12 +714,13 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
     }
 
     get asArray(): Array<DomQuery> {
-        return [].concat(this.rootNode.filter(item => item != null)
-            .map(item => DomQuery.byId(item)));
+        //filter not supported by IE11
+        return [].concat(LazyStream.of(...this.rootNode).filter(item => item != null)
+            .map(item => DomQuery.byId(item)).collect(new ArrayCollector()));
     }
 
     get asNodeArray(): Array<DomQuery> {
-        return [].concat(this.rootNode.filter(item => item != null));
+        return [].concat(Stream.of(this.rootNode).filter(item => item != null).collect(new ArrayCollector()));
     }
 
     /**
@@ -928,6 +929,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         return new DomQuery(...nodes);
     }
 
+
     /*deep with a selector and a peudo /shadow/ marker to break into the next level*/
     private _querySelectorAllDeep(selector): DomQuery {
         if (!this?.rootNode?.length) {
@@ -961,9 +963,10 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         let res: Array<DomQuery> = [];
         if (includeRoot) {
             res = res.concat(
-                (this?.rootNode || [])
+                LazyStream.of(...(this?.rootNode || []))
                     .filter(item => id == item.id)
                     .map(item => new DomQuery(item))
+                    .collect(new ArrayCollector())
             );
         }
 
@@ -979,29 +982,17 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         let res: Array<DomQuery> = [];
         if (includeRoot) {
             res = res.concat(
-                (this?.rootNode || [])
+                LazyStream.of(...(this?.rootNode || []))
                     .filter(item => id == item.id)
                     .map(item => new DomQuery(item))
+                    .collect(new ArrayCollector())
             );
         }
 
-        //for some strange kind of reason the # selector fails
-        //on hidden elements we use the attributes match selector
-        //that works
-
-        let isolation: DomQuery = this;
-        if (res.length) {
-            return new DomQuery(...res);
+        let subItems = this.querySelectorallDeep(`[id="${id}"]`);
+        if(subItems.length) {
+            res.push(subItems);
         }
-        do {
-            let found: DomQuery = isolation.querySelectorAll(`[id="${id}"]`);
-            if (found.length) {
-                res.push(found);
-                return new DomQuery(...res);
-            }
-            isolation = isolation.querySelectorAll("* /shadow/");
-
-        } while (res.length == 0 && isolation?.length);
 
         return new DomQuery(...res);
     }
@@ -1014,12 +1005,13 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
     byTagName(tagName: string, includeRoot ?: boolean, deep ?: boolean): DomQuery {
         let res: Array<Element | DomQuery> = [];
         if (includeRoot) {
-            res = (this?.rootNode ?? [])
+            res = <any> LazyStream.of(...(this?.rootNode ?? []))
                 .filter(element => element?.tagName == tagName)
-                .reduce<Array<Element | DomQuery>>((reduction: any, item: Element) => reduction.concat([item]), res);
+                .reduce<Array<Element | DomQuery>>((reduction: any, item: Element) => reduction.concat([item]), res)
+                .orElse(res).value;
         }
 
-        res = (deep) ? res.concat(this.querySelectorallDeep(tagName)) : res.concat(this.querySelectorAll(tagName));
+        (deep) ? res.push(this.querySelectorallDeep(tagName)) : res.push(this.querySelectorAll(tagName));
         return new DomQuery(...res);
     }
 
@@ -1084,9 +1076,10 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
                     return true;
                 }
                 if (deep) {
-                    this.querySelectorallDeep("input[type='file']").firstElem().isPresent();
+                    return this.querySelectorallDeep("input[type='file']").firstElem().isPresent();
+                } else {
+                    return this.querySelectorAll("input[type='file']").firstElem().isPresent();
                 }
-                return this.querySelectorAll("input[type='file']").firstElem().isPresent();
             }
             return item.isMultipartCandidate(deep);
         };
@@ -1990,6 +1983,8 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
 
         ctrl?.setSelectiongRange ? ctrl?.setSelectiongRange(pos, pos) : null;
     }
+
+
 }
 
 /**

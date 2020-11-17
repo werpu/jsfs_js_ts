@@ -645,13 +645,8 @@ var DomQuery = /** @class */ (function () {
     });
     Object.defineProperty(DomQuery.prototype, "elements", {
         get: function () {
-            var _this = this;
-            var elements = this.stream.flatMap(function (item) {
-                var formElement = item.value.value;
-                return new Stream_1.Stream(formElement.elements ? objToArray(formElement.elements) : []);
-            }).filter(function (item) { return !!item; }).collect(new DomQueryCollector());
-            return elements
-                .orElseLazy(function () { return _this.querySelectorAll("input, checkbox, select, textarea, fieldset"); });
+            //a simple querySelectorAll should suffice
+            return this.querySelectorAll("input, checkbox, select, textarea, fieldset");
         },
         enumerable: true,
         configurable: true
@@ -664,17 +659,24 @@ var DomQuery = /** @class */ (function () {
         enumerable: true,
         configurable: true
     });
-    DomQuery.prototype.querySelectorallDeep = function (elemStr) {
-        var _this = this;
-        var query = [];
-        var prefix = "";
-        for (var cnt = 0; cnt < 5; cnt++) {
-            query.push(prefix + elemStr);
-            prefix = prefix + " * /shadow/ ";
+    /**
+     * a deep search which treats the single isolated shadow doms
+     * separately and runs the query on earch shadow dom
+     * @param queryStr
+     */
+    DomQuery.prototype.querySelectorallDeep = function (queryStr) {
+        var found = [];
+        var queryRes = this.querySelectorAll(queryStr);
+        if (queryRes.length) {
+            found.push(queryRes);
         }
-        var found = Stream_1.Stream.of.apply(Stream_1.Stream, query).map(function (query) { return _this.querySelectorAll(query); })
-            .filter(function (item) { return !item.isAbsent(); })
-            .collect(new SourcesCollectors_1.ArrayCollector());
+        var shadowRoots = this.querySelectorAll("*").shadowRoot;
+        if (shadowRoots.length) {
+            var shadowRes = shadowRoots.querySelectorallDeep(queryStr);
+            if (shadowRes.length) {
+                found.push(shadowRes);
+            }
+        }
         return new (DomQuery.bind.apply(DomQuery, __spreadArrays([void 0], found)))();
     };
     Object.defineProperty(DomQuery.prototype, "disabled", {
@@ -737,15 +739,16 @@ var DomQuery = /** @class */ (function () {
     });
     Object.defineProperty(DomQuery.prototype, "asArray", {
         get: function () {
-            return [].concat(this.rootNode.filter(function (item) { return item != null; })
-                .map(function (item) { return DomQuery.byId(item); }));
+            //filter not supported by IE11
+            return [].concat(Stream_1.LazyStream.of.apply(Stream_1.LazyStream, this.rootNode).filter(function (item) { return item != null; })
+                .map(function (item) { return DomQuery.byId(item); }).collect(new SourcesCollectors_1.ArrayCollector()));
         },
         enumerable: true,
         configurable: true
     });
     Object.defineProperty(DomQuery.prototype, "asNodeArray", {
         get: function () {
-            return [].concat(this.rootNode.filter(function (item) { return item != null; }));
+            return [].concat(Stream_1.Stream.of(this.rootNode).filter(function (item) { return item != null; }).collect(new SourcesCollectors_1.ArrayCollector()));
         },
         enumerable: true,
         configurable: true
@@ -976,9 +979,9 @@ var DomQuery = /** @class */ (function () {
     DomQuery.prototype.byId = function (id, includeRoot) {
         var res = [];
         if (includeRoot) {
-            res = res.concat(((this === null || this === void 0 ? void 0 : this.rootNode) || [])
-                .filter(function (item) { return id == item.id; })
-                .map(function (item) { return new DomQuery(item); }));
+            res = res.concat(Stream_1.LazyStream.of.apply(Stream_1.LazyStream, ((this === null || this === void 0 ? void 0 : this.rootNode) || [])).filter(function (item) { return id == item.id; })
+                .map(function (item) { return new DomQuery(item); })
+                .collect(new SourcesCollectors_1.ArrayCollector()));
         }
         //for some strange kind of reason the # selector fails
         //on hidden elements we use the attributes match selector
@@ -989,25 +992,14 @@ var DomQuery = /** @class */ (function () {
     DomQuery.prototype.byIdDeep = function (id, includeRoot) {
         var res = [];
         if (includeRoot) {
-            res = res.concat(((this === null || this === void 0 ? void 0 : this.rootNode) || [])
-                .filter(function (item) { return id == item.id; })
-                .map(function (item) { return new DomQuery(item); }));
+            res = res.concat(Stream_1.LazyStream.of.apply(Stream_1.LazyStream, ((this === null || this === void 0 ? void 0 : this.rootNode) || [])).filter(function (item) { return id == item.id; })
+                .map(function (item) { return new DomQuery(item); })
+                .collect(new SourcesCollectors_1.ArrayCollector()));
         }
-        //for some strange kind of reason the # selector fails
-        //on hidden elements we use the attributes match selector
-        //that works
-        var isolation = this;
-        if (res.length) {
-            return new (DomQuery.bind.apply(DomQuery, __spreadArrays([void 0], res)))();
+        var subItems = this.querySelectorallDeep("[id=\"" + id + "\"]");
+        if (subItems.length) {
+            res.push(subItems);
         }
-        do {
-            var found = isolation.querySelectorAll("[id=\"" + id + "\"]");
-            if (found.length) {
-                res.push(found);
-                return new (DomQuery.bind.apply(DomQuery, __spreadArrays([void 0], res)))();
-            }
-            isolation = isolation.querySelectorAll("* /shadow/");
-        } while (res.length == 0 && (isolation === null || isolation === void 0 ? void 0 : isolation.length));
         return new (DomQuery.bind.apply(DomQuery, __spreadArrays([void 0], res)))();
     };
     /**
@@ -1019,11 +1011,11 @@ var DomQuery = /** @class */ (function () {
         var _a;
         var res = [];
         if (includeRoot) {
-            res = ((_a = this === null || this === void 0 ? void 0 : this.rootNode) !== null && _a !== void 0 ? _a : [])
-                .filter(function (element) { return (element === null || element === void 0 ? void 0 : element.tagName) == tagName; })
-                .reduce(function (reduction, item) { return reduction.concat([item]); }, res);
+            res = Stream_1.LazyStream.of.apply(Stream_1.LazyStream, ((_a = this === null || this === void 0 ? void 0 : this.rootNode) !== null && _a !== void 0 ? _a : [])).filter(function (element) { return (element === null || element === void 0 ? void 0 : element.tagName) == tagName; })
+                .reduce(function (reduction, item) { return reduction.concat([item]); }, res)
+                .orElse(res).value;
         }
-        res = (deep) ? res.concat(this.querySelectorallDeep(tagName)) : res.concat(this.querySelectorAll(tagName));
+        (deep) ? res.push(this.querySelectorallDeep(tagName)) : res.push(this.querySelectorAll(tagName));
         return new (DomQuery.bind.apply(DomQuery, __spreadArrays([void 0], res)))();
     };
     /**
@@ -1087,9 +1079,11 @@ var DomQuery = /** @class */ (function () {
                     return true;
                 }
                 if (deep) {
-                    _this.querySelectorallDeep("input[type='file']").firstElem().isPresent();
+                    return _this.querySelectorallDeep("input[type='file']").firstElem().isPresent();
                 }
-                return _this.querySelectorAll("input[type='file']").firstElem().isPresent();
+                else {
+                    return _this.querySelectorAll("input[type='file']").firstElem().isPresent();
+                }
             }
             return item.isMultipartCandidate(deep);
         };

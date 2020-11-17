@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ArrayCollector, Config, Lang} from "../../ext/monadish";
+import {ArrayCollector, Config, DomQuery, Lang, LazyStream} from "../../ext/monadish";
 
 import {Stream} from "../../ext/monadish";
 import {DQ} from "../../ext/monadish";
@@ -30,6 +30,8 @@ import {EMPTY_STR, P_VIEWSTATE} from "../core/Const";
  * and due to the url encoding constraint given by the jsf.js spec
  */
 export class XhrFormData extends Config {
+
+    private fileInputs = {};
 
     /**
      * data collector from a given form
@@ -48,6 +50,51 @@ export class XhrFormData extends Config {
             this.handleFormSource();
         }
     }
+
+    /**
+     * generic application of ids
+     * @param executes
+     */
+    applyFileInputs(...executes: Array<string>) {
+        LazyStream.of(...executes).map(id => {
+            if (id == "@all") {
+                return DomQuery.querySelectorAll("input[type='file']");
+            } else if (id == "@form") {
+                return (<DQ>this.dataSource).querySelectorallDeep("input[type='file']");
+            } else {
+                let element = DomQuery.byId(id, true);
+                return this.getFileInputs(element);
+            }
+        })
+        .filter(item => {
+            return !!item.length;
+        })
+        .each(item => {
+            this.fileInputs[item.id.value] = true;
+        });
+    }
+
+    private getFileInputs(rootElment: DomQuery): DomQuery {
+        let ret = rootElment.lazyStream.map(item => {
+            if (item.length == 0) {
+                return null;
+            }
+            if (item.length == 1) {
+                if ((<string>item.tagName.get("booga").value).toLowerCase() == "input" &&
+                    (<string>item.attr("type")?.value || '').toLowerCase() == "file") {
+                    return item;
+                }
+
+                return rootElment.querySelectorallDeep("input[type='file']").firstElem().getAsElem(0).value;
+            }
+            return this.getFileInputs(item);
+        }).filter(item => {
+            return item != null;
+        }).collect(new ArrayCollector());
+
+        return new DomQuery(...ret);
+    }
+
 
     private handleFormSource() {
         //encode and append the issuing item if not a partial ids array of ids is passed
@@ -74,7 +121,7 @@ export class XhrFormData extends Config {
      */
     private applyViewState(form: DQ) {
         let viewState = form.byId(P_VIEWSTATE, true).inputValue;
-        this.appendIf(viewState.isPresent() ,P_VIEWSTATE).value = viewState.value;
+        this.appendIf(viewState.isPresent(), P_VIEWSTATE).value = viewState.value;
     }
 
     /**
@@ -83,26 +130,42 @@ export class XhrFormData extends Config {
      * @param encoded
      */
     assignEncodedString(encoded: string) {
-        let keyValueEntries = encoded.split(/&/gi);
+        let keyValueEntries = decodeURIComponent(encoded).split(/&/gi);
+        this.assignString(keyValueEntries);
+    }
+
+    assignString(keyValueEntries: string[]) {
+        let toMerge = new Config({});
+
         Stream.of(...keyValueEntries)
             //split only the first =
             .map(line => line.split(/=(.*)/gi))
             //special case of having keys without values
             .map(keyVal => keyVal.length < 3 ? [keyVal?.[0] ?? [], keyVal?.[1] ?? []] : keyVal)
             .each(keyVal => {
-                this.append(keyVal[0]).value = keyVal?.splice(1)?.join("") ?? "";
+                toMerge.append(keyVal[0]).value = keyVal?.splice(1)?.join("") ?? "";
             });
+        //merge with overwrite but no append! (aka no double entries are allowed)
+        this.shallowMerge(toMerge);
     }
 
-    // noinspection JSUnusedGlobalSymbols
+// noinspection JSUnusedGlobalSymbols
     /**
      * @returns a Form data representation
      */
     toFormData(): FormData {
         let ret: any = new FormData();
         for (let key in this.value) {
-            if (this.value.hasOwnProperty(key)) {
-                Stream.of(...this.value[key]).each(item => ret.append(key, item));
+            if(key in this.fileInputs) {
+                debugger;
+                let files = DomQuery.byId(key, true).filesFromElem(0);
+                if(files.length) {
+                    ret.append(key, files[0]); //only one file allowed atm per spec
+                }
+            } else {
+                if (this.value.hasOwnProperty(key)) {
+                    Stream.of(...this.value[key]).each(item => ret.append(key, item));
+                }
             }
         }
         return ret;
@@ -124,14 +187,7 @@ export class XhrFormData extends Config {
                 return `${encodeURIComponent(keyVal[0])}=${encodeURIComponent(keyVal[1])}`;
             })
             .collect(new ArrayCollector());
-       /* for (let key in this.value) {
-            if (this.value.hasOwnProperty(key)) {
-                //key value already encoded so no need to reencode them again
-                Stream.of(...this.value[key]).each(item => {
-                    entries.push(`${encodeURIComponent(key)}=${encodeURIComponent(item)}`);
-                });
-            }
-        }*/
+
         return entries.join("&")
     }
 
@@ -162,9 +218,12 @@ export class XhrFormData extends Config {
 
     /**
      * checks if the given datasource is a multipart request source
+     * multipart is only needed if one of the executes is a file input
+     * since file inputs are stateless, they fall out of the viewstate
+     * and need special handling
      */
     get isMultipartRequest(): boolean {
-        return  this.dataSource instanceof DQ && (<DQ> this.dataSource).querySelectorAll("input[type='file']").isPresent();
+        return !!Object.keys(this.fileInputs).length;
     }
 
 }

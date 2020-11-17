@@ -96,7 +96,7 @@ export module StandardInits {
 </head>
 <body>
 <form id="blarg" enctype="multipart/form-data">
-    <input type="file"></input>
+    <input type="file" id="fíleupload"></input>
     <input type="text" id="input_1" name="input_1" value="input_1_val"></input>
     <input type="hidden" id="javax.faces.ViewState" name="javax.faces.ViewState" value="blubbblubblubb"></input>
     <input type="button" id="input_2" name="input_2" value="input_1_val"></input>
@@ -257,6 +257,9 @@ export module StandardInits {
 
     export function defaultMyFaces(withJsf = true): Promise<() => void> {
         return init(HTML_FORM_DEFAULT, withJsf);
+    }
+    export function defaultFileForm(withJsf = true): Promise<() => void> {
+        return init(HTML_FILE_FORM_DEFAULT, withJsf);
     }
 
     export function shadowDomMyFaces(withJsf = true): Promise<() => void> {

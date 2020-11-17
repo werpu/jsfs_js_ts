@@ -651,29 +651,32 @@ var DomQuery = /** @class */ (function () {
                 return new Stream_1.Stream(formElement.elements ? objToArray(formElement.elements) : []);
             }).filter(function (item) { return !!item; }).collect(new DomQueryCollector());
             return elements
-                .orElseLazy(function () { return _this.querySelectorAll("input, checkbox, select, textarea"); });
+                .orElseLazy(function () { return _this.querySelectorAll("input, checkbox, select, textarea, fieldset"); });
         },
         enumerable: true,
         configurable: true
     });
     Object.defineProperty(DomQuery.prototype, "deepElements", {
         get: function () {
-            var _this = this;
-            var query = [];
-            var elemStr = "input, select, textarea, checkbox";
-            var prefix = "";
-            for (var cnt = 0; cnt < 5; cnt++) {
-                query.push(prefix + "input, select, textarea, checkbox");
-                prefix = prefix + " * /shadow/ ";
-            }
-            var found = Stream_1.Stream.of.apply(Stream_1.Stream, query).map(function (query) { return _this.querySelectorAll(query); })
-                .filter(function (item) { return !item.isAbsent(); })
-                .collect(new SourcesCollectors_1.ArrayCollector());
-            return new (DomQuery.bind.apply(DomQuery, __spreadArrays([void 0], found)))();
+            var elemStr = "input, select, textarea, checkbox, fieldset";
+            return this.querySelectorallDeep(elemStr);
         },
         enumerable: true,
         configurable: true
     });
+    DomQuery.prototype.querySelectorallDeep = function (elemStr) {
+        var _this = this;
+        var query = [];
+        var prefix = "";
+        for (var cnt = 0; cnt < 5; cnt++) {
+            query.push(prefix + elemStr);
+            prefix = prefix + " * /shadow/ ";
+        }
+        var found = Stream_1.Stream.of.apply(Stream_1.Stream, query).map(function (query) { return _this.querySelectorAll(query); })
+            .filter(function (item) { return !item.isAbsent(); })
+            .collect(new SourcesCollectors_1.ArrayCollector());
+        return new (DomQuery.bind.apply(DomQuery, __spreadArrays([void 0], found)))();
+    };
     Object.defineProperty(DomQuery.prototype, "disabled", {
         /**
          * todo align this api with the rest of the apis
@@ -859,6 +862,14 @@ var DomQuery = /** @class */ (function () {
         return (index < this.rootNode.length) ? Monad_1.Optional.fromNullable(this.rootNode[index]) : defaults;
     };
     /**
+     * returns the files from a given elmement
+     * @param index
+     */
+    DomQuery.prototype.filesFromElem = function (index) {
+        var _a;
+        return (index < this.rootNode.length) ? ((_a = this.rootNode[index]) === null || _a === void 0 ? void 0 : _a.files) ? this.rootNode[index].files : [] : [];
+    };
+    /**
      * returns the value array< of all elements
      */
     DomQuery.prototype.allElems = function () {
@@ -1004,7 +1015,7 @@ var DomQuery = /** @class */ (function () {
      * @param tagName
      * @param includeRoot
      */
-    DomQuery.prototype.byTagName = function (tagName, includeRoot) {
+    DomQuery.prototype.byTagName = function (tagName, includeRoot, deep) {
         var _a;
         var res = [];
         if (includeRoot) {
@@ -1012,7 +1023,7 @@ var DomQuery = /** @class */ (function () {
                 .filter(function (element) { return (element === null || element === void 0 ? void 0 : element.tagName) == tagName; })
                 .reduce(function (reduction, item) { return reduction.concat([item]); }, res);
         }
-        res = res.concat(this.querySelectorAll(tagName));
+        res = (deep) ? res.concat(this.querySelectorallDeep(tagName)) : res.concat(this.querySelectorAll(tagName));
         return new (DomQuery.bind.apply(DomQuery, __spreadArrays([void 0], res)))();
     };
     /**
@@ -1060,9 +1071,30 @@ var DomQuery = /** @class */ (function () {
     };
     /**
      * checks whether we have a multipart element in our children
+     * or are one
      */
-    DomQuery.prototype.isMultipartCandidate = function () {
-        return this.querySelectorAll("input[type='file']").firstElem().isPresent();
+    DomQuery.prototype.isMultipartCandidate = function (deep) {
+        var _this = this;
+        if (deep === void 0) { deep = false; }
+        var isCandidate = function (item) {
+            var _a;
+            if (item.length == 0) {
+                return false;
+            }
+            if (item.length == 1) {
+                if (item.tagName.get("booga").value.toLowerCase() == "input" &&
+                    (((_a = item.attr("type")) === null || _a === void 0 ? void 0 : _a.value) || "").toLowerCase() == "file") {
+                    return true;
+                }
+                if (deep) {
+                    _this.querySelectorallDeep("input[type='file']").firstElem().isPresent();
+                }
+                return _this.querySelectorAll("input[type='file']").firstElem().isPresent();
+            }
+            return item.isMultipartCandidate(deep);
+        };
+        var ret = this.stream.filter(function (item) { return isCandidate(item); }).first().isPresent();
+        return ret;
     };
     /**
      * innerHtml equivalkent
@@ -6245,6 +6277,7 @@ var XhrFormData = /** @class */ (function (_super) {
         _this.dataSource = dataSource;
         _this.partialIdsArray = partialIdsArray;
         _this.encode = encode;
+        _this.fileInputs = {};
         //a call to getViewState before must pass the encoded line
         //a call from getViewState passes the form element as datasource
         //so we have two call points
@@ -6256,6 +6289,55 @@ var XhrFormData = /** @class */ (function (_super) {
         }
         return _this;
     }
+    /**
+     * generic application of ids
+     * @param executes
+     */
+    XhrFormData.prototype.applyFileInputs = function () {
+        var _this = this;
+        var executes = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            executes[_i] = arguments[_i];
+        }
+        monadish_1.LazyStream.of.apply(monadish_1.LazyStream, executes).map(function (id) {
+            if (id == "@all") {
+                return monadish_1.DomQuery.querySelectorAll("input[type='file']");
+            }
+            else if (id == "@form") {
+                return _this.dataSource.querySelectorallDeep("input[type='file']");
+            }
+            else {
+                var element = monadish_1.DomQuery.byId(id, true);
+                return _this.getFileInputs(element);
+            }
+        })
+            .filter(function (item) {
+            return !!item.length;
+        })
+            .each(function (item) {
+            _this.fileInputs[item.id.value] = true;
+        });
+    };
+    XhrFormData.prototype.getFileInputs = function (rootElment) {
+        var _this = this;
+        var ret = rootElment.lazyStream.map(function (item) {
+            var _a;
+            if (item.length == 0) {
+                return null;
+            }
+            if (item.length == 1) {
+                if (item.tagName.get("booga").value.toLowerCase() == "input" &&
+                    (((_a = item.attr("type")) === null || _a === void 0 ? void 0 : _a.value) || '').toLowerCase() == "file") {
+                    return item;
+                }
+                return rootElment.querySelectorallDeep("input[type='file']").firstElem().getAsElem(0).value;
+            }
+            return _this.getFileInputs(item);
+        }).filter(function (item) {
+            return item != null;
+        }).collect(new monadish_1.ArrayCollector());
+        return new (monadish_1.DomQuery.bind.apply(monadish_1.DomQuery, __spreadArrays([void 0], ret)))();
+    };
     XhrFormData.prototype.handleFormSource = function () {
         //encode and append the issuing item if not a partial ids array of ids is passed
         /*
@@ -6286,15 +6368,20 @@ var XhrFormData = /** @class */ (function (_super) {
      * @param encoded
      */
     XhrFormData.prototype.assignEncodedString = function (encoded) {
-        var _this = this;
-        var keyValueEntries = encoded.split(/&/gi);
+        var keyValueEntries = decodeURIComponent(encoded).split(/&/gi);
+        this.assignString(keyValueEntries);
+    };
+    XhrFormData.prototype.assignString = function (keyValueEntries) {
+        var toMerge = new monadish_1.Config({});
         monadish_2.Stream.of.apply(monadish_2.Stream, keyValueEntries).map(function (line) { return line.split(/=(.*)/gi); })
             //special case of having keys without values
             .map(function (keyVal) { var _a, _b; return keyVal.length < 3 ? [(_a = keyVal === null || keyVal === void 0 ? void 0 : keyVal[0]) !== null && _a !== void 0 ? _a : [], (_b = keyVal === null || keyVal === void 0 ? void 0 : keyVal[1]) !== null && _b !== void 0 ? _b : []] : keyVal; })
             .each(function (keyVal) {
             var _a, _b;
-            _this.append(keyVal[0]).value = (_b = (_a = keyVal === null || keyVal === void 0 ? void 0 : keyVal.splice(1)) === null || _a === void 0 ? void 0 : _a.join("")) !== null && _b !== void 0 ? _b : "";
+            toMerge.append(keyVal[0]).value = (_b = (_a = keyVal === null || keyVal === void 0 ? void 0 : keyVal.splice(1)) === null || _a === void 0 ? void 0 : _a.join("")) !== null && _b !== void 0 ? _b : "";
         });
+        //merge with overwrite but no append! (aka no double entries are allowed)
+        this.shallowMerge(toMerge);
     };
     // noinspection JSUnusedGlobalSymbols
     /**
@@ -6303,8 +6390,17 @@ var XhrFormData = /** @class */ (function (_super) {
     XhrFormData.prototype.toFormData = function () {
         var ret = new FormData();
         var _loop_1 = function (key) {
-            if (this_1.value.hasOwnProperty(key)) {
-                monadish_2.Stream.of.apply(monadish_2.Stream, this_1.value[key]).each(function (item) { return ret.append(key, item); });
+            if (key in this_1.fileInputs) {
+                debugger;
+                var files = monadish_1.DomQuery.byId(key, true).filesFromElem(0);
+                if (files.length) {
+                    ret.append(key, files[0]); //only one file allowed atm per spec
+                }
+            }
+            else {
+                if (this_1.value.hasOwnProperty(key)) {
+                    monadish_2.Stream.of.apply(monadish_2.Stream, this_1.value[key]).each(function (item) { return ret.append(key, item); });
+                }
             }
         };
         var this_1 = this;
@@ -6330,14 +6426,6 @@ var XhrFormData = /** @class */ (function (_super) {
             return encodeURIComponent(keyVal[0]) + "=" + encodeURIComponent(keyVal[1]);
         })
             .collect(new monadish_1.ArrayCollector());
-        /* for (let key in this.value) {
-             if (this.value.hasOwnProperty(key)) {
-                 //key value already encoded so no need to reencode them again
-                 Stream.of(...this.value[key]).each(item => {
-                     entries.push(`${encodeURIComponent(key)}=${encodeURIComponent(item)}`);
-                 });
-             }
-         }*/
         return entries.join("&");
     };
     /**
@@ -6365,9 +6453,12 @@ var XhrFormData = /** @class */ (function (_super) {
     Object.defineProperty(XhrFormData.prototype, "isMultipartRequest", {
         /**
          * checks if the given datasource is a multipart request source
+         * multipart is only needed if one of the executes is a file input
+         * since file inputs are stateless, they fall out of the viewstate
+         * and need special handling
          */
         get: function () {
-            return this.dataSource instanceof monadish_3.DQ && this.dataSource.querySelectorAll("input[type='file']").isPresent();
+            return !!Object.keys(this.fileInputs).length;
         },
         enumerable: true,
         configurable: true
@@ -6465,10 +6556,21 @@ var XhrRequest = /** @class */ (function () {
         var _this = this;
         var ignoreErr = failSaveExecute;
         var xhrObject = this.xhrObject;
+        var executesArr = function () {
+            return _this.requestContext.getIf(Const_1.CTX_PARAM_PASS_THR, Const_1.P_EXECUTE).get("none").value.split(/\s+/gi);
+        };
         try {
-            var viewState = jsf.getViewState(this.sourceForm.getAsElem(0).value);
+            var formElement = this.sourceForm.getAsElem(0).value;
+            var viewState = jsf.getViewState(formElement);
             //encoded we need to decode
-            var formData = new XhrFormData_1.XhrFormData(decodeURIComponent(viewState));
+            //We generated a base representation of the current form
+            var formData = new XhrFormData_1.XhrFormData(this.sourceForm);
+            //in case someone has overloaded the viewstate with addtional decorators we merge
+            //that in, there is no way around it, the spec allows it and getViewState
+            //must be called, so whatever getViewState delivers has higher priority then
+            //whatever the formData object delivers
+            formData.assignEncodedString(viewState);
+            formData.applyFileInputs.apply(formData, executesArr());
             this.contentType = formData.isMultipartRequest ? Const_1.MULTIPART : this.contentType;
             //next step the pass through parameters are merged in for post params
             var requestContext = this.requestContext;
@@ -6642,9 +6744,11 @@ var XhrRequest = /** @class */ (function () {
     XhrRequest.prototype.sendRequest = function (formData) {
         var isPost = this.ajaxType != Const_1.REQ_TYPE_GET;
         if (formData.isMultipartRequest) {
+            //in case of a multipart request we send in a formData object as body
             this.xhrObject.send((isPost) ? formData.toFormData() : null);
         }
         else {
+            //in case of a normal request we send it normally
             this.xhrObject.send((isPost) ? formData.toString() : null);
         }
     };

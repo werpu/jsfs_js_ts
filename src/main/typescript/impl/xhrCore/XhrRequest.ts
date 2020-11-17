@@ -34,7 +34,7 @@ import {
     MULTIPART,
     NO_TIMEOUT,
     ON_ERROR,
-    ON_EVENT,
+    ON_EVENT, P_EXECUTE,
     REQ_ACCEPT,
     REQ_TYPE_GET,
     REQ_TYPE_POST,
@@ -112,11 +112,22 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         let ignoreErr = failSaveExecute;
         let xhrObject = this.xhrObject;
 
+        let executesArr = () => {
+            return this.requestContext.getIf(CTX_PARAM_PASS_THR, P_EXECUTE).get("none").value.split(/\s+/gi);
+        };
         try {
 
-            let viewState = jsf.getViewState(this.sourceForm.getAsElem(0).value);
+            let formElement = this.sourceForm.getAsElem(0).value;
+            let viewState = jsf.getViewState(formElement);
             //encoded we need to decode
-            let formData: XhrFormData = new XhrFormData(decodeURIComponent(viewState));
+            //We generated a base representation of the current form
+            let formData: XhrFormData = new XhrFormData(this.sourceForm);
+            //in case someone has overloaded the viewstate with addtional decorators we merge
+            //that in, there is no way around it, the spec allows it and getViewState
+            //must be called, so whatever getViewState delivers has higher priority then
+            //whatever the formData object delivers
+            formData.assignEncodedString(viewState);
+            formData.applyFileInputs(...executesArr());
 
             this.contentType = formData.isMultipartRequest ? MULTIPART : this.contentType;
 
@@ -320,8 +331,10 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     protected sendRequest(formData: XhrFormData) {
         let isPost = this.ajaxType != REQ_TYPE_GET;
         if (formData.isMultipartRequest) {
+            //in case of a multipart request we send in a formData object as body
             this.xhrObject.send((isPost) ? formData.toFormData() : null);
         } else {
+            //in case of a normal request we send it normally
             this.xhrObject.send((isPost) ? formData.toString() : null);
         }
     }

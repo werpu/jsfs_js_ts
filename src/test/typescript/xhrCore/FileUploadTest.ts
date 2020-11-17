@@ -69,8 +69,12 @@ describe('Tests on the xhr core when it starts to call the request', function ()
         this.closeIt();
     });
 
-    it('must have sent a multipart request', function (done) {
+    it('must have sent a form multipart request', function (done) {
         let send = sinon.spy(XMLHttpRequest.prototype, "send");
+        const CONTENT_TYPE = "Content-Type";
+        const MULTIPART_FORM = "multipart/form-data";
+        const POST = "POST";
+
         try {
 
             let button = DomQuery.byId("input_1");
@@ -82,12 +86,71 @@ describe('Tests on the xhr core when it starts to call the request', function ()
 
             expect(this.requests.length).to.eq(1);
             let request = this.requests[0];
-            expect(request.method).to.eq("POST");
+            expect(request.method).to.eq(POST);
             expect(request.async).to.be.true;
             expect(send.called).to.be.true;
             expect(send.callCount).to.eq(1);
             expect(request.requestBody instanceof FormData).to.be.true;
-            expect(request.requestHeaders["Content-Type"].indexOf("multipart/form-data") != -1).to.be.true;
+            expect(request.requestHeaders[CONTENT_TYPE].indexOf(MULTIPART_FORM) != -1).to.be.true;
+
+        } finally {
+            send.restore();
+        }
+        done();
+    });
+
+    it('must have sent a multipart request with a dedicated execute', function (done) {
+        let send = sinon.spy(XMLHttpRequest.prototype, "send");
+
+        const CONTENT_TYPE = "Content-Type";
+        const MULTIPART_FORM = "multipart/form-data";
+        const POST = "POST";
+
+        try {
+            let button = DomQuery.byId("input_1");
+
+            button.addEventListener("click", (event: Event) => {
+                jsf.ajax.request(event.target, event, {render: '@all', execute: 'input_1 fíleupload'})
+            }).click();
+            //this.resonse("ok");
+
+            expect(this.requests.length).to.eq(1);
+            let request = this.requests[0];
+            expect(request.method).to.eq(POST);
+            expect(request.async).to.be.true;
+            expect(send.called).to.be.true;
+            expect(send.callCount).to.eq(1);
+            expect(request.requestBody instanceof FormData).to.be.true;
+            expect(request.requestHeaders[CONTENT_TYPE].indexOf(MULTIPART_FORM) != -1).to.be.true;
+
+        } finally {
+            send.restore();
+        }
+        done();
+    });
+
+    it('must have sent a single part request with a dedicated execute', function (done) {
+        let send = sinon.spy(XMLHttpRequest.prototype, "send");
+
+        const CONTENT_TYPE = "Content-Type";
+        const MULTIPART_FORM = "multipart/form-data";
+        const POST = "POST";
+
+        try {
+            let button = DomQuery.byId("input_1");
+
+            button.addEventListener("click", (event: Event) => {
+                jsf.ajax.request(event.target, event, {render: '@all', execute: 'input_1 fileupload'});
+            }).click();
+
+            expect(this.requests.length).to.eq(1);
+            let request = this.requests[0];
+            expect(request.method).to.eq(POST);
+            expect(request.async).to.be.true;
+            expect(send.called).to.be.true;
+            expect(send.callCount).to.eq(1);
+            expect(request.requestBody instanceof FormData).to.be.false;
+            expect(request.requestHeaders[CONTENT_TYPE].indexOf(MULTIPART_FORM) == -1).to.be.true;
 
         } finally {
             send.restore();

@@ -60,7 +60,7 @@ export class XhrFormData extends Config {
             if (id == "@all") {
                 return DomQuery.querySelectorAll("input[type='file']");
             } else if (id == "@form") {
-                return (<DQ>this.dataSource).querySelectorallDeep("input[type='file']");
+                return (<DQ>this.dataSource).querySelectorAllDeep("input[type='file']");
             } else {
                 let element = DomQuery.byId(id, true);
                 return this.getFileInputs(element);
@@ -85,7 +85,7 @@ export class XhrFormData extends Config {
                     return item;
                 }
 
-                return rootElment.querySelectorallDeep("input[type='file']").firstElem().getAsElem(0).value;
+                return rootElment.querySelectorAllDeep("input[type='file']").firstElem().getAsElem(0).value;
             }
             return this.getFileInputs(item);
         }).filter(item => {

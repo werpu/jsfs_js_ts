@@ -639,7 +639,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
 
     get deepElements(): DomQuery {
         let elemStr = "input, select, textarea, checkbox, fieldset";
-        return this.querySelectorallDeep(elemStr);
+        return this.querySelectorAllDeep(elemStr);
     }
 
     /**
@@ -647,7 +647,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
      * separately and runs the query on earch shadow dom
      * @param queryStr
      */
-    querySelectorallDeep(queryStr: string): DomQuery {
+    querySelectorAllDeep(queryStr: string): DomQuery {
         let found: Array<DomQuery> = [];
         let queryRes = this.querySelectorAll(queryStr);
         if(queryRes.length) {
@@ -655,7 +655,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         }
         let shadowRoots = this.querySelectorAll("*").shadowRoot;
         if(shadowRoots.length) {
-            let shadowRes = shadowRoots.querySelectorallDeep(queryStr);
+            let shadowRes = shadowRoots.querySelectorAllDeep(queryStr);
             if(shadowRes.length) {
                 found.push(shadowRes);
             }
@@ -989,7 +989,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
             );
         }
 
-        let subItems = this.querySelectorallDeep(`[id="${id}"]`);
+        let subItems = this.querySelectorAllDeep(`[id="${id}"]`);
         if(subItems.length) {
             res.push(subItems);
         }
@@ -1011,7 +1011,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
                 .orElse(res).value;
         }
 
-        (deep) ? res.push(this.querySelectorallDeep(tagName)) : res.push(this.querySelectorAll(tagName));
+        (deep) ? res.push(this.querySelectorAllDeep(tagName)) : res.push(this.querySelectorAll(tagName));
         return new DomQuery(...res);
     }
 
@@ -1076,7 +1076,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
                     return true;
                 }
                 if (deep) {
-                    return this.querySelectorallDeep("input[type='file']").firstElem().isPresent();
+                    return this.querySelectorAllDeep("input[type='file']").firstElem().isPresent();
                 } else {
                     return this.querySelectorAll("input[type='file']").firstElem().isPresent();
                 }

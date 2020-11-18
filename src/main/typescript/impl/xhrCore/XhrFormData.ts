@@ -168,7 +168,7 @@ export class XhrFormData extends Config {
                     return;
                 }
 
-                ret.append(elem.id, elem.value ,elem.files[0]);
+                ret.append(elem.id, elem.files[0]);
             })
         });
         return ret;

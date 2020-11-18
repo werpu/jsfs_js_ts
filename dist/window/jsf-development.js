@@ -6391,14 +6391,21 @@ var XhrFormData = /** @class */ (function (_super) {
         monadish_2.Stream.of.apply(monadish_2.Stream, Object.keys(this.fileInputs)).each(function (key) {
             monadish_1.DomQuery.byId(key, true).eachElem(function (elem) {
                 var _a;
+                var identifier = _this.resolveSubmitIdentifier(elem);
                 if (!((_a = elem === null || elem === void 0 ? void 0 : elem.files) === null || _a === void 0 ? void 0 : _a.length)) {
-                    ret.append(elem.id, elem.value);
+                    ret.append(identifier, elem.value);
                     return;
                 }
-                ret.append(elem.id, elem.files[0]);
+                ret.append(identifier, elem.files[0]);
             });
         });
         return ret;
+    };
+    XhrFormData.prototype.resolveSubmitIdentifier = function (elem) {
+        var _a;
+        var identifier = elem.name;
+        identifier = (((_a = elem === null || elem === void 0 ? void 0 : elem.name) !== null && _a !== void 0 ? _a : "").replace(/s+/gi, "") == "") ? elem.id : identifier;
+        return identifier;
     };
     /**
      * returns an encoded string representation of our xhr form data

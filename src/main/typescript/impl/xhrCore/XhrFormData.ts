@@ -163,15 +163,22 @@ export class XhrFormData extends Config {
             });
         Stream.of<string>(...Object.keys(this.fileInputs)).each((key: string) => {
             DomQuery.byId(key, true).eachElem((elem: HTMLInputElement) => {
+                let identifier = this.resolveSubmitIdentifier(elem);
                 if (!elem?.files?.length) {
-                    ret.append(elem.id, elem.value);
+                    ret.append(identifier, elem.value);
                     return;
                 }
 
-                ret.append(elem.id, elem.files[0]);
+                ret.append(identifier, elem.files[0]);
             })
         });
         return ret;
+    }
+
+    resolveSubmitIdentifier(elem: HTMLInputElement) {
+        let identifier = elem.name;
+        identifier = ((elem?.name ?? "").replace(/s+/gi,"") == "")  ? elem.id : identifier;
+        return identifier;
     }
 
     /**

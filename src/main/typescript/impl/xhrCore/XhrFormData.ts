@@ -157,7 +157,6 @@ export class XhrFormData extends Config {
         let ret: any = new FormData();
         for (let key in this.value) {
             if(key in this.fileInputs) {
-                debugger;
                 let files = DomQuery.byId(key, true).filesFromElem(0);
                 if(files.length) {
                     ret.append(key, files[0]); //only one file allowed atm per spec

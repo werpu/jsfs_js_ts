@@ -129,7 +129,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             formData.assignEncodedString(viewState);
             formData.applyFileInputs(...executesArr());
 
-            this.contentType = formData.isMultipartRequest ? MULTIPART : this.contentType;
+            this.contentType = formData.isMultipartRequest ? "undefined" : this.contentType;
 
             //next step the pass through parameters are merged in for post params
             let requestContext = this.requestContext;
@@ -155,8 +155,10 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             //a bug in the xhr stub library prevents the setRequestHeader to be properly executed on fake xhr objects
             //normal browsers should resolve this
             //tests can quietly fail on this one
+            if(this.contentType != "undefined") {
+                ignoreErr(() => xhrObject.setRequestHeader(CONTENT_TYPE, `${this.contentType}; charset=utf-8`));
+            }
 
-            ignoreErr(() => xhrObject.setRequestHeader(CONTENT_TYPE, `${this.contentType}; charset=utf-8`));
             ignoreErr(() => xhrObject.setRequestHeader(HEAD_FACES_REQ, VAL_AJAX));
 
             //probably not needed anymore, will test this

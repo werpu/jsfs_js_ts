@@ -91,7 +91,7 @@ describe('Tests on the xhr core when it starts to call the request', function ()
             expect(send.called).to.be.true;
             expect(send.callCount).to.eq(1);
             expect(request.requestBody instanceof FormData).to.be.true;
-            expect(request.requestHeaders[CONTENT_TYPE].indexOf(MULTIPART_FORM) != -1).to.be.true;
+            expect(request.requestHeaders[CONTENT_TYPE] == undefined).to.be.true;
 
         } finally {
             send.restore();
@@ -121,7 +121,8 @@ describe('Tests on the xhr core when it starts to call the request', function ()
             expect(send.called).to.be.true;
             expect(send.callCount).to.eq(1);
             expect(request.requestBody instanceof FormData).to.be.true;
-            expect(request.requestHeaders[CONTENT_TYPE].indexOf(MULTIPART_FORM) != -1).to.be.true;
+            //undefined means the browser fills in the rest
+            expect(request.requestHeaders[CONTENT_TYPE] == undefined).to.be.true;
 
         } finally {
             send.restore();

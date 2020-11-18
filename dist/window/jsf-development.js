@@ -654,7 +654,7 @@ var DomQuery = /** @class */ (function () {
     Object.defineProperty(DomQuery.prototype, "deepElements", {
         get: function () {
             var elemStr = "input, select, textarea, checkbox, fieldset";
-            return this.querySelectorallDeep(elemStr);
+            return this.querySelectorAllDeep(elemStr);
         },
         enumerable: true,
         configurable: true
@@ -664,7 +664,7 @@ var DomQuery = /** @class */ (function () {
      * separately and runs the query on earch shadow dom
      * @param queryStr
      */
-    DomQuery.prototype.querySelectorallDeep = function (queryStr) {
+    DomQuery.prototype.querySelectorAllDeep = function (queryStr) {
         var found = [];
         var queryRes = this.querySelectorAll(queryStr);
         if (queryRes.length) {
@@ -672,7 +672,7 @@ var DomQuery = /** @class */ (function () {
         }
         var shadowRoots = this.querySelectorAll("*").shadowRoot;
         if (shadowRoots.length) {
-            var shadowRes = shadowRoots.querySelectorallDeep(queryStr);
+            var shadowRes = shadowRoots.querySelectorAllDeep(queryStr);
             if (shadowRes.length) {
                 found.push(shadowRes);
             }
@@ -996,7 +996,7 @@ var DomQuery = /** @class */ (function () {
                 .map(function (item) { return new DomQuery(item); })
                 .collect(new SourcesCollectors_1.ArrayCollector()));
         }
-        var subItems = this.querySelectorallDeep("[id=\"" + id + "\"]");
+        var subItems = this.querySelectorAllDeep("[id=\"" + id + "\"]");
         if (subItems.length) {
             res.push(subItems);
         }
@@ -1015,7 +1015,7 @@ var DomQuery = /** @class */ (function () {
                 .reduce(function (reduction, item) { return reduction.concat([item]); }, res)
                 .orElse(res).value;
         }
-        (deep) ? res.push(this.querySelectorallDeep(tagName)) : res.push(this.querySelectorAll(tagName));
+        (deep) ? res.push(this.querySelectorAllDeep(tagName)) : res.push(this.querySelectorAll(tagName));
         return new (DomQuery.bind.apply(DomQuery, __spreadArrays([void 0], res)))();
     };
     /**
@@ -1079,7 +1079,7 @@ var DomQuery = /** @class */ (function () {
                     return true;
                 }
                 if (deep) {
-                    return _this.querySelectorallDeep("input[type='file']").firstElem().isPresent();
+                    return _this.querySelectorAllDeep("input[type='file']").firstElem().isPresent();
                 }
                 else {
                     return _this.querySelectorAll("input[type='file']").firstElem().isPresent();
@@ -6298,7 +6298,7 @@ var XhrFormData = /** @class */ (function (_super) {
                 return monadish_1.DomQuery.querySelectorAll("input[type='file']");
             }
             else if (id == "@form") {
-                return _this.dataSource.querySelectorallDeep("input[type='file']");
+                return _this.dataSource.querySelectorAllDeep("input[type='file']");
             }
             else {
                 var element = monadish_1.DomQuery.byId(id, true);
@@ -6324,7 +6324,7 @@ var XhrFormData = /** @class */ (function (_super) {
                     (((_a = item.attr("type")) === null || _a === void 0 ? void 0 : _a.value) || '').toLowerCase() == "file") {
                     return item;
                 }
-                return rootElment.querySelectorallDeep("input[type='file']").firstElem().getAsElem(0).value;
+                return rootElment.querySelectorAllDeep("input[type='file']").firstElem().getAsElem(0).value;
             }
             return _this.getFileInputs(item);
         }).filter(function (item) {
@@ -6382,25 +6382,22 @@ var XhrFormData = /** @class */ (function (_super) {
      * @returns a Form data representation
      */
     XhrFormData.prototype.toFormData = function () {
+        var _this = this;
         var ret = new FormData();
-        var _loop_1 = function (key) {
-            if (key in this_1.fileInputs) {
-                debugger;
-                var files = monadish_1.DomQuery.byId(key, true).filesFromElem(0);
-                if (files.length) {
-                    ret.append(key, files[0]); //only one file allowed atm per spec
+        monadish_2.Stream.of.apply(monadish_2.Stream, Object.keys(this.value)).filter(function (key) { return !(key in _this.fileInputs); })
+            .each(function (key) {
+            monadish_2.Stream.of.apply(monadish_2.Stream, _this.value[key]).each(function (item) { return ret.append(key, item); });
+        });
+        monadish_2.Stream.of.apply(monadish_2.Stream, Object.keys(this.fileInputs)).each(function (key) {
+            monadish_1.DomQuery.byId(key, true).eachElem(function (elem) {
+                var _a;
+                if (!((_a = elem === null || elem === void 0 ? void 0 : elem.files) === null || _a === void 0 ? void 0 : _a.length)) {
+                    ret.append(elem.id, elem.value);
+                    return;
                 }
-            }
-            else {
-                if (this_1.value.hasOwnProperty(key)) {
-                    monadish_2.Stream.of.apply(monadish_2.Stream, this_1.value[key]).each(function (item) { return ret.append(key, item); });
-                }
-            }
-        };
-        var this_1 = this;
-        for (var key in this.value) {
-            _loop_1(key);
-        }
+                ret.append(elem.id, elem.value, elem.files[0]);
+            });
+        });
         return ret;
     };
     /**
@@ -6565,7 +6562,7 @@ var XhrRequest = /** @class */ (function () {
             //whatever the formData object delivers
             formData.assignEncodedString(viewState);
             formData.applyFileInputs.apply(formData, executesArr());
-            this.contentType = formData.isMultipartRequest ? Const_1.MULTIPART : this.contentType;
+            this.contentType = formData.isMultipartRequest ? "undefined" : this.contentType;
             //next step the pass through parameters are merged in for post params
             var requestContext = this.requestContext;
             var passThroughParams = requestContext.getIf(Const_1.CTX_PARAM_PASS_THR);
@@ -6583,7 +6580,9 @@ var XhrRequest = /** @class */ (function () {
             //a bug in the xhr stub library prevents the setRequestHeader to be properly executed on fake xhr objects
             //normal browsers should resolve this
             //tests can quietly fail on this one
-            ignoreErr(function () { return xhrObject.setRequestHeader(Const_1.CONTENT_TYPE, _this.contentType + "; charset=utf-8"); });
+            if (this.contentType != "undefined") {
+                ignoreErr(function () { return xhrObject.setRequestHeader(Const_1.CONTENT_TYPE, _this.contentType + "; charset=utf-8"); });
+            }
             ignoreErr(function () { return xhrObject.setRequestHeader(Const_1.HEAD_FACES_REQ, Const_1.VAL_AJAX); });
             //probably not needed anymore, will test this
             //some webkit based mobile browsers do not follow the w3c spec of

@@ -66,12 +66,12 @@ export class XhrFormData extends Config {
                 return this.getFileInputs(element);
             }
         })
-        .filter(item => {
-            return !!item.length;
-        })
-        .each(item => {
-            this.fileInputs[item.id.value] = true;
-        });
+            .filter(item => {
+                return !!item.length;
+            })
+            .each(item => {
+                this.fileInputs[item.id.value] = true;
+            });
     }
 
     private getFileInputs(rootElment: DomQuery): DomQuery {
@@ -155,18 +155,22 @@ export class XhrFormData extends Config {
      */
     toFormData(): FormData {
         let ret: any = new FormData();
-        for (let key in this.value) {
-            if(key in this.fileInputs) {
-                let files = DomQuery.byId(key, true).filesFromElem(0);
-                if(files.length) {
-                    ret.append(key, files[0]); //only one file allowed atm per spec
+
+        Stream.of(...Object.keys(this.value))
+            .filter(key => !(key in this.fileInputs))
+            .each(key => {
+                Stream.of(...this.value[key]).each(item => ret.append(key, item));
+            });
+        Stream.of<string>(...Object.keys(this.fileInputs)).each((key: string) => {
+            DomQuery.byId(key, true).eachElem((elem: HTMLInputElement) => {
+                if (!elem?.files?.length) {
+                    ret.append(elem.id, elem.value);
+                    return;
                 }
-            } else {
-                if (this.value.hasOwnProperty(key)) {
-                    Stream.of(...this.value[key]).each(item => ret.append(key, item));
-                }
-            }
-        }
+
+                ret.append(elem.id, elem.value ,elem.files[0]);
+            })
+        });
         return ret;
     }
 

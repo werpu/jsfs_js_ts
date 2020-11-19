@@ -1878,6 +1878,8 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         return new DomQuery(...this.rootNode.slice(from, Math.min(to, this.length)));
     }
 
+    //TODO this part probably will be removed
+    //because we can stream from an array stream directly into the dom query
     _limits = -1;
 
     limits(end: number): IStream<DomQuery> {

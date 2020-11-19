@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Stream, StreamMapper} from "./Stream";
+import {IStream, Stream, StreamMapper} from "./Stream";
 import {DomQuery} from "./DomQuery";
 
 /**

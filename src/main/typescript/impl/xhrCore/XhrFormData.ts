@@ -61,8 +61,7 @@ export class XhrFormData extends Config {
      * @param executes
      */
     applyFileInputs(...executes: Array<string>) {
-        LazyStream.of(...executes)
-           .map(id => {
+        LazyStream.of(...executes).map(id => {
             if (id == "@all") {
                 return DomQuery.querySelectorAll("input[type='file']");
             } else if (id == "@form") {
@@ -76,7 +75,7 @@ export class XhrFormData extends Config {
                 return !!item.length;
             })
             .each(item => {
-                this.fileInputs[this.resolveSubmitIdentifier(item.getAsElem(0).value)] = true;
+                this.fileInputs[item.id.value] = true;
             });
     }
 

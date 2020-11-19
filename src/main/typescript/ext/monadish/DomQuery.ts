@@ -1835,7 +1835,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
                         element.checked
                     )
                 ) {
-                    let files: any = (<any>element.value).value?.files ?? [];
+                    let files: any = (<any>element.value).files;
                     if (files?.length) {
                         //xhr level2
                         target.append(name).value = files[0];

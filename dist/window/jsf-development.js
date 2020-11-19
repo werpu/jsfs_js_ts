@@ -767,9 +767,6 @@ var DomQuery = /** @class */ (function () {
             return new DomQuery(document)._querySelectorAll(selector);
         }
     };
-    DomQuery.querySelectorAllDeep = function (selector) {
-        return new DomQuery(document).querySelectorAllDeep(selector);
-    };
     /**
      * byId producer
      *
@@ -1737,22 +1734,20 @@ var DomQuery = /** @class */ (function () {
      * @param toMerge optional config which can be merged in
      * @return a copy pf
      */
-    DomQuery.prototype.encodeFormElement = function (toMerge, idAsNameFallback) {
+    DomQuery.prototype.encodeFormElement = function (toMerge) {
         if (toMerge === void 0) { toMerge = new Monad_1.Config({}); }
-        if (idAsNameFallback === void 0) { idAsNameFallback = false; }
         //browser behavior no element name no encoding (normal submit fails in that case)
         //https://issues.apache.org/jira/browse/MYFACES-2847
-        if ((!idAsNameFallback) && this.name.isAbsent()) {
+        if (this.name.isAbsent()) {
             return;
         }
         //lets keep it sideffects free
         var target = toMerge.shallowCopy;
         this.each(function (element) {
-            var _a, _b, _c;
-            if ((!idAsNameFallback) && element.name.isAbsent()) { //no name, no encoding
+            if (element.name.isAbsent()) { //no name, no encoding
                 return;
             }
-            var name = (idAsNameFallback) ? (_b = (_a = element === null || element === void 0 ? void 0 : element.name) === null || _a === void 0 ? void 0 : _a.value) !== null && _b !== void 0 ? _b : (_c = element === null || element === void 0 ? void 0 : element.id) === null || _c === void 0 ? void 0 : _c.value : element.name.value;
+            var name = element.name.value;
             var tagName = element.tagName.orElse("__none__").value.toLowerCase();
             var elemType = element.type.orElse("__none__").value.toLowerCase();
             elemType = elemType.toLowerCase();
@@ -6314,7 +6309,7 @@ var XhrFormData = /** @class */ (function (_super) {
             return !!item.length;
         })
             .each(function (item) {
-            _this.fileInputs[_this.resolveSubmitIdentifier(item.id.value)] = true;
+            _this.fileInputs[item.id.value] = true;
         });
     };
     XhrFormData.prototype.getFileInputs = function (rootElment) {
@@ -6382,6 +6377,7 @@ var XhrFormData = /** @class */ (function (_super) {
         //merge with overwrite but no append! (aka no double entries are allowed)
         this.shallowMerge(toMerge);
     };
+    // noinspection JSUnusedGlobalSymbols
     /**
      * @returns a Form data representation
      */
@@ -6430,23 +6426,6 @@ var XhrFormData = /** @class */ (function (_super) {
             .collect(new monadish_1.ArrayCollector());
         return entries.join("&");
     };
-    XhrFormData.prototype.applyElementToFormData = function (element, formData) {
-        //we cannot simply reuse the encode, because
-        //some values already might be overwritten by our getViewState call
-        //hence this duplicate code
-        var rawElem = element.getAsElem(0).value;
-        var identifier = this.resolveSubmitIdentifier(rawElem);
-        if (this.hasFile(identifier, rawElem)) {
-            formData.append(identifier, rawElem.files[0]);
-        }
-        else {
-            formData.append(identifier, this.get(identifier).value[0]);
-        }
-    };
-    XhrFormData.prototype.hasFile = function (identifier, rawElem) {
-        var _a;
-        return identifier in this.fileInputs && ((_a = rawElem === null || rawElem === void 0 ? void 0 : rawElem.files) === null || _a === void 0 ? void 0 : _a.length);
-    };
     /**
      * determines fields to submit
      * @param {Object} targetBuf - the target form buffer receiving the data
@@ -6467,7 +6446,7 @@ var XhrFormData = /** @class */ (function (_super) {
             toEncode = parentItem;
         }
         //lets encode the form elements
-        this.shallowMerge(toEncode.deepElements.encodeFormElement(new monadish_1.Config({}), true));
+        this.shallowMerge(toEncode.deepElements.encodeFormElement());
     };
     Object.defineProperty(XhrFormData.prototype, "isMultipartRequest", {
         /**

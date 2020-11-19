@@ -33,7 +33,7 @@ import {
 export type StreamMapper<T> = (data: T) => IStreamDataSource<any>;
 export type ArrayMapper<T> = (data: T) => Array<any>;
 export type IteratableConsumer<T> = (data: T, pos ?: number) => void | boolean;
-export type Reducable<T, V> = (val1: T | V, val2: T) => V;
+export type Reducable<T, V> = (val1: T | V, val2: T) => V;
 export type Matchable<T> = (data: T) => boolean;
 export type Mappable<T, R> = (data: T) => R;
 export type Comparator<T> = (el1: T, el2: T) => number;
@@ -467,7 +467,7 @@ export class LazyStream<T> implements IStreamDataSource<T>, IStream<T>, IMonad<T
         }
     }
 
-    reduce<V>(fn: Reducable<T, V>, startVal: T | V = null): Optional<T | V> {
+    reduce<V>(fn: Reducable<T, V>, startVal: T | V = null): Optional<T | V> {
         if (!this.hasNext()) {
             return Optional.absent;
         }

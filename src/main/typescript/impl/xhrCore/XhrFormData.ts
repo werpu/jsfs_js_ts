@@ -70,7 +70,7 @@ export class XhrFormData extends Config {
                 return !!item.length;
             })
             .each(item => {
-                this.fileInputs[this.resolveSubmitIdentifier(item.id.value)] = true;
+                this.fileInputs[item.id.value] = true;
             });
     }
 
@@ -149,7 +149,7 @@ export class XhrFormData extends Config {
         this.shallowMerge(toMerge);
     }
 
-
+// noinspection JSUnusedGlobalSymbols
     /**
      * @returns a Form data representation
      */
@@ -174,8 +174,6 @@ export class XhrFormData extends Config {
         });
         return ret;
     }
-
-
 
     resolveSubmitIdentifier(elem: HTMLInputElement) {
         let identifier = elem.name;
@@ -203,23 +201,6 @@ export class XhrFormData extends Config {
         return entries.join("&")
     }
 
-    private applyElementToFormData(element: DomQuery, formData: FormData) {
-        //we cannot simply reuse the encode, because
-        //some values already might be overwritten by our getViewState call
-        //hence this duplicate code
-        let rawElem = <HTMLInputElement>element.getAsElem(0).value;
-        let identifier = this.resolveSubmitIdentifier(rawElem);
-        if (this.hasFile(identifier, rawElem)) {
-            formData.append(identifier, rawElem.files[0]);
-        } else {
-            formData.append(identifier, this.get(identifier).value[0])
-        }
-    }
-
-    private hasFile(identifier: string, rawElem: HTMLInputElement) {
-        return identifier in this.fileInputs && rawElem?.files?.length;
-    }
-
     /**
      * determines fields to submit
      * @param {Object} targetBuf - the target form buffer receiving the data
@@ -242,7 +223,7 @@ export class XhrFormData extends Config {
 
         //lets encode the form elements
 
-        this.shallowMerge(toEncode.deepElements.encodeFormElement(new Config({}), true));
+        this.shallowMerge(toEncode.deepElements.encodeFormElement());
     }
 
     /**

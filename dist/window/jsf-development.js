@@ -503,6 +503,8 @@ var DomQuery = /** @class */ (function () {
         }
         this.rootNode = [];
         this.pos = -1;
+        //TODO this part probably will be removed
+        //because we can stream from an array stream directly into the dom query
         this._limits = -1;
         if (Monad_1.Optional.fromNullable(rootNode).isAbsent() || !rootNode.length) {
             return;
@@ -6403,7 +6405,7 @@ var XhrFormData = /** @class */ (function (_super) {
             monadish_2.Stream.of.apply(monadish_2.Stream, _this.value[key]).each(function (item) { return ret.append(key, item); });
         });
         monadish_2.Stream.of.apply(monadish_2.Stream, Object.keys(this.fileInputs)).each(function (key) {
-            monadish_3.DQ.querySelectorAllDeep("[name='" + key + "'], #" + key).eachElem(function (elem) {
+            monadish_3.DQ.querySelectorAllDeep("[name='" + key + "'], [id='" + key + "']").eachElem(function (elem) {
                 var _a;
                 var identifier = _this.resolveSubmitIdentifier(elem);
                 if (!((_a = elem === null || elem === void 0 ? void 0 : elem.files) === null || _a === void 0 ? void 0 : _a.length)) {

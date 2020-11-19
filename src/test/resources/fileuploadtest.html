@@ -1,0 +1,24 @@
+<html>
+<head>
+    <script type="text/javascript" src="./jsf-development.js"></script>
+</head>
+<body>
+
+    <form id="form" enctype="multipart/form-data">
+        <input type="file" id="fileinput" name="fileinput_name"></input>
+        <input type="text" id="textinput" name="textinput"></input>
+
+        <input type="button" id="sourceid" value="click me" onclick="clickIt(event)"></input>
+    </form>
+
+
+    <script type="text/javascript">
+        function clickIt(evt) {
+            debugger;
+            jsf.ajax.request(evt.target, evt, {execute:"@this fileinput", render:"@form"})
+        }
+
+    </script>
+
+</body>
+</html>

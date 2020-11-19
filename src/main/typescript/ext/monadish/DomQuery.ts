@@ -710,7 +710,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
      * once they hit a dead end.
      */
     get lazyStream(): LazyStream<DomQuery> {
-        return LazyStream.ofStreamDataSource(this);
+        return LazyStream.of(...this.asArray);
     }
 
     get asArray(): Array<DomQuery> {

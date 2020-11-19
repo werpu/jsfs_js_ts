@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ArrayCollector, Config, DomQuery, Lang, LazyStream} from "../../ext/monadish";
+import {ArrayCollector, Config, DomQuery, DomQueryCollector, Lang, LazyStream} from "../../ext/monadish";
 
 import {Stream} from "../../ext/monadish";
 import {DQ} from "../../ext/monadish";
@@ -61,44 +61,57 @@ export class XhrFormData extends Config {
      * @param executes
      */
     applyFileInputs(...executes: Array<string>) {
-        LazyStream.of(...executes)
-           .map(id => {
+
+        let fetchInput = (id: string): DQ => {
             if (id == "@all") {
-                return DomQuery.querySelectorAll("input[type='file']");
+                return DQ.querySelectorAllDeep("input[type='file']");
             } else if (id == "@form") {
                 return (<DQ>this.dataSource).querySelectorAllDeep("input[type='file']");
             } else {
-                let element = DomQuery.byId(id, true);
+                let element = DQ.byId(id, true);
                 return this.getFileInputs(element);
             }
-        })
-            .filter(item => {
-                return !!item.length;
-            })
-            .each(item => {
-                this.fileInputs[this.resolveSubmitIdentifier(item.getAsElem(0).value)] = true;
-            });
+        };
+
+        let inputExists = (item: DQ) => {
+            return !!item.length;
+        };
+
+        let applyInput = (item: DQ) => {
+            this.fileInputs[this.resolveSubmitIdentifier(<HTMLInputElement>item.getAsElem(0).value)] = true;
+        };
+
+        LazyStream.of(...executes)
+            .map(fetchInput)
+            .filter(inputExists)
+            .each(applyInput);
     }
 
-    private getFileInputs(rootElment: DomQuery): DomQuery {
-        let ret = rootElment.lazyStream.map(item => {
-            if (item.length == 0) {
-                return null;
-            }
+    private getFileInputs(rootElment: DQ): DQ {
+
+        let resolveFileInputs = item => {
+
             if (item.length == 1) {
                 if ((<string>item.tagName.get("booga").value).toLowerCase() == "input" &&
                     (<string>item.attr("type")?.value || '').toLowerCase() == "file") {
                     return item;
                 }
 
-                return rootElment.querySelectorAllDeep("input[type='file']").firstElem().getAsElem(0).value;
+                return rootElment.querySelectorAllDeep("input[type='file']");
             }
             return this.getFileInputs(item);
-        }).filter(item => {
-            return item != null;
-        }).collect(new ArrayCollector());
+        };
 
-        return new DomQuery(...ret);
+        let itemExists = (item: DQ) => {
+            return !!item?.length;
+        }
+
+        let ret = rootElment.lazyStream
+            .map(resolveFileInputs)
+            .filter(itemExists)
+            .collect(new DomQueryCollector());
+
+        return ret;
     }
 
 
@@ -162,13 +175,13 @@ export class XhrFormData extends Config {
     toFormData(): FormData {
         let ret: any = new FormData();
 
-        Stream.of(...Object.keys(this.value))
+        LazyStream.of(...Object.keys(this.value))
             .filter(key => !(key in this.fileInputs))
             .each(key => {
                 Stream.of(...this.value[key]).each(item => ret.append(key, item));
             });
         Stream.of<string>(...Object.keys(this.fileInputs)).each((key: string) => {
-            DomQuery.querySelectorAllDeep("[name='"+key+"'], #"+key).eachElem((elem: HTMLInputElement) => {
+            DQ.querySelectorAllDeep("[name='" + key + "'], #" + key).eachElem((elem: HTMLInputElement) => {
                 let identifier = this.resolveSubmitIdentifier(elem);
                 if (!elem?.files?.length) {
                     ret.append(identifier, elem.value);
@@ -183,7 +196,7 @@ export class XhrFormData extends Config {
 
     resolveSubmitIdentifier(elem: HTMLInputElement) {
         let identifier = elem.name;
-        identifier = ((elem?.name ?? "").replace(/s+/gi,"") == "")  ? elem.id : identifier;
+        identifier = ((elem?.name ?? "").replace(/s+/gi, "") == "") ? elem.id : identifier;
         return identifier;
     }
 
@@ -196,7 +209,7 @@ export class XhrFormData extends Config {
         if (this.isAbsent()) {
             return defaultStr;
         }
-        let entries = Stream.of(...Object.keys(this.value))
+        let entries = LazyStream.of(...Object.keys(this.value))
             .filter(key => this.value.hasOwnProperty(key))
             .flatMap(key => Stream.of(...this.value[key]).map(val => [key, val]).collect(new ArrayCollector()))
             .map(keyVal => {

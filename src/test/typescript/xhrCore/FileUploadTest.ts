@@ -90,6 +90,7 @@ describe('Tests on the xhr core when it starts to call the request', function ()
             expect(request.async).to.be.true;
             expect(send.called).to.be.true;
             expect(send.callCount).to.eq(1);
+
             expect(request.requestBody instanceof FormData).to.be.true;
             expect(request.requestHeaders[CONTENT_TYPE] == undefined).to.be.true;
 

@@ -1744,6 +1744,7 @@ var DomQuery = /** @class */ (function () {
         //lets keep it sideffects free
         var target = toMerge.shallowCopy;
         this.each(function (element) {
+            var _a, _b;
             if (element.name.isAbsent()) { //no name, no encoding
                 return;
             }
@@ -1792,7 +1793,7 @@ var DomQuery = /** @class */ (function () {
                     elemType != Submittables.SUBMIT &&
                     elemType != Submittables.IMAGE) && ((elemType != Submittables.CHECKBOX && elemType != Submittables.RADIO) ||
                     element.checked)) {
-                    var files = element.value.files;
+                    var files = (_b = (_a = element.value.value) === null || _a === void 0 ? void 0 : _a.files) !== null && _b !== void 0 ? _b : [];
                     if (files === null || files === void 0 ? void 0 : files.length) {
                         //xhr level2
                         target.append(name).value = files[0];
@@ -6309,7 +6310,7 @@ var XhrFormData = /** @class */ (function (_super) {
             return !!item.length;
         })
             .each(function (item) {
-            _this.fileInputs[item.id.value] = true;
+            _this.fileInputs[_this.resolveSubmitIdentifier(item.getAsElem(0).value)] = true;
         });
     };
     XhrFormData.prototype.getFileInputs = function (rootElment) {

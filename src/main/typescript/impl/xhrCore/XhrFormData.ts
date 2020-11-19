@@ -28,6 +28,11 @@ import {EMPTY_STR, P_VIEWSTATE} from "../core/Const";
  * We cannot use standard html5 forms everywhere
  * due to api constraints on the HTML Form object in IE11
  * and due to the url encoding constraint given by the jsf.js spec
+ *
+ * TODO not ideal. too many encoding calls
+ * probably only one needed and one overlay!
+ * the entire fileinput storing probably is redundant now
+ * that domquery has been fixed
  */
 export class XhrFormData extends Config {
 

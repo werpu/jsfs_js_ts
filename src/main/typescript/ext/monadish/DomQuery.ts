@@ -723,6 +723,10 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         return [].concat(Stream.of(this.rootNode).filter(item => item != null).collect(new ArrayCollector()));
     }
 
+
+    static querySelectorAllDeep(selector: string) {
+        return new DomQuery(document).querySelectorAllDeep(selector);
+    }
     /**
      * easy query selector all producer
      *

@@ -753,6 +753,9 @@ var DomQuery = /** @class */ (function () {
         enumerable: true,
         configurable: true
     });
+    DomQuery.querySelectorAllDeep = function (selector) {
+        return new DomQuery(document).querySelectorAllDeep(selector);
+    };
     /**
      * easy query selector all producer
      *
@@ -6257,6 +6260,11 @@ var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/im
  * We cannot use standard html5 forms everywhere
  * due to api constraints on the HTML Form object in IE11
  * and due to the url encoding constraint given by the jsf.js spec
+ *
+ * TODO not ideal. too many encoding calls
+ * probably only one needed and one overlay!
+ * the entire fileinput storing probably is redundant now
+ * that domquery has been fixed
  */
 var XhrFormData = /** @class */ (function (_super) {
     __extends(XhrFormData, _super);
@@ -6390,7 +6398,7 @@ var XhrFormData = /** @class */ (function (_super) {
             monadish_2.Stream.of.apply(monadish_2.Stream, _this.value[key]).each(function (item) { return ret.append(key, item); });
         });
         monadish_2.Stream.of.apply(monadish_2.Stream, Object.keys(this.fileInputs)).each(function (key) {
-            monadish_1.DomQuery.byId(key, true).eachElem(function (elem) {
+            monadish_1.DomQuery.querySelectorAllDeep("[name='" + key + "'], #" + key).eachElem(function (elem) {
                 var _a;
                 var identifier = _this.resolveSubmitIdentifier(elem);
                 if (!((_a = elem === null || elem === void 0 ? void 0 : elem.files) === null || _a === void 0 ? void 0 : _a.length)) {

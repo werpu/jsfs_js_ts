@@ -168,7 +168,7 @@ export class XhrFormData extends Config {
                 Stream.of(...this.value[key]).each(item => ret.append(key, item));
             });
         Stream.of<string>(...Object.keys(this.fileInputs)).each((key: string) => {
-            DomQuery.byId(key, true).eachElem((elem: HTMLInputElement) => {
+            DomQuery.querySelectorAllDeep("[name='"+key+"'], #"+key).eachElem((elem: HTMLInputElement) => {
                 let identifier = this.resolveSubmitIdentifier(elem);
                 if (!elem?.files?.length) {
                     ret.append(identifier, elem.value);

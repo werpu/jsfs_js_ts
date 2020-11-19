@@ -473,7 +473,7 @@ interface IDomQuery {
      * @param toMerge optional config which can be merged in
      * @return a copy pf
      */
-    encodeFormElement(toMerge): Config;
+    encodeFormElement(toMerge?:Config, idAsNameFallback?: boolean): Config;
 
     /**
      * fetches the subnodes from ... to..
@@ -642,6 +642,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         return this.querySelectorAllDeep(elemStr);
     }
 
+
     /**
      * a deep search which treats the single isolated shadow doms
      * separately and runs the query on earch shadow dom
@@ -650,19 +651,18 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
     querySelectorAllDeep(queryStr: string): DomQuery {
         let found: Array<DomQuery> = [];
         let queryRes = this.querySelectorAll(queryStr);
-        if(queryRes.length) {
+        if (queryRes.length) {
             found.push(queryRes);
         }
         let shadowRoots = this.querySelectorAll("*").shadowRoot;
-        if(shadowRoots.length) {
+        if (shadowRoots.length) {
             let shadowRes = shadowRoots.querySelectorAllDeep(queryStr);
-            if(shadowRes.length) {
+            if (shadowRes.length) {
                 found.push(shadowRes);
             }
         }
         return new DomQuery(...found);
     }
-
 
 
     /**
@@ -735,6 +735,13 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         } else {
             return new DomQuery(document)._querySelectorAll(selector);
         }
+
+    }
+
+    static querySelectorAllDeep(selector: string): DomQuery {
+
+        return new DomQuery(document).querySelectorAllDeep(selector);
+
 
     }
 
@@ -843,7 +850,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
      * @param index
      */
     filesFromElem(index: number): Array<any> {
-        return (index < this.rootNode.length) ? (<any>this.rootNode[index])?.files ?  (<any>this.rootNode[index]).files : [] : [];
+        return (index < this.rootNode.length) ? (<any>this.rootNode[index])?.files ? (<any>this.rootNode[index]).files : [] : [];
     }
 
     /**
@@ -990,7 +997,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         }
 
         let subItems = this.querySelectorAllDeep(`[id="${id}"]`);
-        if(subItems.length) {
+        if (subItems.length) {
             res.push(subItems);
         }
 
@@ -1005,7 +1012,7 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
     byTagName(tagName: string, includeRoot ?: boolean, deep ?: boolean): DomQuery {
         let res: Array<Element | DomQuery> = [];
         if (includeRoot) {
-            res = <any> LazyStream.of(...(this?.rootNode ?? []))
+            res = <any>LazyStream.of(...(this?.rootNode ?? []))
                 .filter(element => element?.tagName == tagName)
                 .reduce<Array<Element | DomQuery>>((reduction: any, item: Element) => reduction.concat([item]), res)
                 .orElse(res).value;
@@ -1067,10 +1074,10 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
      */
     isMultipartCandidate(deep = false): boolean {
         let isCandidate = (item: DomQuery): boolean => {
-            if(item.length == 0) {
+            if (item.length == 0) {
                 return false;
             }
-            if(item.length == 1) {
+            if (item.length == 1) {
                 if ((<string>item.tagName.get("booga").value).toLowerCase() == "input" &&
                     (<string>item.attr("type")?.value || "").toLowerCase() == "file") {
                     return true;
@@ -1087,7 +1094,6 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
 
         return ret;
     }
-
 
 
     /**
@@ -1764,11 +1770,11 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
      * @param toMerge optional config which can be merged in
      * @return a copy pf
      */
-    encodeFormElement(toMerge = new Config({})): Config {
+    encodeFormElement(toMerge = new Config({}), idAsNameFallback = false): Config {
 
         //browser behavior no element name no encoding (normal submit fails in that case)
         //https://issues.apache.org/jira/browse/MYFACES-2847
-        if (this.name.isAbsent()) {
+        if ((!idAsNameFallback) && this.name.isAbsent()) {
             return;
         }
 
@@ -1776,10 +1782,10 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         let target = toMerge.shallowCopy;
 
         this.each((element: DomQuery) => {
-            if (element.name.isAbsent()) {//no name, no encoding
+            if ((!idAsNameFallback) && element.name.isAbsent()) {//no name, no encoding
                 return;
             }
-            let name = element.name.value;
+            let name = (idAsNameFallback) ? element?.name?.value ?? element?.id?.value : element.name.value;
             let tagName = element.tagName.orElse("__none__").value.toLowerCase();
             let elemType = element.type.orElse("__none__").value.toLowerCase();
 

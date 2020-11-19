@@ -5,17 +5,17 @@
 <body>
 
     <form id="form" enctype="multipart/form-data">
-        <input type="file" id="fileinput" name="fileinput_name"></input>
-        <input type="text" id="textinput" name="textinput"></input>
+        <input type="file" id="form:fileinput" name="form:fileinput_name"></input>
+        <input type="text" id="form:textinput" name="form:textinput"></input>
 
-        <input type="button" id="sourceid" value="click me" onclick="clickIt(event)"></input>
+        <input type="button" id="form:sourceid" value="click me" onclick="clickIt(event)"></input>
     </form>
 
 
     <script type="text/javascript">
         function clickIt(evt) {
             debugger;
-            jsf.ajax.request(evt.target, evt, {execute:"@this fileinput", render:"@form"})
+            jsf.ajax.request(evt.target, evt, {execute:"@this form:fileinput", render:"@form"})
         }
 
     </script>

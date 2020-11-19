@@ -57,11 +57,11 @@ export module StandardInits {
 </head>
 <body>
 <form id="blarg">
-    <input type="text" id="input_1" name="input_1" value="input_1_val"></input>
+    <input type="text" id="blarg:input_1" name="blarg:input_1" value="input_1_val"></input>
     <input type="hidden" id="javax.faces.ViewState" name="javax.faces.ViewState" value="blubbblubblubb"></input>
-    <input type="button" id="input_2" name="input_2" value="input_1_val"></input>
+    <input type="button" id="blarg:input_2" name="blarg:input_2" value="input_1_val"></input>
     <div id="shadowDomArea">
-            <input type="button" id="input_3" name="input_3" value="input_3_val"></input>
+            <input type="button" id="blarg:input_3" name="blarg:input_3" value="input_3_val"></input>
     </div>
 </form>
 </body>
@@ -266,7 +266,7 @@ export module StandardInits {
         return <Promise<() => void>>init(HTML_SHADOW, withJsf).then((close) => {
             let shadow = DomQuery.byId(<any>window.document).byId("shadowDomArea").attachShadow();
             shadow.innerHtml = `
-                <input type="button" id="input_3" name="input_3" value="input_3_val" onclick="emitPPR(this, ('undefined' == typeof event)? null: event, 'shadowContent');"></input>
+                <input type="button" id="input_3" name="input_3" value="input_3_val" ></input>
                 <div id="shadowContent">before update</div>
             `;
             return close;

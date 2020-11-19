@@ -1409,8 +1409,9 @@ var DomQuery = /** @class */ (function () {
             }
         };
         this.eachElem(function (item) {
-            while (item.parentNode) {
-                item = item.parentNode;
+            var _a, _b;
+            while (item.parentNode || item.host) {
+                item = (_a = item === null || item === void 0 ? void 0 : item.parentNode) !== null && _a !== void 0 ? _a : (_b = item) === null || _b === void 0 ? void 0 : _b.host;
                 resolveItem(item);
                 //nested forms not possible, performance shortcut
                 if (tagName == "form" && retArr.length) {
@@ -6405,7 +6406,7 @@ var XhrFormData = /** @class */ (function (_super) {
             monadish_2.Stream.of.apply(monadish_2.Stream, _this.value[key]).each(function (item) { return ret.append(key, item); });
         });
         monadish_2.Stream.of.apply(monadish_2.Stream, Object.keys(this.fileInputs)).each(function (key) {
-            monadish_3.DQ.querySelectorAllDeep("[name='" + key + "'], [id='" + key + "']").eachElem(function (elem) {
+            monadish_3.DQ.querySelectorAllDeep("[name='" + key + "'], [id=\"" + key + "\"]").eachElem(function (elem) {
                 var _a;
                 var identifier = _this.resolveSubmitIdentifier(elem);
                 if (!((_a = elem === null || elem === void 0 ? void 0 : elem.files) === null || _a === void 0 ? void 0 : _a.length)) {

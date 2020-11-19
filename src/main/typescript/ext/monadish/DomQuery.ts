@@ -1413,8 +1413,9 @@ export class DomQuery implements IDomQuery, IStreamDataSource<DomQuery> {
         };
 
         this.eachElem((item: Element) => {
-            while (item.parentNode) {
-                item = <Element>item.parentNode;
+            while (item.parentNode || (<any> item).host) {
+                item = <Element>item?.parentNode ?? (<any>item)?.host;
+
                 resolveItem(item);
                 //nested forms not possible, performance shortcut
                 if (tagName == "form" && retArr.length) {

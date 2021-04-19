@@ -24,9 +24,10 @@ export interface IdValueHolder {
 
 /**
  * a helper class to isolate the
- * view state data processing
+ * view state and client window and other
+ * future states which follow a similar pattern
  */
-export class ViewState implements IdValueHolder {
+export class StateHolder implements IdValueHolder {
 
     nameSpace: string;
 

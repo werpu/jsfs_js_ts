@@ -4608,7 +4608,7 @@ var ViewState = /** @class */ (function () {
     });
     return ViewState;
 }());
-exports.ViewState = ViewState;
+exports.StateHolder = ViewState;
 
 
 /***/ }),

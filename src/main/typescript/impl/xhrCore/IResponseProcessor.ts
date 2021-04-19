@@ -96,6 +96,14 @@ export interface IResponseProcessor {
     processViewState(node: XMLQuery): boolean;
 
     /**
+     * process the viewState update, update the affected
+     * forms with their respective new viewstate values
+     *
+     */
+    processClientWindow(node: XMLQuery): boolean;
+
+
+    /**
      * evals all processed elements of so far
      * and executes the embedded scripts
      */

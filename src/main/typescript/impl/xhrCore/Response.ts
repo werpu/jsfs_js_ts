@@ -67,11 +67,14 @@ export module Response {
         responseXML.querySelectorAll(RESP_PARTIAL)
             .each(item => processPartialTag(<XMLQuery>item, responseProcessor, internalContext));
 
-        //we now process the viewstates and the evals deferred
+        //we now process the viewstates, client windows and the evals deferred
         //the reason for this is that often it is better
         //to wait until the document has caught up before
         //doing any evals even on embedded scripts
+        //usually this does not matter, the client window comes in almost last always anyway
+        //we maybe drop this deferred assignment in the future, but myfaces did it until now
         responseProcessor.fixViewStates();
+        responseProcessor.fixClientWindow();
         responseProcessor.globalEval();
 
         responseProcessor.done();
@@ -152,6 +155,18 @@ export module Response {
     }
 
     /**
+     * checks and stores a state update for delayed processing
+     *
+     * @param responseProcessor the response processor to perform the store operation
+     * @param node the xml node to check for the state
+     *
+     * @private
+     */
+    function storeState(responseProcessor: IResponseProcessor, node: XMLQuery) {
+        return responseProcessor.processViewState(node) || responseProcessor.processClientWindow(node);
+    }
+
+    /**
      * branch tag update.. drill further down into the updates
      * special case viewstate in that case it is a leaf
      * and the viewstate must be processed
@@ -160,7 +175,8 @@ export module Response {
      * @param responseProcessor
      */
      function processUpdateTag(node: XMLQuery, responseProcessor: IResponseProcessor) {
-        if (!responseProcessor.processViewState(node)) {
+         //early state storing, if no state we perform a normal update cycle
+        if (!storeState(responseProcessor, node)) {
             handleElementUpdate(node, responseProcessor);
         }
     }

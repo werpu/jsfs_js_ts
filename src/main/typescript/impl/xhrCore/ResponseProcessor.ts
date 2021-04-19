@@ -21,9 +21,10 @@ import {IResponseProcessor} from "./IResponseProcessor";
 import {ErrorData} from "./ErrorData";
 import {ExtLang} from "../util/Lang";
 
-import {ViewState} from "../core/ImplTypes";
+import {StateHolder} from "../core/ImplTypes";
 import {EventData} from "./EventData";
 import {
+    APPLIED_CLIENT_WINDOW,
     APPLIED_VST,
     ATTR_ID,
     ATTR_NAME,
@@ -35,10 +36,10 @@ import {
     ERROR_NAME,
     HTML_VIEWSTATE,
     ON_ERROR,
-    ON_EVENT,
+    ON_EVENT, P_CLIENT_WINDOW,
     P_PARTIAL_SOURCE,
     P_VIEWSTATE,
-    RESPONSE_XML,
+    RESPONSE_XML, SEL_CLIENT_WINDOW_ELEM,
     SEL_SCRIPTS_STYLES,
     SEL_VIEWSTATE_ELEM,
     SOURCE,
@@ -261,11 +262,19 @@ export class ResponseProcessor implements IResponseProcessor {
      */
     processViewState(node: XMLQuery): boolean {
         if (ResponseProcessor.isViewStateNode(node)) {
-            let viewStateValue = node.cDATAAsString;
-            this.internalContext.assign(APPLIED_VST, node.id.value).value = new ViewState(node.id.value, viewStateValue);
+            let state = node.cDATAAsString;
+            this.internalContext.assign(APPLIED_VST, node.id.value).value = new StateHolder(node.id.value, state);
             return true;
         }
         return false;
+    }
+
+    processClientWindow(node: XMLQuery): boolean {
+        if (ResponseProcessor.isClientWindowNode(node)) {
+            let state = node.cDATAAsString;
+            this.internalContext.assign(APPLIED_CLIENT_WINDOW, node.id.value).value = new StateHolder(node.id.value, state);
+            return true;
+        }
     }
 
     /**
@@ -281,14 +290,26 @@ export class ResponseProcessor implements IResponseProcessor {
      * post processing viewstate fixing
      */
     fixViewStates() {
-        Stream.ofAssoc<ViewState>(this.internalContext.getIf(APPLIED_VST).orElse({}).value)
+        Stream.ofAssoc<StateHolder>(this.internalContext.getIf(APPLIED_VST).orElse({}).value)
             .each((item: Array<any>) => {
-                let value: ViewState = item[1];
+                let value: StateHolder = item[1];
                 let nameSpace = DQ.byId(value.nameSpace, true).orElse(document.body);
                 let affectedForms = nameSpace.byTagName(TAG_FORM);
                 let affectedForms2 = nameSpace.filter(item => item.tagName.orElse(EMPTY_STR).value.toLowerCase() == TAG_FORM);
 
                 this.appendViewStateToForms(new DomQuery(affectedForms, affectedForms2), value.value);
+            });
+    }
+
+    fixClientWindow() {
+        Stream.ofAssoc<StateHolder>(this.internalContext.getIf(APPLIED_CLIENT_WINDOW).orElse({}).value)
+            .each((item: Array<any>) => {
+                let value: StateHolder = item[1];
+                let nameSpace = DQ.byId(value.nameSpace, true).orElse(document.body);
+                let affectedForms = nameSpace.byTagName(TAG_FORM);
+                let affectedForms2 = nameSpace.filter(item => item.tagName.orElse(EMPTY_STR).value.toLowerCase() == TAG_FORM);
+
+                this.appendClientWindowToForms(new DomQuery(affectedForms, affectedForms2), value.value);
             });
     }
 
@@ -310,11 +331,35 @@ export class ResponseProcessor implements IResponseProcessor {
      * @param viewState the final viewstate
      */
     private appendViewStateToForms(forms: DQ, viewState: string) {
+        this.assignState(forms, SEL_VIEWSTATE_ELEM, viewState);
+    }
+
+
+    /**
+     * proper clientwindow -> form assignment
+     *
+     * @param forms the forms to append the viewstate to
+     * @param clientWindow the final viewstate
+     */
+    private appendClientWindowToForms(forms: DQ, clientWindow: string) {
+        this.assignState(forms, SEL_CLIENT_WINDOW_ELEM, clientWindow);
+    }
+
+    /**
+     * generic append state which appends a certain state as hidden element to an existing set of forms
+     *
+     * @param forms the forms to append or change to
+     * @param selector the selector for the state
+     * @param state the state itself which needs to be assigned
+     *
+     * @private
+     */
+    private assignState(forms: DQ, selector: string, state: string) {
         forms.each((form: DQ) => {
-            let viewStateElems = form.querySelectorAll(SEL_VIEWSTATE_ELEM)
+            let stateHolders = form.querySelectorAll(selector)
                 .orElseLazy(() => ResponseProcessor.newViewStateElement(form));
 
-            viewStateElems.attr("value").value = viewState;
+            stateHolders.attr("value").value = state;
         });
     }
 
@@ -370,6 +415,19 @@ export class ResponseProcessor implements IResponseProcessor {
         return "undefined" != typeof node?.id?.value && (node?.id?.value == P_VIEWSTATE ||
             node?.id?.value?.indexOf([separatorChar, P_VIEWSTATE].join(EMPTY_STR)) != -1 ||
             node?.id?.value?.indexOf([P_VIEWSTATE, separatorChar].join(EMPTY_STR)) != -1);
+    }
+
+    /**
+     * incoming client window node also needs special processing
+     *
+     * @param node the node to check
+     * @returns true of it ii
+     */
+    private static isClientWindowNode(node: XMLQuery): boolean {
+        let separatorChar = (<any>window).jsf.separatorchar;
+        return "undefined" != typeof node?.id?.value && (node?.id?.value == P_CLIENT_WINDOW ||
+            node?.id?.value?.indexOf([separatorChar, P_CLIENT_WINDOW].join(EMPTY_STR)) != -1 ||
+            node?.id?.value?.indexOf([P_CLIENT_WINDOW, separatorChar].join(EMPTY_STR)) != -1);
     }
 
 }

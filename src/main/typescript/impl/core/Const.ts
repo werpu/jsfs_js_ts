@@ -124,6 +124,7 @@ export const TAG_ATTR = "attribute";
 
 
 export const SEL_VIEWSTATE_ELEM = "[name='" + P_VIEWSTATE + "']";
+export const SEL_CLIENT_WINDOW_ELEM = "[name='" + P_CLIENT_WINDOW + "']";
 export const SEL_RESPONSE_XML = "responseXML";
 
 export const PHASE_PROCESS_RESPONSE = "processResponse";
@@ -164,6 +165,7 @@ export const MF_NONE = "__mf_none__";
 export const REASON_EXPIRED = "Expired";
 
 export const APPLIED_VST = "appliedViewState";
+export const APPLIED_CLIENT_WINDOW = "appliedClientWindow";
 
 export const RECONNECT_INTERVAL = 500;
 export const MAX_RECONNECT_ATTEMPTS = 25;

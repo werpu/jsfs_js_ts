@@ -4527,6 +4527,7 @@ exports.TAG_BEFORE = "before";
 exports.TAG_AFTER = "after";
 exports.TAG_ATTR = "attribute";
 exports.SEL_VIEWSTATE_ELEM = "[name='" + exports.P_VIEWSTATE + "']";
+exports.SEL_CLIENT_WINDOW_ELEM = "[name='" + exports.P_CLIENT_WINDOW + "']";
 exports.SEL_RESPONSE_XML = "responseXML";
 exports.PHASE_PROCESS_RESPONSE = "processResponse";
 exports.ERR_NO_PARTIAL_RESPONSE = "Partial response not set";
@@ -4554,6 +4555,7 @@ exports.SEL_SCRIPTS_STYLES = "script, style, link";
 exports.MF_NONE = "__mf_none__";
 exports.REASON_EXPIRED = "Expired";
 exports.APPLIED_VST = "appliedViewState";
+exports.APPLIED_CLIENT_WINDOW = "appliedClientWindow";
 exports.RECONNECT_INTERVAL = 500;
 exports.MAX_RECONNECT_ATTEMPTS = 25;
 exports.UNKNOWN = "UNKNOWN";
@@ -4589,16 +4591,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var Const_1 = __webpack_require__(/*! ./Const */ "./src/main/typescript/impl/core/Const.ts");
 /**
  * a helper class to isolate the
- * view state data processing
+ * view state and client window and other
+ * future states which follow a similar pattern
  */
-var ViewState = /** @class */ (function () {
-    function ViewState(id, value) {
+var StateHolder = /** @class */ (function () {
+    function StateHolder(id, value) {
         this.id = id;
         this.value = value;
         var viewStatePos = id.indexOf(Const_1.P_VIEWSTATE);
         this.nameSpace = viewStatePos > 0 ? id.substr(0, viewStatePos - 1) : Const_1.EMPTY_STR;
     }
-    Object.defineProperty(ViewState.prototype, "hasNameSpace", {
+    Object.defineProperty(StateHolder.prototype, "hasNameSpace", {
         get: function () {
             var _a;
             return !!((_a = this === null || this === void 0 ? void 0 : this.nameSpace) !== null && _a !== void 0 ? _a : Const_1.EMPTY_STR).length;
@@ -4606,9 +4609,9 @@ var ViewState = /** @class */ (function () {
         enumerable: true,
         configurable: true
     });
-    return ViewState;
+    return StateHolder;
 }());
-exports.ViewState = ViewState;
+exports.StateHolder = StateHolder;
 
 
 /***/ }),
@@ -5771,11 +5774,14 @@ var Response;
         //we now process the partial tags, or in none given raise an error
         responseXML.querySelectorAll(Const_1.RESP_PARTIAL)
             .each(function (item) { return processPartialTag(item, responseProcessor, internalContext); });
-        //we now process the viewstates and the evals deferred
+        //we now process the viewstates, client windows and the evals deferred
         //the reason for this is that often it is better
         //to wait until the document has caught up before
         //doing any evals even on embedded scripts
+        //usually this does not matter, the client window comes in almost last always anyway
+        //we maybe drop this deferred assignment in the future, but myfaces did it until now
         responseProcessor.fixViewStates();
+        responseProcessor.fixClientWindow();
         responseProcessor.globalEval();
         responseProcessor.done();
     }
@@ -5842,6 +5848,17 @@ var Response;
         return true;
     }
     /**
+     * checks and stores a state update for delayed processing
+     *
+     * @param responseProcessor the response processor to perform the store operation
+     * @param node the xml node to check for the state
+     *
+     * @private
+     */
+    function storeState(responseProcessor, node) {
+        return responseProcessor.processViewState(node) || responseProcessor.processClientWindow(node);
+    }
+    /**
      * branch tag update.. drill further down into the updates
      * special case viewstate in that case it is a leaf
      * and the viewstate must be processed
@@ -5850,7 +5867,8 @@ var Response;
      * @param responseProcessor
      */
     function processUpdateTag(node, responseProcessor) {
-        if (!responseProcessor.processViewState(node)) {
+        //early state storing, if no state we perform a normal update cycle
+        if (!storeState(responseProcessor, node)) {
             handleElementUpdate(node, responseProcessor);
         }
     }
@@ -6099,11 +6117,18 @@ var ResponseProcessor = /** @class */ (function () {
      */
     ResponseProcessor.prototype.processViewState = function (node) {
         if (ResponseProcessor.isViewStateNode(node)) {
-            var viewStateValue = node.cDATAAsString;
-            this.internalContext.assign(Const_1.APPLIED_VST, node.id.value).value = new ImplTypes_1.ViewState(node.id.value, viewStateValue);
+            var state = node.cDATAAsString;
+            this.internalContext.assign(Const_1.APPLIED_VST, node.id.value).value = new ImplTypes_1.StateHolder(node.id.value, state);
             return true;
         }
         return false;
+    };
+    ResponseProcessor.prototype.processClientWindow = function (node) {
+        if (ResponseProcessor.isClientWindowNode(node)) {
+            var state = node.cDATAAsString;
+            this.internalContext.assign(Const_1.APPLIED_CLIENT_WINDOW, node.id.value).value = new ImplTypes_1.StateHolder(node.id.value, state);
+            return true;
+        }
     };
     /**
      * generic global eval which runs the embedded css and scripts
@@ -6127,6 +6152,17 @@ var ResponseProcessor = /** @class */ (function () {
             _this.appendViewStateToForms(new monadish_1.DomQuery(affectedForms, affectedForms2), value.value);
         });
     };
+    ResponseProcessor.prototype.fixClientWindow = function () {
+        var _this = this;
+        monadish_1.Stream.ofAssoc(this.internalContext.getIf(Const_1.APPLIED_CLIENT_WINDOW).orElse({}).value)
+            .each(function (item) {
+            var value = item[1];
+            var nameSpace = monadish_1.DQ.byId(value.nameSpace, true).orElse(document.body);
+            var affectedForms = nameSpace.byTagName(Const_1.TAG_FORM);
+            var affectedForms2 = nameSpace.filter(function (item) { return item.tagName.orElse(Const_1.EMPTY_STR).value.toLowerCase() == Const_1.TAG_FORM; });
+            _this.appendClientWindowToForms(new monadish_1.DomQuery(affectedForms, affectedForms2), value.value);
+        });
+    };
     /**
      * all processing done we can close the request and send the appropriate events
      */
@@ -6143,10 +6179,31 @@ var ResponseProcessor = /** @class */ (function () {
      * @param viewState the final viewstate
      */
     ResponseProcessor.prototype.appendViewStateToForms = function (forms, viewState) {
+        this.assignState(forms, Const_1.SEL_VIEWSTATE_ELEM, viewState);
+    };
+    /**
+     * proper clientwindow -> form assignment
+     *
+     * @param forms the forms to append the viewstate to
+     * @param clientWindow the final viewstate
+     */
+    ResponseProcessor.prototype.appendClientWindowToForms = function (forms, clientWindow) {
+        this.assignState(forms, Const_1.SEL_CLIENT_WINDOW_ELEM, clientWindow);
+    };
+    /**
+     * generic append state which appends a certain state as hidden element to an existing set of forms
+     *
+     * @param forms the forms to append or change to
+     * @param selector the selector for the state
+     * @param state the state itself which needs to be assigned
+     *
+     * @private
+     */
+    ResponseProcessor.prototype.assignState = function (forms, selector, state) {
         forms.each(function (form) {
-            var viewStateElems = form.querySelectorAll(Const_1.SEL_VIEWSTATE_ELEM)
+            var stateHolders = form.querySelectorAll(selector)
                 .orElseLazy(function () { return ResponseProcessor.newViewStateElement(form); });
-            viewStateElems.attr("value").value = viewState;
+            stateHolders.attr("value").value = state;
         });
     };
     /**
@@ -6198,6 +6255,19 @@ var ResponseProcessor = /** @class */ (function () {
         return "undefined" != typeof ((_a = node === null || node === void 0 ? void 0 : node.id) === null || _a === void 0 ? void 0 : _a.value) && (((_b = node === null || node === void 0 ? void 0 : node.id) === null || _b === void 0 ? void 0 : _b.value) == Const_1.P_VIEWSTATE ||
             ((_d = (_c = node === null || node === void 0 ? void 0 : node.id) === null || _c === void 0 ? void 0 : _c.value) === null || _d === void 0 ? void 0 : _d.indexOf([separatorChar, Const_1.P_VIEWSTATE].join(Const_1.EMPTY_STR))) != -1 ||
             ((_f = (_e = node === null || node === void 0 ? void 0 : node.id) === null || _e === void 0 ? void 0 : _e.value) === null || _f === void 0 ? void 0 : _f.indexOf([Const_1.P_VIEWSTATE, separatorChar].join(Const_1.EMPTY_STR))) != -1);
+    };
+    /**
+     * incoming client window node also needs special processing
+     *
+     * @param node the node to check
+     * @returns true of it ii
+     */
+    ResponseProcessor.isClientWindowNode = function (node) {
+        var _a, _b, _c, _d, _e, _f;
+        var separatorChar = window.jsf.separatorchar;
+        return "undefined" != typeof ((_a = node === null || node === void 0 ? void 0 : node.id) === null || _a === void 0 ? void 0 : _a.value) && (((_b = node === null || node === void 0 ? void 0 : node.id) === null || _b === void 0 ? void 0 : _b.value) == Const_1.P_CLIENT_WINDOW ||
+            ((_d = (_c = node === null || node === void 0 ? void 0 : node.id) === null || _c === void 0 ? void 0 : _c.value) === null || _d === void 0 ? void 0 : _d.indexOf([separatorChar, Const_1.P_CLIENT_WINDOW].join(Const_1.EMPTY_STR))) != -1 ||
+            ((_f = (_e = node === null || node === void 0 ? void 0 : node.id) === null || _e === void 0 ? void 0 : _e.value) === null || _f === void 0 ? void 0 : _f.indexOf([Const_1.P_CLIENT_WINDOW, separatorChar].join(Const_1.EMPTY_STR))) != -1);
     };
     return ResponseProcessor;
 }());

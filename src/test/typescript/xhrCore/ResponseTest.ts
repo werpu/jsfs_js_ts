@@ -304,6 +304,65 @@ describe('Tests of the various aspects of the response protocol functionality', 
         expect(DQ.byId("javax.faces.ViewState").inputValue.value == "RTUyRDI0NzE4QzAxM0E5RDAwMDAwMDVD").to.be.true;
     });
 
+    /**
+     * The body innerHTML is based on a Tobago page. View state and client window id is rendered within a
+     * jsf-state-container.
+     * Beside the tobago-out tag, the view state and the client window id must be updated properly.
+     */
+    it("must have updated the client window tag properly", function () {
+        window.document.body.innerHTML = `<tobago-page locale='en' class='container-fluid' id='page'>
+   <form action='/IntegrationJSTest/integrationtestsjasmine/tobago-jfwid-test.jsf' id='page::form' method='post' accept-charset='UTF-8' data-tobago-context-path=''>
+    <input type='hidden' name='javax.faces.source' id='javax.faces.source' disabled='disabled'>
+    <tobago-focus id='page::lastFocusId'>
+     <input type='hidden' name='page::lastFocusId' id='page::lastFocusId::field'>
+    </tobago-focus>
+    <input type='hidden' name='org.apache.myfaces.tobago.webapp.Secret' id='org.apache.myfaces.tobago.webapp.Secret' value='SLrPlxqLEaR/oYFLSu4wgg=='>
+    <tobago-in id='page:input' class='tobago-margin-bottom'>
+     <input type='text' name='page:input' id='page:input::field' class='tobago-in form-control' value='Alice'>
+     <tobago-behavior event='change' client-id='page:input' field-id='page:input::field' execute='page:input' render='page:output'></tobago-behavior>
+    </tobago-in>
+    <div id='page:output' class='tobago-margin-bottom'>
+     <tobago-out class='form-control-plaintext'></tobago-out>
+    </div>
+    <div class='tobago-page-menuStore'></div>
+    <span id='page::jsf-state-container'>
+      <input type='hidden' name='javax.faces.ViewState' id='j_id__v_0:javax.faces.ViewState:1' value='RkExQ0Q1NTYzOTNCNzg0RjAwMDAwMDE4' autocomplete='off'>
+      <input type='hidden' name='javax.faces.RenderKitId' value='tobago'>
+      <input type='hidden' id='j_id__v_0:javax.faces.ClientWindow:1' name='javax.faces.ClientWindow' value='5m10kooxi'>
+    </span>
+   </form>
+  </tobago-page>`;
+
+        expect(DQ.querySelectorAll("#page\\:output tobago-out").textContent() === "").to.be.true;
+        expect(DQ.byId("j_id__v_0:javax.faces.ViewState:1").isAbsent()).to.be.false;
+        expect(DQ.byId("j_id__v_0:javax.faces.ClientWindow:1").isAbsent()).to.be.false;
+
+        jsf.ajax.request(window.document.getElementById("page:input"), "change", {
+            "javax.faces.behavior.event": "change",
+            execute: "page:input",
+            render: "page:output"
+        });
+
+        this.respond(`<?xml version="1.0" encoding="UTF-8"?>
+<partial-response id='j_id__v_0'>
+<changes>
+<update id='page:output'><![CDATA[
+<div id='page:output' class='tobago-margin-bottom'>
+<tobago-out class='form-control-plaintext'>Alice</tobago-out>
+</div>]]>
+</update>
+<update id='j_id__v_0:javax.faces.ViewState:1'><![CDATA[MDQwQzkxNkU0MTg0RTQxRjAwMDAwMDE3]]>
+</update>
+<update id='j_id__v_0:javax.faces.ClientWindow:1'><![CDATA[5m10kooxg]]>
+</update>
+</changes>
+</partial-response>`);
+
+        expect(DQ.querySelectorAll("#page\\:output tobago-out").textContent() === "Alice").to.be.true;
+        expect(DQ.byId("j_id__v_0:javax.faces.ViewState:1").isAbsent()).to.be.false;
+        expect(DQ.byId("j_id__v_0:javax.faces.ClientWindow:1").isAbsent()).to.be.false;
+    });
+
 
     //TODO update head all and redirect
 });

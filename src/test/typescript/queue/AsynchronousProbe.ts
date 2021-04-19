@@ -15,11 +15,11 @@
  */
 
 /**
- * we need a probe to test our asynchronoues behavior
- * the asynchronous behavior needs to be in an asynchronus runnable
+ * we need a probe to test our asynchronous behavior
+ * the asynchronous behavior needs to be in an asynchronous runnable
  */
 import {AsyncRunnable} from "../../../main/typescript/impl/util/AsyncRunnable";
-import {IValueHolder} from "../../../main/typescript/ext/monadish/Monad";
+import {IValueHolder} from "../../../main/typescript/ext/monadish";
 
 export class ProbeClass implements AsyncRunnable<Promise<any>>, IValueHolder<Promise<any>> {
 
@@ -36,7 +36,7 @@ export class ProbeClass implements AsyncRunnable<Promise<any>>, IValueHolder<Pro
         this.value = new Promise((resolve, reject) => {
             this.$timeout(() => {
                 if (this.resolveIt) {
-                    resolve();
+                    resolve(() => true);
                 } else {
                     reject();
                 }

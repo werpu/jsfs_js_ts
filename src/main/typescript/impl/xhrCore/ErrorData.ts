@@ -84,7 +84,7 @@ export class ErrorData extends EventData {
         let status = getMsg(context, STATUS);
         let responseText = getMsg(context, RESPONSE_TEXT);
         let responseXML = getMsg(context, RESPONSE_XML);
-        return new ErrorData(source, name, errorMessage, responseText, responseXML, errorCode + EMPTY_STR, status, errorType);
+        return new ErrorData(source, errorName, errorMessage, responseText, responseXML, errorCode + EMPTY_STR, status, errorType);
     }
 
     private static getMsg(context, param) {

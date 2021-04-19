@@ -121,7 +121,7 @@ describe('Tests the jsf websocket client side api on high level (generic test wi
                     messageCalled = true;
                     msg = message;
                     cnl = channel;
-                    resolve();
+                    resolve(() => true);
                 },
                 () => {
                     closeCalled = true;
@@ -169,7 +169,7 @@ describe('Tests the jsf websocket client side api on high level (generic test wi
                     messageCalled = true;
                     msg = message;
                     cnl = channel;
-                    resolve();
+                    resolve(() => true);
                 },
                 () => {
                     closeCalled = true;

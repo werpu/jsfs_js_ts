@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-import {Config, DomQuery, DQ, Lang, Stream, XMLQuery} from "../../ext/monadish";
+import {Config, DomQuery, DQ, Lang, Stream, XMLQuery} from "mona-dish";
 import {Implementation} from "../AjaxImpl";
 import {Assertions} from "../util/Assertions";
 import {IResponseProcessor} from "./IResponseProcessor";
 import {ErrorData} from "./ErrorData";
-import {ExtLang} from "../util/Lang";
-
 import {StateHolder} from "../core/ImplTypes";
 import {EventData} from "./EventData";
+
 import {
     APPLIED_CLIENT_WINDOW,
     APPLIED_VST,

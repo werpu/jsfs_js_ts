@@ -17,13 +17,8 @@
  *
  */
 
-import {Lang as LangBase} from "../../ext/monadish/Lang";
+import {Lang as LangBase, Config, Optional, DomQuery, DQ, Stream} from "mona-dish";
 import {Messages} from "../i18n/Messages";
-// noinspection TypeScriptPreferShortImport
-import {Config, Optional} from "../../ext/monadish/Monad";
-// noinspection TypeScriptPreferShortImport
-import {DomQuery, DQ} from "../../ext/monadish/DomQuery";
-import {Stream} from "../../ext/monadish";
 import {EMPTY_STR, TAG_FORM} from "../core/Const";
 import {getEventTarget} from "../xhrCore/RequestDataResolver";
 

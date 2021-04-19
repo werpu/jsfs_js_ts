@@ -1,6 +1,6 @@
-import {Config, Lang, XMLQuery} from "../../ext/monadish";
+import {Config, Lang, XMLQuery} from "mona-dish";
 
-import {DQ} from "../../ext/monadish";
+import {DQ} from "mona-dish";
 import {ExtLang} from "./Lang";
 import getMessage = ExtLang.getMessage;
 import makeException = ExtLang.makeException;

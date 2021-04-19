@@ -3,7 +3,7 @@ import {Implementation} from "../../../main/typescript/impl/AjaxImpl";
 import {StandardInits} from "../frameworkBase/_ext/shared/StandardInits";
 import defaultMyFaces = StandardInits.defaultMyFaces;
 import protocolPage = StandardInits.protocolPage;
-import {DQ} from "../../../main/typescript/ext/monadish/DomQuery";
+import {DQ} from "mona-dish";
 import {XhrFormData} from "../../../main/typescript/impl/xhrCore/XhrFormData";
 import { expect } from "chai";
 

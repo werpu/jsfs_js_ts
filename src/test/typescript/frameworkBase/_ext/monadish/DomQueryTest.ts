@@ -16,7 +16,7 @@
 
 import {expect} from 'chai';
 import {describe, it} from 'mocha';
-import {ArrayCollector, DomQuery, Lang, LazyStream} from "../../../../../main/typescript/ext/monadish";
+import {ArrayCollector, DomQuery, Lang, LazyStream} from "mona-dish";
 import * as sinon from 'sinon';
 import trim = Lang.trim;
 

@@ -18,7 +18,7 @@ import {IListener} from "./util/ListenerQueue";
 import {Response} from "./xhrCore/Response";
 import {XhrRequest} from "./xhrCore/XhrRequest";
 import {AsynchronouseQueue} from "./util/AsyncQueue";
-import {AssocArrayCollector, Config, DQ, Lang, Optional, Stream} from "../ext/monadish";
+import {AssocArrayCollector, Config, DQ, Lang, Optional, Stream} from "mona-dish";
 import {Assertions} from "./util/Assertions";
 import {XhrFormData} from "./xhrCore/XhrFormData";
 import {ExtDomquery} from "./util/ExtDomQuery";

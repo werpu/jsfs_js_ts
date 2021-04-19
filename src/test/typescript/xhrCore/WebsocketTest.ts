@@ -6,7 +6,7 @@ import {Implementation} from "../../../main/typescript/impl/AjaxImpl";
 import {expect} from "chai";
 
 import defaultMyFaces = StandardInits.defaultMyFaces;
-import {Lang} from "../../../main/typescript/ext/monadish";
+import {Lang} from "mona-dish";
 import {FakeWebsocket} from "./FakeWebsocket";
 import assertType = Lang.assertType;
 

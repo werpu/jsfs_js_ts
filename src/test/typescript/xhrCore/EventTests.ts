@@ -21,7 +21,7 @@ import {Implementation} from "../../../main/typescript/impl/AjaxImpl";
 
 import {expect} from "chai";
 import protocolPage = StandardInits.protocolPage;
-import {DQ} from "../../../main/typescript/ext/monadish/DomQuery";
+import {DQ} from "mona-dish";
 import {XmlResponses} from "../frameworkBase/_ext/shared/XmlResponses";
 
 declare var jsf: any;

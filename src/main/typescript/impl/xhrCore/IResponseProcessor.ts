@@ -1,6 +1,6 @@
-import {XMLQuery} from "../../ext/monadish";
+import {XMLQuery} from "mona-dish";
 // noinspection TypeScriptPreferShortImport
-import {DQ} from "../../ext/monadish/DomQuery";
+import {DQ} from "mona-dish";
 
 /**
  * response processor interface

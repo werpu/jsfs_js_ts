@@ -16,7 +16,7 @@
 
 import { expect } from 'chai';
 import { describe, it } from 'mocha';
-import {Lang} from "../../../../../main/typescript/ext/monadish";
+import {Lang} from "mona-dish";
 
 
 const jsdom = require("jsdom");

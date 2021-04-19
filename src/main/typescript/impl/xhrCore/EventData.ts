@@ -1,4 +1,4 @@
-import {Config, DQ} from "../../ext/monadish";
+import {Config, DQ} from "mona-dish";
 import {BEGIN, CTX_PARAM_PASS_THR, EVENT, P_PARTIAL_SOURCE, SOURCE} from "../core/Const";
 
 export class EventData {

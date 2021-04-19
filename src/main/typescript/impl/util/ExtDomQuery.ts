@@ -1,5 +1,4 @@
-import {Config, IValueHolder, Optional} from "../../ext/monadish/Monad";
-import {DomQuery, DQ} from "../../ext/monadish/DomQuery";
+import {Config, IValueHolder, Optional, DomQuery, DQ} from "mona-dish";
 import {EMPTY_STR, P_WINDOW_ID} from "../core/Const";
 
 declare let window: any;
@@ -25,7 +24,7 @@ export class ExtDomquery extends DQ {
 
     get windowId(): string | null {
 
-        const fetchWindowIdFromURL = function (): string | null {
+        const fetchWindowIdFromURL = function (): string | null {
             let href = window.location.href;
             let windowId = "windowId";
             let regex = new RegExp("[\\?&]" + windowId + "=([^&#\\;]*)");

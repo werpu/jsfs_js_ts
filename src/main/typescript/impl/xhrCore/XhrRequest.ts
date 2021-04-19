@@ -15,7 +15,7 @@
  */
 
 import {AsyncRunnable} from "../util/AsyncRunnable";
-import {Config, DQ, Stream} from "../../ext/monadish";
+import {Config, DQ, Stream} from "mona-dish";
 import {Implementation} from "../AjaxImpl";
 
 import {XhrFormData} from "./XhrFormData";

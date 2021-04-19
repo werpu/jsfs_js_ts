@@ -15,7 +15,7 @@
  */
 
 
-import {DomQuery} from "../../../../../main/typescript/ext/monadish";
+import {DomQuery} from "mona-dish";
 
 declare let jsf: any;
 

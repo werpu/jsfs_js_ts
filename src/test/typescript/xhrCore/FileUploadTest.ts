@@ -2,7 +2,7 @@ import {describe, it} from "mocha";
 import * as sinon from "sinon";
 import {expect} from "chai";
 import {StandardInits} from "../frameworkBase/_ext/shared/StandardInits";
-import {DomQuery} from "../../../main/typescript/ext/monadish";
+import {DomQuery} from "mona-dish";
 import {
     COMPLETE,
     P_AJAX,

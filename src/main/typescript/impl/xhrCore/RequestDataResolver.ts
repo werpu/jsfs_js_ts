@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Config, DomQuery, DQ} from "../../ext/monadish";
+import {Config, DomQuery, DQ} from "mona-dish";
 import {
     CTX_PARAM_DELAY,
     CTX_PARAM_TIMEOUT,

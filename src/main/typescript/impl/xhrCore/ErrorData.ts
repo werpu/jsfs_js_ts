@@ -8,7 +8,7 @@ import {
     STATUS,
     UNKNOWN
 } from "../core/Const";
-import {Config} from "../../ext/monadish";
+import {Config} from "mona-dish";
 
 import {EventData} from "./EventData";
 import {ExtLang} from "../util/Lang";

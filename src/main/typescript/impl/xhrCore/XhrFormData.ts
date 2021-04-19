@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ArrayCollector, Config, DomQuery, DomQueryCollector, Lang, LazyStream} from "../../ext/monadish";
+import {ArrayCollector, Config, DomQuery, DomQueryCollector, Lang, LazyStream} from "mona-dish";
 
-import {Stream} from "../../ext/monadish";
-import {DQ} from "../../ext/monadish";
+import {Stream, DQ} from "mona-dish";
 import isString = Lang.isString;
 import {EMPTY_STR, P_VIEWSTATE} from "../core/Const";
 

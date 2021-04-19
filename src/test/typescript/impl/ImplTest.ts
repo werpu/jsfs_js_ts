@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import {Config} from "../../../main/typescript/ext/monadish/Monad";
+import {Config} from "mona-dish";
 import {describe, it} from 'mocha';
 import {expect} from 'chai';
 import * as sinon from 'sinon';
 
-import {DomQuery} from "../../../main/typescript/ext/monadish/DomQuery";
+import {DomQuery} from "mona-dish";
 
 import {StandardInits} from "../frameworkBase/_ext/shared/StandardInits";
 import defaultMyFaces = StandardInits.defaultMyFaces;

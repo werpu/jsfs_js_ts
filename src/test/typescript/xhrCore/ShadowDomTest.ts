@@ -22,7 +22,7 @@ import * as sinon from "sinon";
 
 import {XmlResponses} from "../frameworkBase/_ext/shared/XmlResponses";
 import {expect} from "chai";
-import {DomQuery} from "../../../main/typescript/ext/monadish/DomQuery";
+import {DomQuery} from "mona-dish";
 import shadowDomMyFaces = StandardInits.shadowDomMyFaces;
 
 

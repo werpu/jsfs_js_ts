@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import {Config, Optional, XMLQuery} from "../../ext/monadish";
+import {Config, Optional, XMLQuery} from "mona-dish";
 
 import {Assertions} from "../util/Assertions";
-import {DQ} from "../../ext/monadish";
+import {DQ} from "mona-dish";
 import {
     CTX_PARAM_MF_INTERNAL,
     CTX_PARAM_SRC_CTL_ID,

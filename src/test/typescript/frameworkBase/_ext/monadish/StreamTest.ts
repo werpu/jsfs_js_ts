@@ -16,7 +16,7 @@
 
 import {describe} from "mocha";
 import {expect} from "chai";
-import {ArrayCollector, LazyStream, Stream} from "../../../../../main/typescript/ext/monadish";
+import {ArrayCollector, LazyStream, Stream} from "mona-dish";
 
 describe('early stream tests', () => {
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Config, DQ, XMLQuery} from "../../ext/monadish";
+import {Config, DQ, XMLQuery} from "mona-dish";
 import {ResponseProcessor} from "./ResponseProcessor";
 
 import {IResponseProcessor} from "./IResponseProcessor";

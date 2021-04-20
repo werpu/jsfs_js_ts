@@ -22,7 +22,7 @@ export class ExtDomquery extends DQ {
         return new ExtDomquery(document.body).nonce;
     }
 
-    get windowId(): string | null {
+    get windowId(): string | null {
 
         const fetchWindowIdFromURL = function (): string | null {
             let href = window.location.href;
@@ -87,7 +87,7 @@ export class ExtDomquery extends DQ {
         //perfect application for lazy stream
         return DQ.querySelectorAll("script").lazyStream
                 .filter(item => {
-                    return (item.attr("src").value ?? EMPTY_STR).search(/\/javax\.faces\.resource.*\/jsf\.js.*separator/) != -1;
+                    return (item.attr("src").value ?? EMPTY_STR).search(/\/javax\.faces\.resource.*\/jsf\.js.*separator/) != -1;
                 }).map((item: DQ) => {
                     let result = item.attr("src").value.match(rexp);
                     return decodeURIComponent(result[1]);

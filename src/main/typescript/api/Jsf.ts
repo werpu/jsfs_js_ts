@@ -19,8 +19,6 @@
 import {Implementation} from "../impl/AjaxImpl";
 import {PushImpl} from "../impl/PushImpl";
 
-declare type Context = { [key: string]: any };
-
 export module jsf {
     "use strict";
 

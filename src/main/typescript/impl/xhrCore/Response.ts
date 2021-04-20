@@ -40,6 +40,7 @@ import {
 import {resolveContexts, resolveResponseXML} from "./ResonseDataResolver";
 
 
+
 export module Response {
 
 
@@ -51,10 +52,10 @@ export module Response {
      * and processing its tags
      *
      * @param {XMLHttpRequest} request (xhrRequest) - xhr request object
-     * @param {[key: string]: any} context (Map) - AJAX context
+     * @param ASSOC_ARR<any> context (Map) - AJAX context
      *
      */
-    export function processResponse(request: XMLHttpRequest, context: { [key: string]: any }) {
+    export function processResponse(request: XMLHttpRequest, context: Context) {
 
         let req = Config.fromNullable(request);
         let {externalContext, internalContext} = resolveContexts(context);

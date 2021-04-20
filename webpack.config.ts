@@ -1,5 +1,6 @@
 import * as webpack from 'webpack';
 import * as path from 'path'
+import { IgnorePlugin } from 'webpack';
 
 //let TerserPlugin = require('terser-webpack-plugin');
 let BrotliPlugin = require('brotli-webpack-plugin');
@@ -29,8 +30,16 @@ function build(env, argv) {
             filename: (argv.mode == "production") ? "jsf.js" : "jsf-development.js"
         },
         resolve: {
-            extensions: [".tsx", ".ts", ".json"]
+            extensions: [".tsx", ".ts", ".json"],
+            alias: {
+                /*we load the reduced core, because there are some parts we simply do not need*/
+               // "mona-dish": path.resolve(__dirname, "node_modules/mona-dish/dist/js/commonjs/index_core.js")
+            }
         },
+        externals: {
+            "rxjs": "RxJS"
+        },
+
         module: {
             rules: [
                 // all files with a '.ts' or '.tsx' extension will be handled by 'ts-loader'
@@ -49,9 +58,15 @@ function build(env, argv) {
             ]
         },
 
+
+
+
+
+
         plugins: [
+
              new CompressionPlugin({
-                filename: '[path].gz[query]',
+                filename: 'jsf.js.gz[query]',
                 algorithm: 'gzip',
                 test: /\.js$|\.css$|\.html$|\.eot?.+$|\.ttf?.+$|\.woff?.+$|\.svg?.+$/,
                 threshold: 10240,
@@ -59,7 +74,7 @@ function build(env, argv) {
 
             }),
             new BrotliPlugin({
-                asset: '[path].br[query]',
+                asset: 'jsf.js.br[query]',
                 test: /\.(js|css|html|svg)$/,
                 threshold: 10240,
                 minRatio: 0.8

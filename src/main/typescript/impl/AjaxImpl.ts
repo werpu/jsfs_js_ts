@@ -58,6 +58,7 @@ import {
     resolveTimeout
 } from "./xhrCore/RequestDataResolver";
 
+
 declare var jsf: any;
 
 /*
@@ -417,7 +418,7 @@ export module Implementation {
         /**
          * the search root for the dom element search
          */
-        let searchRoot = new DQ(node || document.body);
+        let searchRoot = new DQ(node || document.body).querySelectorAll(`form input [name='${P_CLIENT_WINDOW}']`);
 
         /**
          * lazy helper to fetch the window id from the window url
@@ -432,12 +433,10 @@ export module Implementation {
          * @param value1
          * @param value2
          */
-        let doubleCheck = (value1: string, value2: string) => {
-            if (value1 == ALTERED) {
-                return value1;
-            } else if (value1 == INIT) {
+        let differenceCheck = (value1: string, value2: string) => {
+            if(value1 == INIT) {
                 return value2;
-            } else if (value1 != value2) {
+            } else if (value1 == ALTERED || value1 != value2) {
                 return ALTERED;
             }
             return value2;
@@ -454,16 +453,18 @@ export module Implementation {
          * window ids must be present in all forms
          * or non existent. If they exist all of them must be the same
          */
-        let formWindowId: Optional<string> = searchRoot.stream.map<string>(getValue).reduce(doubleCheck, INIT);
+
+        let formWindowId: Optional<string> = searchRoot.stream.map<string>(getValue).reduce(differenceCheck, INIT);
+
 
         //if the resulting window id is set on altered then we have an unresolvable problem
-        assert(formWindowId.value != ALTERED, "Multiple different windowIds found in document");
+        assert(ALTERED != formWindowId.value, "Multiple different windowIds found in document");
 
         /**
          * return the window id or null
          * prio, forms under node/document and if not given then from the url
          */
-        return formWindowId.value ?? fetchWindowIdFromUrl();
+        return formWindowId.value != INIT ? formWindowId.value : fetchWindowIdFromUrl();
     }
 
     /**
@@ -631,9 +632,9 @@ export module Implementation {
      * filter the options given with a blacklist so that only
      * the values required for passthough land in the ajax request
      *
-     * @param mappedOpts the options to be filtered
+     * @param {Context} mappedOpts the options to be filtered
      */
-    function filterPassthroughValues(mappedOpts: { [key: string]: any }) {
+    function filterPassthroughValues(mappedOpts: Context): Context {
         //we now can use the full code reduction given by our stream api
         //to filter
         return Stream.ofAssoc(mappedOpts)

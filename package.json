@@ -30,19 +30,20 @@
     "jsdom": "^16.5.3",
     "jsdom-global": "^3.0.2",
     "mocha": "^8.3.2",
-    "npm-check-updates": "^11.4.1",
+    "npm-check-updates": "^11.5.0",
     "nyc": "^15.1.0",
     "replace-in-file": "^6.2.0",
+    "rxjs": "^6.6.7",
     "sinon": "^10.0.0",
     "terser-webpack-plugin": "^5.1.1",
-    "ts-loader": "^9.0.0",
+    "ts-loader": "^9.0.2",
     "ts-node": "^9.1.1",
     "typescript": "^4.2.4",
-    "webpack": "^5.33.2",
+    "webpack": "^5.34.0",
     "webpack-cli": "^4.6.0",
     "webpack-dev-server": "^3.11.2"
   },
   "dependencies": {
-    "mona-dish": "^0.19.22"
+    "mona-dish": "0.20.3"
   }
 }

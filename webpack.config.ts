@@ -33,7 +33,7 @@ function build(env, argv) {
             extensions: [".tsx", ".ts", ".json"],
             alias: {
                 /*we load the reduced core, because there are some parts we simply do not need*/
-               // "mona-dish": path.resolve(__dirname, "node_modules/mona-dish/dist/js/commonjs/index_core.js")
+               "mona-dish": path.resolve(__dirname, "node_modules/mona-dish/dist/js/commonjs/index_core.js")
             }
         },
         externals: {

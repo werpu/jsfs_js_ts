@@ -1,3 +1,5 @@
+// noinspection HtmlUnknownAttribute
+
 /* Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -23,7 +25,6 @@ import trim = Lang.trim;
 
 const jsdom = require("jsdom");
 const {JSDOM} = jsdom;
-
 
 describe('DOMQuery tests', function () {
 
@@ -60,7 +61,7 @@ describe('DOMQuery tests', function () {
 
         this.xhr = sinon.useFakeXMLHttpRequest();
         this.requests = [];
-        this.xhr.onCreate = (xhr) => {
+        this.xhr.onCreate = (xhr: any) => {
             this.requests.push(xhr);
         };
         (<any>global).XMLHttpRequest = this.xhr;
@@ -118,7 +119,7 @@ describe('DOMQuery tests', function () {
     it('domquery ops test2 eachNode', function () {
         let probe2 = DomQuery.querySelectorAll("div");
         let noIter = 0;
-        probe2 = probe2.each((item, cnt) => {
+        probe2.each((item, cnt) => {
             expect(item instanceof DomQuery).to.be.true;
             expect(noIter == cnt).to.be.true;
             noIter++;
@@ -229,19 +230,19 @@ describe('DOMQuery tests', function () {
     it("must have a working input handling", function () {
         DomQuery.querySelectorAll("body").innerHtml = `<form id="blarg">
     <div id="embed1">
-        <input type="text" id="id_1" name="id_1" value="id_1_val"></input>
-        <input type="text" id="id_2" name="id_2" value="id_2_val" disabled="disabled"> </input>
+        <input type="text" id="id_1" name="id_1" value="id_1_val"/>
+        <input type="text" id="id_2" name="id_2" value="id_2_val" disabled="disabled"/>
         <textarea type="text" id="id_3" name="id_3">textareaVal</textarea>
 
         <fieldset>
-            <input type="radio" id="mc" name="cc_1" value="Mastercard" checked="checked"></input>
+            <input type="radio" id="mc" name="cc_1" value="Mastercard" checked="checked"/>
             <label for="mc"> Mastercard</label>
-            <input type="radio" id="vi" name="cc_1" value="Visa"></input>
+            <input type="radio" id="vi" name="cc_1" value="Visa"/>
             <label for="vi"> Visa</label>
-            <input type="radio" id="ae" name="cc_1" value="AmericanExpress"></input>
+            <input type="radio" id="ae" name="cc_1" value="AmericanExpress"/>
             <label for="ae"> American Express</label>
         </fieldset>
-        <select id="val_5" name="val_5" name="top5" size="5">
+        <select id="val_5" name="val_5" size="5">
             <option>barg</option>
             <option>jjj</option>
             <option selected>akaka</option>
@@ -343,7 +344,7 @@ describe('DOMQuery tests', function () {
             //-->   
             </script>
         
-            <style type="text/css">
+            <style>
                 #first {
                     border: 1px solid black;
                 }
@@ -380,7 +381,7 @@ describe('DOMQuery tests', function () {
 
     it("it must handle events properly", function () {
         let clicked = 0;
-        let listener = (evt: any) => {
+        let listener = () => {
             clicked++;
         };
         let eventReceiver = DomQuery.byId("id_1");

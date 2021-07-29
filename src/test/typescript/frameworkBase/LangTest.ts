@@ -33,7 +33,7 @@ const dom = new JSDOM(`
     `)
 
 export const window = dom.window;
-;
+
 
 function hello_world() {
     return "Hello World!"
@@ -71,8 +71,6 @@ describe('Lang tests', () => {
     });
 
     it('strToArray working', () => {
-        const lang = Lang;
-
         let arr = strToArray("hello.world.from.me", /\./gi);
 
         expect(arr).to.exist;
@@ -82,7 +80,6 @@ describe('Lang tests', () => {
     });
 
     it('trim working', () => {
-        const lang = Lang;
         let origStr = " hello world from me    ";
         let trimmed = trim(origStr);
         expect(trimmed).to.exist;
@@ -91,7 +88,6 @@ describe('Lang tests', () => {
     });
 
     it('isString working', () => {
-        const lang = Lang;
         expect(isString(" ")).to.be.true;
         expect(isString('')).to.be.true;
         expect(isString(null)).to.be.false;
@@ -103,7 +99,6 @@ describe('Lang tests', () => {
     });
 
     it('isFunc working', () => {
-        const lang = Lang;
         expect(isFunc(() => {
         })).to.be.true;
         expect(isFunc(function () {
@@ -114,7 +109,6 @@ describe('Lang tests', () => {
     });
 
     it('objToArray working', () => {
-        const lang = Lang;
         let obj_probe = new Probe();
         let resultArr = objToArray(obj_probe);
         expect(assertType(resultArr, Array)).to.be.true;
@@ -126,15 +120,13 @@ describe('Lang tests', () => {
     });
 
     it('keyval to string working', () => {
-        const lang = Lang;
         let keyval = keyValToStr("key", "val", ":")
         expect(keyval).to.eq("key:val");
 
     });
 
     it('equals ignore case test', () => {
-        const lang = Lang;
-        expect(equalsIgnoreCase(null, null)).to.be.true;
+        expect(equalsIgnoreCase(<any>null, <any>null)).to.be.true;
         expect(equalsIgnoreCase("", "")).to.be.true;
         expect(equalsIgnoreCase("null", "NuLL")).to.be.true;
         expect(equalsIgnoreCase("null ", "NuLL")).to.be.false;

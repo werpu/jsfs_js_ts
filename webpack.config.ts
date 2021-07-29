@@ -1,8 +1,6 @@
 import * as webpack from 'webpack';
 import * as path from 'path'
-import { IgnorePlugin } from 'webpack';
 
-//let TerserPlugin = require('terser-webpack-plugin');
 let BrotliPlugin = require('brotli-webpack-plugin');
 let CompressionPlugin = require('compression-webpack-plugin');
 
@@ -15,7 +13,7 @@ let CompressionPlugin = require('compression-webpack-plugin');
  * @param env the environment
  * @param argv the arguments list
  */
-function build(env, argv) {
+function build(env: {[key:string]: string}, argv: {[key:string]: string}) {
 
     let libraryTarget = env.TARGET_TYPE ?? "window";
 

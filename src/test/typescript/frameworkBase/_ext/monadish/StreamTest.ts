@@ -75,11 +75,9 @@ describe('early stream tests', () => {
     })
 
     it("must have a correct first last", function () {
-        let stream = Stream.of<number>(...this.probe);
-
-        let first = Stream.of<number>(...this.probe).filter((data) => data != 5).onElem((data) => {
+        let first = Stream.of<number>(...this.probe).filter((data) => data != 5).onElem(() => {
         }).first().value;
-        let last = Stream.of<number>(...this.probe).filter((data) => data != 5).onElem((data) => {
+        let last = Stream.of<number>(...this.probe).filter((data) => data != 5).onElem(() => {
         }).last().value;
         expect(first).to.eq(1);
         expect(last).to.eq(4);
@@ -87,8 +85,6 @@ describe('early stream tests', () => {
     });
 
     it("must have a correct first last lazy", function () {
-        let stream = LazyStream.of<number>(...this.probe);
-
         let first = LazyStream.of<number>(...this.probe).filter((data) => data != 5).onElem((data) => {
             data;
         }).first().value;
@@ -102,7 +98,7 @@ describe('early stream tests', () => {
 
     it("must have a correct limits", function () {
         let cnt = 0;
-        let last = Stream.of<number>(...this.probe).filter((data) => data != 5).limits(2).onElem((data) => {
+        let last = Stream.of<number>(...this.probe).filter((data) => data != 5).limits(2).onElem(() => {
             cnt++;
         }).last().value;
 
@@ -118,8 +114,8 @@ describe('early stream tests', () => {
             key3: "val3"
         }
 
-        let arr1 = [];
-        let arr2 = [];
+        let arr1: Array<string | number> = [];
+        let arr2: Array<string | number> = [];
 
         Stream.ofAssoc(probe).each(item => {
             expect(item.length).to.eq(2);

@@ -52,14 +52,10 @@ class DtoUils {
                 (<any>target)[key] = {};
 
                 for (let key2 in newVal) {
-                    let subTarget = new mappings[key].clazz(newVal[key2]);
-                    //   subTarget = this.mapIt(subTarget, <any> newVal[key2]);
-                    (<any>target)[key][key2] = subTarget;
+                    (<any>target)[key][key2] = new mappings[key].clazz(newVal[key2]);
                 }
             } else if (mappings && mappings[key]) {
-                let subTarget = new mappings[key](newVal);
-
-                (<any>target)[key] = subTarget;
+                (<any>target)[key] = new mappings[key](newVal);
             } else {
                 (<any>target)[key] = newVal
             }
@@ -71,13 +67,14 @@ class DtoUils {
 
 }
 
+// noinspection JSUnusedLocalSymbols
 class BaseDto<T> {
 
     TYPES = "___mappable_types___";
 
     constructor(data?: T, dtoTypes: any = {}) {
 
-        this[this.TYPES] = dtoTypes;
+        (<any>this)[this.TYPES] = dtoTypes;
 
         if (data) {
             this.mapIt(this, data);
@@ -99,14 +96,11 @@ class BaseDto<T> {
                 (<any>target)[key] = {};
 
                 for (let key2 in newVal) {
-                    let subTarget = new target[this.TYPES][key].clazz(newVal[key2]);
-                 //   subTarget = this.mapIt(subTarget, <any> newVal[key2]);
-                    (<any>target)[key][key2] = subTarget;
+                    //   subTarget = this.mapIt(subTarget, <any> newVal[key2]);
+                    (<any>target)[key][key2] = new target[this.TYPES][key].clazz(newVal[key2]);
                 }
             } else if (target[this.TYPES] && target[this.TYPES][key]) {
-                let subTarget = new target[this.TYPES][key](newVal);
-
-                (<any>target)[key] = subTarget;
+                (<any>target)[key] = new target[this.TYPES][key](newVal);
             } else {
                 (<any>target)[key] = newVal
             }
@@ -136,12 +130,12 @@ function mixMaps(target: any, src: any): any {
 
 export class Probe1Impl  implements Probe1 {
 
-    val1: string;
-    val2: Date;
-    val3: any;
-    val4: Probe2[];
-    val5: Probe2;
-    val6: any;
+    val1!: string;
+    val2!: Date;
+    val3!: any;
+    val4!: Probe2[];
+    val5!: Probe2;
+    val6!: any;
 
     constructor(data: Probe1, mixin: any = {} /*put your own arguments in here*/) {
         DtoUils.mapIt(this, data, mixMaps({

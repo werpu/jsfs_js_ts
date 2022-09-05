@@ -1,7 +1,6 @@
 import * as webpack from 'webpack';
 import * as path from 'path'
 
-let BrotliPlugin = require('brotli-webpack-plugin');
 let CompressionPlugin = require('compression-webpack-plugin');
 
 
@@ -71,8 +70,9 @@ function build(env: {[key:string]: string}, argv: {[key:string]: string}) {
                 minRatio: 0.3
 
             }),
-            new BrotliPlugin({
-                asset: 'jsf.js.br[query]',
+            new CompressionPlugin({
+                filename: 'jsf.js.br[query]',
+                algorithm: 'brotliCompress',
                 test: /\.(js|css|html|svg)$/,
                 threshold: 10240,
                 minRatio: 0.8

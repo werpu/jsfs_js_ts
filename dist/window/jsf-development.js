@@ -35,10 +35,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var __spreadArray = (this && this.__spreadArray) || function (to, from) {
-    for (var i = 0, il = from.length, j = to.length; i < il; i++, j++)
-        to[j] = from[i];
-    return to;
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.myfaces = exports.jsf = void 0;
@@ -202,7 +206,7 @@ var jsf;
             for (var _i = 2; _i < arguments.length; _i++) {
                 funcs[_i - 2] = arguments[_i];
             }
-            return AjaxImpl_1.Implementation.chain.apply(AjaxImpl_1.Implementation, __spreadArray([source, event], funcs));
+            return AjaxImpl_1.Implementation.chain.apply(AjaxImpl_1.Implementation, __spreadArray([source, event], funcs, false));
         }
         util.chain = chain;
     })(util = jsf.util || (jsf.util = {}));
@@ -423,7 +427,7 @@ var Implementation;
                 //it it is not a plain executable code but a definition
                 var sourceCode = trim(func);
                 if (sourceCode.indexOf("function ") == 0) {
-                    sourceCode = "return " + sourceCode + " (event)";
+                    sourceCode = "return ".concat(sourceCode, " (event)");
                 }
                 return (ret = ret && (new Function("event", sourceCode).call(source, event) !== false));
             }
@@ -454,7 +458,7 @@ var Implementation;
      */
     function request(el, event, opts) {
         var _a, _b, _c;
-        var _d = RequestDataResolver_1.resolveDefaults(event, opts, el), resolvedEvent = _d.resolvedEvent, options = _d.options, elem = _d.elem, elementId = _d.elementId, requestCtx = _d.requestCtx, internalCtx = _d.internalCtx, windowId = _d.windowId, isResetValues = _d.isResetValues;
+        var _d = (0, RequestDataResolver_1.resolveDefaults)(event, opts, el), resolvedEvent = _d.resolvedEvent, options = _d.options, elem = _d.elem, elementId = _d.elementId, requestCtx = _d.requestCtx, internalCtx = _d.internalCtx, windowId = _d.windowId, isResetValues = _d.isResetValues;
         Assertions_1.Assertions.assertRequestIntegrity(options, elem);
         requestCtx.assignIf(!!windowId, Const_1.P_WINDOW_ID).value = windowId;
         requestCtx.assign(Const_1.CTX_PARAM_PASS_THR).value = filterPassthroughValues(options.value);
@@ -482,7 +486,7 @@ var Implementation;
          * so that people can use dummy forms and work
          * with detached objects
          */
-        var form = RequestDataResolver_1.resolveForm(requestCtx, elem, resolvedEvent);
+        var form = (0, RequestDataResolver_1.resolveForm)(requestCtx, elem, resolvedEvent);
         /**
          * binding contract the javax.faces.source must be set
          */
@@ -517,8 +521,8 @@ var Implementation;
         assignClientWindowId(form, requestCtx);
         assignExecute(options, requestCtx, form, elementId.value);
         assignRender(options, requestCtx, form, elementId.value);
-        var delay = RequestDataResolver_1.resolveDelay(options);
-        var timeout = RequestDataResolver_1.resolveTimeout(options);
+        var delay = (0, RequestDataResolver_1.resolveDelay)(options);
+        var timeout = (0, RequestDataResolver_1.resolveTimeout)(options);
         //now we enqueue the request as asynchronous runnable into our request
         //queue and let the queue take over the rest
         Implementation.queueHandler.addRequestToQueue(elem, form, requestCtx, internalCtx, delay, timeout);
@@ -637,7 +641,7 @@ var Implementation;
         /**
          * the search root for the dom element search
          */
-        var searchRoot = new mona_dish_1.DQ(node || document.body).querySelectorAll("form input [name='" + Const_1.P_CLIENT_WINDOW + "']");
+        var searchRoot = new mona_dish_1.DQ(node || document.body).querySelectorAll("form input [name='".concat(Const_1.P_CLIENT_WINDOW, "']"));
         /**
          * lazy helper to fetch the window id from the window url
          */
@@ -1897,13 +1901,13 @@ var ExtLang;
      * @return either the config entry or if none is given the default value
      */
     function getGlobalConfig(configName, defaultValue) {
-        var _a, _b, _c, _d;
+        var _a, _b, _c;
         /**
          * note we could use exists but this is an heavy operation, since the config name usually
          * given this function here is called very often
          * is a single entry without . in between we can do the lighter shortcut
          */
-        return (_d = (_c = (_b = (_a = window) === null || _a === void 0 ? void 0 : _a.myfaces) === null || _b === void 0 ? void 0 : _b.config) === null || _c === void 0 ? void 0 : _c[configName]) !== null && _d !== void 0 ? _d : defaultValue;
+        return (_c = (_b = (_a = window === null || window === void 0 ? void 0 : window.myfaces) === null || _a === void 0 ? void 0 : _a.config) === null || _b === void 0 ? void 0 : _b[configName]) !== null && _c !== void 0 ? _c : defaultValue;
     }
     ExtLang.getGlobalConfig = getGlobalConfig;
     /**
@@ -1927,7 +1931,7 @@ var ExtLang;
      */
     function getForm(elem, event) {
         var queryElem = new mona_dish_1.DQ(elem);
-        var eventTarget = new mona_dish_1.DQ(RequestDataResolver_1.getEventTarget(event));
+        var eventTarget = new mona_dish_1.DQ((0, RequestDataResolver_1.getEventTarget)(event));
         if (queryElem.isTag(Const_1.TAG_FORM)) {
             return queryElem;
         }
@@ -1960,8 +1964,8 @@ var ExtLang;
      * @return either the config entry or if none is given the default value
      */
     function getLocalOrGlobalConfig(localOptions, configName, defaultValue) {
-        var _a, _b, _c, _d, _e, _f, _g, _h;
-        return (_h = (_d = (_c = (_b = (_a = localOptions.value) === null || _a === void 0 ? void 0 : _a.myfaces) === null || _b === void 0 ? void 0 : _b.config) === null || _c === void 0 ? void 0 : _c[configName]) !== null && _d !== void 0 ? _d : (_g = (_f = (_e = window) === null || _e === void 0 ? void 0 : _e.myfaces) === null || _f === void 0 ? void 0 : _f.config) === null || _g === void 0 ? void 0 : _g[configName]) !== null && _h !== void 0 ? _h : defaultValue;
+        var _a, _b, _c, _d, _e, _f, _g;
+        return (_g = (_d = (_c = (_b = (_a = localOptions.value) === null || _a === void 0 ? void 0 : _a.myfaces) === null || _b === void 0 ? void 0 : _b.config) === null || _c === void 0 ? void 0 : _c[configName]) !== null && _d !== void 0 ? _d : (_f = (_e = window === null || window === void 0 ? void 0 : window.myfaces) === null || _e === void 0 ? void 0 : _e.config) === null || _f === void 0 ? void 0 : _f[configName]) !== null && _g !== void 0 ? _g : defaultValue;
     }
     ExtLang.getLocalOrGlobalConfig = getLocalOrGlobalConfig;
     /**
@@ -2176,7 +2180,7 @@ function resolveTargetUrl(srcFormElement) {
 exports.resolveTargetUrl = resolveTargetUrl;
 function resolveFinalUrl(sourceForm, formData, ajaxType) {
     if (ajaxType === void 0) { ajaxType = Const_1.REQ_TYPE_POST; }
-    var targetUrl = this.resolveTargetUrl(sourceForm.getAsElem(0).value);
+    var targetUrl = resolveTargetUrl(sourceForm.getAsElem(0).value);
     return targetUrl + (ajaxType == Const_1.REQ_TYPE_GET ? "?" + formData.toString() : Const_1.EMPTY_STR);
 }
 exports.resolveFinalUrl = resolveFinalUrl;
@@ -2231,7 +2235,7 @@ exports.resolveWindowId = resolveWindowId;
  * (with a fallback for ie events if none is present)
  */
 function getEventTarget(evt) {
-    var _a, _b, _c;
+    var _a, _b;
     //ie6 and 7 fallback
     var finalEvent = evt;
     /**
@@ -2243,7 +2247,7 @@ function getEventTarget(evt) {
      * behavior. I dont use it that way but nevertheless it
      * does not break anything so why not
      * */
-    var t = (_b = (_a = finalEvent === null || finalEvent === void 0 ? void 0 : finalEvent.srcElement) !== null && _a !== void 0 ? _a : finalEvent === null || finalEvent === void 0 ? void 0 : finalEvent.target) !== null && _b !== void 0 ? _b : (_c = finalEvent) === null || _c === void 0 ? void 0 : _c.source;
+    var t = (_b = (_a = finalEvent === null || finalEvent === void 0 ? void 0 : finalEvent.srcElement) !== null && _a !== void 0 ? _a : finalEvent === null || finalEvent === void 0 ? void 0 : finalEvent.target) !== null && _b !== void 0 ? _b : finalEvent === null || finalEvent === void 0 ? void 0 : finalEvent.source;
     while ((t) && (t.nodeType != 1)) {
         t = t.parentNode;
     }
@@ -2429,8 +2433,8 @@ var Response;
      */
     function processResponse(request, context) {
         var req = mona_dish_1.Config.fromNullable(request);
-        var _a = ResonseDataResolver_1.resolveContexts(context), externalContext = _a.externalContext, internalContext = _a.internalContext;
-        var responseXML = ResonseDataResolver_1.resolveResponseXML(req);
+        var _a = (0, ResonseDataResolver_1.resolveContexts)(context), externalContext = _a.externalContext, internalContext = _a.internalContext;
+        var responseXML = (0, ResonseDataResolver_1.resolveResponseXML)(req);
         var responseProcessor = new ResponseProcessor_1.ResponseProcessor(req, externalContext, internalContext);
         internalContext.assign(Const_1.RESPONSE_XML).value = responseXML;
         //we now process the partial tags, or in none given raise an error
@@ -2585,10 +2589,14 @@ var Response;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var __spreadArray = (this && this.__spreadArray) || function (to, from) {
-    for (var i = 0, il = from.length, j = to.length; i < il; i++, j++)
-        to[j] = from[i];
-    return to;
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ResponseProcessor = void 0;
@@ -2794,7 +2802,7 @@ var ResponseProcessor = /** @class */ (function () {
      * generic global eval which runs the embedded css and scripts
      */
     ResponseProcessor.prototype.globalEval = function () {
-        var updateElems = new (mona_dish_1.DQ.bind.apply(mona_dish_1.DQ, __spreadArray([void 0], this.internalContext.getIf(Const_1.UPDATE_ELEMS).value)))();
+        var updateElems = new (mona_dish_1.DQ.bind.apply(mona_dish_1.DQ, __spreadArray([void 0], this.internalContext.getIf(Const_1.UPDATE_ELEMS).value, false)))();
         updateElems.runCss();
         updateElems.runScripts();
     };
@@ -2959,10 +2967,14 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-var __spreadArray = (this && this.__spreadArray) || function (to, from) {
-    for (var i = 0, il = from.length, j = to.length; i < il; i++, j++)
-        to[j] = from[i];
-    return to;
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.XhrFormData = void 0;
@@ -3135,7 +3147,7 @@ var XhrFormData = /** @class */ (function (_super) {
             mona_dish_2.Stream.of.apply(mona_dish_2.Stream, _this.value[key]).each(function (item) { return ret.append(key, item); });
         });
         mona_dish_2.Stream.of.apply(mona_dish_2.Stream, Object.keys(this.fileInputs)).each(function (key) {
-            mona_dish_2.DQ.querySelectorAllDeep("[name='" + key + "'], [id=\"" + key + "\"]").eachElem(function (elem) {
+            mona_dish_2.DQ.querySelectorAllDeep("[name='".concat(key, "'], [id=\"").concat(key, "\"]")).eachElem(function (elem) {
                 var _a;
                 var identifier = _this.resolveSubmitIdentifier(elem);
                 if (!((_a = elem === null || elem === void 0 ? void 0 : elem.files) === null || _a === void 0 ? void 0 : _a.length)) {
@@ -3167,7 +3179,7 @@ var XhrFormData = /** @class */ (function (_super) {
         var entries = mona_dish_1.LazyStream.of.apply(mona_dish_1.LazyStream, Object.keys(this.value)).filter(function (key) { return _this.value.hasOwnProperty(key); })
             .flatMap(function (key) { return mona_dish_2.Stream.of.apply(mona_dish_2.Stream, _this.value[key]).map(function (val) { return [key, val]; }).collect(new mona_dish_1.ArrayCollector()); })
             .map(function (keyVal) {
-            return encodeURIComponent(keyVal[0]) + "=" + encodeURIComponent(keyVal[1]);
+            return "".concat(encodeURIComponent(keyVal[0]), "=").concat(encodeURIComponent(keyVal[1]));
         })
             .collect(new mona_dish_1.ArrayCollector());
         return entries.join("&");
@@ -3184,7 +3196,7 @@ var XhrFormData = /** @class */ (function (_super) {
             //in case of our myfaces reduced ppr we only
             //only submit the partials
             this._value = {};
-            toEncode = new (mona_dish_2.DQ.bind.apply(mona_dish_2.DQ, __spreadArray([void 0], this.partialIdsArray)))();
+            toEncode = new (mona_dish_2.DQ.bind.apply(mona_dish_2.DQ, __spreadArray([void 0], this.partialIdsArray, false)))();
         }
         else {
             if (parentItem.isAbsent())
@@ -3265,12 +3277,12 @@ var XhrRequest = /** @class */ (function () {
      * @param xhrObject optional xhr object which must fullfill the XMLHTTPRequest api, default XMLHttpRequest
      */
     function XhrRequest(source, sourceForm, requestContext, internalContext, partialIdsArray, timeout, ajaxType, contentType, xhrObject) {
-        var _this = this;
         if (partialIdsArray === void 0) { partialIdsArray = []; }
         if (timeout === void 0) { timeout = Const_1.NO_TIMEOUT; }
         if (ajaxType === void 0) { ajaxType = Const_1.REQ_TYPE_POST; }
         if (contentType === void 0) { contentType = Const_1.URL_ENCODED; }
         if (xhrObject === void 0) { xhrObject = new XMLHttpRequest(); }
+        var _this = this;
         this.source = source;
         this.sourceForm = sourceForm;
         this.requestContext = requestContext;
@@ -3327,14 +3339,14 @@ var XhrRequest = /** @class */ (function () {
             //per spec the onevent and onerrors must be passed through to the response
             responseContext.assign(Const_1.ON_EVENT).value = requestContext.getIf(Const_1.ON_EVENT).value;
             responseContext.assign(Const_1.ON_ERROR).value = requestContext.getIf(Const_1.ON_ERROR).value;
-            xhrObject.open(this.ajaxType, RequestDataResolver_1.resolveFinalUrl(this.sourceForm, formData, this.ajaxType), true);
+            xhrObject.open(this.ajaxType, (0, RequestDataResolver_1.resolveFinalUrl)(this.sourceForm, formData, this.ajaxType), true);
             //adding timeout
             this.timeout ? xhrObject.timeout = this.timeout : null;
             //a bug in the xhr stub library prevents the setRequestHeader to be properly executed on fake xhr objects
             //normal browsers should resolve this
             //tests can quietly fail on this one
             if (this.contentType != "undefined") {
-                ignoreErr(function () { return xhrObject.setRequestHeader(Const_1.CONTENT_TYPE, _this.contentType + "; charset=utf-8"); });
+                ignoreErr(function () { return xhrObject.setRequestHeader(Const_1.CONTENT_TYPE, "".concat(_this.contentType, "; charset=utf-8")); });
             }
             ignoreErr(function () { return xhrObject.setRequestHeader(Const_1.HEAD_FACES_REQ, Const_1.VAL_AJAX); });
             //probably not needed anymore, will test this
@@ -3474,7 +3486,7 @@ var XhrRequest = /** @class */ (function () {
             //this in onError but also we cannot swallow it
             //we need to resolve the local handlers lazyly,
             //because some frameworks might decorate them over the context in the response
-            var eventHandler = RequestDataResolver_1.resolveHandlerFunc(this.requestContext, this.responseContext, Const_1.ON_EVENT);
+            var eventHandler = (0, RequestDataResolver_1.resolveHandlerFunc)(this.requestContext, this.responseContext, Const_1.ON_EVENT);
             AjaxImpl_1.Implementation.sendEvent(eventData, eventHandler);
         }
         catch (e) {
@@ -3484,7 +3496,7 @@ var XhrRequest = /** @class */ (function () {
     };
     XhrRequest.prototype.handleError = function (exception) {
         var errorData = ErrorData_1.ErrorData.fromClient(exception);
-        var eventHandler = RequestDataResolver_1.resolveHandlerFunc(this.requestContext, this.responseContext, Const_1.ON_ERROR);
+        var eventHandler = (0, RequestDataResolver_1.resolveHandlerFunc)(this.requestContext, this.responseContext, Const_1.ON_ERROR);
         AjaxImpl_1.Implementation.sendError(errorData, eventHandler);
     };
     XhrRequest.prototype.sendRequest = function (formData) {

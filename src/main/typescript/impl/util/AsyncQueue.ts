@@ -14,7 +14,7 @@ import {AsyncRunnable} from "./AsyncRunnable";
 export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
 
     private runnableQueue = [];
-    private delayTimeout: number;
+    private delayTimeout: null | ReturnType<typeof setTimeout>;
 
     currentlyRunning: AsyncRunnable<any>;
 

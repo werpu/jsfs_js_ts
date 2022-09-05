@@ -21,7 +21,7 @@
  * so either one is found and the other is not
  */
 
-//the replace in file plugin meets our system independend grep/awk criteria
+//the replace in file plugin meets our system independent grep/awk criteria
 //does pretty much what grep and awk do on unix systems
 const replace = require('replace-in-file');
 

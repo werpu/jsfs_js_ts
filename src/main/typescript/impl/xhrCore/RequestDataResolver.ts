@@ -57,7 +57,7 @@ export function resolveTargetUrl(srcFormElement: HTMLFormElement) {
 }
 
 export function resolveFinalUrl(sourceForm: DomQuery, formData: XhrFormData, ajaxType = REQ_TYPE_POST) {
-    let targetUrl = this.resolveTargetUrl(<HTMLFormElement>sourceForm.getAsElem(0).value);
+    let targetUrl = resolveTargetUrl(<HTMLFormElement>sourceForm.getAsElem(0).value);
 
     return targetUrl + (ajaxType == REQ_TYPE_GET ? "?" + formData.toString() : EMPTY_STR);
 }

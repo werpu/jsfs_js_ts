@@ -1,6 +1,6 @@
 {
   "name": "jsf.js_next_gen",
-  "version": "1.0.0-beta-1",
+  "version": "1.0.0",
   "description": "A next generation typescript reimplementation of jsf.js",
   "main": "dist/window/jsf.js",
   "scripts": {

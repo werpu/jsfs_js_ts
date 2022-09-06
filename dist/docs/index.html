@@ -1,0 +1,173 @@
+<!DOCTYPE html><html class="default" lang="en"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>jsf.js_next_gen</title><meta name="description" content="Documentation for jsf.js_next_gen"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="assets/style.css"/><link rel="stylesheet" href="assets/highlight.css"/><script async src="assets/search.js" id="search-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os"</script><header class="tsd-page-toolbar">
+<div class="tsd-toolbar-contents container">
+<div class="table-cell" id="tsd-search" data-base=".">
+<div class="field"><label for="tsd-search-field" class="tsd-widget search no-caption"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M15.7824 13.833L12.6666 10.7177C12.5259 10.5771 12.3353 10.499 12.1353 10.499H11.6259C12.4884 9.39596 13.001 8.00859 13.001 6.49937C13.001 2.90909 10.0914 0 6.50048 0C2.90959 0 0 2.90909 0 6.49937C0 10.0896 2.90959 12.9987 6.50048 12.9987C8.00996 12.9987 9.39756 12.4863 10.5008 11.6239V12.1332C10.5008 12.3332 10.5789 12.5238 10.7195 12.6644L13.8354 15.7797C14.1292 16.0734 14.6042 16.0734 14.8948 15.7797L15.7793 14.8954C16.0731 14.6017 16.0731 14.1267 15.7824 13.833ZM6.50048 10.499C4.29094 10.499 2.50018 8.71165 2.50018 6.49937C2.50018 4.29021 4.28781 2.49976 6.50048 2.49976C8.71001 2.49976 10.5008 4.28708 10.5008 6.49937C10.5008 8.70852 8.71314 10.499 6.50048 10.499Z" fill="var(--color-text)"></path></svg></label><input type="text" id="tsd-search-field" aria-label="Search"/></div>
+<ul class="results">
+<li class="state loading">Preparing search index...</li>
+<li class="state failure">The search index is not available</li></ul><a href="index.html" class="title">jsf.js_next_gen</a></div>
+<div class="table-cell" id="tsd-widgets"><a href="#" class="tsd-widget menu no-caption" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="2" fill="var(--color-text)"></rect><rect x="1" y="7" width="14" height="2" fill="var(--color-text)"></rect><rect x="1" y="11" width="14" height="2" fill="var(--color-text)"></rect></svg></a></div></div></header>
+<div class="container container-main">
+<div class="col-8 col-content">
+<div class="tsd-page-title">
+<h2>jsf.js_next_gen</h2></div>
+<div class="tsd-panel tsd-typography">
+<a href="#🚀-scratchpad-for-the-typescript-based-reimplementation-of-jsf-js" id="🚀-scratchpad-for-the-typescript-based-reimplementation-of-jsf-js" style="color: inherit; text-decoration: none;">
+  <h1>🚀 Scratchpad for the typescript based reimplementation of jsf js</h1>
+</a>
+
+<a href="#what-is-this" id="what-is-this" style="color: inherit; text-decoration: none;">
+  <h2>What is this?</h2>
+</a>
+<p>This project is a work in progress for a next gen typescript based 
+reimplementation of jsf.js</p>
+<p>The main goal is maintainability. It omits legacy browsers
+with IE11 being the future the baseline for the moment.</p>
+<p>It uses functional constructs on micro scale
+to keep the maintainability and uses 
+my own <a href="https://github.com/werpu/mona-dish/">mona-dish</a> project as core framework base, to avoid
+unnecessary colliding dependencies.</p>
+<p>I might roll in MonaDish in the future
+via npm, but for now simply having it in the codebase suffices
+and prevents collisions with other frameworks.</p>
+<p>But it still uses classes modules and inheritance
+for code structuring.
+The reason for this is, I do not like the one function for all
+approach, Webpack can take care of the packaging.</p>
+<p>Having smaller code parts makes it easier to test certain
+aspects of the implementation.</p>
+<p>Also one additional aspect of the new implementation it has a proper
+test coverage via unit tests.</p>
+<p>This was also severely lacking in my old implementation
+where I just ran a set of 20 integration tests on macro scale.</p>
+
+<a href="#status" id="status" style="color: inherit; text-decoration: none;">
+  <h2>Status</h2>
+</a>
+<p>ATM I am function complete, and the code
+can be tested (alpha stage)
+I probably will make a release before 2020.</p>
+
+<a href="#usage" id="usage" style="color: inherit; text-decoration: none;">
+  <h2>Usage</h2>
+</a>
+<p>It still is a work in progress, but for testing purposes
+it can be used (check the dist directory for builds, I consider
+stable enough for testing, or your own builds)</p>
+
+<a href="#build" id="build" style="color: inherit; text-decoration: none;">
+  <h2>build</h2>
+</a>
+<p>Make sure python 3.x is installed (needed by some build dependencies)</p>
+
+<a href="#general-build" id="general-build" style="color: inherit; text-decoration: none;">
+  <h3>General build</h3>
+</a>
+<p>run </p>
+<ul>
+<li>npm install</li>
+</ul>
+
+<a href="#on-windows" id="on-windows" style="color: inherit; text-decoration: none;">
+  <h4>On Windows</h4>
+</a>
+<p>if not done yet</p>
+<ul>
+<li>npm install --global --production windows-build-tools</li>
+</ul>
+<p>run</p>
+<ul>
+<li>npm install</li>
+</ul>
+
+<a href="#tests" id="tests" style="color: inherit; text-decoration: none;">
+  <h3>Tests</h3>
+</a>
+<p>run</p>
+<ul>
+<li>npm test</li>
+</ul>
+
+<a href="#test-coverage" id="test-coverage" style="color: inherit; text-decoration: none;">
+  <h3>Test Coverage</h3>
+</a>
+<ul>
+<li>npm coverage</li>
+</ul>
+
+<a href="#changelist-compared-to-the-original-implementation" id="changelist-compared-to-the-original-implementation" style="color: inherit; text-decoration: none;">
+  <h3>Changelist compared to the original implementation</h3>
+</a>
+<ul>
+<li><p><em>no_portlet_env</em> is no more
+the configuration parameter &#39;no_portlet_env&#39; has become obsolete with 
+jsf 2.3 which introduced a proper namespaced viewstate handling
+so it is gone now</p>
+</li>
+<li><p>pps disabled for the moment</p>
+</li>
+</ul>
+<p>we had a special pps handling introduced in myfaces, a feature
+probably never used (you basically could reduce the parameters
+sent down by sending a list of pps ids). I have disabled it for the time being.
+The code still is in there for the moment, but will be dropped
+if no demand arises to enable it again.</p>
+<ul>
+<li>legacy browsers</li>
+</ul>
+<p>In order to improve the maintainability I have dropped a lot
+of shim and legacy code which was needed to support old browsers.
+Since our main aim is long term maintainability there is a clear cut.
+The lowest supported browser for the moment is Internet Explorer 11 
+older browsers are now cut off. This should suffice for most if 
+not all important environments. If you still use an older browser than 
+IE11 you still can revert to the old codebase for the time being
+(final cutoff point probably will come within the next few years)</p>
+<p>IE11 might be cut off in the future, depending on the business requirements 
+by the myfaces users</p>
+<ul>
+<li>performance</li>
+</ul>
+<p>Given that we now have faster browsers and end user devices in the mobile
+area than 10 years ago, my main focus was maintainability.
+Maintainability and readability now comes before performance. So I sacrificed some
+of the performance to achieve it.
+Given that the most critical performance hits do not happen in the ajax area
+this is a sacrifice I can live with for the time being.</p>
+<ul>
+<li>Client side i18n</li>
+</ul>
+<p>The client side i18n error message translations have become more
+of a liability than a feature.
+For the time being all client side errors are reported in english.
+I can reintroduce them, if there is a real demand.
+But the size and maintainability tradeoff compared to what they
+bring was not worth it to keep them anymore.</p>
+</div></div>
+<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+<div class="tsd-navigation settings">
+<details class="tsd-index-accordion"><summary class="tsd-accordion-summary">
+<h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4.93896 8.531L12 15.591L19.061 8.531L16.939 6.409L12 11.349L7.06098 6.409L4.93896 8.531Z" fill="var(--color-text)"></path></svg> Settings</h3></summary>
+<div class="tsd-accordion-details">
+<div class="tsd-filter-visibility">
+<h4 class="uppercase">Member Visibility</h4><form>
+<ul id="tsd-filter-options">
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li></ul></form></div>
+<div class="tsd-theme-toggle">
+<h4 class="uppercase">Theme</h4><select id="theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div>
+<nav class="tsd-navigation primary">
+<details class="tsd-index-accordion" open><summary class="tsd-accordion-summary">
+<h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4.93896 8.531L12 15.591L19.061 8.531L16.939 6.409L12 11.349L7.06098 6.409L4.93896 8.531Z" fill="var(--color-text)"></path></svg> Modules</h3></summary>
+<div class="tsd-accordion-details">
+<ul>
+<li class="current selected"><a href="modules.html">jsf.js_<wbr/>next_<wbr/>gen</a>
+<ul>
+<li class="tsd-kind-namespace"><a href="modules/jsf.html">jsf</a>
+<ul>
+<li class="tsd-kind-namespace tsd-parent-kind-namespace"><a href="modules/jsf.ajax.html">ajax</a></li>
+<li class="tsd-kind-namespace tsd-parent-kind-namespace"><a href="modules/jsf.push.html">push</a></li>
+<li class="tsd-kind-namespace tsd-parent-kind-namespace"><a href="modules/jsf.util.html">util</a></li></ul></li>
+<li class="tsd-kind-namespace"><a href="modules/myfaces.html">myfaces</a></li></ul></li></ul></div></details></nav>
+<nav class="tsd-navigation secondary menu-sticky"></nav></div></div>
+<div class="container tsd-generator">
+<p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></div>
+<div class="overlay"></div><script src="assets/main.js"></script></body></html>

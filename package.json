@@ -4,6 +4,7 @@
   "description": "A next generation typescript reimplementation of jsf.js",
   "main": "dist/window/jsf.js",
   "scripts": {
+    "doc": "npx typedoc --tsconfig src/main/typescript/tsconfig-typedoc.json",
     "test": "env TS_NODE_PROJECT=./src/test/typescript/tsconfig.json mocha -r ts-node/register ./src/test/typescript/**/**/*Test*.ts",
     "coverage": "nyc --reporter=html --reporter=text mocha -r ts-node/register ./**/test/typescript/**/**/*Test*.ts",
     "build-production": "webpack --mode production --env FILE_NAME=jsf  && ts-node ./remap.ts --production",
@@ -37,6 +38,7 @@
     "terser-webpack-plugin": "^5.3.6",
     "ts-loader": "^9.3.1",
     "ts-node": "^10.9.1",
+    "typedoc": "^0.23.14",
     "typescript": "^4.8.2",
     "webpack": "^5.74.0",
     "webpack-cli": "^4.10.0",

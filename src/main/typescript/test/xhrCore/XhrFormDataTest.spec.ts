@@ -17,7 +17,7 @@
 import {describe, it} from 'mocha';
 import {DQ} from "mona-dish";
 import * as sinon from 'sinon';
-import {XhrFormData} from "../../../main/typescript/impl/xhrCore/XhrFormData";
+import {XhrFormData} from "../../impl/xhrCore/XhrFormData";
 import {expect} from "chai";
 
 const jsdom = require("jsdom");

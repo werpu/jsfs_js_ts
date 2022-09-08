@@ -1,10 +1,10 @@
 import * as sinon from "sinon";
-import {Implementation} from "../../../main/typescript/impl/AjaxImpl";
+import {Implementation} from "../../impl/AjaxImpl";
 import {StandardInits} from "../frameworkBase/_ext/shared/StandardInits";
 import defaultMyFaces = StandardInits.defaultMyFaces;
 import protocolPage = StandardInits.protocolPage;
 import {DQ} from "mona-dish";
-import {XhrFormData} from "../../../main/typescript/impl/xhrCore/XhrFormData";
+import {XhrFormData} from "../../impl/xhrCore/XhrFormData";
 import { expect } from "chai";
 
 describe("test for proper request param patterns identical to the old implementation", function () {

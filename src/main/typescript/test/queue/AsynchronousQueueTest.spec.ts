@@ -18,9 +18,9 @@ import {describe, it} from 'mocha';
 import {expect} from 'chai';
 import * as sinon from 'sinon';
 import {ProbeClass} from "./AsynchronousProbe";
-import {AsynchronouseQueue} from "../../../main/typescript/impl/util/AsyncQueue";
+import {AsynchronouseQueue} from "../../impl/util/AsyncQueue";
 import {StandardInits} from "../frameworkBase/_ext/shared/StandardInits";
-import {Implementation} from "../../../main/typescript/impl/AjaxImpl";
+import {Implementation} from "../../impl/AjaxImpl";
 import defaultMyFaces = StandardInits.defaultMyFaces;
 
 describe('Asynchronous Queue tests', () => {

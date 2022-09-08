@@ -25,6 +25,7 @@ import trim = Lang.trim;
 
 const jsdom = require("jsdom");
 const {JSDOM} = jsdom;
+declare const global;
 
 describe('DOMQuery tests', function () {
 

@@ -9,7 +9,7 @@ import isFunc = Lang.isFunc;
 import isString = Lang.isString;
 import trim = Lang.trim;
 import strToArray = Lang.strToArray;
-import {ExtLang} from "../../../main/typescript/impl/util/Lang";
+import {ExtLang} from "../../impl/util/Lang";
 import keyValToStr = ExtLang.keyValToStr;
 
 

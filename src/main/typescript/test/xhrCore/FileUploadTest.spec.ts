@@ -12,11 +12,11 @@ import {
     P_VIEWSTATE,
     P_WINDOW_ID,
     SUCCESS
-} from "../../../main/typescript/impl/core/Const";
+} from "../../impl/core/Const";
 import defaultMyFaces = StandardInits.defaultMyFaces;
 import STD_XML = StandardInits.STD_XML;
 import defaultFileForm = StandardInits.defaultFileForm;
-import {Implementation} from "../../../main/typescript/impl/AjaxImpl";
+import {Implementation} from "../../impl/AjaxImpl";
 
 declare var jsf: any;
 declare var Impl

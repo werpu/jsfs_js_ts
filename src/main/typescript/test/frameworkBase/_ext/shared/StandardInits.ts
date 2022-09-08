@@ -17,6 +17,7 @@
 
 import {DomQuery} from "mona-dish";
 
+declare let global;
 declare let jsf: any;
 
 /**
@@ -325,9 +326,9 @@ export module StandardInits {
      */
     let initJSF = async function () {
         // @ts-ignore
-        return import("../../../../../main/typescript/api/Jsf").then((data) => {
-            let Implementation = require("../../../../../main/typescript/impl/AjaxImpl");
-            let PushImpl = require("../../../../../main/typescript/impl/PushImpl");
+        return import("../../../../api/Jsf").then((data) => {
+            let Implementation = require("../../../../impl/AjaxImpl");
+            let PushImpl = require("../../../../impl/PushImpl");
             applyJsfToGlobals(data, Implementation, PushImpl);
         });
     };

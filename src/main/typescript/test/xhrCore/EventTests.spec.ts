@@ -17,7 +17,7 @@
 import {describe} from "mocha";
 import * as sinon from "sinon";
 import {StandardInits} from "../frameworkBase/_ext/shared/StandardInits";
-import {Implementation} from "../../../main/typescript/impl/AjaxImpl";
+import {Implementation} from "../../impl/AjaxImpl";
 
 import {expect} from "chai";
 import protocolPage = StandardInits.protocolPage;

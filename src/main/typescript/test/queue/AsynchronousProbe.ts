@@ -18,7 +18,7 @@
  * we need a probe to test our asynchronous behavior
  * the asynchronous behavior needs to be in an asynchronous runnable
  */
-import {AsyncRunnable} from "../../../main/typescript/impl/util/AsyncRunnable";
+import {AsyncRunnable} from "../../impl/util/AsyncRunnable";
 import {IValueHolder} from "mona-dish";
 
 export class ProbeClass implements AsyncRunnable<Promise<any>>, IValueHolder<Promise<any>> {

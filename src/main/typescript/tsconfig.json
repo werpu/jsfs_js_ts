@@ -13,6 +13,7 @@
     "sourceMap": true,
     "typeRoots": [
       "../../build/npm/node_modules/@types"
-    ]
+    ],
+    "types": ["node"]
   }
 }

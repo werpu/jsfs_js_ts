@@ -23,7 +23,7 @@ import {DomQuery} from "mona-dish";
 
 import {StandardInits} from "../frameworkBase/_ext/shared/StandardInits";
 import defaultMyFaces = StandardInits.defaultMyFaces;
-import {P_EXECUTE, P_RENDER} from "../../../main/typescript/impl/core/Const";
+import {P_EXECUTE, P_RENDER} from "../../impl/core/Const";
 
 sinon.reset();
 

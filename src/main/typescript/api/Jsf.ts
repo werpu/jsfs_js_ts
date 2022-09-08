@@ -176,7 +176,7 @@ export module jsf {
          * @returns true if the chain has succeeded false otherwise
          */
         export function chain(source, event, ...funcs: Array<Function | string>): boolean {
-            return Implementation.chain(source, event, ...funcs);
+            return Implementation.chain(source, event, ...(funcs as EvalFuncs));
         }
     }
 

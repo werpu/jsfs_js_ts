@@ -2054,7 +2054,8 @@ var ErrorData = /** @class */ (function (_super) {
         return _this;
     }
     ErrorData.fromClient = function (e) {
-        return new ErrorData("client", e.name, e.message, e.stack);
+        var _a, _b, _c;
+        return new ErrorData("client", (_a = e === null || e === void 0 ? void 0 : e.name) !== null && _a !== void 0 ? _a : '', (_b = e === null || e === void 0 ? void 0 : e.message) !== null && _b !== void 0 ? _b : '', (_c = e === null || e === void 0 ? void 0 : e.stack) !== null && _c !== void 0 ? _c : '');
     };
     ErrorData.fromHttpConnection = function (source, name, message, responseText, responseCode) {
         return new ErrorData(source, name, message, responseText, responseCode, null, "UNKNOWN", ErrorType.HTTP_ERROR);
@@ -3350,9 +3351,6 @@ var XhrRequest = /** @class */ (function () {
             xhrObject.open(this.ajaxType, (0, RequestDataResolver_1.resolveFinalUrl)(this.sourceForm, formData, this.ajaxType), true);
             //adding timeout
             this.timeout ? xhrObject.timeout = this.timeout : null;
-            xhrObject.onerror = function (data) {
-                _this.handleError(new Error("XHR Error: ".concat(JSON.stringify(data))));
-            };
             //a bug in the xhr stub library prevents the setRequestHeader to be properly executed on fake xhr objects
             //normal browsers should resolve this
             //tests can quietly fail on this one
@@ -3470,7 +3468,7 @@ var XhrRequest = /** @class */ (function () {
             }
         };
         try {
-            AjaxImpl_1.Implementation.sendError(errorData);
+            this.handleError(errorData, true);
         }
         finally {
             resolve(errorData);
@@ -3505,8 +3503,9 @@ var XhrRequest = /** @class */ (function () {
             throw e;
         }
     };
-    XhrRequest.prototype.handleError = function (exception) {
-        var errorData = ErrorData_1.ErrorData.fromClient(exception);
+    XhrRequest.prototype.handleError = function (exception, httpError) {
+        if (httpError === void 0) { httpError = false; }
+        var errorData = (httpError) ? ErrorData_1.ErrorData.fromServerError(exception) : ErrorData_1.ErrorData.fromClient(exception);
         var eventHandler = (0, RequestDataResolver_1.resolveHandlerFunc)(this.requestContext, this.responseContext, Const_1.ON_ERROR);
         AjaxImpl_1.Implementation.sendError(errorData, eventHandler);
     };

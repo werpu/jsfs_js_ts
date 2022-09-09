@@ -152,9 +152,6 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             //adding timeout
             this.timeout ? xhrObject.timeout = this.timeout : null;
 
-            xhrObject.onerror = (data: ProgressEvent) => {
-                this.handleError(new Error(`XHR Error: ${JSON.stringify(data)}`));
-            };
             //a bug in the xhr stub library prevents the setRequestHeader to be properly executed on fake xhr objects
             //normal browsers should resolve this
             //tests can quietly fail on this one
@@ -288,7 +285,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             }
         };
         try {
-            Implementation.sendError(<any>errorData);
+            this.handleError(errorData, true);
         } finally {
             resolve(errorData);
         }
@@ -326,8 +323,8 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         }
     }
 
-    private handleError(exception) {
-        let errorData = ErrorData.fromClient(exception);
+    private handleError(exception, httpError: boolean = false) {
+        let errorData = (httpError) ? ErrorData.fromServerError(exception) : ErrorData.fromClient(exception);
 
         let eventHandler = resolveHandlerFunc(this.requestContext, this.responseContext, ON_ERROR);
         Implementation.sendError(errorData, eventHandler);

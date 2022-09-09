@@ -67,7 +67,7 @@ export class ErrorData extends EventData {
     }
 
     static fromClient(e: Error): ErrorData {
-        return new ErrorData("client", e.name, e.message, e.stack);
+        return new ErrorData("client", e?.name ?? '', e?.message ?? '', e?.stack ?? '');
     }
 
     static fromHttpConnection(source: string, name: string, message: string, responseText, responseCode: number): ErrorData {

@@ -1859,7 +1859,7 @@ var ExtLang;
             templateParams[_i - 2] = arguments[_i];
         }
         installedLocale = installedLocale !== null && installedLocale !== void 0 ? installedLocale : new Messages_1.Messages();
-        var msg = (_b = (_a = installedLocale[key]) !== null && _a !== void 0 ? _a : defaultMessage) !== null && _b !== void 0 ? _b : key + " - undefined message";
+        var msg = (_b = (_a = installedLocale[key]) !== null && _a !== void 0 ? _a : defaultMessage) !== null && _b !== void 0 ? _b : key;
         mona_dish_1.Stream.of.apply(mona_dish_1.Stream, templateParams).each(function (param, cnt) {
             msg = msg.replace(new RegExp(["\\{", cnt, "\\}"].join(Const_1.EMPTY_STR), "g"), param);
         });
@@ -2679,13 +2679,21 @@ var ResponseProcessor = /** @class */ (function () {
          */
         var mergedErrorData = new mona_dish_1.Config({});
         mergedErrorData.assign(Const_1.SOURCE).value = this.externalContext.getIf(Const_1.P_PARTIAL_SOURCE).get(0).value;
-        mergedErrorData.assign(Const_1.ERROR_NAME).value = node.getIf(Const_1.ERROR_NAME).textContent(Const_1.EMPTY_STR);
-        mergedErrorData.assign(Const_1.ERROR_MESSAGE).value = node.getIf(Const_1.ERROR_MESSAGE).cDATAAsString;
+        mergedErrorData.assign(Const_1.ERROR_NAME).value = node.querySelectorAll(Const_1.ERROR_NAME).textContent(Const_1.EMPTY_STR);
+        mergedErrorData.assign(Const_1.ERROR_MESSAGE).value = node.querySelectorAll(Const_1.ERROR_MESSAGE).cDATAAsString;
         var hasResponseXML = this.internalContext.get(Const_1.RESPONSE_XML).isPresent();
+        //we now store the response xml also in the error data for further details
         mergedErrorData.assignIf(hasResponseXML, Const_1.RESPONSE_XML).value = this.internalContext.getIf(Const_1.RESPONSE_XML).value.get(0).value;
+        // error post processing and enrichment (standard messages from keys)
         var errorData = ErrorData_1.ErrorData.fromServerError(mergedErrorData);
-        this.externalContext.getIf(Const_1.ON_ERROR).orElse(this.internalContext.getIf(Const_1.ON_ERROR).value).orElse(Const_1.EMPTY_FUNC).value(errorData);
+        // we now trigger an internally stored onError function which might be a attached to the context
+        // either we haven an internal on error, or an on error has been bassed via params from the outside
+        // in both cases they are attached to our contexts
+        this.triggerOnError(errorData);
         AjaxImpl_1.Implementation.sendError(errorData);
+    };
+    ResponseProcessor.prototype.triggerOnError = function (errorData) {
+        this.externalContext.getIf(Const_1.ON_ERROR).orElse(this.internalContext.getIf(Const_1.ON_ERROR).value).orElse(Const_1.EMPTY_FUNC).value(errorData);
     };
     /**
      * process the redirect operation

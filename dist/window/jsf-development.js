@@ -611,7 +611,7 @@ var Implementation;
      *
      *
      *  handles the errors, in case of an onError exists within the context the onError is called as local error handler
-     *  the registered error handlers in the queue receiv an error message to be dealt with
+     *  the registered error handlers in the queue received an error message to be dealt with
      *  and if the projectStage is at development an alert box is displayed
      *
      *  note: we have additional functionality here, via the global config myfaces.config.defaultErrorOutput a function can be provided
@@ -3350,6 +3350,9 @@ var XhrRequest = /** @class */ (function () {
             xhrObject.open(this.ajaxType, (0, RequestDataResolver_1.resolveFinalUrl)(this.sourceForm, formData, this.ajaxType), true);
             //adding timeout
             this.timeout ? xhrObject.timeout = this.timeout : null;
+            xhrObject.onerror = function (data) {
+                _this.handleError(new Error("XHR Error: ".concat(JSON.stringify(data))));
+            };
             //a bug in the xhr stub library prevents the setRequestHeader to be properly executed on fake xhr objects
             //normal browsers should resolve this
             //tests can quietly fail on this one

@@ -387,7 +387,7 @@ export module Implementation {
      *
      *
      *  handles the errors, in case of an onError exists within the context the onError is called as local error handler
-     *  the registered error handlers in the queue receiv an error message to be dealt with
+     *  the registered error handlers in the queue received an error message to be dealt with
      *  and if the projectStage is at development an alert box is displayed
      *
      *  note: we have additional functionality here, via the global config myfaces.config.defaultErrorOutput a function can be provided

@@ -152,6 +152,9 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             //adding timeout
             this.timeout ? xhrObject.timeout = this.timeout : null;
 
+            xhrObject.onerror = (data: ProgressEvent) => {
+                this.handleError(new Error(`XHR Error: ${JSON.stringify(data)}`));
+            };
             //a bug in the xhr stub library prevents the setRequestHeader to be properly executed on fake xhr objects
             //normal browsers should resolve this
             //tests can quietly fail on this one

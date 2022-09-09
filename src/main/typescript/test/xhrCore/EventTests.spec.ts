@@ -97,12 +97,15 @@ describe('tests the addOnEvent and addOnError handling', function () {
         let onErrorCalled1 = 0;
         let onErrorCalled2 = 0;
 
+        let errorTitle = '';
+        let errorMessage = '';
         jsf.ajax.addOnError((data: any) => {
+            errorTitle = data.errorName;
+            errorMessage = data.errorMessage;
             onErrorCalled1++
         });
         jsf.ajax.addOnError((data: any) => {
             onErrorCalled2++;
-
         });
 
         //cmd_error_component
@@ -111,6 +114,8 @@ describe('tests the addOnEvent and addOnError handling', function () {
 
         expect(onErrorCalled1).to.eq(1);
         expect(onErrorCalled2).to.eq(1);
+        expect(errorTitle).to.eq('Erro21');
+        expect(errorMessage).to.eq('Error2 Text');
     });
 
     it("must have an id set if there is an emitting element", function () {

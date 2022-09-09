@@ -304,6 +304,7 @@ describe('Tests of the various aspects of the response protocol functionality', 
         expect(DQ.byId("javax.faces.ViewState").inputValue.value == "RTUyRDI0NzE4QzAxM0E5RDAwMDAwMDVD").to.be.true;
     });
 
+
     /**
      * The body innerHTML is based on a Tobago page. View state and client window id is rendered within a
      * jsf-state-container.

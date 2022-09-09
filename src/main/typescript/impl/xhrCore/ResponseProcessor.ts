@@ -137,16 +137,27 @@ export class ResponseProcessor implements IResponseProcessor {
 
         let mergedErrorData = new Config({});
         mergedErrorData.assign(SOURCE).value = this.externalContext.getIf(P_PARTIAL_SOURCE).get(0).value;
-        mergedErrorData.assign(ERROR_NAME).value = node.getIf(ERROR_NAME).textContent(EMPTY_STR);
-        mergedErrorData.assign(ERROR_MESSAGE).value = node.getIf(ERROR_MESSAGE).cDATAAsString;
+        mergedErrorData.assign(ERROR_NAME).value = node.querySelectorAll(ERROR_NAME).textContent(EMPTY_STR);
+        mergedErrorData.assign(ERROR_MESSAGE).value = node.querySelectorAll(ERROR_MESSAGE).cDATAAsString;
 
         let hasResponseXML = this.internalContext.get(RESPONSE_XML).isPresent();
+
+        //we now store the response xml also in the error data for further details
         mergedErrorData.assignIf(hasResponseXML, RESPONSE_XML).value = this.internalContext.getIf(RESPONSE_XML).value.get(0).value;
 
+        // error post processing and enrichment (standard messages from keys)
         let errorData = ErrorData.fromServerError(mergedErrorData);
 
-        this.externalContext.getIf(ON_ERROR).orElse(this.internalContext.getIf(ON_ERROR).value).orElse(EMPTY_FUNC).value(errorData);
+        // we now trigger an internally stored onError function which might be a attached to the context
+        // either we haven an internal on error, or an on error has been bassed via params from the outside
+        // in both cases they are attached to our contexts
+
+        this.triggerOnError(errorData);
         Implementation.sendError(errorData);
+    }
+
+    private triggerOnError(errorData: ErrorData) {
+        this.externalContext.getIf(ON_ERROR).orElse(this.internalContext.getIf(ON_ERROR).value).orElse(EMPTY_FUNC).value(errorData);
     }
 
     /**

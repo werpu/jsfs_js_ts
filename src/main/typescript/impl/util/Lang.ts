@@ -85,7 +85,7 @@ export module ExtLang {
     export function getMessage(key: string, defaultMessage?: string, ...templateParams: Array<string>): string {
         installedLocale = installedLocale ?? new Messages();
 
-        let msg = installedLocale[key] ?? defaultMessage ?? key + " - undefined message";
+        let msg = installedLocale[key] ?? defaultMessage ?? key;
 
         Stream.of(...templateParams).each((param, cnt) => {
             msg = msg.replace(new RegExp(["\\{", cnt, "\\}"].join(EMPTY_STR), "g"), param);

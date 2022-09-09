@@ -31,7 +31,6 @@ import {
     ERROR,
     HEAD_FACES_REQ,
     MALFORMEDXML,
-    MULTIPART,
     NO_TIMEOUT,
     ON_ERROR,
     ON_EVENT, P_EXECUTE,
@@ -266,14 +265,14 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
 
         //malforms always result in empty response xml
         if (!this?.xhrObject?.responseXML) {
-            this.handleMalFormedXML(resolve);
+            this.handleMalFormedXML(resolve, reject);
             return;
         }
 
         jsf.ajax.response(this.xhrObject, this.responseContext.value ?? {});
     }
 
-    private handleMalFormedXML(resolve: Function) {
+    private handleMalFormedXML(resolve: Function, reject: Function) {
         this.stopProgress = true;
         let errorData = {
             type: ERROR,
@@ -287,7 +286,9 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         try {
             this.handleError(errorData, true);
         } finally {
+            //we issue a resolve in this case to allow the system to recover
             resolve(errorData);
+            //reject();
         }
         //non blocking non clearing
     }
@@ -323,8 +324,8 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         }
     }
 
-    private handleError(exception, httpError: boolean = false) {
-        let errorData = (httpError) ? ErrorData.fromServerError(exception) : ErrorData.fromClient(exception);
+    private handleError(exception, responseFormatError: boolean = false) {
+        let errorData = (responseFormatError) ? ErrorData.fromHttpConnection(exception.source, exception.type, exception.status, exception.responseText, exception.responseCode, exception.status) : ErrorData.fromClient(exception);
 
         let eventHandler = resolveHandlerFunc(this.requestContext, this.responseContext, ON_ERROR);
         Implementation.sendError(errorData, eventHandler);

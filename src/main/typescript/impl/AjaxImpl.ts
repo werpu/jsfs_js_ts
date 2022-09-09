@@ -17,7 +17,7 @@
 import {IListener} from "./util/ListenerQueue";
 import {Response} from "./xhrCore/Response";
 import {XhrRequest} from "./xhrCore/XhrRequest";
-import {AsynchronouseQueue} from "./util/AsyncQueue";
+import {AsynchronousQueue} from "./util/AsyncQueue";
 import {AssocArrayCollector, Config, DQ, Lang, Optional, Stream} from "mona-dish";
 import {Assertions} from "./util/Assertions";
 import {XhrFormData} from "./xhrCore/XhrFormData";
@@ -107,7 +107,7 @@ export module Implementation {
     let separator: string = null;
     let eventQueue = [];
     let errorQueue = [];
-    export let requestQueue: AsynchronouseQueue<XhrRequest> = null;
+    export let requestQueue: AsynchronousQueue<XhrRequest> = null;
     /*error reporting threshold*/
     let threshold = "ERROR";
 
@@ -502,7 +502,7 @@ export module Implementation {
          * adds a new request to our queue for further processing
          */
         addRequestToQueue: function (elem: DQ, form: DQ, reqCtx: Config, respPassThr: Config, delay = 0, timeout = 0) {
-            requestQueue = requestQueue ?? new AsynchronouseQueue<XhrRequest>();
+            requestQueue = requestQueue ?? new AsynchronousQueue<XhrRequest>();
             requestQueue.enqueue(new XhrRequest(elem, form, reqCtx, respPassThr, [], timeout), delay);
         }
     };

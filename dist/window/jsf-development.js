@@ -719,7 +719,7 @@ var Implementation;
         addRequestToQueue: function (elem, form, reqCtx, respPassThr, delay, timeout) {
             if (delay === void 0) { delay = 0; }
             if (timeout === void 0) { timeout = 0; }
-            Implementation.requestQueue = Implementation.requestQueue !== null && Implementation.requestQueue !== void 0 ? Implementation.requestQueue : new AsyncQueue_1.AsynchronouseQueue();
+            Implementation.requestQueue = Implementation.requestQueue !== null && Implementation.requestQueue !== void 0 ? Implementation.requestQueue : new AsyncQueue_1.AsynchronousQueue();
             Implementation.requestQueue.enqueue(new XhrRequest_1.XhrRequest(elem, form, reqCtx, respPassThr, [], timeout), delay);
         }
     };
@@ -1515,7 +1515,7 @@ var Assertions;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.AsynchronouseQueue = void 0;
+exports.AsynchronousQueue = void 0;
 /**
  * Asynchronous queue which starts to work
  * through the callbacks until the queue is empty
@@ -1527,11 +1527,11 @@ exports.AsynchronouseQueue = void 0;
  * This interface can be used as wrapper contract
  * for normal promises if needed.
  */
-var AsynchronouseQueue = /** @class */ (function () {
-    function AsynchronouseQueue() {
+var AsynchronousQueue = /** @class */ (function () {
+    function AsynchronousQueue() {
         this.runnableQueue = [];
     }
-    Object.defineProperty(AsynchronouseQueue.prototype, "isEmpty", {
+    Object.defineProperty(AsynchronousQueue.prototype, "isEmpty", {
         get: function () {
             return !this.runnableQueue.length;
         },
@@ -1545,7 +1545,7 @@ var AsynchronouseQueue = /** @class */ (function () {
      * @param element the element to be queued and processed
      * @param delay possible delay after our usual process or drop if something newer is incoming algorithm
      */
-    AsynchronouseQueue.prototype.enqueue = function (element, delay) {
+    AsynchronousQueue.prototype.enqueue = function (element, delay) {
         var _this = this;
         if (delay === void 0) { delay = 0; }
         if (this.delayTimeout) {
@@ -1561,14 +1561,14 @@ var AsynchronouseQueue = /** @class */ (function () {
             this.appendElement(element);
         }
     };
-    AsynchronouseQueue.prototype.dequeue = function () {
+    AsynchronousQueue.prototype.dequeue = function () {
         return this.runnableQueue.shift();
     };
-    AsynchronouseQueue.prototype.cleanup = function () {
+    AsynchronousQueue.prototype.cleanup = function () {
         this.currentlyRunning = null;
         this.runnableQueue.length = 0;
     };
-    AsynchronouseQueue.prototype.appendElement = function (element) {
+    AsynchronousQueue.prototype.appendElement = function (element) {
         //only if the first element is added we start with a trigger
         //otherwise a process already is running and not finished yet at that
         //time
@@ -1577,7 +1577,7 @@ var AsynchronouseQueue = /** @class */ (function () {
             this.runEntry();
         }
     };
-    AsynchronouseQueue.prototype.runEntry = function () {
+    AsynchronousQueue.prototype.runEntry = function () {
         var _this = this;
         if (this.isEmpty) {
             this.currentlyRunning = null;
@@ -1600,7 +1600,7 @@ var AsynchronouseQueue = /** @class */ (function () {
         //(the browser engine will take care of that)
         function () { return _this.callForNextElementToProcess(); }).start();
     };
-    AsynchronouseQueue.prototype.cancel = function () {
+    AsynchronousQueue.prototype.cancel = function () {
         try {
             if (this.currentlyRunning) {
                 this.currentlyRunning.cancel();
@@ -1610,12 +1610,12 @@ var AsynchronouseQueue = /** @class */ (function () {
             this.cleanup();
         }
     };
-    AsynchronouseQueue.prototype.callForNextElementToProcess = function () {
+    AsynchronousQueue.prototype.callForNextElementToProcess = function () {
         this.runEntry();
     };
-    return AsynchronouseQueue;
+    return AsynchronousQueue;
 }());
-exports.AsynchronouseQueue = AsynchronouseQueue;
+exports.AsynchronousQueue = AsynchronousQueue;
 
 
 /***/ }),
@@ -2057,8 +2057,9 @@ var ErrorData = /** @class */ (function (_super) {
         var _a, _b, _c;
         return new ErrorData("client", (_a = e === null || e === void 0 ? void 0 : e.name) !== null && _a !== void 0 ? _a : '', (_b = e === null || e === void 0 ? void 0 : e.message) !== null && _b !== void 0 ? _b : '', (_c = e === null || e === void 0 ? void 0 : e.stack) !== null && _c !== void 0 ? _c : '');
     };
-    ErrorData.fromHttpConnection = function (source, name, message, responseText, responseCode) {
-        return new ErrorData(source, name, message, responseText, responseCode, null, "UNKNOWN", ErrorType.HTTP_ERROR);
+    ErrorData.fromHttpConnection = function (source, name, message, responseText, responseCode, status) {
+        if (status === void 0) { status = 'UNKNOWN'; }
+        return new ErrorData(source, name, message, responseText, responseCode, "".concat(responseCode), status, ErrorType.HTTP_ERROR);
     };
     ErrorData.fromGeneric = function (context, errorCode, errorType) {
         if (errorType === void 0) { errorType = ErrorType.SERVER_ERROR; }
@@ -3450,12 +3451,12 @@ var XhrRequest = /** @class */ (function () {
         this.sendEvent(Const_1.COMPLETE);
         //malforms always result in empty response xml
         if (!((_a = this === null || this === void 0 ? void 0 : this.xhrObject) === null || _a === void 0 ? void 0 : _a.responseXML)) {
-            this.handleMalFormedXML(resolve);
+            this.handleMalFormedXML(resolve, reject);
             return;
         }
         jsf.ajax.response(this.xhrObject, (_b = this.responseContext.value) !== null && _b !== void 0 ? _b : {});
     };
-    XhrRequest.prototype.handleMalFormedXML = function (resolve) {
+    XhrRequest.prototype.handleMalFormedXML = function (resolve, reject) {
         var _a;
         this.stopProgress = true;
         var errorData = {
@@ -3471,7 +3472,9 @@ var XhrRequest = /** @class */ (function () {
             this.handleError(errorData, true);
         }
         finally {
+            //we issue a resolve in this case to allow the system to recover
             resolve(errorData);
+            //reject();
         }
         //non blocking non clearing
     };
@@ -3503,9 +3506,9 @@ var XhrRequest = /** @class */ (function () {
             throw e;
         }
     };
-    XhrRequest.prototype.handleError = function (exception, httpError) {
-        if (httpError === void 0) { httpError = false; }
-        var errorData = (httpError) ? ErrorData_1.ErrorData.fromServerError(exception) : ErrorData_1.ErrorData.fromClient(exception);
+    XhrRequest.prototype.handleError = function (exception, responseFormatError) {
+        if (responseFormatError === void 0) { responseFormatError = false; }
+        var errorData = (responseFormatError) ? ErrorData_1.ErrorData.fromHttpConnection(exception.source, exception.type, exception.status, exception.responseText, exception.responseCode, exception.status) : ErrorData_1.ErrorData.fromClient(exception);
         var eventHandler = (0, RequestDataResolver_1.resolveHandlerFunc)(this.requestContext, this.responseContext, Const_1.ON_ERROR);
         AjaxImpl_1.Implementation.sendError(errorData, eventHandler);
     };

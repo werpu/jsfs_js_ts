@@ -1515,7 +1515,7 @@ var Assertions;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.AsynchronouseQueue = void 0;
+exports.AsynchronousQueue = void 0;
 /**
  * Asynchronous queue which starts to work
  * through the callbacks until the queue is empty
@@ -1615,7 +1615,7 @@ var AsynchronouseQueue = /** @class */ (function () {
     };
     return AsynchronouseQueue;
 }());
-exports.AsynchronouseQueue = AsynchronouseQueue;
+exports.AsynchronousQueue = AsynchronouseQueue;
 
 
 /***/ }),

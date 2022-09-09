@@ -11,7 +11,7 @@ import {AsyncRunnable} from "./AsyncRunnable";
  * This interface can be used as wrapper contract
  * for normal promises if needed.
  */
-export class AsynchronouseQueue<T extends AsyncRunnable<any>> {
+export class AsynchronousQueue<T extends AsyncRunnable<any>> {
 
     private runnableQueue = [];
     private delayTimeout: null | ReturnType<typeof setTimeout>;

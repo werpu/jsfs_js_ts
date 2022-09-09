@@ -70,8 +70,8 @@ export class ErrorData extends EventData {
         return new ErrorData("client", e?.name ?? '', e?.message ?? '', e?.stack ?? '');
     }
 
-    static fromHttpConnection(source: string, name: string, message: string, responseText, responseCode: number): ErrorData {
-        return new ErrorData(source, name, message, responseText, responseCode, null, "UNKNOWN", ErrorType.HTTP_ERROR);
+    static fromHttpConnection(source: any, name: string, message: string, responseText, responseCode: number, status: string = 'UNKNOWN'): ErrorData {
+        return new ErrorData(source, name, message, responseText, responseCode, `${responseCode}`, status, ErrorType.HTTP_ERROR);
     }
 
     static fromGeneric(context: Config, errorCode: number, errorType: ErrorType = ErrorType.SERVER_ERROR): ErrorData {

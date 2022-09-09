@@ -18,7 +18,7 @@ import {describe, it} from 'mocha';
 import {expect} from 'chai';
 import * as sinon from 'sinon';
 import {ProbeClass} from "./AsynchronousProbe";
-import {AsynchronouseQueue} from "../../impl/util/AsyncQueue";
+import {AsynchronousQueue} from "../../impl/util/AsyncQueue";
 import {StandardInits} from "../frameworkBase/_ext/shared/StandardInits";
 import {Implementation} from "../../impl/AjaxImpl";
 import defaultMyFaces = StandardInits.defaultMyFaces;
@@ -60,7 +60,7 @@ describe('Asynchronous Queue tests', () => {
 
         const probe1 = new ProbeClass(setTimeout);
 
-        const queue = new AsynchronouseQueue();
+        const queue = new AsynchronousQueue();
         probe1.then(() => {
             expect(probe1.thenPerformed, "called").to.be.true;
             done();
@@ -69,7 +69,7 @@ describe('Asynchronous Queue tests', () => {
     });
 
     it('multiple  entries', (done) => {
-        const queue = new AsynchronouseQueue();
+        const queue = new AsynchronousQueue();
         const probe1 = new ProbeClass(setTimeout);
         const probe2 = new ProbeClass(setTimeout);
         const probe3 = new ProbeClass(setTimeout);

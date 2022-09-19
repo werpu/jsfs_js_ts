@@ -138,7 +138,6 @@ describe('Tests of the various aspects of the response protocol functionality', 
         //basic replacement
         let newBody = DQ.byId(document.body);
         let newContent = <string>newBody.html().value;
-
         //standard replacement successful
         expect(newContent.indexOf("<h3>Body replacement test successful</h3>") != -1,
             "elements must be updated").to.be.true;

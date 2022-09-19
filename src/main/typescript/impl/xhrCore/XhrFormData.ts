@@ -148,7 +148,8 @@ export class XhrFormData extends Config {
      * @param encoded
      */
     assignEncodedString(encoded: string) {
-        let keyValueEntries = decodeURIComponent(encoded).split(/&/gi);
+        //this code filters out empty strings as key value pairs
+        let keyValueEntries = decodeURIComponent(encoded).split(/&/gi).filter(item => !!(item || '').replace(/\s+/g,''));
         this.assignString(keyValueEntries);
     }
 

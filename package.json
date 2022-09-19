@@ -9,7 +9,8 @@
     "coverage": "env TS_NODE_PROJECT=./src/test/typescript/tsconfig.json nyc --reporter=html --reporter=text mocha",
     "build-production": "webpack --mode production --env FILE_NAME=jsf  && ts-node ./remap.ts --production",
     "build-development": "webpack --mode development --env FILE_NAME=jsf-development  && ts-node ./remap.ts --development",
-    "build": "npm run doc && npm run build-development && npm run build-production"
+    "build": "npm run doc && npm run build-development && npm run build-production",
+    "serve": "npx http-server -p 8900 -b -g -o ./dist/"
   },
   "keywords": [
     "myfaces",
@@ -22,30 +23,31 @@
     "@istanbuljs/nyc-config-typescript": "^1.0.2",
     "@types/chai": "^4.3.3",
     "@types/mocha": "^9.1.1",
-    "@types/node": "^18.7.16",
+    "@types/node": "^18.7.18",
     "@types/sinon": "^10.0.13",
     "babel-plugin-syntax-dynamic-import": "^6.18.0",
     "chai": "^4.3.6",
     "compression-webpack-plugin": "^10.0.0",
     "html-webpack-plugin": "^5.5.0",
+    "http-server": "^14.1.1",
     "jsdom": "^20.0.0",
     "jsdom-global": "^3.0.2",
     "mocha": "^10.0.0",
-    "npm-check-updates": "^16.1.0",
+    "npm-check-updates": "^16.1.3",
     "nyc": "^15.1.0",
     "replace-in-file": "^6.3.5",
     "rxjs": "^7.5.6",
     "sinon": "^14.0.0",
     "terser-webpack-plugin": "^5.3.6",
-    "ts-loader": "^9.3.1",
+    "ts-loader": "^9.4.0",
     "ts-node": "^10.9.1",
-    "typedoc": "^0.23.14",
-    "typescript": "^4.8.2",
+    "typedoc": "^0.23.15",
+    "typescript": "^4.8.3",
     "webpack": "^5.74.0",
     "webpack-cli": "^4.10.0",
     "webpack-dev-server": "^4.11.0"
   },
   "dependencies": {
-    "mona-dish": "0.21.4"
+    "mona-dish": "0.21.8"
   }
 }

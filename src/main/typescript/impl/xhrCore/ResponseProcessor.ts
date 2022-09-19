@@ -53,6 +53,7 @@ import {
     UPDATE_FORMS
 } from "../core/Const";
 import trim = Lang.trim;
+import {ExtDomquery} from "../util/ExtDomQuery";
 
 /**
  * Response processor
@@ -180,7 +181,7 @@ export class ResponseProcessor implements IResponseProcessor {
      * @param cdataBlock the cdata block with the new html code
      */
     update(node: XMLQuery, cdataBlock: string) {
-        let result = DQ.byId(node.id.value, true).outerHTML(cdataBlock, false, false);
+        let result = ExtDomquery.byId(node.id.value, true).outerHTML(cdataBlock, false, false);
         let sourceForm = result?.parents(TAG_FORM).orElse(result.byTagName(TAG_FORM, true));
         if (sourceForm) {
             this.storeForPostProcessing(sourceForm, result);
@@ -291,7 +292,7 @@ export class ResponseProcessor implements IResponseProcessor {
      * generic global eval which runs the embedded css and scripts
      */
     globalEval() {
-        let updateElems = new DQ(...this.internalContext.getIf(UPDATE_ELEMS).value);
+        let updateElems = new ExtDomquery(...this.internalContext.getIf(UPDATE_ELEMS).value);
         updateElems.runCss();
         updateElems.runScripts();
     }

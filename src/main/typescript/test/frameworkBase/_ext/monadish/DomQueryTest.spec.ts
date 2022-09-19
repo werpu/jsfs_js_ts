@@ -21,6 +21,7 @@ import {describe, it} from 'mocha';
 import {ArrayCollector, DomQuery, Lang, LazyStream} from "mona-dish";
 import * as sinon from 'sinon';
 import trim = Lang.trim;
+import {ExtDomquery} from "../../../../impl/util/ExtDomQuery";
 
 
 const jsdom = require("jsdom");
@@ -136,7 +137,7 @@ describe('DOMQuery tests', function () {
     });
 
     it('outerhtml and eval tests', function () {
-        let probe1 = new DomQuery(window.document.body);
+        let probe1 = new ExtDomquery(window.document.body);
         probe1.querySelectorAll("#id_1").outerHTML(`
             <div id='barg'>
             

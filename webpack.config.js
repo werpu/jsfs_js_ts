@@ -25,7 +25,8 @@ function build(env, argv) {
             extensions: [".tsx", ".ts", ".json"],
             alias: {
                 /*we load the reduced core, because there are some parts we simply do not need*/
-                "mona-dish": path.resolve(__dirname, "node_modules/mona-dish/dist/js/commonjs/index_core.js")
+                //"mona-dish": path.resolve(__dirname, "node_modules/mona-dish/dist/js/commonjs/index_core.js")
+                "mona-dish": path.resolve(__dirname, "node_modules/mona-dish/src/main/typescript/index_core.ts")
             }
         },
         externals: {
@@ -36,8 +37,11 @@ function build(env, argv) {
                 // all files with a '.ts' or '.tsx' extension will be handled by 'ts-loader'
                 {
                     test: /\.tsx?$/, use: [{
-                            loader: "ts-loader"
-                        }], exclude: /node_modules/
+                            loader: "ts-loader",
+                            options: {
+                                allowTsInNodeModules: true
+                            }
+                        }]
                 }, {
                     test: /jsf\.js$/,
                     loader: 'string-replace-loader',

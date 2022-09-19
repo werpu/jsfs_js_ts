@@ -1,14 +1,3515 @@
 /******/ (() => { // webpackBootstrap
+/******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
-/***/ "./node_modules/mona-dish/dist/js/commonjs/index_core.js":
-/*!***************************************************************!*\
-  !*** ./node_modules/mona-dish/dist/js/commonjs/index_core.js ***!
-  \***************************************************************/
-/***/ ((__unused_webpack_module, exports) => {
+/***/ "./node_modules/mona-dish/src/main/typescript/DomQuery.ts":
+/*!****************************************************************!*\
+  !*** ./node_modules/mona-dish/src/main/typescript/DomQuery.ts ***!
+  \****************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
-!function(){"use strict";var t={585:function(t,e,r){var n,o=this&&this.__extends||(n=function(t,e){return n=Object.setPrototypeOf||{__proto__:[]}instanceof Array&&function(t,e){t.__proto__=e}||function(t,e){for(var r in e)Object.prototype.hasOwnProperty.call(e,r)&&(t[r]=e[r])},n(t,e)},function(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Class extends value "+String(e)+" is not a constructor or null");function r(){this.constructor=t}n(t,e),t.prototype=null===e?Object.create(e):(r.prototype=e.prototype,new r)}),i=this&&this.__assign||function(){return i=Object.assign||function(t){for(var e,r=1,n=arguments.length;r<n;r++)for(var o in e=arguments[r])Object.prototype.hasOwnProperty.call(e,o)&&(t[o]=e[o]);return t},i.apply(this,arguments)},a=this&&this.__awaiter||function(t,e,r,n){return new(r||(r=Promise))((function(o,i){function a(t){try{u(n.next(t))}catch(t){i(t)}}function l(t){try{u(n.throw(t))}catch(t){i(t)}}function u(t){var e;t.done?o(t.value):(e=t.value,e instanceof r?e:new r((function(t){t(e)}))).then(a,l)}u((n=n.apply(t,e||[])).next())}))},l=this&&this.__generator||function(t,e){var r,n,o,i,a={label:0,sent:function(){if(1&o[0])throw o[1];return o[1]},trys:[],ops:[]};return i={next:l(0),throw:l(1),return:l(2)},"function"==typeof Symbol&&(i[Symbol.iterator]=function(){return this}),i;function l(i){return function(l){return function(i){if(r)throw new TypeError("Generator is already executing.");for(;a;)try{if(r=1,n&&(o=2&i[0]?n.return:i[0]?n.throw||((o=n.return)&&o.call(n),0):n.next)&&!(o=o.call(n,i[1])).done)return o;switch(n=0,o&&(i=[2&i[0],o.value]),i[0]){case 0:case 1:o=i;break;case 4:return a.label++,{value:i[1],done:!1};case 5:a.label++,n=i[1],i=[0];continue;case 7:i=a.ops.pop(),a.trys.pop();continue;default:if(!(o=a.trys,(o=o.length>0&&o[o.length-1])||6!==i[0]&&2!==i[0])){a=0;continue}if(3===i[0]&&(!o||i[1]>o[0]&&i[1]<o[3])){a.label=i[1];break}if(6===i[0]&&a.label<o[1]){a.label=o[1],o=i;break}if(o&&a.label<o[2]){a.label=o[2],a.ops.push(i);break}o[2]&&a.ops.pop(),a.trys.pop();continue}i=e.call(t,a)}catch(t){i=[6,t],n=0}finally{r=o=0}if(5&i[0])throw i[1];return{value:i[0]?i[1]:void 0,done:!0}}([i,l])}}},u=this&&this.__read||function(t,e){var r="function"==typeof Symbol&&t[Symbol.iterator];if(!r)return t;var n,o,i=r.call(t),a=[];try{for(;(void 0===e||e-- >0)&&!(n=i.next()).done;)a.push(n.value)}catch(t){o={error:t}}finally{try{n&&!n.done&&(r=i.return)&&r.call(i)}finally{if(o)throw o.error}}return a},s=this&&this.__spreadArray||function(t,e,r){if(r||2===arguments.length)for(var n,o=0,i=e.length;o<i;o++)!n&&o in e||(n||(n=Array.prototype.slice.call(e,0,o)),n[o]=e[o]);return t.concat(n||Array.prototype.slice.call(e))},c=this&&this.__values||function(t){var e="function"==typeof Symbol&&Symbol.iterator,r=e&&t[e],n=0;if(r)return r.call(t);if(t&&"number"==typeof t.length)return{next:function(){return t&&n>=t.length&&(t=void 0),{value:t&&t[n++],done:!t}}};throw new TypeError(e?"Object is not iterable.":"Symbol.iterator is not defined.")};Object.defineProperty(e,"__esModule",{value:!0}),e.DQ=e.DomQueryCollector=e.DomQuery=e.ElementAttribute=void 0;var f,p=r(152),h=r(551),y=r(255),v=r(805),d=v.Lang.trim,m=v.Lang.objToArray,b=v.Lang.isString,g=v.Lang.equalsIgnoreCase;function S(t,e,r){return void 0===r&&(r={attributes:!0,childList:!0,subtree:!0,timeout:500,interval:100}),new Promise((function(n,o){var a=new Error("Mutation observer timeout");if(void 0!==window.MutationObserver){var l=setTimeout((function(){return o(a)}),r.timeout),u=new window.MutationObserver((function(t,r){var o=new x(t.map((function(t){return t.target}))).first(e);o.isPresent()&&(clearTimeout(l),n(o))})),s=i({},r);delete s.timeout,t.eachElem((function(t){u.observe(t,s)}))}else var c=setInterval((function(){var o=null;(o=r.childList?e(t)?t:t.childNodes.first(e):r.subtree?e(t)?t:t.querySelectorAll(" * ").first(e):e(t)?t:x.absent).isPresent()&&f&&(clearTimeout(f),clearInterval(c),c=null,n(o))}),r.interval),f=setTimeout((function(){c&&(clearInterval(c),o(a))}),r.timeout)}))}!function(t){t.SELECT="select",t.BUTTON="button",t.SUBMIT="submit",t.RESET="reset",t.IMAGE="image",t.RADIO="radio",t.CHECKBOX="checkbox"}(f||(f={}));var A=function(t){function e(e,r,n){void 0===n&&(n=null);var o=t.call(this,e,r)||this;return o.element=e,o.name=r,o.defaultVal=n,o}return o(e,t),Object.defineProperty(e.prototype,"value",{get:function(){var t,e=(t=this.element.get(0)).orElse.apply(t,[]).values;return e.length?e[0].getAttribute(this.name):this.defaultVal},set:function(t){for(var e,r=(e=this.element.get(0)).orElse.apply(e,[]).values,n=0;n<r.length;n++)r[n].setAttribute(this.name,t);r[0].setAttribute(this.name,t)},enumerable:!1,configurable:!0}),e.prototype.getClass=function(){return e},e.fromNullable=function(t,r){return void 0===r&&(r="value"),new e(t,r)},e}(p.ValueEmbedder);e.ElementAttribute=A;var w=function(t){return!0},x=function(){function t(){for(var e,r=[],n=0;n<arguments.length;n++)r[n]=arguments[n];if(this.rootNode=[],this.pos=-1,this._limits=-1,!p.Optional.fromNullable(r).isAbsent()&&r.length)for(var o=0;o<r.length;o++)if(r[o])if(b(r[o])){var i=t.querySelectorAll(r[o]);i.isAbsent()||r.push.apply(r,s([],u(i.values),!1))}else r[o]instanceof t?(e=this.rootNode).push.apply(e,s([],u(r[o].values),!1)):this.rootNode.push(r[o])}return Object.defineProperty(t.prototype,"value",{get:function(){return this.getAsElem(0)},enumerable:!1,configurable:!0}),Object.defineProperty(t.prototype,"values",{get:function(){return this.allElems()},enumerable:!1,configurable:!0}),Object.defineProperty(t.prototype,"id",{get:function(){return new A(this.get(0),"id")},enumerable:!1,configurable:!0}),Object.defineProperty(t.prototype,"length",{get:function(){return this.rootNode.length},enumerable:!1,configurable:!0}),Object.defineProperty(t.prototype,"tagName",{get:function(){return this.getAsElem(0).getIf("tagName")},enumerable:!1,configurable:!0}),Object.defineProperty(t.prototype,"nodeName",{get:function(){return this.getAsElem(0).getIf("nodeName")},enumerable:!1,configurable:!0}),t.prototype.isTag=function(t){return!this.isAbsent()&&(this.nodeName.orElse("__none___").value.toLowerCase()==t.toLowerCase()||this.tagName.orElse("__none___").value.toLowerCase()==t.toLowerCase())},Object.defineProperty(t.prototype,"type",{get:function(){return this.getAsElem(0).getIf("type")},enumerable:!1,configurable:!0}),Object.defineProperty(t.prototype,"name",{get:function(){return new p.ValueEmbedder(this.getAsElem(0).value,"name")},enumerable:!1,configurable:!0}),Object.defineProperty(t.prototype,"inputValue",{get:function(){return this.getAsElem(0).getIf("value").isPresent()?new p.ValueEmbedder(this.getAsElem(0).value):p.ValueEmbedder.absent},enumerable:!1,configurable:!0}),Object.defineProperty(t.prototype,"checked",{get:function(){return h.Stream.of.apply(h.Stream,s([],u(this.values),!1)).allMatch((function(t){return!!t.checked}))},set:function(t){this.eachElem((function(e){return e.checked=t}))},enumerable:!1,configurable:!0}),Object.defineProperty(t.prototype,"elements",{get:function(){return this.querySelectorAll("input, checkbox, select, textarea, fieldset")},enumerable:!1,configurable:!0}),Object.defineProperty(t.prototype,"deepElements",{get:function(){return this.querySelectorAllDeep("input, select, textarea, checkbox, fieldset")},enumerable:!1,configurable:!0}),t.prototype.querySelectorAllDeep=function(e){var r=[],n=this.querySelectorAll(e);n.length&&r.push(n);var o=this.querySelectorAll("*").shadowRoot;if(o.length){var i=o.querySelectorAllDeep(e);i.length&&r.push(i)}return new(t.bind.apply(t,s([void 0],u(r),!1)))},Object.defineProperty(t.prototype,"disabled",{get:function(){return this.attr("disabled").isPresent()},set:function(t){t?this.attr("disabled").value="disabled":this.removeAttribute("disabled")},enumerable:!1,configurable:!0}),t.prototype.removeAttribute=function(t){this.eachElem((function(e){return e.removeAttribute(t)}))},Object.defineProperty(t.prototype,"childNodes",{get:function(){var e=[];return this.eachElem((function(t){e=e.concat(m(t.childNodes))})),new(t.bind.apply(t,s([void 0],u(e),!1)))},enumerable:!1,configurable:!0}),Object.defineProperty(t.prototype,"stream",{get:function(){return new(h.Stream.bind.apply(h.Stream,s([void 0],u(this.asArray),!1)))},enumerable:!1,configurable:!0}),Object.defineProperty(t.prototype,"lazyStream",{get:function(){return h.LazyStream.of.apply(h.LazyStream,s([],u(this.asArray),!1))},enumerable:!1,configurable:!0}),Object.defineProperty(t.prototype,"asArray",{get:function(){return[].concat(h.LazyStream.of.apply(h.LazyStream,s([],u(this.rootNode),!1)).filter((function(t){return null!=t})).map((function(e){return t.byId(e)})).collect(new y.ArrayCollector))},enumerable:!1,configurable:!0}),Object.defineProperty(t.prototype,"asNodeArray",{get:function(){return[].concat(h.Stream.of(this.rootNode).filter((function(t){return null!=t})).collect(new y.ArrayCollector))},enumerable:!1,configurable:!0}),t.querySelectorAllDeep=function(e){return new t(document).querySelectorAllDeep(e)},t.querySelectorAll=function(e){return-1!=e.indexOf("/shadow/")?new t(document)._querySelectorAllDeep(e):new t(document)._querySelectorAll(e)},t.byId=function(e,r){return void 0===r&&(r=!1),b(e)?r?new t(document).byIdDeep(e):new t(document).byId(e):new t(e)},t.byTagName=function(e){return b(e)?new t(document).byTagName(e):new t(e)},t.globalEval=function(e,r){return new t(document).globalEval(e,r)},t.fromMarkup=function(e){var r=document.implementation.createHTMLDocument(""),n=(e=d(e)).toLowerCase();if(-1!=n.indexOf("<!doctype")||-1!=n.indexOf("<html")||-1!=n.indexOf("<head")||-1!=n.indexOf("<body"))return r.documentElement.innerHTML=e,new t(r.documentElement);var o=function(t,e){var r=["<",e,">"].join(""),n=["<",e," "].join("");return 0==t.indexOf(r)||0==t.indexOf(n)},i=new t(document.createElement("div"));return o(n,"thead")||o(n,"tbody")?(i.html("<table>".concat(e,"</table>")),i.querySelectorAll("table").get(0).childNodes.detach()):o(n,"tfoot")?(i.html("<table><thead></thead><tbody><tbody".concat(e,"</table>")),i.querySelectorAll("table").get(2).childNodes.detach()):o(n,"tr")?(i.html("<table><tbody>".concat(e,"</tbody></table>")),i.querySelectorAll("tbody").get(0).childNodes.detach()):o(n,"td")?(i.html("<table><tbody><tr>".concat(e,"</tr></tbody></table>")),i.querySelectorAll("tr").get(0).childNodes.detach()):(i.html(e),i.childNodes.detach())},t.prototype.get=function(e){return e<this.rootNode.length?new t(this.rootNode[e]):t.absent},t.prototype.getAsElem=function(t,e){return void 0===e&&(e=p.Optional.absent),t<this.rootNode.length?p.Optional.fromNullable(this.rootNode[t]):e},t.prototype.filesFromElem=function(t){var e;return t<this.rootNode.length&&(null===(e=this.rootNode[t])||void 0===e?void 0:e.files)?this.rootNode[t].files:[]},t.prototype.allElems=function(){return this.rootNode},t.prototype.isAbsent=function(){return 0==this.length},t.prototype.isPresent=function(t){var e=this.isAbsent();return!e&&t&&t.call(this,this),!e},t.prototype.ifPresentLazy=function(t){return void 0===t&&(t=function(){}),this.isPresent.call(this,t),this},t.prototype.delete=function(){this.eachElem((function(t){t.parentNode&&t.parentNode.removeChild(t)}))},t.prototype.querySelectorAll=function(t){return-1!=t.indexOf("/shadow/")?this._querySelectorAllDeep(t):this._querySelectorAll(t)},t.prototype._querySelectorAll=function(e){var r,n;if(!(null===(r=null==this?void 0:this.rootNode)||void 0===r?void 0:r.length))return this;for(var o=[],i=0;i<this.rootNode.length;i++)if(null===(n=this.rootNode[i])||void 0===n?void 0:n.querySelectorAll){var a=this.rootNode[i].querySelectorAll(e);o=o.concat(m(a))}return new(t.bind.apply(t,s([void 0],u(o),!1)))},t.prototype._querySelectorAllDeep=function(e){var r;if(!(null===(r=null==this?void 0:this.rootNode)||void 0===r?void 0:r.length))return this;for(var n=new(t.bind.apply(t,s([void 0],u(this.rootNode),!1))),o=e.split(/\/shadow\//),i=0;i<o.length;i++)if(""!=o[i]){var a=o[i];n=n.querySelectorAll(a),i<o.length-1&&(n=n.shadowRoot)}return n},t.prototype.byId=function(e,r){var n=[];return r&&(n=n.concat(h.LazyStream.of.apply(h.LazyStream,s([],u((null==this?void 0:this.rootNode)||[]),!1)).filter((function(t){return e==t.id})).map((function(e){return new t(e)})).collect(new y.ArrayCollector))),n=n.concat(this.querySelectorAll('[id="'.concat(e,'"]'))),new(t.bind.apply(t,s([void 0],u(n),!1)))},t.prototype.byIdDeep=function(e,r){var n=[];r&&(n=n.concat(h.LazyStream.of.apply(h.LazyStream,s([],u((null==this?void 0:this.rootNode)||[]),!1)).filter((function(t){return e==t.id})).map((function(e){return new t(e)})).collect(new y.ArrayCollector)));var o=this.querySelectorAllDeep('[id="'.concat(e,'"]'));return o.length&&n.push(o),new(t.bind.apply(t,s([void 0],u(n),!1)))},t.prototype.byTagName=function(e,r,n){var o,i=[];return r&&(i=h.LazyStream.of.apply(h.LazyStream,s([],u(null!==(o=null==this?void 0:this.rootNode)&&void 0!==o?o:[]),!1)).filter((function(t){return(null==t?void 0:t.tagName)==e})).reduce((function(t,e){return t.concat([e])}),i).orElse(i).value),n?i.push(this.querySelectorAllDeep(e)):i.push(this.querySelectorAll(e)),new(t.bind.apply(t,s([void 0],u(i),!1)))},t.prototype.attr=function(t,e){return void 0===e&&(e=null),new A(this,t,e)},t.prototype.hasClass=function(t){var e=!1;return this.eachElem((function(r){if(e=r.classList.contains(t))return!1})),e},t.prototype.addClass=function(t){return this.eachElem((function(e){return e.classList.add(t)})),this},t.prototype.removeClass=function(t){return this.eachElem((function(e){return e.classList.remove(t)})),this},t.prototype.isMultipartCandidate=function(t){var e=this;void 0===t&&(t=!1);return this.stream.filter((function(r){return function(r){var n;return 0!=r.length&&(1==r.length?"input"==r.tagName.get("booga").value.toLowerCase()&&"file"==((null===(n=r.attr("type"))||void 0===n?void 0:n.value)||"").toLowerCase()||(t?e.querySelectorAllDeep("input[type='file']").firstElem().isPresent():e.querySelectorAll("input[type='file']").firstElem().isPresent()):r.isMultipartCandidate(t))}(r)})).first().isPresent()},t.prototype.html=function(t){return p.Optional.fromNullable(t).isAbsent()?this.isPresent()?p.Optional.fromNullable(this.innerHtml):p.Optional.absent:(this.innerHtml=t,this)},t.prototype.dispatchEvent=function(t){return this.eachElem((function(e){return e.dispatchEvent(t)})),this},Object.defineProperty(t.prototype,"innerHtml",{get:function(){var t=[];return this.eachElem((function(e){return t.push(e.innerHTML)})),t.join("")},set:function(t){this.eachElem((function(e){return e.innerHTML=t}))},enumerable:!1,configurable:!0}),t.prototype._mozMatchesSelector=function(t,e){var r=t,n=r.matchesSelector||r.mozMatchesSelector||r.msMatchesSelector||r.oMatchesSelector||r.webkitMatchesSelector||function(e){for(var r=(document||window.ownerDocument).querySelectorAll(e),n=r.length;--n>=0&&r.item(n)!==t;);return n>-1};return n.call(t,e)},t.prototype.filterSelector=function(e){var r=this,n=[];return this.eachElem((function(t){r._mozMatchesSelector(t,e)&&n.push(t)})),new(t.bind.apply(t,s([void 0],u(n),!1)))},t.prototype.matchesSelector=function(t){var e=this;return this.eachElem((function(r){if(!e._mozMatchesSelector(r,t))return!1})),!0},t.prototype.getIf=function(){for(var t=[],e=0;e<arguments.length;e++)t[e]=arguments[e];for(var r=this.childNodes,n=0;n<t.length;n++)if((r=r.filterSelector(t[n])).isAbsent())return r;return r},t.prototype.eachElem=function(t){for(var e=0,r=this.rootNode.length;e<r&&!1!==t(this.rootNode[e],e);e++);return this},t.prototype.firstElem=function(t){return void 0===t&&(t=function(t){return t}),this.rootNode.length>1&&t(this.rootNode[0],0),this},t.prototype.each=function(e){return h.Stream.of.apply(h.Stream,s([],u(this.rootNode),!1)).each((function(r,n){if(null!=r)return e(t.byId(r),n)})),this},t.prototype.first=function(t){return void 0===t&&(t=function(t){return t}),this.rootNode.length>=1?(t(this.get(0),0),this.get(0)):this},t.prototype.filter=function(e){var r=[];return this.each((function(t){e(t)&&r.push(t)})),new(t.bind.apply(t,s([void 0],u(r),!1)))},t.prototype.globalEval=function(t,e){var r=document.getElementsByTagName("head")[0]||document.documentElement,n=document.createElement("script");e&&n.setAttribute("nonce",e),n.type="text/javascript",n.innerHTML=t;var o=r.appendChild(n);return r.removeChild(o),this},t.prototype.detach=function(){return this.eachElem((function(t){t.parentNode.removeChild(t)})),this},t.prototype.appendTo=function(t){this.eachElem((function(e){t.getAsElem(0).orElseLazy((function(){return{appendChild:function(t){}}})).value.appendChild(e)}))},t.prototype.loadScriptEval=function(t,e,r){var n=this;void 0===e&&(e=0),void 0===r&&(r="utf-8");var o=new XMLHttpRequest;return o.open("GET",t,!1),r&&o.setRequestHeader("Content-Type","application/x-javascript; charset:"+r),o.send(null),o.onload=function(r){e?setTimeout((function(){n.globalEval(o.responseText+"\r\n//@ sourceURL="+t)}),e):n.globalEval(o.responseText.replace(/\n/g,"\r\n")+"\r\n//@ sourceURL="+t)},o.onerror=function(t){throw Error(t)},this},t.prototype.insertAfter=function(){for(var e=[],r=0;r<arguments.length;r++)e[r]=arguments[r];this.each((function(t){for(var r=t.getAsElem(0).value,n=r.parentNode,o=function(t){var o=r.nextSibling;e[t].eachElem((function(t){o?(n.insertBefore(t,o),r=o):n.appendChild(t)}))},i=0;i<e.length;i++)o(i)}));var n=[];return n.push(this),n=n.concat(e),new(t.bind.apply(t,s([void 0],u(n),!1)))},t.prototype.insertBefore=function(){for(var e=[],r=0;r<arguments.length;r++)e[r]=arguments[r];this.each((function(t){for(var r=t.getAsElem(0).value,n=r.parentNode,o=0;o<e.length;o++)e[o].eachElem((function(t){n.insertBefore(t,r)}))}));var n=[];return n.push(this),n=n.concat(e),new(t.bind.apply(t,s([void 0],u(n),!1)))},t.prototype.orElse=function(){for(var e=[],r=0;r<arguments.length;r++)e[r]=arguments[r];return this.isPresent()?this:new(t.bind.apply(t,s([void 0],u(e),!1)))},t.prototype.orElseLazy=function(e){return this.isPresent()?this:new t(e())},t.prototype.parents=function(e){var r=new Set,n=[],o=e.toLowerCase(),i=function(t){(t.tagName||"").toLowerCase()!=o||r.has(t)||(r.add(t),n.push(t))};return this.eachElem((function(t){for(var r;t.parentNode||t.host;)if(t=null!==(r=null==t?void 0:t.parentNode)&&void 0!==r?r:null==t?void 0:t.host,i(t),"form"==e&&n.length)return!1})),new(t.bind.apply(t,s([void 0],u(n),!1)))},t.prototype.copyAttrs=function(t){var e=this;return t.eachElem((function(t){var r,n,o=m(t.attributes);try{for(var i=c(o),a=i.next();!a.done;a=i.next()){var l=a.value,u=l.value,s=l.name;switch(s){case"id":e.id.value=u;break;case"disabled":e.resolveAttributeHolder("disabled").disabled=u;break;case"checked":e.resolveAttributeHolder("checked").checked=u;break;default:e.attr(s).value=u}}}catch(t){r={error:t}}finally{try{a&&!a.done&&(n=i.return)&&n.call(i)}finally{if(r)throw r.error}}})),this},t.prototype.resolveAttributeHolder=function(t){void 0===t&&(t="value");var e=[];return e[t]=null,t in this.getAsElem(0).value?this.getAsElem(0).value:e},t.prototype.outerHTML=function(e,r,n,o){var i;if(void 0===o&&(o=!1),!this.isAbsent()){var a=null===(i=null===document||void 0===document?void 0:document.activeElement)||void 0===i?void 0:i.id,l=a?t.getCaretPosition(document.activeElement):null,c=t.fromMarkup(e),f=[],p=this.getAsElem(0).value,h=c.get(0),y=p.parentNode,v=h.getAsElem(0).value;if(y.replaceChild(v,p),f.push(new t(v)),this.isAbsent())return this;var d=[];c.length>1&&(d=d.concat.apply(d,s([],u(c.values.slice(1)),!1)),f.push(t.byId(v).insertAfter(new(t.bind.apply(t,s([void 0],u(d),!1)))))),r&&this.runScripts(),n&&this.runCss();var m=t.byId(a);return a&&m.isPresent()&&null!=l&&void 0!==l&&m.eachElem((function(e){return t.setCaretPosition(e,l)})),c}},t.prototype.runScripts=function(e){var r=this;void 0===e&&(e=w);var n=[],o=g,i=function(t){var i=t.tagName,a=t.type||"";if(i&&o(i,"script")&&(""===a||o(a,"text/javascript")||o(a,"javascript")||o(a,"text/ecmascript")||o(a,"ecmascript"))){var l=t.getAttribute("src");if(void 0!==l&&null!=l&&l.length>0)e(l)&&(n.length&&(r.globalEval(n.join("\n")),n=[]),r.loadScriptEval(l,0,"UTF-8"));else{for(var u=d(t.text||t.innerText||t.innerHTML),s=!0;s;)s=!1,"\x3c!--"==u.substring(0,4)&&(u=u.substring(4),s=!0),"//\x3c!--"==u.substring(0,4)&&(u=u.substring(6),s=!0),"//<![CDATA["==u.substring(0,11)&&(u=u.substring(11),s=!0);n.push(u)}}};try{new t(this.filterSelector("script"),this.querySelectorAll("script")).stream.flatMap((function(t){return h.Stream.of(t.values)})).sort((function(t,e){return t.compareDocumentPosition(e)-3})).each((function(t){return i(t)})),n.length&&this.globalEval(n.join("\n"))}catch(t){window.console&&window.console.error&&console.error(t.message||t.description)}finally{i=null}return this},t.prototype.runCss=function(){var e=function(t,e){var r,n,o,i,a=document.createElement("style");document.getElementsByTagName("head")[0].appendChild(a);var l=null!==(r=a.sheet)&&void 0!==r?r:a.styleSheet;a.setAttribute("rel",null!==(n=t.getAttribute("rel"))&&void 0!==n?n:"stylesheet"),a.setAttribute("type",null!==(o=t.getAttribute("type"))&&void 0!==o?o:"text/css"),null!==(i=null==l?void 0:l.cssText)&&void 0!==i&&i?l.cssText=e:a.appendChild(document.createTextNode(e))};return new t(this.filterSelector("link, style"),this.querySelectorAll("link, style")).stream.flatMap((function(t){return h.Stream.of(t.values)})).sort((function(t,e){return t.compareDocumentPosition(e)-3})).each((function(t){return function(t){var r=t.tagName;if(r&&g(r,"link")&&g(t.getAttribute("type"),"text/css"))e(t,"@import url('"+t.getAttribute("href")+"');");else if(r&&g(r,"style")&&g(t.getAttribute("type"),"text/css")){var n=[],o=Array.prototype.slice.call(t.childNodes);o?o.forEach((function(t){return n.push(t.innerHTML||t.data)})):t.innerHTML&&n.push(t.innerHTML),e(t,n.join(""))}}(t)})),this},t.prototype.click=function(){return this.fireEvent("click"),this},t.prototype.addEventListener=function(t,e,r){return this.eachElem((function(n){return n.addEventListener(t,e,r)})),this},t.prototype.removeEventListener=function(t,e,r){return this.eachElem((function(n){return n.removeEventListener(t,e,r)})),this},t.prototype.fireEvent=function(t){this.eachElem((function(e){var r;if(e.ownerDocument)r=e.ownerDocument;else{if(9!=e.nodeType)throw new Error("Invalid node passed to fireEvent: "+e.id);r=e}if(e.dispatchEvent){var n="";switch(t){case"click":case"mousedown":case"mouseup":n="MouseEvents";break;case"focus":case"change":case"blur":case"select":n="HTMLEvents";break;default:throw"fireEvent: Couldn't find an event class for event '"+t+"'."}var o=r.createEvent(n);o.initEvent(t,!0,!0),o.synthetic=!0,e.dispatchEvent(o)}else if(e.fireEvent){var i=r.createEventObject();i.synthetic=!0,e.fireEvent("on"+t,i)}}))},t.prototype.textContent=function(t){return void 0===t&&(t=""),this.stream.map((function(t){return t.getAsElem(0).orElseLazy((function(){return{textContent:""}})).value.textContent||""})).reduce((function(e,r){return e+t+r}),"").value},t.prototype.innerText=function(t){return void 0===t&&(t=""),this.stream.map((function(t){return t.getAsElem(0).orElseLazy((function(){return{innerText:""}})).value.innerText||""})).reduce((function(e,r){return[e,r].join(t)}),"").value},t.prototype.encodeFormElement=function(t){if(void 0===t&&(t=new p.Config({})),!this.name.isAbsent()){var e=t.shallowCopy;return this.each((function(t){var r,n;if(!t.name.isAbsent()){var o=t.name.value,i=t.tagName.orElse("__none__").value.toLowerCase(),a=t.type.orElse("__none__").value.toLowerCase();if(a=a.toLowerCase(),("input"==i||"textarea"==i||"select"==i)&&null!=o&&""!=o&&!t.disabled){if("select"==i){var l=t.getAsElem(0).value;if(l.selectedIndex>=0)for(var u=l.options.length,s=0;s<u;s++)if(l.options[s].selected){var c=l.options[s];e.append(o).value=null!=c.getAttribute("value")?c.value:c.text}}if(i!=f.SELECT&&a!=f.BUTTON&&a!=f.RESET&&a!=f.SUBMIT&&a!=f.IMAGE&&(a!=f.CHECKBOX&&a!=f.RADIO||t.checked)){var p=null!==(n=null===(r=t.value.value)||void 0===r?void 0:r.files)&&void 0!==n?n:[];(null==p?void 0:p.length)?e.append(o).value=p[0]:e.append(o).value=t.inputValue.value}}}})),e}},Object.defineProperty(t.prototype,"cDATAAsString",{get:function(){return this.lazyStream.flatMap((function(t){return t.childNodes.stream})).filter((function(t){var e,r;return 4==(null===(r=null===(e=null==t?void 0:t.value)||void 0===e?void 0:e.value)||void 0===r?void 0:r.nodeType)})).reduce((function(t,e){var r,n,o;return t.push(null!==(o=null===(n=null===(r=null==e?void 0:e.value)||void 0===r?void 0:r.value)||void 0===n?void 0:n.data)&&void 0!==o?o:""),t}),[]).value.join("")},enumerable:!1,configurable:!0}),t.prototype.subNodes=function(e,r){return p.Optional.fromNullable(r).isAbsent()&&(r=this.length),new(t.bind.apply(t,s([void 0],u(this.rootNode.slice(e,Math.min(r,this.length))),!1)))},t.prototype.limits=function(t){return this._limits=t,this},t.prototype.hasNext=function(){var t=-1!=this._limits&&this.pos>=this._limits-1,e=this.pos>=this.values.length-1;return!(t||e)},t.prototype.next=function(){return this.hasNext()?(this.pos++,new t(this.values[this.pos])):null},t.prototype.reset=function(){this.pos=-1},t.prototype.attachShadow=function(e){void 0===e&&(e={mode:"open"});var r=[];return this.eachElem((function(n){var o;if(!(null==n?void 0:n.attachShadow))throw new Error("Shadow dom creation not supported by the browser, please use a shim, to gain this functionality");o=t.byId(n.attachShadow(e)),r.push(o)})),new(t.bind.apply(t,s([void 0],u(r),!1)))},t.prototype.waitUntilDom=function(t,e){return void 0===e&&(e={attributes:!0,childList:!0,subtree:!0,timeout:500,interval:100}),a(this,void 0,void 0,(function(){return l(this,(function(r){return[2,S(this,t,e)]}))}))},Object.defineProperty(t.prototype,"shadowElements",{get:function(){var e=(this.querySelectorAll("*").filter((function(t){return t.hasShadow})).allElems()||[]).map((function(t){return t.shadowRoot}));return new(t.bind.apply(t,s([void 0],u(e),!1)))},enumerable:!1,configurable:!0}),Object.defineProperty(t.prototype,"shadowRoot",{get:function(){for(var e=[],r=0;r<this.rootNode.length;r++)this.rootNode[r].shadowRoot&&e.push(this.rootNode[r].shadowRoot);return new(t.bind.apply(t,s([void 0],u(e),!1)))},enumerable:!1,configurable:!0}),Object.defineProperty(t.prototype,"hasShadow",{get:function(){for(var t=0;t<this.rootNode.length;t++)if(this.rootNode[t].shadowRoot)return!0;return!1},enumerable:!1,configurable:!0}),t.getCaretPosition=function(t){var e=0;try{if(null===document||void 0===document?void 0:document.selection){t.focus();var r=document.selection.createRange();r.moveStart("character",-t.value.length),e=r.text.length}}catch(t){}return e},t.setCaretPosition=function(t,e){(null==t?void 0:t.focus)&&(null==t||t.focus()),(null==t?void 0:t.setSelectiongRange)&&(null==t||t.setSelectiongRange(e,e))},t.prototype[Symbol.iterator]=function(){var t=this;return{next:function(){return{done:!t.hasNext(),value:t.next()}}}},t.absent=new t,t}();e.DomQuery=x;var E=function(){function t(){this.data=[]}return t.prototype.collect=function(t){this.data.push(t)},Object.defineProperty(t.prototype,"finalValue",{get:function(){return new(x.bind.apply(x,s([void 0],u(this.data),!1)))},enumerable:!1,configurable:!0}),t}();e.DomQueryCollector=E,e.DQ=x},805:function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.Lang=void 0;var n=r(152);!function(t){function e(t){for(var e=/\s/,r=(t=t.replace(/^\s\s*/,"")).length;e.test(t.charAt(--r)););return t.slice(0,r+1)}function r(t){return!!arguments.length&&null!=t&&("string"==typeof t||t instanceof String)}t.saveResolve=function(t,e){void 0===e&&(e=null);try{var r=t();return n.Optional.fromNullable(null!=r?r:e)}catch(t){return n.Optional.absent}},t.saveResolveLazy=function(t,e){void 0===e&&(e=null);try{var r=t();return n.Optional.fromNullable(null!=r?r:e())}catch(t){return n.Optional.absent}},t.strToArray=function(t,r){void 0===r&&(r=/\./gi);var n=[];return t.split(r).forEach((function(t){n.push(e(t))})),n},t.trim=e,t.objToArray=function(t,e,r){return void 0===e&&(e=0),void 0===r&&(r=[]),"__undefined__"==(null!=t?t:"__undefined__")?null!=r?r:null:t instanceof Array&&!e&&!r?t:r.concat(Array.prototype.slice.call(t,e))},t.equalsIgnoreCase=function(t,e){var r=null!=e?e:"___no_value__";return(null!=t?t:"___no_value__").toLowerCase()===r.toLowerCase()},t.assertType=function(t,e){return r(e)?typeof t==e:t instanceof e},t.isString=r,t.isFunc=function(t){return t instanceof Function||"function"==typeof t},t.objAssign=function(t){for(var e=[],r=1;r<arguments.length;r++)e[r-1]=arguments[r];if(null==t)throw new TypeError("Cannot convert undefined or null to object");var n=Object(t);return Object.assign?(e.forEach((function(t){return Object.assign(n,t)})),n):(e.filter((function(t){return null!=t})).forEach((function(t){var e=t;Object.keys(e).filter((function(t){return Object.prototype.hasOwnProperty.call(e,t)})).forEach((function(t){return n[t]=e[t]}))})),n)}}(e.Lang||(e.Lang={}))},152:function(t,e,r){var n,o=this&&this.__extends||(n=function(t,e){return n=Object.setPrototypeOf||{__proto__:[]}instanceof Array&&function(t,e){t.__proto__=e}||function(t,e){for(var r in e)Object.prototype.hasOwnProperty.call(e,r)&&(t[r]=e[r])},n(t,e)},function(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Class extends value "+String(e)+" is not a constructor or null");function r(){this.constructor=t}n(t,e),t.prototype=null===e?Object.create(e):(r.prototype=e.prototype,new r)}),i=this&&this.__read||function(t,e){var r="function"==typeof Symbol&&t[Symbol.iterator];if(!r)return t;var n,o,i=r.call(t),a=[];try{for(;(void 0===e||e-- >0)&&!(n=i.next()).done;)a.push(n.value)}catch(t){o={error:t}}finally{try{n&&!n.done&&(r=i.return)&&r.call(i)}finally{if(o)throw o.error}}return a},a=this&&this.__spreadArray||function(t,e,r){if(r||2===arguments.length)for(var n,o=0,i=e.length;o<i;o++)!n&&o in e||(n||(n=Array.prototype.slice.call(e,0,o)),n[o]=e[o]);return t.concat(n||Array.prototype.slice.call(e))};Object.defineProperty(e,"__esModule",{value:!0}),e.Config=e.ValueEmbedder=e.Optional=e.Monad=void 0;var l=r(805),u=r(255),s=r(551),c=l.Lang.objAssign,f=function(){function t(t){this._value=t}return Object.defineProperty(t.prototype,"value",{get:function(){return this._value},enumerable:!1,configurable:!0}),t.prototype.map=function(e){return e||(e=function(t){return t}),new t(e(this.value))},t.prototype.flatMap=function(e){for(var r=this.map(e);(null==r?void 0:r.value)instanceof t;)r=r.value;return r},t}();e.Monad=f;var p=function(t){function e(e){return t.call(this,e)||this}return o(e,t),Object.defineProperty(e.prototype,"value",{get:function(){return this._value instanceof f?this._value.flatMap().value:this._value},enumerable:!1,configurable:!0}),e.fromNullable=function(t){return new e(t)},e.prototype.isAbsent=function(){return void 0===this.value||null==this.value},e.prototype.isPresent=function(t){var e=this.isAbsent();return!e&&t&&t.call(this,this),!e},e.prototype.ifPresentLazy=function(t){return void 0===t&&(t=function(){}),this.isPresent.call(this,t),this},e.prototype.orElse=function(t){return this.isPresent()?this:null==t?e.absent:this.flatMap((function(){return t}))},e.prototype.orElseLazy=function(t){return this.isPresent()?this:this.flatMap(t)},e.prototype.flatMap=function(r){var n=t.prototype.flatMap.call(this,r);return n instanceof e?n.flatMap():e.fromNullable(n.value)},e.prototype.getIf=function(){for(var t=[],e=0;e<arguments.length;e++)t[e]=arguments[e];for(var r=this,n=0;n<t.length;n++){var o=this.keyVal(t[n]),i=this.arrayIndex(t[n]);if(""===o&&i>=0){if((r=this.getClass().fromNullable(r.value instanceof Array?r.value.length<i?null:r.value[i]:null)).isAbsent())return r}else if(o&&i>=0){if(r.getIfPresent(o).isAbsent())return r;if((r=r.getIfPresent(o).value instanceof Array?this.getClass().fromNullable(r.getIfPresent(o).value[i]):this.getClass().absent).isAbsent())return r}else{if((r=r.getIfPresent(o)).isAbsent())return r;i>-1&&(r=this.getClass().fromNullable(r.value[i]))}}return r},e.prototype.match=function(t){return!this.isAbsent()&&t(this.value)},e.prototype.get=function(t){return void 0===t&&(t=e.absent),this.isAbsent()?this.getClass().fromNullable(t).flatMap():this.getClass().fromNullable(this.value).flatMap()},e.prototype.toJson=function(){return JSON.stringify(this.value)},e.prototype.getClass=function(){return e},e.prototype.arrayIndex=function(t){var e=t.indexOf("["),r=t.indexOf("]");return e>=0&&r>0&&e<r?parseInt(t.substring(e+1,r)):-1},e.prototype.keyVal=function(t){var e=t.indexOf("[");return e>=0?t.substring(0,e):t},e.prototype.getIfPresent=function(t){return this.isAbsent()?this.getClass().absent:this.getClass().fromNullable(this.value[t]).flatMap()},e.prototype.resolve=function(t){if(this.isAbsent())return e.absent;try{return e.fromNullable(t(this.value))}catch(t){return e.absent}},e.absent=e.fromNullable(null),e}(f);e.Optional=p;var h=function(t){function e(e,r){void 0===r&&(r="value");var n=t.call(this,e)||this;return n.key=r,n}return o(e,t),Object.defineProperty(e.prototype,"value",{get:function(){return this._value?this._value[this.key]:null},set:function(t){this._value&&(this._value[this.key]=t)},enumerable:!1,configurable:!0}),e.prototype.orElse=function(t){var r={};return r[this.key]=t,this.isPresent()?this:new e(r,this.key)},e.prototype.orElseLazy=function(t){if(this.isPresent())return this;var r={};return r[this.key]=t(),new e(r,this.key)},e.prototype.getClass=function(){return e},e.fromNullable=function(t,r){return void 0===r&&(r="value"),new e(t,r)},e.absent=e.fromNullable(null),e}(p);e.ValueEmbedder=h;var y=function(t){function e(e,r,n){var o=t.call(this,e,r)||this;return o.arrPos=null!=n?n:-1,o}return o(e,t),Object.defineProperty(e.prototype,"value",{get:function(){return""==this.key&&this.arrPos>=0?this._value[this.arrPos]:this.key&&this.arrPos>=0?this._value[this.key][this.arrPos]:this._value[this.key]},set:function(t){""==this.key&&this.arrPos>=0?this._value[this.arrPos]=t:this.key&&this.arrPos>=0?this._value[this.key][this.arrPos]=t:this._value[this.key]=t},enumerable:!1,configurable:!0}),e.absent=e.fromNullable(null),e}(h),v=function(t){function e(e){return t.call(this,e)||this}return o(e,t),Object.defineProperty(e.prototype,"shallowCopy",{get:function(){return new e(s.Stream.ofAssoc(this.value).collect(new u.AssocArrayCollector))},enumerable:!1,configurable:!0}),Object.defineProperty(e.prototype,"deepCopy",{get:function(){return new e(c({},this.value))},enumerable:!1,configurable:!0}),e.fromNullable=function(t){return new e(t)},e.prototype.shallowMerge=function(t,e,r){var n=this;void 0===e&&(e=!0),void 0===r&&(r=!1);var o=function(o){!e&&o in l.value||(r?Array.isArray(t.getIf(o).value)?s.Stream.of.apply(s.Stream,a([],i(t.getIf(o).value),!1)).each((function(t){return n.append(o).value=t})):l.append(o).value=t.getIf(o).value:l.assign(o).value=t.getIf(o).value)},l=this;for(var u in t.value)o(u)},e.prototype.append=function(){for(var t=[],e=0;e<arguments.length;e++)t[e]=arguments[e];var r=t.length<1;if(!r){var n=t[t.length-1],o=(this.keyVal(n),this.getIf.apply(this,a([],i(t),!1)).isPresent());this.buildPath(t);var l=this.arrayIndex(n);if(l>-1)throw Error("Append only possible on non array properties, use assign on indexed data");var u=this.getIf.apply(this,a([],i(t),!1)).value;Array.isArray(u)||(u=this.assign.apply(this,a([],i(t),!1)).value=[u]),o&&u.push({}),l=u.length-1;var s=new y(1==t.length?this.value:this.getIf.apply(this,t.slice(0,t.length-1)).value,n,l);return s}},e.prototype.appendIf=function(t){for(var e=[],r=1;r<arguments.length;r++)e[r-1]=arguments[r];return t?this.append.apply(this,a([],i(e),!1)):{value:null}},e.prototype.assign=function(){for(var t=[],e=0;e<arguments.length;e++)t[e]=arguments[e];if(!(t.length<1)){this.buildPath(t);var r=this.keyVal(t[t.length-1]),n=this.arrayIndex(t[t.length-1]),o=new y(1==t.length?this.value:this.getIf.apply(this,t.slice(0,t.length-1)).value,r,n);return o}},e.prototype.assignIf=function(t){for(var e=[],r=1;r<arguments.length;r++)e[r-1]=arguments[r];return t?this.assign.apply(this,a([],i(e),!1)):{value:null}},e.prototype.getIf=function(){for(var e=[],r=0;r<arguments.length;r++)e[r]=arguments[r];return this.getClass().fromNullable(t.prototype.getIf.apply(this,e).value)},e.prototype.get=function(e){return this.getClass().fromNullable(t.prototype.get.call(this,e).value)},e.prototype.delete=function(t){return t in this.value&&delete this.value[t],this},e.prototype.toJson=function(){return JSON.stringify(this.value)},e.prototype.getClass=function(){return e},e.prototype.setVal=function(t){this._value=t},e.prototype.buildPath=function(t){for(var e=this,r=this.getClass().fromNullable(null),n=-1,o=function(t,e){for(var r=t.length,n=r+e,o=r;o<n;o++)t.push({})},i=0;i<t.length;i++){var a=this.keyVal(t[i]),l=this.arrayIndex(t[i]);if(""===a&&l>=0)e.setVal(e.value instanceof Array?e.value:[]),o(e.value,l+1),n>=0&&(r.value[n]=e.value),r=e,n=l,e=this.getClass().fromNullable(e.value[l]);else{var u=e.getIf(a);if(-1==l)u.isAbsent()?u=this.getClass().fromNullable(e.value[a]={}):e=u;else{var s=u.value instanceof Array?u.value:[];o(s,l+1),e.value[a]=s,u=this.getClass().fromNullable(s[l])}r=e,n=l,e=u}}return this},e}(p);e.Config=v},255:function(t,e,r){var n=this&&this.__read||function(t,e){var r="function"==typeof Symbol&&t[Symbol.iterator];if(!r)return t;var n,o,i=r.call(t),a=[];try{for(;(void 0===e||e-- >0)&&!(n=i.next()).done;)a.push(n.value)}catch(t){o={error:t}}finally{try{n&&!n.done&&(r=i.return)&&r.call(i)}finally{if(o)throw o.error}}return a},o=this&&this.__spreadArray||function(t,e,r){if(r||2===arguments.length)for(var n,o=0,i=e.length;o<i;o++)!n&&o in e||(n||(n=Array.prototype.slice.call(e,0,o)),n[o]=e[o]);return t.concat(n||Array.prototype.slice.call(e))};Object.defineProperty(e,"__esModule",{value:!0}),e.QueryFormStringCollector=e.QueryFormDataCollector=e.FormDataCollector=e.AssocArrayCollector=e.Run=e.ArrayAssocArrayCollector=e.ArrayCollector=e.FlatMapStreamDataSource=e.MappedStreamDataSource=e.FilteredStreamDatasource=e.ArrayStreamDataSource=e.SequenceDataSource=void 0;var i=r(551),a=function(){function t(t,e){this.total=e,this.start=t,this.value=t}return t.prototype.hasNext=function(){return this.value<this.total},t.prototype.next=function(){return Math.min(this.value++,this.total-1)},t.prototype.reset=function(){this.value=0},t}();e.SequenceDataSource=a;var l=function(){function t(){for(var t=[],e=0;e<arguments.length;e++)t[e]=arguments[e];this.dataPos=-1,this.value=t}return t.prototype.hasNext=function(){return this.value.length-1>this.dataPos},t.prototype.next=function(){return this.dataPos++,this.value[this.dataPos]},t.prototype.reset=function(){this.dataPos=-1},t}();e.ArrayStreamDataSource=l;var u=function(){function t(t,e){this.filteredNext=null,this.filterFunc=t,this.inputDataSource=e}return t.prototype.hasNext=function(){for(;null==this.filteredNext&&this.inputDataSource.hasNext();){var t=this.inputDataSource.next();if(this.filterFunc(t))return this.filteredNext=t,!0;this.filteredNext=null}return null!=this.filteredNext},t.prototype.next=function(){var t=this.filteredNext;return this.filteredNext=null,this.hasNext(),t},t.prototype.reset=function(){this.filteredNext=null,this.inputDataSource.reset()},t}();e.FilteredStreamDatasource=u;var s=function(){function t(t,e){this.mapFunc=t,this.inputDataSource=e}return t.prototype.hasNext=function(){return this.inputDataSource.hasNext()},t.prototype.next=function(){return this.mapFunc(this.inputDataSource.next())},t.prototype.reset=function(){this.inputDataSource.reset()},t}();e.MappedStreamDataSource=s;var c=function(){function t(t,e){this.mapFunc=t,this.inputDataSource=e}return t.prototype.hasNext=function(){return this.resolveCurrentNext()||this.resolveNextNext()},t.prototype.resolveCurrentNext=function(){var t=!1;return this.activeDataSource&&(t=this.activeDataSource.hasNext()),t},t.prototype.resolveNextNext=function(){for(var t=!1;!t&&this.inputDataSource.hasNext();){var e=this.mapFunc(this.inputDataSource.next());Array.isArray(e)?this.activeDataSource=new(l.bind.apply(l,o([void 0],n(e),!1))):this.activeDataSource=e,t=this.activeDataSource.hasNext()}return t},t.prototype.next=function(){return this.activeDataSource.next()},t.prototype.reset=function(){this.inputDataSource.reset()},t}();e.FlatMapStreamDataSource=c;var f=function(){function t(){this.data=[]}return t.prototype.collect=function(t){this.data.push(t)},Object.defineProperty(t.prototype,"finalValue",{get:function(){return this.data},enumerable:!1,configurable:!0}),t}();e.ArrayCollector=f;var p=function(){function t(){this.finalValue={}}return t.prototype.collect=function(t){var e,r,n,o,i=null!==(e=null==t?void 0:t[0])&&void 0!==e?e:t;this.finalValue[i]=null!==(n=null===(r=this.finalValue)||void 0===r?void 0:r[i])&&void 0!==n?n:[],this.finalValue[i].push(null===(o=null==t?void 0:t[1])||void 0===o||o)},t}();e.ArrayAssocArrayCollector=p;var h=function(){function t(){}return t.prototype.collect=function(t){},Object.defineProperty(t.prototype,"finalValue",{get:function(){return null},enumerable:!1,configurable:!0}),t}();e.Run=h;var y=function(){function t(){this.finalValue={}}return t.prototype.collect=function(t){var e,r;this.finalValue[null!==(e=t[0])&&void 0!==e?e:t]=null===(r=t[1])||void 0===r||r},t}();e.AssocArrayCollector=y;var v=function(){function t(){this.finalValue=new FormData}return t.prototype.collect=function(t){this.finalValue.append(t.key,t.value)},t}();e.FormDataCollector=v;var d=function(){function t(){this.finalValue=new FormData}return t.prototype.collect=function(t){var e=t.encodeFormElement();e.isPresent()&&this.finalValue.append(t.name.value,e.get(t.name).value)},t}();e.QueryFormDataCollector=d;var m=function(){function t(){this.formData=[]}return t.prototype.collect=function(t){var e=t.encodeFormElement();e.isPresent()&&this.formData.push([t.name.value,e.get(t.name).value])},Object.defineProperty(t.prototype,"finalValue",{get:function(){return i.Stream.of.apply(i.Stream,o([],n(this.formData),!1)).map((function(t){return t.join("=")})).reduce((function(t,e){return[t,e].join("&")})).orElse("").value},enumerable:!1,configurable:!0}),t}();e.QueryFormStringCollector=m},551:function(t,e,r){var n=this&&this.__read||function(t,e){var r="function"==typeof Symbol&&t[Symbol.iterator];if(!r)return t;var n,o,i=r.call(t),a=[];try{for(;(void 0===e||e-- >0)&&!(n=i.next()).done;)a.push(n.value)}catch(t){o={error:t}}finally{try{n&&!n.done&&(r=i.return)&&r.call(i)}finally{if(o)throw o.error}}return a},o=this&&this.__spreadArray||function(t,e,r){if(r||2===arguments.length)for(var n,o=0,i=e.length;o<i;o++)!n&&o in e||(n||(n=Array.prototype.slice.call(e,0,o)),n[o]=e[o]);return t.concat(n||Array.prototype.slice.call(e))};Object.defineProperty(e,"__esModule",{value:!0}),e.LazyStream=e.Stream=void 0;var i=r(152),a=r(255),l=function(){function t(){for(var t=[],e=0;e<arguments.length;e++)t[e]=arguments[e];this._limits=-1,this.pos=-1,this.value=t}return t.of=function(){for(var e=[],r=0;r<arguments.length;r++)e[r]=arguments[r];return new(t.bind.apply(t,o([void 0],n(e),!1)))},t.ofAssoc=function(t){return this.of.apply(this,o([],n(Object.keys(t)),!1)).map((function(e){return[e,t[e]]}))},t.ofDataSource=function(e){for(var r=[];e.hasNext();)r.push(e.next());return new(t.bind.apply(t,o([void 0],n(r),!1)))},t.prototype.limits=function(t){return this._limits=t,this},t.prototype.concat=function(){for(var e=[],r=0;r<arguments.length;r++)e[r]=arguments[r];return t.of.apply(t,o([this],n(e),!1)).flatMap((function(t){return t}))},t.prototype.onElem=function(t){for(var e=0;e<this.value.length&&(-1==this._limits||e<this._limits)&&!1!==t(this.value[e],e);e++);return this},t.prototype.each=function(t){this.onElem(t)},t.prototype.map=function(e){e||(e=function(t){return t});var r=[];return this.each((function(t,n){r.push(e(t))})),new(t.bind.apply(t,o([void 0],n(r),!1)))},t.prototype.flatMap=function(e){var r=[];return this.each((function(t){var i=e(t);r=Array.isArray(i)?r.concat(i):r.concat.apply(r,o([],n(i.value),!1))})),t.of.apply(t,o([],n(r),!1))},t.prototype.filter=function(e){var r=[];return this.each((function(t){e(t)&&r.push(t)})),new(t.bind.apply(t,o([void 0],n(r),!1)))},t.prototype.reduce=function(t,e){void 0===e&&(e=null);for(var r=null!=e?0:1,n=null!=e?e:this.value.length?this.value[0]:null,o=r;o<this.value.length&&(-1==this._limits||o<this._limits);o++)n=t(n,this.value[o]);return i.Optional.fromNullable(n)},t.prototype.first=function(){return this.value&&this.value.length?i.Optional.fromNullable(this.value[0]):i.Optional.absent},t.prototype.last=function(){var t=this._limits>0?Math.min(this._limits,this.value.length):this.value.length;return i.Optional.fromNullable(t?this.value[t-1]:null)},t.prototype.anyMatch=function(t){for(var e=0;e<this.value.length&&(-1==this._limits||e<this._limits);e++)if(t(this.value[e]))return!0;return!1},t.prototype.allMatch=function(t){if(!this.value.length)return!1;for(var e=0,r=0;r<this.value.length;r++)t(this.value[r])&&e++;return e==this.value.length},t.prototype.noneMatch=function(t){for(var e=0,r=0;r<this.value.length;r++)t(this.value[r])||e++;return e==this.value.length},t.prototype.sort=function(e){var r=this.value.slice().sort(e);return t.of.apply(t,o([],n(r),!1))},t.prototype.collect=function(t){return this.each((function(e){return t.collect(e)})),t.finalValue},t.prototype.hasNext=function(){var t=-1!=this._limits&&this.pos>=this._limits-1,e=this.pos>=this.value.length-1;return!(t||e)},t.prototype.next=function(){return this.hasNext()?(this.pos++,this.value[this.pos]):null},t.prototype[Symbol.iterator]=function(){var t=this;return{next:function(){return{done:!t.hasNext(),value:t.next()}}}},t.prototype.reset=function(){this.pos=-1},t}();e.Stream=l;var u=function(){function t(t){this._limits=-1,this.pos=-1,this.dataSource=t}return t.of=function(){for(var e=[],r=0;r<arguments.length;r++)e[r]=arguments[r];return new t(new(a.ArrayStreamDataSource.bind.apply(a.ArrayStreamDataSource,o([void 0],n(e),!1))))},t.ofAssoc=function(t){return this.of.apply(this,o([],n(Object.keys(t)),!1)).map((function(e){return[e,t[e]]}))},t.ofStreamDataSource=function(e){return new t(e)},t.prototype.hasNext=function(){return!this.isOverLimits()&&this.dataSource.hasNext()},t.prototype.next=function(){var t=this.dataSource.next();return this.pos++,t},t.prototype.reset=function(){this.dataSource.reset(),this.pos=0,this._limits=-1},t.prototype.concat=function(){for(var e=[],r=0;r<arguments.length;r++)e[r]=arguments[r];return t.of.apply(t,o([this],n(e),!1)).flatMap((function(t){return t}))},t.prototype.nextFilter=function(t){if(this.hasNext()){var e=this.next();return t(e)?e:this.nextFilter(t)}return null},t.prototype.limits=function(t){return this._limits=t,this},t.prototype.collect=function(t){for(;this.hasNext();){var e=this.next();t.collect(e)}return t.finalValue},t.prototype.onElem=function(e){var r=this;return new t(new a.MappedStreamDataSource((function(t){return!1===e(t,r.pos)&&r.stop(),t}),this))},t.prototype.filter=function(e){return new t(new a.FilteredStreamDatasource(e,this))},t.prototype.map=function(e){return new t(new a.MappedStreamDataSource(e,this))},t.prototype.flatMap=function(e){return new t(new a.FlatMapStreamDataSource(e,this))},t.prototype.each=function(t){for(;this.hasNext();)!1===t(this.next())&&this.stop()},t.prototype.reduce=function(t,e){if(void 0===e&&(e=null),!this.hasNext())return i.Optional.absent;var r=null,n=null;if(null!=e)r=e,n=this.next();else{if(r=this.next(),!this.hasNext())return i.Optional.fromNullable(r);n=this.next()}for(r=t(r,n);this.hasNext();)r=t(r,n=this.next());return i.Optional.fromNullable(r)},t.prototype.last=function(){return this.hasNext()?this.reduce((function(t,e){return e})):i.Optional.absent},t.prototype.first=function(){return this.reset(),this.hasNext()?i.Optional.fromNullable(this.next()):i.Optional.absent},t.prototype.anyMatch=function(t){for(;this.hasNext();)if(t(this.next()))return!0;return!1},t.prototype.allMatch=function(t){for(;this.hasNext();)if(!t(this.next()))return!1;return!0},t.prototype.noneMatch=function(t){for(;this.hasNext();)if(t(this.next()))return!1;return!0},t.prototype.sort=function(e){var r=this.collect(new a.ArrayCollector);return r=r.sort(e),t.of.apply(t,o([],n(r),!1))},Object.defineProperty(t.prototype,"value",{get:function(){return this.collect(new a.ArrayCollector)},enumerable:!1,configurable:!0}),t.prototype[Symbol.iterator]=function(){var t=this;return{next:function(){return{done:!t.hasNext(),value:t.next()}}}},t.prototype.stop=function(){this.pos=this._limits+1e9},t.prototype.isOverLimits=function(){return-1!=this._limits&&this.pos>=this._limits-1},t}();e.LazyStream=u},121:function(t,e,r){var n,o=this&&this.__extends||(n=function(t,e){return n=Object.setPrototypeOf||{__proto__:[]}instanceof Array&&function(t,e){t.__proto__=e}||function(t,e){for(var r in e)Object.prototype.hasOwnProperty.call(e,r)&&(t[r]=e[r])},n(t,e)},function(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Class extends value "+String(e)+" is not a constructor or null");function r(){this.constructor=t}n(t,e),t.prototype=null===e?Object.create(e):(r.prototype=e.prototype,new r)});Object.defineProperty(e,"__esModule",{value:!0}),e.XQ=e.XMLQuery=void 0;var i=r(805),a=r(585),l=i.Lang.isString,u=function(t){function e(e,r){void 0===r&&(r="text/xml");var n;return l(e)?t.call(this,null==(n=e)?null:i.Lang.saveResolveLazy((function(){return new window.DOMParser}),(function(){return(t=new ActiveXObject("Microsoft.XMLDOM")).async=!1,{parseFromString:function(e,r){return t.loadXML(e)}};var t})).value.parseFromString(n,r))||this:t.call(this,e)||this}return o(e,t),e.prototype.isXMLParserError=function(){return this.querySelectorAll("parsererror").isPresent()},e.prototype.toString=function(){var t=[];return this.eachElem((function(e){var r,n,o,i=null!==(o=null===(n=null===(r=null===window||void 0===window?void 0:window.XMLSerializer)||void 0===r?void 0:r.constructor())||void 0===n?void 0:n.serializeToString(e))&&void 0!==o?o:null==e?void 0:e.xml;i&&t.push(i)})),t.join("")},e.prototype.parserErrorText=function(t){return this.querySelectorAll("parsererror").textContent(t)},e.parseXML=function(t){return new e(t)},e.parseHTML=function(t){return new e(t,"text/html")},e.fromString=function(t,r){return void 0===r&&(r="text/xml"),new e(t,r)},e}(a.DomQuery);e.XMLQuery=u,e.XQ=u}},e={};function r(n){var o=e[n];if(void 0!==o)return o.exports;var i=e[n]={exports:{}};return t[n].call(i.exports,i,i.exports,r),i.exports}var n={};!function(){var t=n;Object.defineProperty(t,"__esModule",{value:!0}),t.QueryFormDataCollector=t.FormDataCollector=t.AssocArrayCollector=t.ArrayCollector=t.QueryFormStringCollector=t.SequenceDataSource=t.FlatMapStreamDataSource=t.FilteredStreamDatasource=t.MappedStreamDataSource=t.ArrayStreamDataSource=t.LazyStream=t.Stream=t.XQ=t.XMLQuery=t.ValueEmbedder=t.Optional=t.Monad=t.Config=t.Lang=t.DQ=t.DomQueryCollector=t.ElementAttribute=t.DomQuery=void 0;var e=r(585);Object.defineProperty(t,"DomQuery",{enumerable:!0,get:function(){return e.DomQuery}}),Object.defineProperty(t,"ElementAttribute",{enumerable:!0,get:function(){return e.ElementAttribute}}),Object.defineProperty(t,"DomQueryCollector",{enumerable:!0,get:function(){return e.DomQueryCollector}}),Object.defineProperty(t,"DQ",{enumerable:!0,get:function(){return e.DQ}});var o=r(805);Object.defineProperty(t,"Lang",{enumerable:!0,get:function(){return o.Lang}});var i=r(152);Object.defineProperty(t,"Config",{enumerable:!0,get:function(){return i.Config}}),Object.defineProperty(t,"Monad",{enumerable:!0,get:function(){return i.Monad}}),Object.defineProperty(t,"Optional",{enumerable:!0,get:function(){return i.Optional}}),Object.defineProperty(t,"ValueEmbedder",{enumerable:!0,get:function(){return i.ValueEmbedder}});var a=r(121);Object.defineProperty(t,"XMLQuery",{enumerable:!0,get:function(){return a.XMLQuery}}),Object.defineProperty(t,"XQ",{enumerable:!0,get:function(){return a.XQ}});var l=r(551);Object.defineProperty(t,"Stream",{enumerable:!0,get:function(){return l.Stream}}),Object.defineProperty(t,"LazyStream",{enumerable:!0,get:function(){return l.LazyStream}});var u=r(255);Object.defineProperty(t,"ArrayStreamDataSource",{enumerable:!0,get:function(){return u.ArrayStreamDataSource}}),Object.defineProperty(t,"MappedStreamDataSource",{enumerable:!0,get:function(){return u.MappedStreamDataSource}}),Object.defineProperty(t,"FilteredStreamDatasource",{enumerable:!0,get:function(){return u.FilteredStreamDatasource}}),Object.defineProperty(t,"FlatMapStreamDataSource",{enumerable:!0,get:function(){return u.FlatMapStreamDataSource}}),Object.defineProperty(t,"SequenceDataSource",{enumerable:!0,get:function(){return u.SequenceDataSource}}),Object.defineProperty(t,"QueryFormStringCollector",{enumerable:!0,get:function(){return u.QueryFormStringCollector}}),Object.defineProperty(t,"ArrayCollector",{enumerable:!0,get:function(){return u.ArrayCollector}}),Object.defineProperty(t,"AssocArrayCollector",{enumerable:!0,get:function(){return u.AssocArrayCollector}}),Object.defineProperty(t,"FormDataCollector",{enumerable:!0,get:function(){return u.FormDataCollector}}),Object.defineProperty(t,"QueryFormDataCollector",{enumerable:!0,get:function(){return u.QueryFormDataCollector}})}();var o=exports;for(var i in n)o[i]=n[i];n.__esModule&&Object.defineProperty(o,"__esModule",{value:!0})}();
-//# sourceMappingURL=index_core.js.map
+
+/* Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator = (this && this.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (_) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.DQ = exports.DomQueryCollector = exports.DomQuery = exports.ElementAttribute = void 0;
+var Monad_1 = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
+var Stream_1 = __webpack_require__(/*! ./Stream */ "./node_modules/mona-dish/src/main/typescript/Stream.ts");
+var SourcesCollectors_1 = __webpack_require__(/*! ./SourcesCollectors */ "./node_modules/mona-dish/src/main/typescript/SourcesCollectors.ts");
+var Lang_1 = __webpack_require__(/*! ./Lang */ "./node_modules/mona-dish/src/main/typescript/Lang.ts");
+var trim = Lang_1.Lang.trim;
+var objToArray = Lang_1.Lang.objToArray;
+var isString = Lang_1.Lang.isString;
+var equalsIgnoreCase = Lang_1.Lang.equalsIgnoreCase;
+/**
+ *
+ *        // - submit checkboxes and radio inputs only if checked
+ if ((tagName != "select" && elemType != "button"
+ && elemType != "reset" && elemType != "submit" && elemType != "image")
+ && ((elemType != "checkbox" && elemType != "radio"
+ */
+var Submittables;
+(function (Submittables) {
+    Submittables["SELECT"] = "select";
+    Submittables["BUTTON"] = "button";
+    Submittables["SUBMIT"] = "submit";
+    Submittables["RESET"] = "reset";
+    Submittables["IMAGE"] = "image";
+    Submittables["RADIO"] = "radio";
+    Submittables["CHECKBOX"] = "checkbox";
+})(Submittables || (Submittables = {}));
+/**
+ * helper to fix a common problem that a system has to wait until a certain condition is reached
+ * depening on the browser this uses either the mutation observer or a semi compatible interval as fallback
+ * @param condition
+ */
+function waitUntilDom(root, condition, options) {
+    if (options === void 0) { options = { attributes: true, childList: true, subtree: true, timeout: 500, interval: 100 }; }
+    var ret = new Promise(function (success, error) {
+        var MUT_ERROR = new Error("Mutation observer timeout");
+        if ('undefined' != typeof window.MutationObserver) {
+            var mutTimeout_1 = setTimeout(function () {
+                return error(MUT_ERROR);
+            }, options.timeout);
+            var callback = function (mutationList, observer) {
+                var found = new DomQuery(mutationList.map(function (mut) { return mut.target; })).first(condition);
+                if (found.isPresent()) {
+                    clearTimeout(mutTimeout_1);
+                    success(found);
+                }
+            };
+            var observer_1 = new window.MutationObserver(callback);
+            // browsers might ignore it, but we cannot break the api in the case
+            // hence no timeout is passed
+            var observableOpts_1 = __assign({}, options);
+            delete observableOpts_1.timeout;
+            root.eachElem(function (item) {
+                observer_1.observe(item, observableOpts_1);
+            });
+        }
+        else { //fallback for legacy browsers without mutation observer
+            //we do the same but for now ignore the options on the dom query
+            var interval_1 = setInterval(function () {
+                var found = null;
+                if (options.childList) {
+                    found = (condition(root)) ? root : root.childNodes.first(condition);
+                }
+                else if (options.subtree) {
+                    found = (condition(root)) ? root : root.querySelectorAll(" * ").first(condition);
+                }
+                else {
+                    found = (condition(root)) ? root : DomQuery.absent;
+                }
+                if (found.isPresent()) {
+                    if (timeout_1) {
+                        clearTimeout(timeout_1);
+                        clearInterval(interval_1);
+                        interval_1 = null;
+                        success(found);
+                    }
+                }
+            }, options.interval);
+            var timeout_1 = setTimeout(function () {
+                if (interval_1) {
+                    clearInterval(interval_1);
+                    error(MUT_ERROR);
+                }
+            }, options.timeout);
+        }
+    });
+    return ret;
+}
+var ElementAttribute = /** @class */ (function (_super) {
+    __extends(ElementAttribute, _super);
+    function ElementAttribute(element, name, defaultVal) {
+        if (defaultVal === void 0) { defaultVal = null; }
+        var _this = _super.call(this, element, name) || this;
+        _this.element = element;
+        _this.name = name;
+        _this.defaultVal = defaultVal;
+        return _this;
+    }
+    Object.defineProperty(ElementAttribute.prototype, "value", {
+        get: function () {
+            var _a;
+            var val = (_a = this.element.get(0)).orElse.apply(_a, []).values;
+            if (!val.length) {
+                return this.defaultVal;
+            }
+            return val[0].getAttribute(this.name);
+        },
+        set: function (value) {
+            var _a;
+            var val = (_a = this.element.get(0)).orElse.apply(_a, []).values;
+            for (var cnt = 0; cnt < val.length; cnt++) {
+                val[cnt].setAttribute(this.name, value);
+            }
+            val[0].setAttribute(this.name, value);
+        },
+        enumerable: false,
+        configurable: true
+    });
+    ElementAttribute.prototype.getClass = function () {
+        return ElementAttribute;
+    };
+    ElementAttribute.fromNullable = function (value, valueKey) {
+        if (valueKey === void 0) { valueKey = "value"; }
+        return new ElementAttribute(value, valueKey);
+    };
+    return ElementAttribute;
+}(Monad_1.ValueEmbedder));
+exports.ElementAttribute = ElementAttribute;
+/**
+ * small helper for the specialized jsf case
+ * @param src
+ * @constructor
+ */
+var DEFAULT_WHITELIST = function (src) {
+    return true;
+};
+/**
+ * Monadic DomNode representation, ala jquery
+ * This is a thin wrapper over querySelectorAll
+ * to get slim monadic support
+ * to reduce implementation code on the users side.
+ * This is vital for frameworks which want to rely on
+ * plain dom but still do not want to lose
+ * the reduced code footprint of querying dom trees and traversing
+ * by using functional patterns.
+ *
+ * Also a few convenience methods are added to reduce
+ * the code footprint of standard dom processing
+ * operations like eval
+ *
+ * TODO add jquery fallback support, since it is supported
+ * in most older systems
+ * Note parts of this code still stem from the Dom.js I have written 10 years
+ * ago, those parts look a little bit ancient and will be replaced over time.
+ *
+ */
+var DomQuery = /** @class */ (function () {
+    function DomQuery() {
+        var _a;
+        var rootNode = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            rootNode[_i] = arguments[_i];
+        }
+        this.rootNode = [];
+        this.pos = -1;
+        //TODO this part probably will be removed
+        //because we can stream from an array stream directly into the dom query
+        this._limits = -1;
+        if (Monad_1.Optional.fromNullable(rootNode).isAbsent() || !rootNode.length) {
+            return;
+        }
+        else {
+            //we need to flatten out the arrays
+            for (var cnt = 0; cnt < rootNode.length; cnt++) {
+                if (!rootNode[cnt]) {
+                    //we skip possible null entries which can happen in
+                    //certain corner conditions due to the constructor re-wrapping single elements into arrays.
+                    continue;
+                }
+                else if (isString(rootNode[cnt])) {
+                    var foundElement = DomQuery.querySelectorAll(rootNode[cnt]);
+                    if (!foundElement.isAbsent()) {
+                        rootNode.push.apply(rootNode, foundElement.values);
+                    }
+                }
+                else if (rootNode[cnt] instanceof DomQuery) {
+                    (_a = this.rootNode).push.apply(_a, rootNode[cnt].values);
+                }
+                else {
+                    this.rootNode.push(rootNode[cnt]);
+                }
+            }
+        }
+    }
+    Object.defineProperty(DomQuery.prototype, "value", {
+        /**
+         * returns the first element
+         */
+        get: function () {
+            return this.getAsElem(0);
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "values", {
+        get: function () {
+            return this.allElems();
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "id", {
+        /**
+         * returns the id of the first element
+         */
+        get: function () {
+            return new ElementAttribute(this.get(0), "id");
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "length", {
+        /**
+         * length of the entire query set
+         */
+        get: function () {
+            return this.rootNode.length;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "tagName", {
+        /**
+         * convenience method for tagName
+         */
+        get: function () {
+            return this.getAsElem(0).getIf("tagName");
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "nodeName", {
+        /**
+         * convenience method for nodeName
+         */
+        get: function () {
+            return this.getAsElem(0).getIf("nodeName");
+        },
+        enumerable: false,
+        configurable: true
+    });
+    DomQuery.prototype.isTag = function (tagName) {
+        return !this.isAbsent()
+            && (this.nodeName.orElse("__none___")
+                .value.toLowerCase() == tagName.toLowerCase()
+                || this.tagName.orElse("__none___")
+                    .value.toLowerCase() == tagName.toLowerCase());
+    };
+    Object.defineProperty(DomQuery.prototype, "type", {
+        /**
+         * convenience property for type
+         *
+         * returns null in case of no type existing otherwise
+         * the type of the first element
+         */
+        get: function () {
+            return this.getAsElem(0).getIf("type");
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "name", {
+        /**
+         * convenience property for name
+         *
+         * returns null in case of no type existing otherwise
+         * the name of the first element
+         */
+        get: function () {
+            return new Monad_1.ValueEmbedder(this.getAsElem(0).value, "name");
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "inputValue", {
+        /**
+         * convenience property for value
+         *
+         * returns null in case of no type existing otherwise
+         * the value of the first element
+         */
+        get: function () {
+            if (this.getAsElem(0).getIf("value").isPresent()) {
+                return new Monad_1.ValueEmbedder(this.getAsElem(0).value);
+            }
+            else {
+                return Monad_1.ValueEmbedder.absent;
+            }
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "checked", {
+        get: function () {
+            return Stream_1.Stream.of.apply(Stream_1.Stream, this.values).allMatch(function (el) { return !!el.checked; });
+        },
+        set: function (newChecked) {
+            this.eachElem(function (el) { return el.checked = newChecked; });
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "elements", {
+        get: function () {
+            //a simple querySelectorAll should suffice
+            return this.querySelectorAll("input, checkbox, select, textarea, fieldset");
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "deepElements", {
+        get: function () {
+            var elemStr = "input, select, textarea, checkbox, fieldset";
+            return this.querySelectorAllDeep(elemStr);
+        },
+        enumerable: false,
+        configurable: true
+    });
+    /**
+     * a deep search which treats the single isolated shadow doms
+     * separately and runs the query on earch shadow dom
+     * @param queryStr
+     */
+    DomQuery.prototype.querySelectorAllDeep = function (queryStr) {
+        var found = [];
+        var queryRes = this.querySelectorAll(queryStr);
+        if (queryRes.length) {
+            found.push(queryRes);
+        }
+        var shadowRoots = this.querySelectorAll("*").shadowRoot;
+        if (shadowRoots.length) {
+            var shadowRes = shadowRoots.querySelectorAllDeep(queryStr);
+            if (shadowRes.length) {
+                found.push(shadowRes);
+            }
+        }
+        return new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], found, false)))();
+    };
+    Object.defineProperty(DomQuery.prototype, "disabled", {
+        /**
+         * todo align this api with the rest of the apis
+         */
+        get: function () {
+            return this.attr("disabled").isPresent();
+        },
+        set: function (disabled) {
+            // this.attr("disabled").value = disabled + "";
+            if (!disabled) {
+                this.removeAttribute("disabled");
+            }
+            else {
+                this.attr("disabled").value = "disabled";
+            }
+        },
+        enumerable: false,
+        configurable: true
+    });
+    DomQuery.prototype.removeAttribute = function (name) {
+        this.eachElem(function (item) { return item.removeAttribute(name); });
+    };
+    Object.defineProperty(DomQuery.prototype, "childNodes", {
+        get: function () {
+            var childNodeArr = [];
+            this.eachElem(function (item) {
+                childNodeArr = childNodeArr.concat(objToArray(item.childNodes));
+            });
+            return new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], childNodeArr, false)))();
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "stream", {
+        /**
+         * binding into stream
+         */
+        get: function () {
+            return new (Stream_1.Stream.bind.apply(Stream_1.Stream, __spreadArray([void 0], this.asArray, false)))();
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "lazyStream", {
+        /**
+         * fetches a lazy stream representation
+         * lazy should be applied if you have some filters etc
+         * in between, this can reduce the number of post filter operations
+         * and ram usage
+         * significantly because the operations are done lazily and stop
+         * once they hit a dead end.
+         */
+        get: function () {
+            return Stream_1.LazyStream.of.apply(Stream_1.LazyStream, this.asArray);
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "asArray", {
+        get: function () {
+            //filter not supported by IE11
+            return [].concat(Stream_1.LazyStream.of.apply(Stream_1.LazyStream, this.rootNode).filter(function (item) { return item != null; })
+                .map(function (item) { return DomQuery.byId(item); }).collect(new SourcesCollectors_1.ArrayCollector()));
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "asNodeArray", {
+        get: function () {
+            return [].concat(Stream_1.Stream.of(this.rootNode).filter(function (item) { return item != null; }).collect(new SourcesCollectors_1.ArrayCollector()));
+        },
+        enumerable: false,
+        configurable: true
+    });
+    DomQuery.querySelectorAllDeep = function (selector) {
+        return new DomQuery(document).querySelectorAllDeep(selector);
+    };
+    /**
+     * easy query selector all producer
+     *
+     * @param selector the selector
+     * @returns a results dom query object
+     */
+    DomQuery.querySelectorAll = function (selector) {
+        if (selector.indexOf("/shadow/") != -1) {
+            return new DomQuery(document)._querySelectorAllDeep(selector);
+        }
+        else {
+            return new DomQuery(document)._querySelectorAll(selector);
+        }
+    };
+    /**
+     * byId producer
+     *
+     * @param selector id
+     * @return a DomQuery containing the found elements
+     */
+    DomQuery.byId = function (selector, deep) {
+        if (deep === void 0) { deep = false; }
+        if (isString(selector)) {
+            return (!deep) ? new DomQuery(document).byId(selector) : new DomQuery(document).byIdDeep(selector);
+        }
+        else {
+            return new DomQuery(selector);
+        }
+    };
+    /**
+     * byTagName producer
+     *
+     * @param selector name
+     * @return a DomQuery containing the found elements
+     */
+    DomQuery.byTagName = function (selector) {
+        if (isString(selector)) {
+            return new DomQuery(document).byTagName(selector);
+        }
+        else {
+            return new DomQuery(selector);
+        }
+    };
+    DomQuery.globalEval = function (code, nonce) {
+        return new DomQuery(document).globalEval(code, nonce);
+    };
+    /**
+     * builds the ie nodes properly in a placeholder
+     * and bypasses a non script insert bug that way
+     * @param markup the marku code
+     */
+    DomQuery.fromMarkup = function (markup) {
+        //https://developer.mozilla.org/de/docs/Web/API/DOMParser license creative commons
+        var doc = document.implementation.createHTMLDocument("");
+        markup = trim(markup);
+        var lowerMarkup = markup.toLowerCase();
+        if (lowerMarkup.indexOf('<!doctype') != -1 ||
+            lowerMarkup.indexOf('<html') != -1 ||
+            lowerMarkup.indexOf('<head') != -1 || //TODO proper regexps here to avoid embedded tags with same element names to be triggered
+            lowerMarkup.indexOf('<body') != -1) {
+            doc.documentElement.innerHTML = markup;
+            return new DomQuery(doc.documentElement);
+        }
+        else {
+            var startsWithTag = function (str, tagName) {
+                var tag1 = ["<", tagName, ">"].join("");
+                var tag2 = ["<", tagName, " "].join("");
+                return (str.indexOf(tag1) == 0) || (str.indexOf(tag2) == 0);
+            };
+            var dummyPlaceHolder = new DomQuery(document.createElement("div"));
+            //table needs special treatment due to the browsers auto creation
+            if (startsWithTag(lowerMarkup, "thead") || startsWithTag(lowerMarkup, "tbody")) {
+                dummyPlaceHolder.html("<table>".concat(markup, "</table>"));
+                return dummyPlaceHolder.querySelectorAll("table").get(0).childNodes.detach();
+            }
+            else if (startsWithTag(lowerMarkup, "tfoot")) {
+                dummyPlaceHolder.html("<table><thead></thead><tbody><tbody".concat(markup, "</table>"));
+                return dummyPlaceHolder.querySelectorAll("table").get(2).childNodes.detach();
+            }
+            else if (startsWithTag(lowerMarkup, "tr")) {
+                dummyPlaceHolder.html("<table><tbody>".concat(markup, "</tbody></table>"));
+                return dummyPlaceHolder.querySelectorAll("tbody").get(0).childNodes.detach();
+            }
+            else if (startsWithTag(lowerMarkup, "td")) {
+                dummyPlaceHolder.html("<table><tbody><tr>".concat(markup, "</tr></tbody></table>"));
+                return dummyPlaceHolder.querySelectorAll("tr").get(0).childNodes.detach();
+            }
+            dummyPlaceHolder.html(markup);
+            return dummyPlaceHolder.childNodes.detach();
+        }
+    };
+    /**
+     * returns the nth element as domquery
+     * from the internal elements
+     * note if you try to reach a non existing element position
+     * you will get back an absent entry
+     *
+     * @param index the nth index
+     */
+    DomQuery.prototype.get = function (index) {
+        return (index < this.rootNode.length) ? new DomQuery(this.rootNode[index]) : DomQuery.absent;
+    };
+    /**
+     * returns the nth element as optional of an Element object
+     * @param index the number from the index
+     * @param defaults the default value if the index is overrun default Optional.absent
+     */
+    DomQuery.prototype.getAsElem = function (index, defaults) {
+        if (defaults === void 0) { defaults = Monad_1.Optional.absent; }
+        return (index < this.rootNode.length) ? Monad_1.Optional.fromNullable(this.rootNode[index]) : defaults;
+    };
+    /**
+     * returns the files from a given elmement
+     * @param index
+     */
+    DomQuery.prototype.filesFromElem = function (index) {
+        var _a;
+        return (index < this.rootNode.length) ? ((_a = this.rootNode[index]) === null || _a === void 0 ? void 0 : _a.files) ? this.rootNode[index].files : [] : [];
+    };
+    /**
+     * returns the value array< of all elements
+     */
+    DomQuery.prototype.allElems = function () {
+        return this.rootNode;
+    };
+    /**
+     * absent no values reached?
+     */
+    DomQuery.prototype.isAbsent = function () {
+        return this.length == 0;
+    };
+    /**
+     * should make the code clearer
+     * note if you pass a function
+     * this refers to the active dopmquery object
+     */
+    DomQuery.prototype.isPresent = function (presentRunnable) {
+        var absent = this.isAbsent();
+        if (!absent && presentRunnable) {
+            presentRunnable.call(this, this);
+        }
+        return !absent;
+    };
+    /**
+     * should make the code clearer
+     * note if you pass a function
+     * this refers to the active dopmquery object
+     *
+     *
+     * @param presentRunnable
+     */
+    DomQuery.prototype.ifPresentLazy = function (presentRunnable) {
+        if (presentRunnable === void 0) { presentRunnable = function () {
+        }; }
+        this.isPresent.call(this, presentRunnable);
+        return this;
+    };
+    /**
+     * remove all affected nodes from this query object from the dom tree
+     */
+    DomQuery.prototype.delete = function () {
+        this.eachElem(function (node) {
+            if (node.parentNode) {
+                node.parentNode.removeChild(node);
+            }
+        });
+    };
+    DomQuery.prototype.querySelectorAll = function (selector) {
+        //We could merge both methods, but for now this is more readable
+        if (selector.indexOf("/shadow/") != -1) {
+            return this._querySelectorAllDeep(selector);
+        }
+        else {
+            return this._querySelectorAll(selector);
+        }
+    };
+    /**
+     * query selector all on the existing dom queryX object
+     *
+     * @param selector the standard selector
+     * @return a DomQuery with the results
+     */
+    DomQuery.prototype._querySelectorAll = function (selector) {
+        var _a, _b;
+        if (!((_a = this === null || this === void 0 ? void 0 : this.rootNode) === null || _a === void 0 ? void 0 : _a.length)) {
+            return this;
+        }
+        var nodes = [];
+        for (var cnt = 0; cnt < this.rootNode.length; cnt++) {
+            if (!((_b = this.rootNode[cnt]) === null || _b === void 0 ? void 0 : _b.querySelectorAll)) {
+                continue;
+            }
+            var res = this.rootNode[cnt].querySelectorAll(selector);
+            nodes = nodes.concat(objToArray(res));
+        }
+        return new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], nodes, false)))();
+    };
+    /*deep with a selector and a peudo /shadow/ marker to break into the next level*/
+    DomQuery.prototype._querySelectorAllDeep = function (selector) {
+        var _a;
+        if (!((_a = this === null || this === void 0 ? void 0 : this.rootNode) === null || _a === void 0 ? void 0 : _a.length)) {
+            return this;
+        }
+        var nodes = [];
+        var foundNodes = new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], this.rootNode, false)))();
+        var selectors = selector.split(/\/shadow\//);
+        for (var cnt2 = 0; cnt2 < selectors.length; cnt2++) {
+            if (selectors[cnt2] == "") {
+                continue;
+            }
+            var levelSelector = selectors[cnt2];
+            foundNodes = foundNodes.querySelectorAll(levelSelector);
+            if (cnt2 < selectors.length - 1) {
+                foundNodes = foundNodes.shadowRoot;
+            }
+        }
+        return foundNodes;
+    };
+    /**
+     * core byId method
+     * @param id the id to search for
+     * @param includeRoot also match the root element?
+     */
+    DomQuery.prototype.byId = function (id, includeRoot) {
+        var res = [];
+        if (includeRoot) {
+            res = res.concat(Stream_1.LazyStream.of.apply(Stream_1.LazyStream, ((this === null || this === void 0 ? void 0 : this.rootNode) || [])).filter(function (item) { return id == item.id; })
+                .map(function (item) { return new DomQuery(item); })
+                .collect(new SourcesCollectors_1.ArrayCollector()));
+        }
+        //for some strange kind of reason the # selector fails
+        //on hidden elements we use the attributes match selector
+        //that works
+        res = res.concat(this.querySelectorAll("[id=\"".concat(id, "\"]")));
+        return new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], res, false)))();
+    };
+    DomQuery.prototype.byIdDeep = function (id, includeRoot) {
+        var res = [];
+        if (includeRoot) {
+            res = res.concat(Stream_1.LazyStream.of.apply(Stream_1.LazyStream, ((this === null || this === void 0 ? void 0 : this.rootNode) || [])).filter(function (item) { return id == item.id; })
+                .map(function (item) { return new DomQuery(item); })
+                .collect(new SourcesCollectors_1.ArrayCollector()));
+        }
+        var subItems = this.querySelectorAllDeep("[id=\"".concat(id, "\"]"));
+        if (subItems.length) {
+            res.push(subItems);
+        }
+        return new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], res, false)))();
+    };
+    /**
+     * same as byId just for the tag name
+     * @param tagName
+     * @param includeRoot
+     */
+    DomQuery.prototype.byTagName = function (tagName, includeRoot, deep) {
+        var _a;
+        var res = [];
+        if (includeRoot) {
+            res = Stream_1.LazyStream.of.apply(Stream_1.LazyStream, ((_a = this === null || this === void 0 ? void 0 : this.rootNode) !== null && _a !== void 0 ? _a : [])).filter(function (element) { return (element === null || element === void 0 ? void 0 : element.tagName) == tagName; })
+                .reduce(function (reduction, item) { return reduction.concat([item]); }, res)
+                .orElse(res).value;
+        }
+        (deep) ? res.push(this.querySelectorAllDeep(tagName)) : res.push(this.querySelectorAll(tagName));
+        return new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], res, false)))();
+    };
+    /**
+     * attr accessor, usage myQuery.attr("class").value = "bla"
+     * or let value myQuery.attr("class").value
+     * @param attr the attribute to set
+     * @param defaultValue the default value in case nothing is presented (defaults to null)
+     */
+    DomQuery.prototype.attr = function (attr, defaultValue) {
+        if (defaultValue === void 0) { defaultValue = null; }
+        return new ElementAttribute(this, attr, defaultValue);
+    };
+    /**
+     * hasclass, checks for an existing class in the class attributes
+     *
+     * @param clazz the class to search for
+     */
+    DomQuery.prototype.hasClass = function (clazz) {
+        var hasIt = false;
+        this.eachElem(function (node) {
+            hasIt = node.classList.contains(clazz);
+            if (hasIt) {
+                return false;
+            }
+        });
+        return hasIt;
+    };
+    /**
+     * appends a class string if not already in the element(s)
+     *
+     * @param clazz the style class to append
+     */
+    DomQuery.prototype.addClass = function (clazz) {
+        this.eachElem(function (item) { return item.classList.add(clazz); });
+        return this;
+    };
+    /**
+     * remove the style class if in the class definitions
+     *
+     * @param clazz
+     */
+    DomQuery.prototype.removeClass = function (clazz) {
+        this.eachElem(function (item) { return item.classList.remove(clazz); });
+        return this;
+    };
+    /**
+     * checks whether we have a multipart element in our children
+     * or are one
+     */
+    DomQuery.prototype.isMultipartCandidate = function (deep) {
+        var _this = this;
+        if (deep === void 0) { deep = false; }
+        var isCandidate = function (item) {
+            var _a;
+            if (item.length == 0) {
+                return false;
+            }
+            if (item.length == 1) {
+                if (item.tagName.get("booga").value.toLowerCase() == "input" &&
+                    (((_a = item.attr("type")) === null || _a === void 0 ? void 0 : _a.value) || "").toLowerCase() == "file") {
+                    return true;
+                }
+                if (deep) {
+                    return _this.querySelectorAllDeep("input[type='file']").firstElem().isPresent();
+                }
+                else {
+                    return _this.querySelectorAll("input[type='file']").firstElem().isPresent();
+                }
+            }
+            return item.isMultipartCandidate(deep);
+        };
+        var ret = this.stream.filter(function (item) { return isCandidate(item); }).first().isPresent();
+        return ret;
+    };
+    /**
+     * innerHtml equivalkent
+     * equivalent to jqueries html
+     * as setter the html is set and the
+     * DomQuery is given back
+     * as getter the html string is returned
+     *
+     * @param inval
+     */
+    DomQuery.prototype.html = function (inval) {
+        if (Monad_1.Optional.fromNullable(inval).isAbsent()) {
+            return this.isPresent() ? Monad_1.Optional.fromNullable(this.innerHtml) : Monad_1.Optional.absent;
+        }
+        this.innerHtml = inval;
+        return this;
+    };
+    /**
+     * Standard dispatch event method, delegated from node
+     */
+    DomQuery.prototype.dispatchEvent = function (evt) {
+        this.eachElem(function (elem) { return elem.dispatchEvent(evt); });
+        return this;
+    };
+    Object.defineProperty(DomQuery.prototype, "innerHtml", {
+        get: function () {
+            var retArr = [];
+            this.eachElem(function (elem) { return retArr.push(elem.innerHTML); });
+            return retArr.join("");
+        },
+        set: function (inVal) {
+            this.eachElem(function (elem) { return elem.innerHTML = inVal; });
+        },
+        enumerable: false,
+        configurable: true
+    });
+    //source: https://developer.mozilla.org/en-US/docs/Web/API/Element/matches
+    //code snippet license: https://creativecommons.org/licenses/by-sa/2.5/
+    DomQuery.prototype._mozMatchesSelector = function (toMatch, selector) {
+        var prot = toMatch;
+        var matchesSelector = prot.matchesSelector ||
+            prot.mozMatchesSelector ||
+            prot.msMatchesSelector ||
+            prot.oMatchesSelector ||
+            prot.webkitMatchesSelector ||
+            function (s) {
+                var matches = (document || window.ownerDocument).querySelectorAll(s), i = matches.length;
+                while (--i >= 0 && matches.item(i) !== toMatch) {
+                }
+                return i > -1;
+            };
+        return matchesSelector.call(toMatch, selector);
+    };
+    /**
+     * filters the current dom query elements
+     * upon a given selector
+     *
+     * @param selector
+     */
+    DomQuery.prototype.filterSelector = function (selector) {
+        var _this = this;
+        var matched = [];
+        this.eachElem(function (item) {
+            if (_this._mozMatchesSelector(item, selector)) {
+                matched.push(item);
+            }
+        });
+        return new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], matched, false)))();
+    };
+    DomQuery.prototype.matchesSelector = function (selector) {
+        var _this = this;
+        this.eachElem(function (item) {
+            if (!_this._mozMatchesSelector(item, selector)) {
+                return false;
+            }
+        });
+        return true;
+    };
+    /**
+     * easy node traversal, you can pass
+     * a set of node selectors which are joined as direct childs
+     *
+     * not the rootnodes are not in the getIf, those are always the child nodes
+     *
+     * @param nodeSelector
+     */
+    DomQuery.prototype.getIf = function () {
+        var nodeSelector = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            nodeSelector[_i] = arguments[_i];
+        }
+        var selectorStage = this.childNodes;
+        for (var cnt = 0; cnt < nodeSelector.length; cnt++) {
+            selectorStage = selectorStage.filterSelector(nodeSelector[cnt]);
+            if (selectorStage.isAbsent()) {
+                return selectorStage;
+            }
+        }
+        return selectorStage;
+    };
+    DomQuery.prototype.eachElem = function (func) {
+        for (var cnt = 0, len = this.rootNode.length; cnt < len; cnt++) {
+            if (func(this.rootNode[cnt], cnt) === false) {
+                break;
+            }
+        }
+        return this;
+    };
+    DomQuery.prototype.firstElem = function (func) {
+        if (func === void 0) { func = function (item) { return item; }; }
+        if (this.rootNode.length > 1) {
+            func(this.rootNode[0], 0);
+        }
+        return this;
+    };
+    DomQuery.prototype.each = function (func) {
+        Stream_1.Stream.of.apply(Stream_1.Stream, this.rootNode).each(function (item, cnt) {
+            //we could use a filter, but for the best performance we dont
+            if (item == null) {
+                return;
+            }
+            return func(DomQuery.byId(item), cnt);
+        });
+        return this;
+    };
+    /**
+     * returns a new dom query containing only the first element max
+     *
+     * @param func a an optional callback function to perform an operation on the first element
+     */
+    DomQuery.prototype.first = function (func) {
+        if (func === void 0) { func = function (item) { return item; }; }
+        if (this.rootNode.length >= 1) {
+            func(this.get(0), 0);
+            return this.get(0);
+        }
+        return this;
+    };
+    /**
+     * filter function which filters a subset
+     *
+     * @param func
+     */
+    DomQuery.prototype.filter = function (func) {
+        var reArr = [];
+        this.each(function (item) {
+            func(item) ? reArr.push(item) : null;
+        });
+        return new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], reArr, false)))();
+    };
+    //TODO append prepend
+    /**
+     * global eval head appendix method
+     * no other methods are supported anymore
+     * @param code the code to be evaled
+     * @param  nonce optional  nonce key for higher security
+     */
+    DomQuery.prototype.globalEval = function (code, nonce) {
+        var head = document.getElementsByTagName("head")[0] || document.documentElement;
+        var script = document.createElement("script");
+        if (nonce) {
+            script.setAttribute("nonce", nonce);
+        }
+        script.type = "text/javascript";
+        script.innerHTML = code;
+        var newScriptElement = head.appendChild(script);
+        head.removeChild(newScriptElement);
+        return this;
+    };
+    /**
+     * detaches a set of nodes from their parent elements
+     * in a browser independend manner
+     * @param {Object} items the items which need to be detached
+     * @return {Array} an array of nodes with the detached dom nodes
+     */
+    DomQuery.prototype.detach = function () {
+        this.eachElem(function (item) {
+            item.parentNode.removeChild(item);
+        });
+        return this;
+    };
+    /**
+     * appends the current set of elements
+     * to the element or first element passed via elem
+     * @param elem
+     */
+    DomQuery.prototype.appendTo = function (elem) {
+        this.eachElem(function (item) {
+            var value1 = elem.getAsElem(0).orElseLazy(function () {
+                return {
+                    appendChild: function (theItem) {
+                    }
+                };
+            }).value;
+            value1.appendChild(item);
+        });
+    };
+    /**
+     * loads and evals a script from a source uri
+     *
+     * @param src the source to be loaded and evaled
+     * @param defer in miliseconds execution default (0 == no defer)
+     * @param charSet
+     */
+    DomQuery.prototype.loadScriptEval = function (src, defer, charSet) {
+        var _this = this;
+        if (defer === void 0) { defer = 0; }
+        if (charSet === void 0) { charSet = "utf-8"; }
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", src, false);
+        if (charSet) {
+            xhr.setRequestHeader("Content-Type", "application/x-javascript; charset:" + charSet);
+        }
+        xhr.send(null);
+        xhr.onload = function (responseData) {
+            //defer also means we have to process after the ajax response
+            //has been processed
+            //we can achieve that with a small timeout, the timeout
+            //triggers after the processing is done!
+            if (!defer) {
+                _this.globalEval(xhr.responseText.replace(/\n/g, "\r\n") + "\r\n//@ sourceURL=" + src);
+            }
+            else {
+                //TODO not ideal we maybe ought to move to something else here
+                //but since it is not in use yet, it is ok
+                setTimeout(function () {
+                    _this.globalEval(xhr.responseText + "\r\n//@ sourceURL=" + src);
+                }, defer);
+            }
+        };
+        xhr.onerror = function (data) {
+            throw Error(data);
+        };
+        //since we are synchronous we do it after not with onReadyStateChange
+        return this;
+    };
+    DomQuery.prototype.insertAfter = function () {
+        var toInsertParams = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            toInsertParams[_i] = arguments[_i];
+        }
+        this.each(function (existingItem) {
+            var existingElement = existingItem.getAsElem(0).value;
+            var rootNode = existingElement.parentNode;
+            var _loop_1 = function (cnt) {
+                var nextSibling = existingElement.nextSibling;
+                toInsertParams[cnt].eachElem(function (insertElem) {
+                    if (nextSibling) {
+                        rootNode.insertBefore(insertElem, nextSibling);
+                        existingElement = nextSibling;
+                    }
+                    else {
+                        rootNode.appendChild(insertElem);
+                    }
+                });
+            };
+            for (var cnt = 0; cnt < toInsertParams.length; cnt++) {
+                _loop_1(cnt);
+            }
+        });
+        var res = [];
+        res.push(this);
+        res = res.concat(toInsertParams);
+        return new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], res, false)))();
+    };
+    DomQuery.prototype.insertBefore = function () {
+        var toInsertParams = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            toInsertParams[_i] = arguments[_i];
+        }
+        this.each(function (existingItem) {
+            var existingElement = existingItem.getAsElem(0).value;
+            var rootNode = existingElement.parentNode;
+            for (var cnt = 0; cnt < toInsertParams.length; cnt++) {
+                toInsertParams[cnt].eachElem(function (insertElem) {
+                    rootNode.insertBefore(insertElem, existingElement);
+                });
+            }
+        });
+        var res = [];
+        res.push(this);
+        res = res.concat(toInsertParams);
+        return new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], res, false)))();
+    };
+    DomQuery.prototype.orElse = function () {
+        var elseValue = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            elseValue[_i] = arguments[_i];
+        }
+        if (this.isPresent()) {
+            return this;
+        }
+        else {
+            return new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], elseValue, false)))();
+        }
+    };
+    DomQuery.prototype.orElseLazy = function (func) {
+        if (this.isPresent()) {
+            return this;
+        }
+        else {
+            return new DomQuery(func());
+        }
+    };
+    DomQuery.prototype.parents = function (tagName) {
+        var retSet = new Set();
+        var retArr = [];
+        var lowerTagName = tagName.toLowerCase();
+        var resolveItem = function (item) {
+            if ((item.tagName || "").toLowerCase() == lowerTagName && !retSet.has(item)) {
+                retSet.add(item);
+                retArr.push(item);
+            }
+        };
+        this.eachElem(function (item) {
+            var _a;
+            while (item.parentNode || item.host) {
+                item = (_a = item === null || item === void 0 ? void 0 : item.parentNode) !== null && _a !== void 0 ? _a : item === null || item === void 0 ? void 0 : item.host;
+                resolveItem(item);
+                //nested forms not possible, performance shortcut
+                if (tagName == "form" && retArr.length) {
+                    return false;
+                }
+            }
+        });
+        return new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], retArr, false)))();
+    };
+    DomQuery.prototype.copyAttrs = function (sourceItem) {
+        var _this = this;
+        sourceItem.eachElem(function (sourceNode) {
+            var attrs = objToArray(sourceNode.attributes);
+            for (var _i = 0, attrs_1 = attrs; _i < attrs_1.length; _i++) {
+                var item = attrs_1[_i];
+                var value = item.value;
+                var name_1 = item.name;
+                switch (name_1) {
+                    case "id":
+                        _this.id.value = value;
+                        break;
+                    case "disabled":
+                        _this.resolveAttributeHolder("disabled").disabled = value;
+                        break;
+                    case "checked":
+                        _this.resolveAttributeHolder("checked").checked = value;
+                        break;
+                    default:
+                        _this.attr(name_1).value = value;
+                }
+            }
+        });
+        return this;
+    };
+    /**
+     * resolves an attribute holder compared
+     * @param attrName the attribute name
+     */
+    DomQuery.prototype.resolveAttributeHolder = function (attrName) {
+        if (attrName === void 0) { attrName = "value"; }
+        var ret = [];
+        ret[attrName] = null;
+        return (attrName in this.getAsElem(0).value) ?
+            this.getAsElem(0).value :
+            ret;
+    };
+    /**
+     * outerhtml convenience method
+     * browsers only support innerHTML but
+     * for instance for your jsf.js we have a full
+     * replace pattern which needs outerHTML processing
+     *
+     * @param markup
+     * @param runEmbeddedScripts
+     * @param runEmbeddedCss
+     */
+    DomQuery.prototype.outerHTML = function (markup, runEmbeddedScripts, runEmbeddedCss, deep) {
+        var _a;
+        if (deep === void 0) { deep = false; }
+        if (this.isAbsent()) {
+            return;
+        }
+        var focusElementId = (_a = document === null || document === void 0 ? void 0 : document.activeElement) === null || _a === void 0 ? void 0 : _a.id;
+        var caretPosition = (focusElementId) ? DomQuery.getCaretPosition(document.activeElement) : null;
+        var nodes = DomQuery.fromMarkup(markup);
+        var res = [];
+        var toReplace = this.getAsElem(0).value;
+        var firstInsert = nodes.get(0);
+        var parentNode = toReplace.parentNode;
+        var replaced = firstInsert.getAsElem(0).value;
+        parentNode.replaceChild(replaced, toReplace);
+        res.push(new DomQuery(replaced));
+        //no replacement possible
+        if (this.isAbsent()) {
+            return this;
+        }
+        var insertAdditionalItems = [];
+        if (nodes.length > 1) {
+            insertAdditionalItems = insertAdditionalItems.concat.apply(insertAdditionalItems, nodes.values.slice(1));
+            res.push(DomQuery.byId(replaced).insertAfter(new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], insertAdditionalItems, false)))()));
+        }
+        if (runEmbeddedScripts) {
+            this.runScripts();
+        }
+        if (runEmbeddedCss) {
+            this.runCss();
+        }
+        var focusElement = DomQuery.byId(focusElementId);
+        if (focusElementId && focusElement.isPresent() &&
+            caretPosition != null && "undefined" != typeof caretPosition) {
+            focusElement.eachElem(function (item) { return DomQuery.setCaretPosition(item, caretPosition); });
+        }
+        return nodes;
+    };
+    /**
+     * Run through the given nodes in the DomQuery execute the inline scripts
+     * @param whilteListed: optional whitelist function which can filter out script tags which are not processed
+     * defaults to the standard jsf.js exclusion (we use this code for myfaces)
+     */
+    DomQuery.prototype.runScripts = function (whilteListed) {
+        var _this = this;
+        if (whilteListed === void 0) { whilteListed = DEFAULT_WHITELIST; }
+        var finalScripts = [], equi = equalsIgnoreCase, execScrpt = function (item) {
+            var tagName = item.tagName;
+            var itemType = item.type || "";
+            if (tagName && equi(tagName, "script") &&
+                (itemType === "" || equi(itemType, "text/javascript") ||
+                    equi(itemType, "javascript") ||
+                    equi(itemType, "text/ecmascript") ||
+                    equi(itemType, "ecmascript"))) {
+                var src = item.getAttribute('src');
+                if ('undefined' != typeof src
+                    && null != src
+                    && src.length > 0) {
+                    //we have to move this into an inner if because chrome otherwise chokes
+                    //due to changing the and order instead of relying on left to right
+                    //if jsf.js is already registered we do not replace it anymore
+                    if (whilteListed(src)) {
+                        if (finalScripts.length) {
+                            //script source means we have to eval the existing
+                            //scripts before running the include
+                            _this.globalEval(finalScripts.join("\n"));
+                            finalScripts = [];
+                        }
+                        _this.loadScriptEval(src, 0, "UTF-8");
+                    }
+                }
+                else {
+                    // embedded script auto eval
+                    //TODO this probably needs to be changed due to our new parsing structures
+                    //probably not needed anymore
+                    var evalText = trim(item.text || item.innerText || item.innerHTML);
+                    var go = true;
+                    while (go) {
+                        go = false;
+                        if (evalText.substring(0, 4) == "<!--") {
+                            evalText = evalText.substring(4);
+                            go = true;
+                        }
+                        if (evalText.substring(0, 4) == "//<!--") {
+                            evalText = evalText.substring(6);
+                            go = true;
+                        }
+                        if (evalText.substring(0, 11) == "//<![CDATA[") {
+                            evalText = evalText.substring(11);
+                            go = true;
+                        }
+                    }
+                    // we have to run the script under a global context
+                    //we store the script for less calls to eval
+                    finalScripts.push(evalText);
+                }
+            }
+        };
+        try {
+            var scriptElements = new DomQuery(this.filterSelector("script"), this.querySelectorAll("script"));
+            //script execution order by relative pos in their dom tree
+            scriptElements.stream
+                .flatMap(function (item) { return Stream_1.Stream.of(item.values); })
+                .sort(function (node1, node2) { return node1.compareDocumentPosition(node2) - 3; }) //preceding 2, following == 4)
+                .each(function (item) { return execScrpt(item); });
+            if (finalScripts.length) {
+                this.globalEval(finalScripts.join("\n"));
+            }
+        }
+        catch (e) {
+            if (window.console && window.console.error) {
+                //not sure if we
+                //should use our standard
+                //error mechanisms here
+                //because in the head appendix
+                //method only a console
+                //error would be raised as well
+                console.error(e.message || e.description);
+            }
+        }
+        finally {
+            //the usual ie6 fix code
+            //the IE6 garbage collector is broken
+            //nulling closures helps somewhat to reduce
+            //mem leaks, which are impossible to avoid
+            //at this browser
+            execScrpt = null;
+        }
+        return this;
+    };
+    DomQuery.prototype.runCss = function () {
+        var applyStyle = function (item, style) {
+            var _a, _b, _c, _d;
+            var newSS = document.createElement("style");
+            document.getElementsByTagName("head")[0].appendChild(newSS);
+            var styleSheet = (_a = newSS.sheet) !== null && _a !== void 0 ? _a : newSS.styleSheet;
+            newSS.setAttribute("rel", (_b = item.getAttribute("rel")) !== null && _b !== void 0 ? _b : "stylesheet");
+            newSS.setAttribute("type", (_c = item.getAttribute("type")) !== null && _c !== void 0 ? _c : "text/css");
+            if ((_d = styleSheet === null || styleSheet === void 0 ? void 0 : styleSheet.cssText) !== null && _d !== void 0 ? _d : false) {
+                styleSheet.cssText = style;
+            }
+            else {
+                newSS.appendChild(document.createTextNode(style));
+            }
+        }, execCss = function (item) {
+            var tagName = item.tagName;
+            if (tagName && equalsIgnoreCase(tagName, "link") && equalsIgnoreCase(item.getAttribute("type"), "text/css")) {
+                applyStyle(item, "@import url('" + item.getAttribute("href") + "');");
+            }
+            else if (tagName && equalsIgnoreCase(tagName, "style") && equalsIgnoreCase(item.getAttribute("type"), "text/css")) {
+                var innerText_1 = [];
+                //compliant browsers know child nodes
+                var childNodes = Array.prototype.slice.call(item.childNodes);
+                if (childNodes) {
+                    childNodes.forEach(function (child) { return innerText_1.push(child.innerHTML || child.data); });
+                    //non compliant ones innerHTML
+                }
+                else if (item.innerHTML) {
+                    innerText_1.push(item.innerHTML);
+                }
+                applyStyle(item, innerText_1.join(""));
+            }
+        };
+        var scriptElements = new DomQuery(this.filterSelector("link, style"), this.querySelectorAll("link, style"));
+        scriptElements.stream
+            .flatMap(function (item) { return Stream_1.Stream.of(item.values); })
+            .sort(function (node1, node2) { return node1.compareDocumentPosition(node2) - 3; })
+            .each(function (item) { return execCss(item); });
+        return this;
+    };
+    /**
+     * fires a click event on the underlying dom elements
+     */
+    DomQuery.prototype.click = function () {
+        this.fireEvent("click");
+        return this;
+    };
+    DomQuery.prototype.addEventListener = function (type, listener, options) {
+        this.eachElem(function (node) { return node.addEventListener(type, listener, options); });
+        return this;
+    };
+    DomQuery.prototype.removeEventListener = function (type, listener, options) {
+        this.eachElem(function (node) { return node.removeEventListener(type, listener, options); });
+        return this;
+    };
+    /**
+     * fires an event
+     */
+    DomQuery.prototype.fireEvent = function (eventName) {
+        this.eachElem(function (node) {
+            var doc;
+            if (node.ownerDocument) {
+                doc = node.ownerDocument;
+            }
+            else if (node.nodeType == 9) {
+                // the node may be the document itself, nodeType 9 = DOCUMENT_NODE
+                doc = node;
+            }
+            else {
+                throw new Error("Invalid node passed to fireEvent: " + node.id);
+            }
+            if (node.dispatchEvent) {
+                // Gecko-style approach (now the standard) takes more work
+                var eventClass = "";
+                // Different events have different event classes.
+                // If this switch statement can't map an eventName to an eventClass,
+                // the event firing is going to fail.
+                switch (eventName) {
+                    case "click": // Dispatching of 'click' appears to not work correctly in Safari. Use 'mousedown' or 'mouseup' instead.
+                    case "mousedown":
+                    case "mouseup":
+                        eventClass = "MouseEvents";
+                        break;
+                    case "focus":
+                    case "change":
+                    case "blur":
+                    case "select":
+                        eventClass = "HTMLEvents";
+                        break;
+                    default:
+                        throw "fireEvent: Couldn't find an event class for event '" + eventName + "'.";
+                        break;
+                }
+                var event_1 = doc.createEvent(eventClass);
+                event_1.initEvent(eventName, true, true); // All events created as bubbling and cancelable.
+                event_1.synthetic = true; // allow detection of synthetic events
+                // The second parameter says go ahead with the default action
+                node.dispatchEvent(event_1);
+            }
+            else if (node.fireEvent) {
+                // IE-old school style, you can drop this if you don't need to support IE8 and lower
+                var event_2 = doc.createEventObject();
+                event_2.synthetic = true; // allow detection of synthetic events
+                node.fireEvent("on" + eventName, event_2);
+            }
+        });
+    };
+    DomQuery.prototype.textContent = function (joinstr) {
+        if (joinstr === void 0) { joinstr = ""; }
+        return this.stream
+            .map(function (value) {
+            var item = value.getAsElem(0).orElseLazy(function () {
+                return {
+                    textContent: ""
+                };
+            }).value;
+            return item.textContent || "";
+        })
+            .reduce(function (text1, text2) { return text1 + joinstr + text2; }, "").value;
+    };
+    DomQuery.prototype.innerText = function (joinstr) {
+        if (joinstr === void 0) { joinstr = ""; }
+        return this.stream
+            .map(function (value) {
+            var item = value.getAsElem(0).orElseLazy(function () {
+                return {
+                    innerText: ""
+                };
+            }).value;
+            return item.innerText || "";
+        })
+            .reduce(function (text1, text2) { return [text1, text2].join(joinstr); }, "").value;
+    };
+    /**
+     * encodes all input elements properly into respective
+     * config entries, this can be used
+     * for legacy systems, for newer usecases, use the
+     * HTML5 Form class which all newer browsers provide
+     *
+     * @param toMerge optional config which can be merged in
+     * @return a copy pf
+     */
+    DomQuery.prototype.encodeFormElement = function (toMerge) {
+        if (toMerge === void 0) { toMerge = new Monad_1.Config({}); }
+        //browser behavior no element name no encoding (normal submit fails in that case)
+        //https://issues.apache.org/jira/browse/MYFACES-2847
+        if (this.name.isAbsent()) {
+            return;
+        }
+        //lets keep it sideffects free
+        var target = toMerge.shallowCopy;
+        this.each(function (element) {
+            var _a, _b;
+            if (element.name.isAbsent()) { //no name, no encoding
+                return;
+            }
+            var name = element.name.value;
+            var tagName = element.tagName.orElse("__none__").value.toLowerCase();
+            var elemType = element.type.orElse("__none__").value.toLowerCase();
+            elemType = elemType.toLowerCase();
+            // routine for all elements
+            // rules:
+            // - process only inputs, textareas and selects
+            // - elements muest have attribute "name"
+            // - elements must not be disabled
+            if (((tagName == "input" || tagName == "textarea" || tagName == "select") &&
+                (name != null && name != "")) && !element.disabled) {
+                // routine for select elements
+                // rules:
+                // - if select-one and value-Attribute exist => "name=value"
+                // (also if value empty => "name=")
+                // - if select-one and value-Attribute don't exist =>
+                // "name=DisplayValue"
+                // - if select multi and multple selected => "name=value1&name=value2"
+                // - if select and selectedIndex=-1 don't submit
+                if (tagName == "select") {
+                    // selectedIndex must be >= 0 sein to be submittet
+                    var selectElem = element.getAsElem(0).value;
+                    if (selectElem.selectedIndex >= 0) {
+                        var uLen = selectElem.options.length;
+                        for (var u = 0; u < uLen; u++) {
+                            // find all selected options
+                            //let subBuf = [];
+                            if (selectElem.options[u].selected) {
+                                var elementOption = selectElem.options[u];
+                                target.append(name).value = (elementOption.getAttribute("value") != null) ?
+                                    elementOption.value : elementOption.text;
+                            }
+                        }
+                    }
+                }
+                // routine for remaining elements
+                // rules:
+                // - don't submit no selects (processed above), buttons, reset buttons, submit buttons,
+                // - submit checkboxes and radio inputs only if checked
+                if ((tagName != Submittables.SELECT &&
+                    elemType != Submittables.BUTTON &&
+                    elemType != Submittables.RESET &&
+                    elemType != Submittables.SUBMIT &&
+                    elemType != Submittables.IMAGE) && ((elemType != Submittables.CHECKBOX && elemType != Submittables.RADIO) ||
+                    element.checked)) {
+                    var files = (_b = (_a = element.value.value) === null || _a === void 0 ? void 0 : _a.files) !== null && _b !== void 0 ? _b : [];
+                    if (files === null || files === void 0 ? void 0 : files.length) {
+                        //xhr level2
+                        target.append(name).value = files[0];
+                    }
+                    else {
+                        target.append(name).value = element.inputValue.value;
+                    }
+                }
+            }
+        });
+        return target;
+    };
+    Object.defineProperty(DomQuery.prototype, "cDATAAsString", {
+        get: function () {
+            var cDataBlock = [];
+            var TYPE_CDATA_BLOCK = 4;
+            var res = this.lazyStream.flatMap(function (item) {
+                return item.childNodes.stream;
+            }).filter(function (item) {
+                var _a, _b;
+                return ((_b = (_a = item === null || item === void 0 ? void 0 : item.value) === null || _a === void 0 ? void 0 : _a.value) === null || _b === void 0 ? void 0 : _b.nodeType) == TYPE_CDATA_BLOCK;
+            }).reduce(function (reduced, item) {
+                var _a, _b, _c;
+                reduced.push((_c = (_b = (_a = item === null || item === void 0 ? void 0 : item.value) === null || _a === void 0 ? void 0 : _a.value) === null || _b === void 0 ? void 0 : _b.data) !== null && _c !== void 0 ? _c : "");
+                return reduced;
+            }, []).value;
+            // response may contain several blocks
+            return res.join("");
+        },
+        enumerable: false,
+        configurable: true
+    });
+    DomQuery.prototype.subNodes = function (from, to) {
+        if (Monad_1.Optional.fromNullable(to).isAbsent()) {
+            to = this.length;
+        }
+        return new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], this.rootNode.slice(from, Math.min(to, this.length)), false)))();
+    };
+    DomQuery.prototype.limits = function (end) {
+        this._limits = end;
+        return this;
+    };
+    //-- internally exposed methods needed for the interconnectivity
+    DomQuery.prototype.hasNext = function () {
+        var isLimitsReached = this._limits != -1 && this.pos >= this._limits - 1;
+        var isEndOfArray = this.pos >= this.values.length - 1;
+        return !(isLimitsReached ||
+            isEndOfArray);
+    };
+    DomQuery.prototype.next = function () {
+        if (!this.hasNext()) {
+            return null;
+        }
+        this.pos++;
+        return new DomQuery(this.values[this.pos]);
+    };
+    DomQuery.prototype.reset = function () {
+        this.pos = -1;
+    };
+    DomQuery.prototype.attachShadow = function (params) {
+        if (params === void 0) { params = { mode: "open" }; }
+        var shadowRoots = [];
+        this.eachElem(function (item) {
+            var shadowElement;
+            if (item === null || item === void 0 ? void 0 : item.attachShadow) {
+                shadowElement = DomQuery.byId(item.attachShadow(params));
+                shadowRoots.push(shadowElement);
+            }
+            else {
+                throw new Error("Shadow dom creation not supported by the browser, please use a shim, to gain this functionality");
+            }
+        });
+        return new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], shadowRoots, false)))();
+    };
+    /**
+     * helper to fix a common dom problem
+     * we have to wait until a certain condition is met, in most of the cases we just want to know whether an element is present in the subdome before being able to proceed
+     * @param condition
+     * @param options
+     */
+    DomQuery.prototype.waitUntilDom = function (condition, options) {
+        if (options === void 0) { options = { attributes: true, childList: true, subtree: true, timeout: 500, interval: 100 }; }
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                return [2 /*return*/, waitUntilDom(this, condition, options)];
+            });
+        });
+    };
+    Object.defineProperty(DomQuery.prototype, "shadowElements", {
+        /**
+         * returns the embedded shadow elements
+         */
+        get: function () {
+            var shadowElements = this.querySelectorAll("*")
+                .filter(function (item) { return item.hasShadow; });
+            var mapped = (shadowElements.allElems() || []).map(function (element) { return element.shadowRoot; });
+            return new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], mapped, false)))();
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "shadowRoot", {
+        get: function () {
+            var shadowRoots = [];
+            for (var cnt = 0; cnt < this.rootNode.length; cnt++) {
+                if (this.rootNode[cnt].shadowRoot) {
+                    shadowRoots.push(this.rootNode[cnt].shadowRoot);
+                }
+            }
+            return new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], shadowRoots, false)))();
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "hasShadow", {
+        get: function () {
+            for (var cnt = 0; cnt < this.rootNode.length; cnt++) {
+                if (this.rootNode[cnt].shadowRoot) {
+                    return true;
+                }
+            }
+            return false;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    //from
+    // http://blog.vishalon.net/index.php/javascript-getting-and-setting-caret-position-in-textarea/
+    DomQuery.getCaretPosition = function (ctrl) {
+        var caretPos = 0;
+        try {
+            if (document === null || document === void 0 ? void 0 : document.selection) {
+                ctrl.focus();
+                var selection = document.selection.createRange();
+                //the selection now is start zero
+                selection.moveStart('character', -ctrl.value.length);
+                //the caretposition is the selection start
+                caretPos = selection.text.length;
+            }
+        }
+        catch (e) {
+            //now this is ugly, but not supported input types throw errors for selectionStart
+            //just in case someone dumps this code onto unsupported browsers
+        }
+        return caretPos;
+    };
+    /**
+     * sets the caret position
+     *
+     * @param ctrl the control to set the caret position to
+     * @param pos the position to set
+     *
+     * note if the control does not have any selectable and focusable behavior
+     * calling this method does nothing (silent fail)
+     *
+     */
+    DomQuery.setCaretPosition = function (ctrl, pos) {
+        (ctrl === null || ctrl === void 0 ? void 0 : ctrl.focus) ? ctrl === null || ctrl === void 0 ? void 0 : ctrl.focus() : null;
+        //the selection range is our caret position
+        (ctrl === null || ctrl === void 0 ? void 0 : ctrl.setSelectiongRange) ? ctrl === null || ctrl === void 0 ? void 0 : ctrl.setSelectiongRange(pos, pos) : null;
+    };
+    /**
+     * Implementation of an iterator
+     * to allow loops over dom query collections
+     */
+    DomQuery.prototype[Symbol.iterator] = function () {
+        var _this = this;
+        return {
+            next: function () {
+                var done = !_this.hasNext();
+                var val = _this.next();
+                return {
+                    done: done,
+                    value: val
+                };
+            }
+        };
+    };
+    DomQuery.absent = new DomQuery();
+    return DomQuery;
+}());
+exports.DomQuery = DomQuery;
+/**
+ * Various collectors
+ * which can be used in conjunction with Streams
+ */
+/**
+ * A collector which bundles a full dom query stream into a single dom query element
+ *
+ * This connects basically our stream back into DomQuery
+ */
+var DomQueryCollector = /** @class */ (function () {
+    function DomQueryCollector() {
+        this.data = [];
+    }
+    DomQueryCollector.prototype.collect = function (element) {
+        this.data.push(element);
+    };
+    Object.defineProperty(DomQueryCollector.prototype, "finalValue", {
+        get: function () {
+            return new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], this.data, false)))();
+        },
+        enumerable: false,
+        configurable: true
+    });
+    return DomQueryCollector;
+}());
+exports.DomQueryCollector = DomQueryCollector;
+/**
+ * abbreviation for DomQuery
+ */
+exports.DQ = DomQuery;
+
+
+/***/ }),
+
+/***/ "./node_modules/mona-dish/src/main/typescript/Lang.ts":
+/*!************************************************************!*\
+  !*** ./node_modules/mona-dish/src/main/typescript/Lang.ts ***!
+  \************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+/* Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Lang = void 0;
+var Monad_1 = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
+/**
+ * Lang helpers crossported from the apache myfaces project
+ */
+var Lang;
+(function (Lang) {
+    //should be in lang, but for now here to avoid recursive imports, not sure if typescript still has a problem with those
+    /**
+     * helper function to savely resolve anything
+     * this is not an elvis operator, it resolves
+     * a value without exception in a tree and if
+     * it is not resolvable then an optional of
+     * a default value is restored or Optional.empty
+     * if none is given
+     *
+     * usage
+     * <code>
+     *     let var: Optiona<string> = saveResolve(() => a.b.c.d.e, "foobaz")
+     * </code>
+     *
+     * @param resolverProducer a lambda which can produce the value
+     * @param defaultValue an optional default value if the producer failes to produce anything
+     * @returns an Optional of the produced value
+     */
+    function saveResolve(resolverProducer, defaultValue) {
+        if (defaultValue === void 0) { defaultValue = null; }
+        try {
+            var result = resolverProducer();
+            return Monad_1.Optional.fromNullable(result !== null && result !== void 0 ? result : defaultValue);
+        }
+        catch (e) {
+            return Monad_1.Optional.absent;
+        }
+    }
+    Lang.saveResolve = saveResolve;
+    function saveResolveLazy(resolverProducer, defaultValue) {
+        if (defaultValue === void 0) { defaultValue = null; }
+        try {
+            var result = resolverProducer();
+            return Monad_1.Optional.fromNullable(result !== null && result !== void 0 ? result : defaultValue());
+        }
+        catch (e) {
+            return Monad_1.Optional.absent;
+        }
+    }
+    Lang.saveResolveLazy = saveResolveLazy;
+    /**
+     * String to array function performs a string to array transformation
+     * @param {String} it the string which has to be changed into an array
+     * @param {RegExp} splitter our splitter reglar expression
+     * @return a trimmed array of the splitted string
+     */
+    function strToArray(it, splitter) {
+        if (splitter === void 0) { splitter = /\./gi; }
+        var ret = [];
+        it.split(splitter).forEach((function (element) {
+            ret.push(trim(element));
+        }));
+        return ret;
+    }
+    Lang.strToArray = strToArray;
+    /**
+     * hyperfast trim
+     * http://blog.stevenlevithan.com/archives/faster-trim-javascript
+     * crossported from dojo
+     */
+    function trim(str) {
+        str = str.replace(/^\s\s*/, '');
+        var ws = /\s/, i = str.length;
+        while (ws.test(str.charAt(--i))) {
+            //do nothing
+        }
+        return str.slice(0, i + 1);
+    }
+    Lang.trim = trim;
+    /**
+     * generic object arrays like dom definitions to array conversion method which
+     * transforms any object to something array like
+     * @param obj
+     * @param offset
+     * @param pack
+     * @returns an array converted from the object
+     */
+    function objToArray(obj, offset, pack) {
+        if (offset === void 0) { offset = 0; }
+        if (pack === void 0) { pack = []; }
+        if ((obj !== null && obj !== void 0 ? obj : "__undefined__") == "__undefined__") {
+            return pack !== null && pack !== void 0 ? pack : null;
+        }
+        //since offset is numeric we cannot use the shortcut due to 0 being false
+        //special condition array delivered no offset no pack
+        if (obj instanceof Array && !offset && !pack)
+            return obj;
+        return pack.concat(Array.prototype.slice.call(obj, offset));
+    }
+    Lang.objToArray = objToArray;
+    /**
+     * equalsIgnoreCase, case insensitive comparison of two strings
+     *
+     * @param source
+     * @param destination
+     */
+    function equalsIgnoreCase(source, destination) {
+        var finalSource = source !== null && source !== void 0 ? source : "___no_value__";
+        var finalDest = destination !== null && destination !== void 0 ? destination : "___no_value__";
+        //in any other case we do a strong string comparison
+        return finalSource.toLowerCase() === finalDest.toLowerCase();
+    }
+    Lang.equalsIgnoreCase = equalsIgnoreCase;
+    /**
+     * runtime type assertion
+     *
+     * @param probe the probe to be tested for a type
+     * @param theType the type to be tested for
+     */
+    function assertType(probe, theType) {
+        return isString(theType) ? typeof probe == theType : probe instanceof theType;
+    }
+    Lang.assertType = assertType;
+    /**
+     * Backported from dojo
+     * a failsafe string determination method
+     * (since in javascript String != "" typeof alone fails!)
+     * @param it {|Object|} the object to be checked for being a string
+     * @return true in case of being a string false otherwise
+     */
+    function isString(it) {
+        //	summary:
+        //		Return true if it is a String
+        return !!arguments.length && it != null && (typeof it == "string" || it instanceof String); // Boolean
+    }
+    Lang.isString = isString;
+    function isFunc(it) {
+        return it instanceof Function || typeof it === "function";
+    }
+    Lang.isFunc = isFunc;
+    // code from https://developer.mozilla.org/de/docs/Web/JavaScript/Reference/Global_Objects/Object/assign
+    // license https://creativecommons.org/licenses/by-sa/2.5/
+    function objAssign(target) {
+        var theArgs = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            theArgs[_i - 1] = arguments[_i];
+        }
+        if (target == null) { // TypeError if undefined or null
+            throw new TypeError('Cannot convert undefined or null to object');
+        }
+        var to = Object(target);
+        if (Object.assign) {
+            theArgs.forEach(function (item) { return Object.assign(to, item); });
+            return to;
+        }
+        theArgs.filter(function (item) { return item != null; }).forEach(function (item) {
+            var nextSource = item;
+            Object.keys(nextSource)
+                .filter(function (nextKey) { return Object.prototype.hasOwnProperty.call(nextSource, nextKey); })
+                .forEach(function (nextKey) { return to[nextKey] = nextSource[nextKey]; });
+        });
+        return to;
+    }
+    Lang.objAssign = objAssign;
+})(Lang = exports.Lang || (exports.Lang = {}));
+
+
+/***/ }),
+
+/***/ "./node_modules/mona-dish/src/main/typescript/Monad.ts":
+/*!*************************************************************!*\
+  !*** ./node_modules/mona-dish/src/main/typescript/Monad.ts ***!
+  \*************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+/* Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Config = exports.ValueEmbedder = exports.Optional = exports.Monad = void 0;
+/**
+ * A module which keeps  basic monadish like definitions in place without any sidedependencies to other modules.
+ * Useful if you need the functions in another library to keep its dependencies down
+ */
+/*IMonad definitions*/
+var Lang_1 = __webpack_require__(/*! ./Lang */ "./node_modules/mona-dish/src/main/typescript/Lang.ts");
+var SourcesCollectors_1 = __webpack_require__(/*! ./SourcesCollectors */ "./node_modules/mona-dish/src/main/typescript/SourcesCollectors.ts");
+var Stream_1 = __webpack_require__(/*! ./Stream */ "./node_modules/mona-dish/src/main/typescript/Stream.ts");
+var objAssign = Lang_1.Lang.objAssign;
+/**
+ * Implementation of a monad
+ * (Sideffect free), no write allowed directly on the monads
+ * value state
+ */
+var Monad = /** @class */ (function () {
+    function Monad(value) {
+        this._value = value;
+    }
+    Object.defineProperty(Monad.prototype, "value", {
+        get: function () {
+            return this._value;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Monad.prototype.map = function (fn) {
+        if (!fn) {
+            fn = function (inval) { return inval; };
+        }
+        var result = fn(this.value);
+        return new Monad(result);
+    };
+    Monad.prototype.flatMap = function (fn) {
+        var mapped = this.map(fn);
+        while ((mapped === null || mapped === void 0 ? void 0 : mapped.value) instanceof Monad) {
+            mapped = mapped.value;
+        }
+        return mapped;
+    };
+    return Monad;
+}());
+exports.Monad = Monad;
+/**
+ * optional implementation, an optional is basically an implementation of a Monad with additional syntactic
+ * sugar on top
+ * (Sideeffect free, since value assignment is not allowed)
+ * */
+var Optional = /** @class */ (function (_super) {
+    __extends(Optional, _super);
+    function Optional(value) {
+        return _super.call(this, value) || this;
+    }
+    Object.defineProperty(Optional.prototype, "value", {
+        get: function () {
+            if (this._value instanceof Monad) {
+                return this._value.flatMap().value;
+            }
+            return this._value;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Optional.fromNullable = function (value) {
+        return new Optional(value);
+    };
+    /*syntactic sugar for absent and present checks*/
+    Optional.prototype.isAbsent = function () {
+        return "undefined" == typeof this.value || null == this.value;
+    };
+    /**
+     * any value present
+     */
+    Optional.prototype.isPresent = function (presentRunnable) {
+        var absent = this.isAbsent();
+        if (!absent && presentRunnable) {
+            presentRunnable.call(this, this);
+        }
+        return !absent;
+    };
+    Optional.prototype.ifPresentLazy = function (presentRunnable) {
+        if (presentRunnable === void 0) { presentRunnable = function () {
+        }; }
+        this.isPresent.call(this, presentRunnable);
+        return this;
+    };
+    Optional.prototype.orElse = function (elseValue) {
+        if (this.isPresent()) {
+            return this;
+        }
+        else {
+            //shortcut
+            if (elseValue == null) {
+                return Optional.absent;
+            }
+            return this.flatMap(function () { return elseValue; });
+        }
+    };
+    /**
+     * lazy, passes a function which then is lazily evaluated
+     * instead of a direct value
+     * @param func
+     */
+    Optional.prototype.orElseLazy = function (func) {
+        if (this.isPresent()) {
+            return this;
+        }
+        else {
+            return this.flatMap(func);
+        }
+    };
+    /*
+     * we need to implement it to fullfill the contract, although it is used only internally
+     * all values are flattened when accessed anyway, so there is no need to call this methiod
+     */
+    Optional.prototype.flatMap = function (fn) {
+        var val = _super.prototype.flatMap.call(this, fn);
+        if (!(val instanceof Optional)) {
+            return Optional.fromNullable(val.value);
+        }
+        return val.flatMap();
+    };
+    /*
+     * elvis operation, take care, if you use this you lose typesafety and refactoring
+     * capabilites, unfortunately typesceript does not allow to have its own elvis operator
+     * this is some syntactic sugar however which is quite useful*/
+    Optional.prototype.getIf = function () {
+        var key = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            key[_i] = arguments[_i];
+        }
+        var currentPos = this;
+        for (var cnt = 0; cnt < key.length; cnt++) {
+            var currKey = this.keyVal(key[cnt]);
+            var arrPos = this.arrayIndex(key[cnt]);
+            if (currKey === "" && arrPos >= 0) {
+                currentPos = this.getClass().fromNullable(!(currentPos.value instanceof Array) ? null : (currentPos.value.length < arrPos ? null : currentPos.value[arrPos]));
+                if (currentPos.isAbsent()) {
+                    return currentPos;
+                }
+                continue;
+            }
+            else if (currKey && arrPos >= 0) {
+                if (currentPos.getIfPresent(currKey).isAbsent()) {
+                    return currentPos;
+                }
+                currentPos = (currentPos.getIfPresent(currKey).value instanceof Array) ? this.getClass().fromNullable(currentPos.getIfPresent(currKey).value[arrPos]) : this.getClass().absent;
+                if (currentPos.isAbsent()) {
+                    return currentPos;
+                }
+                continue;
+            }
+            else {
+                currentPos = currentPos.getIfPresent(currKey);
+            }
+            if (currentPos.isAbsent()) {
+                return currentPos;
+            }
+            else if (arrPos > -1) {
+                currentPos = this.getClass().fromNullable(currentPos.value[arrPos]);
+            }
+        }
+        var retVal = currentPos;
+        return retVal;
+    };
+    /**
+     * simple match, if the first order function call returns
+     * true then there is a match, if the value is not present
+     * it never matches
+     *
+     * @param fn the first order function performing the match
+     */
+    Optional.prototype.match = function (fn) {
+        if (this.isAbsent()) {
+            return false;
+        }
+        return fn(this.value);
+    };
+    /**
+     * convenience function to flatmap the internal value
+     * and replace it with a default in case of being absent
+     *
+     * @param defaultVal
+     * @returns {Optional<any>}
+     */
+    Optional.prototype.get = function (defaultVal) {
+        if (defaultVal === void 0) { defaultVal = Optional.absent; }
+        if (this.isAbsent()) {
+            return this.getClass().fromNullable(defaultVal).flatMap();
+        }
+        return this.getClass().fromNullable(this.value).flatMap();
+    };
+    Optional.prototype.toJson = function () {
+        return JSON.stringify(this.value);
+    };
+    /**
+     * helper to override several implementations in a more fluent way
+     * by having a getClass operation we can avoid direct calls into the constructor or
+     * static methods and do not have to implement several methods which rely on the type
+     * of "this"
+     * @returns {Monadish.Optional}
+     */
+    Optional.prototype.getClass = function () {
+        return Optional;
+    };
+    /*helper method for getIf with array access aka <name>[<indexPos>]*/
+    Optional.prototype.arrayIndex = function (key) {
+        var start = key.indexOf("[");
+        var end = key.indexOf("]");
+        if (start >= 0 && end > 0 && start < end) {
+            return parseInt(key.substring(start + 1, end));
+        }
+        else {
+            return -1;
+        }
+    };
+    /*helper method for getIf with array access aka <name>[<indexPos>]*/
+    Optional.prototype.keyVal = function (key) {
+        var start = key.indexOf("[");
+        if (start >= 0) {
+            return key.substring(0, start);
+        }
+        else {
+            return key;
+        }
+    };
+    /**
+     * additional syntactic sugar which is not part of the usual optional implementation
+     * but makes life easier, if you want to sacrifice typesafety and refactoring
+     * capabilities in typescript
+     */
+    Optional.prototype.getIfPresent = function (key) {
+        if (this.isAbsent()) {
+            return this.getClass().absent;
+        }
+        return this.getClass().fromNullable(this.value[key]).flatMap();
+    };
+    /**
+     * elvis like typesafe functional save resolver
+     * a typesafe option for getIfPresent
+     *
+     * usage myOptional.resolve(value => value.subAttr.subAttr2).orElseLazy(....)
+     * if this is resolvable without any errors an Optional with the value is returned
+     * if not, then an Optional absent is returned, also if you return Optional absent
+     * it is flatmapped into absent
+     *
+     * @param resolver the resolver function, can throw any arbitrary errors, int  the error case
+     * the resolution goes towards absent
+     */
+    Optional.prototype.resolve = function (resolver) {
+        if (this.isAbsent()) {
+            return Optional.absent;
+        }
+        try {
+            return Optional.fromNullable(resolver(this.value));
+        }
+        catch (e) {
+            return Optional.absent;
+        }
+    };
+    /*default value for absent*/
+    Optional.absent = Optional.fromNullable(null);
+    return Optional;
+}(Monad));
+exports.Optional = Optional;
+// --------------------- From here onwards we break out the sideffects free limits ------------
+/**
+ * ValueEmbedder is the writeable version
+ * of optional, it basically is a wrappber
+ * around a construct which has a state
+ * and can be written to.
+ *
+ * For the readonly version see Optional
+ */
+var ValueEmbedder = /** @class */ (function (_super) {
+    __extends(ValueEmbedder, _super);
+    function ValueEmbedder(rootElem, valueKey) {
+        if (valueKey === void 0) { valueKey = "value"; }
+        var _this = _super.call(this, rootElem) || this;
+        _this.key = valueKey;
+        return _this;
+    }
+    Object.defineProperty(ValueEmbedder.prototype, "value", {
+        get: function () {
+            return this._value ? this._value[this.key] : null;
+        },
+        set: function (newVal) {
+            if (!this._value) {
+                return;
+            }
+            this._value[this.key] = newVal;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    ValueEmbedder.prototype.orElse = function (elseValue) {
+        var alternative = {};
+        alternative[this.key] = elseValue;
+        return this.isPresent() ? this : new ValueEmbedder(alternative, this.key);
+    };
+    ValueEmbedder.prototype.orElseLazy = function (func) {
+        if (this.isPresent()) {
+            return this;
+        }
+        else {
+            var alternative = {};
+            alternative[this.key] = func();
+            return new ValueEmbedder(alternative, this.key);
+        }
+    };
+    /**
+     * helper to override several implementations in a more fluent way
+     * by having a getClass operation we can avoid direct calls into the constructor or
+     * static methods and do not have to implement several methods which rely on the type
+     * of "this"
+     * @returns {Monadish.Optional}
+     */
+    ValueEmbedder.prototype.getClass = function () {
+        return ValueEmbedder;
+    };
+    ValueEmbedder.fromNullable = function (value, valueKey) {
+        if (valueKey === void 0) { valueKey = "value"; }
+        return new ValueEmbedder(value, valueKey);
+    };
+    /*default value for absent*/
+    ValueEmbedder.absent = ValueEmbedder.fromNullable(null);
+    return ValueEmbedder;
+}(Optional));
+exports.ValueEmbedder = ValueEmbedder;
+/**
+ * specialized value embedder
+ * for our Configuration
+ */
+var ConfigEntry = /** @class */ (function (_super) {
+    __extends(ConfigEntry, _super);
+    function ConfigEntry(rootElem, key, arrPos) {
+        var _this = _super.call(this, rootElem, key) || this;
+        _this.arrPos = arrPos !== null && arrPos !== void 0 ? arrPos : -1;
+        return _this;
+    }
+    Object.defineProperty(ConfigEntry.prototype, "value", {
+        get: function () {
+            if (this.key == "" && this.arrPos >= 0) {
+                return this._value[this.arrPos];
+            }
+            else if (this.key && this.arrPos >= 0) {
+                return this._value[this.key][this.arrPos];
+            }
+            return this._value[this.key];
+        },
+        set: function (val) {
+            if (this.key == "" && this.arrPos >= 0) {
+                this._value[this.arrPos] = val;
+                return;
+            }
+            else if (this.key && this.arrPos >= 0) {
+                this._value[this.key][this.arrPos] = val;
+                return;
+            }
+            this._value[this.key] = val;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    /*default value for absent*/
+    ConfigEntry.absent = ConfigEntry.fromNullable(null);
+    return ConfigEntry;
+}(ValueEmbedder));
+/**
+ * Config, basically an optional wrapper for a json structure
+ * (not sideeffect free, since we can alter the internal config state
+ * without generating a new config), not sure if we should make it sideffect free
+ * since this would swallow a lot of performane and ram
+ */
+var Config = /** @class */ (function (_super) {
+    __extends(Config, _super);
+    function Config(root) {
+        return _super.call(this, root) || this;
+    }
+    Object.defineProperty(Config.prototype, "shallowCopy", {
+        get: function () {
+            return new Config(Stream_1.Stream.ofAssoc(this.value).collect(new SourcesCollectors_1.AssocArrayCollector()));
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Config.prototype, "deepCopy", {
+        get: function () {
+            return new Config(objAssign({}, this.value));
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Config.fromNullable = function (value) {
+        return new Config(value);
+    };
+    /**
+     * simple merge for the root configs
+     */
+    Config.prototype.shallowMerge = function (other, overwrite, withAppend) {
+        var _this = this;
+        if (overwrite === void 0) { overwrite = true; }
+        if (withAppend === void 0) { withAppend = false; }
+        var _loop_1 = function (key) {
+            if (overwrite || !(key in this_1.value)) {
+                if (!withAppend) {
+                    this_1.assign(key).value = other.getIf(key).value;
+                }
+                else {
+                    if (Array.isArray(other.getIf(key).value)) {
+                        Stream_1.Stream.of.apply(Stream_1.Stream, other.getIf(key).value).each(function (item) { return _this.append(key).value = item; });
+                    }
+                    else {
+                        this_1.append(key).value = other.getIf(key).value;
+                    }
+                }
+            }
+        };
+        var this_1 = this;
+        for (var key in other.value) {
+            _loop_1(key);
+        }
+    };
+    /**
+     * assigns a single value as array, or appends it
+     * to an existing value mapping a single value to array
+     *
+     *
+     * usage myConfig.append("foobaz").value = "newValue"
+     *       myConfig.append("foobaz").value = "newValue2"
+     *
+     * resulting in myConfig.foobaz == ["newValue, newValue2"]
+     *
+     * @param keys
+     */
+    Config.prototype.append = function () {
+        var keys = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            keys[_i] = arguments[_i];
+        }
+        var noKeys = keys.length < 1;
+        if (noKeys) {
+            return;
+        }
+        var lastKey = keys[keys.length - 1];
+        var currKey, finalKey = this.keyVal(lastKey);
+        var pathExists = this.getIf.apply(this, keys).isPresent();
+        this.buildPath(keys);
+        var finalKeyArrPos = this.arrayIndex(lastKey);
+        if (finalKeyArrPos > -1) {
+            throw Error("Append only possible on non array properties, use assign on indexed data");
+        }
+        var value = this.getIf.apply(this, keys).value;
+        if (!Array.isArray(value)) {
+            value = this.assign.apply(this, keys).value = [value];
+        }
+        if (pathExists) {
+            value.push({});
+        }
+        finalKeyArrPos = value.length - 1;
+        var retVal = new ConfigEntry(keys.length == 1 ? this.value : this.getIf.apply(this, keys.slice(0, keys.length - 1)).value, lastKey, finalKeyArrPos);
+        return retVal;
+    };
+    Config.prototype.appendIf = function (condition) {
+        var keys = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            keys[_i - 1] = arguments[_i];
+        }
+        if (!condition) {
+            return { value: null };
+        }
+        return this.append.apply(this, keys);
+    };
+    Config.prototype.assign = function () {
+        var keys = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            keys[_i] = arguments[_i];
+        }
+        if (keys.length < 1) {
+            return;
+        }
+        this.buildPath(keys);
+        var currKey = this.keyVal(keys[keys.length - 1]);
+        var arrPos = this.arrayIndex(keys[keys.length - 1]);
+        var retVal = new ConfigEntry(keys.length == 1 ? this.value : this.getIf.apply(this, keys.slice(0, keys.length - 1)).value, currKey, arrPos);
+        return retVal;
+    };
+    Config.prototype.assignIf = function (condition) {
+        var keys = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            keys[_i - 1] = arguments[_i];
+        }
+        return condition ? this.assign.apply(this, keys) : { value: null };
+    };
+    Config.prototype.getIf = function () {
+        var keys = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            keys[_i] = arguments[_i];
+        }
+        return this.getClass().fromNullable(_super.prototype.getIf.apply(this, keys).value);
+    };
+    Config.prototype.get = function (defaultVal) {
+        return this.getClass().fromNullable(_super.prototype.get.call(this, defaultVal).value);
+    };
+    //empties the current config entry
+    Config.prototype.delete = function (key) {
+        if (key in this.value) {
+            delete this.value[key];
+        }
+        return this;
+    };
+    Config.prototype.toJson = function () {
+        return JSON.stringify(this.value);
+    };
+    Config.prototype.getClass = function () {
+        return Config;
+    };
+    Config.prototype.setVal = function (val) {
+        this._value = val;
+    };
+    /**
+     * builds the config path
+     *
+     * @param keys a sequential array of keys containing either a key name or an array reference name[<index>]
+     */
+    Config.prototype.buildPath = function (keys) {
+        var val = this;
+        var parentVal = this.getClass().fromNullable(null);
+        var parentPos = -1;
+        var alloc = function (arr, length) {
+            var length1 = arr.length;
+            var length2 = length1 + length;
+            for (var cnt = length1; cnt < length2; cnt++) {
+                arr.push({});
+            }
+        };
+        for (var cnt = 0; cnt < keys.length; cnt++) {
+            var currKey = this.keyVal(keys[cnt]);
+            var arrPos = this.arrayIndex(keys[cnt]);
+            if (currKey === "" && arrPos >= 0) {
+                val.setVal((val.value instanceof Array) ? val.value : []);
+                alloc(val.value, arrPos + 1);
+                if (parentPos >= 0) {
+                    parentVal.value[parentPos] = val.value;
+                }
+                parentVal = val;
+                parentPos = arrPos;
+                val = this.getClass().fromNullable(val.value[arrPos]);
+                continue;
+            }
+            var tempVal = val.getIf(currKey);
+            if (arrPos == -1) {
+                if (tempVal.isAbsent()) {
+                    tempVal = this.getClass().fromNullable(val.value[currKey] = {});
+                }
+                else {
+                    val = tempVal;
+                }
+            }
+            else {
+                var arr = (tempVal.value instanceof Array) ? tempVal.value : [];
+                alloc(arr, arrPos + 1);
+                val.value[currKey] = arr;
+                tempVal = this.getClass().fromNullable(arr[arrPos]);
+            }
+            parentVal = val;
+            parentPos = arrPos;
+            val = tempVal;
+        }
+        return this;
+    };
+    return Config;
+}(Optional));
+exports.Config = Config;
+
+
+/***/ }),
+
+/***/ "./node_modules/mona-dish/src/main/typescript/SourcesCollectors.ts":
+/*!*************************************************************************!*\
+  !*** ./node_modules/mona-dish/src/main/typescript/SourcesCollectors.ts ***!
+  \*************************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+/* Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.QueryFormStringCollector = exports.QueryFormDataCollector = exports.FormDataCollector = exports.AssocArrayCollector = exports.Run = exports.ArrayAssocArrayCollector = exports.ArrayCollector = exports.FlatMapStreamDataSource = exports.MappedStreamDataSource = exports.FilteredStreamDatasource = exports.ArrayStreamDataSource = exports.SequenceDataSource = void 0;
+var Stream_1 = __webpack_require__(/*! ./Stream */ "./node_modules/mona-dish/src/main/typescript/Stream.ts");
+/**
+ * defines a sequence of numbers for our stream input
+ */
+var SequenceDataSource = /** @class */ (function () {
+    function SequenceDataSource(start, total) {
+        this.total = total;
+        this.start = start;
+        this.value = start;
+    }
+    SequenceDataSource.prototype.hasNext = function () {
+        return this.value < this.total;
+    };
+    SequenceDataSource.prototype.next = function () {
+        return Math.min(this.value++, this.total - 1);
+    };
+    SequenceDataSource.prototype.reset = function () {
+        this.value = 0;
+    };
+    return SequenceDataSource;
+}());
+exports.SequenceDataSource = SequenceDataSource;
+/**
+ * implementation of iteratable on top of array
+ */
+var ArrayStreamDataSource = /** @class */ (function () {
+    function ArrayStreamDataSource() {
+        var value = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            value[_i] = arguments[_i];
+        }
+        this.dataPos = -1;
+        this.value = value;
+    }
+    ArrayStreamDataSource.prototype.hasNext = function () {
+        return this.value.length - 1 > this.dataPos;
+    };
+    ArrayStreamDataSource.prototype.next = function () {
+        this.dataPos++;
+        return this.value[this.dataPos];
+    };
+    ArrayStreamDataSource.prototype.reset = function () {
+        this.dataPos = -1;
+    };
+    return ArrayStreamDataSource;
+}());
+exports.ArrayStreamDataSource = ArrayStreamDataSource;
+/**
+ * an intermediate data source which prefilters
+ * incoming stream data
+ * and lets only the data out which
+ * passes the filter function check
+ */
+var FilteredStreamDatasource = /** @class */ (function () {
+    function FilteredStreamDatasource(filterFunc, parent) {
+        this.filteredNext = null;
+        this.filterFunc = filterFunc;
+        this.inputDataSource = parent;
+    }
+    /**
+     * in order to filter we have to make a look ahead until the
+     * first next allowed element
+     * hence we prefetch the element and then
+     * serve it via next
+     */
+    FilteredStreamDatasource.prototype.hasNext = function () {
+        while (this.filteredNext == null && this.inputDataSource.hasNext()) {
+            var next = this.inputDataSource.next();
+            if (this.filterFunc(next)) {
+                this.filteredNext = next;
+                return true;
+            }
+            else {
+                this.filteredNext = null;
+            }
+        }
+        return this.filteredNext != null;
+    };
+    /**
+     * serve the next element
+     */
+    FilteredStreamDatasource.prototype.next = function () {
+        var ret = this.filteredNext;
+        this.filteredNext = null;
+        //We have to call hasNext, to roll another
+        //prefetch in case someone runs next
+        //sequentially without calling hasNext
+        this.hasNext();
+        return ret;
+    };
+    FilteredStreamDatasource.prototype.reset = function () {
+        this.filteredNext = null;
+        this.inputDataSource.reset();
+    };
+    return FilteredStreamDatasource;
+}());
+exports.FilteredStreamDatasource = FilteredStreamDatasource;
+/**
+ * an intermediate datasource which maps the items from
+ * one into another
+ */
+var MappedStreamDataSource = /** @class */ (function () {
+    function MappedStreamDataSource(mapFunc, parent) {
+        this.mapFunc = mapFunc;
+        this.inputDataSource = parent;
+    }
+    MappedStreamDataSource.prototype.hasNext = function () {
+        return this.inputDataSource.hasNext();
+    };
+    MappedStreamDataSource.prototype.next = function () {
+        return this.mapFunc(this.inputDataSource.next());
+    };
+    MappedStreamDataSource.prototype.reset = function () {
+        this.inputDataSource.reset();
+    };
+    return MappedStreamDataSource;
+}());
+exports.MappedStreamDataSource = MappedStreamDataSource;
+/**
+ * Same for flatmap to deal with element -> stream mappings
+ */
+var FlatMapStreamDataSource = /** @class */ (function () {
+    function FlatMapStreamDataSource(func, parent) {
+        this.mapFunc = func;
+        this.inputDataSource = parent;
+    }
+    FlatMapStreamDataSource.prototype.hasNext = function () {
+        return this.resolveCurrentNext() || this.resolveNextNext();
+    };
+    FlatMapStreamDataSource.prototype.resolveCurrentNext = function () {
+        var next = false;
+        if (this.activeDataSource) {
+            next = this.activeDataSource.hasNext();
+        }
+        return next;
+    };
+    FlatMapStreamDataSource.prototype.resolveNextNext = function () {
+        var next = false;
+        while (!next && this.inputDataSource.hasNext()) {
+            var mapped = this.mapFunc(this.inputDataSource.next());
+            if (Array.isArray(mapped)) {
+                this.activeDataSource = new (ArrayStreamDataSource.bind.apply(ArrayStreamDataSource, __spreadArray([void 0], mapped, false)))();
+            }
+            else {
+                this.activeDataSource = mapped;
+            }
+            next = this.activeDataSource.hasNext();
+        }
+        return next;
+    };
+    FlatMapStreamDataSource.prototype.next = function () {
+        return this.activeDataSource.next();
+    };
+    FlatMapStreamDataSource.prototype.reset = function () {
+        this.inputDataSource.reset();
+    };
+    return FlatMapStreamDataSource;
+}());
+exports.FlatMapStreamDataSource = FlatMapStreamDataSource;
+/**
+ * For the time being we only need one collector
+ * a collector which collects a stream back into arrays
+ */
+var ArrayCollector = /** @class */ (function () {
+    function ArrayCollector() {
+        this.data = [];
+    }
+    ArrayCollector.prototype.collect = function (element) {
+        this.data.push(element);
+    };
+    Object.defineProperty(ArrayCollector.prototype, "finalValue", {
+        get: function () {
+            return this.data;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    return ArrayCollector;
+}());
+exports.ArrayCollector = ArrayCollector;
+/**
+ * collects an tuple array stream into an assoc array with elements being collected into arrays
+ *
+ */
+var ArrayAssocArrayCollector = /** @class */ (function () {
+    function ArrayAssocArrayCollector() {
+        this.finalValue = {};
+    }
+    ArrayAssocArrayCollector.prototype.collect = function (element) {
+        var _a, _b, _c, _d;
+        var key = (_a = element === null || element === void 0 ? void 0 : element[0]) !== null && _a !== void 0 ? _a : element;
+        this.finalValue[key] = (_c = (_b = this.finalValue) === null || _b === void 0 ? void 0 : _b[key]) !== null && _c !== void 0 ? _c : [];
+        this.finalValue[key].push((_d = element === null || element === void 0 ? void 0 : element[1]) !== null && _d !== void 0 ? _d : true);
+    };
+    return ArrayAssocArrayCollector;
+}());
+exports.ArrayAssocArrayCollector = ArrayAssocArrayCollector;
+/**
+ * dummy collector which just triggers a run
+ * on lazy streams without collecting anything
+ */
+var Run = /** @class */ (function () {
+    function Run() {
+    }
+    Run.prototype.collect = function (element) {
+    };
+    Object.defineProperty(Run.prototype, "finalValue", {
+        get: function () {
+            return null;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    return Run;
+}());
+exports.Run = Run;
+/**
+ * collects an assoc stream back to an assoc array
+ */
+var AssocArrayCollector = /** @class */ (function () {
+    function AssocArrayCollector() {
+        this.finalValue = {};
+    }
+    AssocArrayCollector.prototype.collect = function (element) {
+        var _a, _b;
+        this.finalValue[(_a = element[0]) !== null && _a !== void 0 ? _a : element] = (_b = element[1]) !== null && _b !== void 0 ? _b : true;
+    };
+    return AssocArrayCollector;
+}());
+exports.AssocArrayCollector = AssocArrayCollector;
+/**
+ * Form data collector for key value pair streams
+ */
+var FormDataCollector = /** @class */ (function () {
+    function FormDataCollector() {
+        this.finalValue = new FormData();
+    }
+    FormDataCollector.prototype.collect = function (element) {
+        this.finalValue.append(element.key, element.value);
+    };
+    return FormDataCollector;
+}());
+exports.FormDataCollector = FormDataCollector;
+/**
+ * Form data collector for DomQuery streams
+ */
+var QueryFormDataCollector = /** @class */ (function () {
+    function QueryFormDataCollector() {
+        this.finalValue = new FormData();
+    }
+    QueryFormDataCollector.prototype.collect = function (element) {
+        var toMerge = element.encodeFormElement();
+        if (toMerge.isPresent()) {
+            this.finalValue.append(element.name.value, toMerge.get(element.name).value);
+        }
+    };
+    return QueryFormDataCollector;
+}());
+exports.QueryFormDataCollector = QueryFormDataCollector;
+/**
+ * Encoded String collector from dom query streams
+ */
+var QueryFormStringCollector = /** @class */ (function () {
+    function QueryFormStringCollector() {
+        this.formData = [];
+    }
+    QueryFormStringCollector.prototype.collect = function (element) {
+        var toMerge = element.encodeFormElement();
+        if (toMerge.isPresent()) {
+            this.formData.push([element.name.value, toMerge.get(element.name).value]);
+        }
+    };
+    Object.defineProperty(QueryFormStringCollector.prototype, "finalValue", {
+        get: function () {
+            return Stream_1.Stream.of.apply(Stream_1.Stream, this.formData).map(function (keyVal) { return keyVal.join("="); })
+                .reduce(function (item1, item2) { return [item1, item2].join("&"); })
+                .orElse("").value;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    return QueryFormStringCollector;
+}());
+exports.QueryFormStringCollector = QueryFormStringCollector;
+
+
+/***/ }),
+
+/***/ "./node_modules/mona-dish/src/main/typescript/Stream.ts":
+/*!**************************************************************!*\
+  !*** ./node_modules/mona-dish/src/main/typescript/Stream.ts ***!
+  \**************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+/* Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.LazyStream = exports.Stream = void 0;
+/*
+ * A small stream implementation
+ */
+var Monad_1 = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
+var SourcesCollectors_1 = __webpack_require__(/*! ./SourcesCollectors */ "./node_modules/mona-dish/src/main/typescript/SourcesCollectors.ts");
+/**
+ * A simple typescript based reimplementation of streams
+ *
+ * This is the early eval version
+ * for a lazy eval version check, LazyStream, which is api compatible
+ * to this implementation, however with the benefit of being able
+ * to provide infinite data sources and generic data providers, the downside
+ * is, it might be a tad slower in some situations
+ */
+var Stream = /** @class */ (function () {
+    function Stream() {
+        var value = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            value[_i] = arguments[_i];
+        }
+        this._limits = -1;
+        this.pos = -1;
+        this.value = value;
+    }
+    Stream.of = function () {
+        var data = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            data[_i] = arguments[_i];
+        }
+        return new (Stream.bind.apply(Stream, __spreadArray([void 0], data, false)))();
+    };
+    Stream.ofAssoc = function (data) {
+        return this.of.apply(this, Object.keys(data)).map(function (key) { return [key, data[key]]; });
+    };
+    Stream.ofDataSource = function (dataSource) {
+        var value = [];
+        while (dataSource.hasNext()) {
+            value.push(dataSource.next());
+        }
+        return new (Stream.bind.apply(Stream, __spreadArray([void 0], value, false)))();
+    };
+    Stream.prototype.limits = function (end) {
+        this._limits = end;
+        return this;
+    };
+    /**
+     * concat for streams, so that you can concat two streams together
+     * @param toAppend
+     */
+    Stream.prototype.concat = function () {
+        //let dataSource = new MultiStreamDatasource<T>(this, ...toAppend);
+        //return Stream.ofDataSource<T>(dataSource);
+        var toAppend = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            toAppend[_i] = arguments[_i];
+        }
+        return Stream.of.apply(Stream, __spreadArray([this], toAppend, false)).flatMap(function (item) { return item; });
+    };
+    Stream.prototype.onElem = function (fn) {
+        for (var cnt = 0; cnt < this.value.length && (this._limits == -1 || cnt < this._limits); cnt++) {
+            if (fn(this.value[cnt], cnt) === false) {
+                break;
+            }
+        }
+        return this;
+    };
+    Stream.prototype.each = function (fn) {
+        this.onElem(fn);
+    };
+    Stream.prototype.map = function (fn) {
+        if (!fn) {
+            fn = function (inval) { return inval; };
+        }
+        var res = [];
+        this.each(function (item, cnt) {
+            res.push(fn(item));
+        });
+        return new (Stream.bind.apply(Stream, __spreadArray([void 0], res, false)))();
+    };
+    /*
+     * we need to implement it to fullfill the contract, although it is used only internally
+     * all values are flattened when accessed anyway, so there is no need to call this methiod
+     */
+    Stream.prototype.flatMap = function (fn) {
+        var ret = [];
+        this.each(function (item) {
+            var strmR = fn(item);
+            ret = Array.isArray(strmR) ? ret.concat(strmR) : ret.concat.apply(ret, strmR.value);
+        });
+        return Stream.of.apply(Stream, ret);
+    };
+    Stream.prototype.filter = function (fn) {
+        var res = [];
+        this.each(function (data) {
+            if (fn(data)) {
+                res.push(data);
+            }
+        });
+        return new (Stream.bind.apply(Stream, __spreadArray([void 0], res, false)))();
+    };
+    Stream.prototype.reduce = function (fn, startVal) {
+        if (startVal === void 0) { startVal = null; }
+        var offset = startVal != null ? 0 : 1;
+        var val1 = startVal != null ? startVal : this.value.length ? this.value[0] : null;
+        for (var cnt = offset; cnt < this.value.length && (this._limits == -1 || cnt < this._limits); cnt++) {
+            val1 = fn(val1, this.value[cnt]);
+        }
+        return Monad_1.Optional.fromNullable(val1);
+    };
+    Stream.prototype.first = function () {
+        return this.value && this.value.length ? Monad_1.Optional.fromNullable(this.value[0]) : Monad_1.Optional.absent;
+    };
+    Stream.prototype.last = function () {
+        //could be done via reduce, but is faster this way
+        var length = this._limits > 0 ? Math.min(this._limits, this.value.length) : this.value.length;
+        return Monad_1.Optional.fromNullable(length ? this.value[length - 1] : null);
+    };
+    Stream.prototype.anyMatch = function (fn) {
+        for (var cnt = 0; cnt < this.value.length && (this._limits == -1 || cnt < this._limits); cnt++) {
+            if (fn(this.value[cnt])) {
+                return true;
+            }
+        }
+        return false;
+    };
+    Stream.prototype.allMatch = function (fn) {
+        if (!this.value.length) {
+            return false;
+        }
+        var matches = 0;
+        for (var cnt = 0; cnt < this.value.length; cnt++) {
+            if (fn(this.value[cnt])) {
+                matches++;
+            }
+        }
+        return matches == this.value.length;
+    };
+    Stream.prototype.noneMatch = function (fn) {
+        var matches = 0;
+        for (var cnt = 0; cnt < this.value.length; cnt++) {
+            if (!fn(this.value[cnt])) {
+                matches++;
+            }
+        }
+        return matches == this.value.length;
+    };
+    Stream.prototype.sort = function (comparator) {
+        var newArr = this.value.slice().sort(comparator);
+        return Stream.of.apply(Stream, newArr);
+    };
+    Stream.prototype.collect = function (collector) {
+        this.each(function (data) { return collector.collect(data); });
+        return collector.finalValue;
+    };
+    //-- internally exposed methods needed for the interconnectivity
+    Stream.prototype.hasNext = function () {
+        var isLimitsReached = this._limits != -1 && this.pos >= this._limits - 1;
+        var isEndOfArray = this.pos >= this.value.length - 1;
+        return !(isLimitsReached || isEndOfArray);
+    };
+    Stream.prototype.next = function () {
+        if (!this.hasNext()) {
+            return null;
+        }
+        this.pos++;
+        return this.value[this.pos];
+    };
+    Stream.prototype[Symbol.iterator] = function () {
+        var _this = this;
+        return {
+            next: function () {
+                var done = !_this.hasNext();
+                var val = _this.next();
+                return {
+                    done: done,
+                    value: val
+                };
+            }
+        };
+    };
+    /*get observable(): Observable<T> {
+        return from(this);
+    }*/
+    Stream.prototype.reset = function () {
+        this.pos = -1;
+    };
+    return Stream;
+}());
+exports.Stream = Stream;
+/**
+ * Lazy implementation of a Stream
+ * The idea is to connect the intermediate
+ * streams as datasources like a linked list
+ * with reverse referencing and for special
+ * operations like filtering flatmapping
+ * have intermediate datasources in the list
+ * with specialized functions.
+ *
+ * Sort of a modified pipe valve pattern
+ * the streams are the pipes the intermediate
+ * data sources are the valves
+ *
+ * We then can use passed in functions to control
+ * the flow in the valves
+ *
+ * That way we can have a lazy evaluating stream
+ *
+ * So if an endpoint requests data
+ * a callback trace goes back the stream list
+ * which triggers an operation upwards
+ * which sends data down the drain which then is processed
+ * and filtered until one element hits the endpoint.
+ *
+ * That is repeated, until all elements are processed
+ * or an internal limit is hit.
+ *
+ */
+var LazyStream = /** @class */ (function () {
+    function LazyStream(parent) {
+        this._limits = -1;
+        /*
+         * needed to have the limits check working
+         * we need to keep track of the current position
+         * in the stream
+         */
+        this.pos = -1;
+        this.dataSource = parent;
+    }
+    LazyStream.of = function () {
+        var values = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            values[_i] = arguments[_i];
+        }
+        return new LazyStream(new (SourcesCollectors_1.ArrayStreamDataSource.bind.apply(SourcesCollectors_1.ArrayStreamDataSource, __spreadArray([void 0], values, false)))());
+    };
+    LazyStream.ofAssoc = function (data) {
+        return this.of.apply(this, Object.keys(data)).map(function (key) { return [key, data[key]]; });
+    };
+    LazyStream.ofStreamDataSource = function (value) {
+        return new LazyStream(value);
+    };
+    LazyStream.prototype.hasNext = function () {
+        if (this.isOverLimits()) {
+            return false;
+        }
+        return this.dataSource.hasNext();
+    };
+    LazyStream.prototype.next = function () {
+        var next = this.dataSource.next();
+        // @ts-ignore
+        this.pos++;
+        return next;
+    };
+    LazyStream.prototype.reset = function () {
+        this.dataSource.reset();
+        this.pos = 0;
+        this._limits = -1;
+    };
+    /**
+     * concat for streams, so that you can concat two streams together
+     * @param toAppend
+     */
+    LazyStream.prototype.concat = function () {
+        var toAppend = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            toAppend[_i] = arguments[_i];
+        }
+        //this.dataSource =  new MultiStreamDatasource<T>(this, ... toAppend);
+        //return this;
+        return LazyStream.of.apply(LazyStream, __spreadArray([this], toAppend, false)).flatMap(function (item) { return item; });
+    };
+    LazyStream.prototype.nextFilter = function (fn) {
+        if (this.hasNext()) {
+            var newVal = this.next();
+            if (!fn(newVal)) {
+                return this.nextFilter(fn);
+            }
+            return newVal;
+        }
+        return null;
+    };
+    LazyStream.prototype.limits = function (max) {
+        this._limits = max;
+        return this;
+    };
+    //main stream methods
+    LazyStream.prototype.collect = function (collector) {
+        while (this.hasNext()) {
+            var t = this.next();
+            collector.collect(t);
+        }
+        return collector.finalValue;
+    };
+    LazyStream.prototype.onElem = function (fn) {
+        var _this = this;
+        return new LazyStream(new SourcesCollectors_1.MappedStreamDataSource(function (el) {
+            if (fn(el, _this.pos) === false) {
+                _this.stop();
+            }
+            return el;
+        }, this));
+    };
+    LazyStream.prototype.filter = function (fn) {
+        return new LazyStream(new SourcesCollectors_1.FilteredStreamDatasource(fn, this));
+    };
+    LazyStream.prototype.map = function (fn) {
+        return new LazyStream(new SourcesCollectors_1.MappedStreamDataSource(fn, this));
+    };
+    LazyStream.prototype.flatMap = function (fn) {
+        return new LazyStream(new SourcesCollectors_1.FlatMapStreamDataSource(fn, this));
+    };
+    //endpoint
+    LazyStream.prototype.each = function (fn) {
+        while (this.hasNext()) {
+            if (fn(this.next()) === false) {
+                this.stop();
+            }
+        }
+    };
+    LazyStream.prototype.reduce = function (fn, startVal) {
+        if (startVal === void 0) { startVal = null; }
+        if (!this.hasNext()) {
+            return Monad_1.Optional.absent;
+        }
+        var value1 = null;
+        var value2 = null;
+        if (startVal != null) {
+            value1 = startVal;
+            value2 = this.next();
+        }
+        else {
+            value1 = this.next();
+            if (!this.hasNext()) {
+                return Monad_1.Optional.fromNullable(value1);
+            }
+            value2 = this.next();
+        }
+        value1 = fn(value1, value2);
+        while (this.hasNext()) {
+            value2 = this.next();
+            value1 = fn(value1, value2);
+        }
+        return Monad_1.Optional.fromNullable(value1);
+    };
+    LazyStream.prototype.last = function () {
+        if (!this.hasNext()) {
+            return Monad_1.Optional.absent;
+        }
+        return this.reduce(function (el1, el2) { return el2; });
+    };
+    LazyStream.prototype.first = function () {
+        this.reset();
+        if (!this.hasNext()) {
+            return Monad_1.Optional.absent;
+        }
+        return Monad_1.Optional.fromNullable(this.next());
+    };
+    LazyStream.prototype.anyMatch = function (fn) {
+        while (this.hasNext()) {
+            if (fn(this.next())) {
+                return true;
+            }
+        }
+        return false;
+    };
+    LazyStream.prototype.allMatch = function (fn) {
+        while (this.hasNext()) {
+            if (!fn(this.next())) {
+                return false;
+            }
+        }
+        return true;
+    };
+    LazyStream.prototype.noneMatch = function (fn) {
+        while (this.hasNext()) {
+            if (fn(this.next())) {
+                return false;
+            }
+        }
+        return true;
+    };
+    LazyStream.prototype.sort = function (comparator) {
+        var arr = this.collect(new SourcesCollectors_1.ArrayCollector());
+        arr = arr.sort(comparator);
+        return LazyStream.of.apply(LazyStream, arr);
+    };
+    Object.defineProperty(LazyStream.prototype, "value", {
+        get: function () {
+            return this.collect(new SourcesCollectors_1.ArrayCollector());
+        },
+        enumerable: false,
+        configurable: true
+    });
+    LazyStream.prototype[Symbol.iterator] = function () {
+        var _this = this;
+        return {
+            next: function () {
+                var done = !_this.hasNext();
+                var val = _this.next();
+                return {
+                    done: done,
+                    value: val
+                };
+            }
+        };
+    };
+    /*get observable(): Observable<T> {
+        return from(this);
+    }*/
+    LazyStream.prototype.stop = function () {
+        this.pos = this._limits + 1000000000;
+    };
+    LazyStream.prototype.isOverLimits = function () {
+        return this._limits != -1 && this.pos >= this._limits - 1;
+    };
+    return LazyStream;
+}());
+exports.LazyStream = LazyStream;
+
+
+/***/ }),
+
+/***/ "./node_modules/mona-dish/src/main/typescript/XmlQuery.ts":
+/*!****************************************************************!*\
+  !*** ./node_modules/mona-dish/src/main/typescript/XmlQuery.ts ***!
+  \****************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+/* Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.XQ = exports.XMLQuery = void 0;
+var Lang_1 = __webpack_require__(/*! ./Lang */ "./node_modules/mona-dish/src/main/typescript/Lang.ts");
+var DomQuery_1 = __webpack_require__(/*! ./DomQuery */ "./node_modules/mona-dish/src/main/typescript/DomQuery.ts");
+var isString = Lang_1.Lang.isString;
+/**
+ * xml query as specialized case for DomQuery
+ */
+var XMLQuery = /** @class */ (function (_super) {
+    __extends(XMLQuery, _super);
+    function XMLQuery(rootNode, docType) {
+        if (docType === void 0) { docType = "text/xml"; }
+        var _this = this;
+        var createIe11DomQueryShim = function () {
+            //at the time if wroting ie11 is the only relevant browser
+            //left withut any DomQuery support
+            var parser = new ActiveXObject("Microsoft.XMLDOM");
+            parser.async = false;
+            //we shim th dom parser from ie in
+            return {
+                parseFromString: function (text, contentType) {
+                    return parser.loadXML(text);
+                }
+            };
+        };
+        var parseXML = function (xml) {
+            if (xml == null) {
+                return null;
+            }
+            var domParser = Lang_1.Lang.saveResolveLazy(function () { return new window.DOMParser(); }, function () { return createIe11DomQueryShim(); }).value;
+            return domParser.parseFromString(xml, docType);
+        };
+        if (isString(rootNode)) {
+            _this = _super.call(this, parseXML(rootNode)) || this;
+        }
+        else {
+            _this = _super.call(this, rootNode) || this;
+        }
+        return _this;
+    }
+    XMLQuery.prototype.isXMLParserError = function () {
+        return this.querySelectorAll("parsererror").isPresent();
+    };
+    XMLQuery.prototype.toString = function () {
+        var ret = [];
+        this.eachElem(function (node) {
+            var _a, _b, _c;
+            var serialized = (_c = (_b = (_a = window === null || window === void 0 ? void 0 : window.XMLSerializer) === null || _a === void 0 ? void 0 : _a.constructor()) === null || _b === void 0 ? void 0 : _b.serializeToString(node)) !== null && _c !== void 0 ? _c : node === null || node === void 0 ? void 0 : node.xml;
+            if (!!serialized) {
+                ret.push(serialized);
+            }
+        });
+        return ret.join("");
+    };
+    XMLQuery.prototype.parserErrorText = function (joinstr) {
+        return this.querySelectorAll("parsererror").textContent(joinstr);
+    };
+    XMLQuery.parseXML = function (txt) {
+        return new XMLQuery(txt);
+    };
+    XMLQuery.parseHTML = function (txt) {
+        return new XMLQuery(txt, "text/html");
+    };
+    XMLQuery.fromString = function (txt, parseType) {
+        if (parseType === void 0) { parseType = "text/xml"; }
+        return new XMLQuery(txt, parseType);
+    };
+    return XMLQuery;
+}(DomQuery_1.DomQuery));
+exports.XMLQuery = XMLQuery;
+exports.XQ = XMLQuery;
+
+
+/***/ }),
+
+/***/ "./node_modules/mona-dish/src/main/typescript/index_core.ts":
+/*!******************************************************************!*\
+  !*** ./node_modules/mona-dish/src/main/typescript/index_core.ts ***!
+  \******************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.QueryFormDataCollector = exports.FormDataCollector = exports.AssocArrayCollector = exports.ArrayCollector = exports.QueryFormStringCollector = exports.SequenceDataSource = exports.FlatMapStreamDataSource = exports.FilteredStreamDatasource = exports.MappedStreamDataSource = exports.ArrayStreamDataSource = exports.LazyStream = exports.Stream = exports.XQ = exports.XMLQuery = exports.ValueEmbedder = exports.Optional = exports.Monad = exports.Config = exports.Lang = exports.DQ = exports.DomQueryCollector = exports.ElementAttribute = exports.DomQuery = void 0;
+var DomQuery_1 = __webpack_require__(/*! ./DomQuery */ "./node_modules/mona-dish/src/main/typescript/DomQuery.ts");
+Object.defineProperty(exports, "DomQuery", ({ enumerable: true, get: function () { return DomQuery_1.DomQuery; } }));
+Object.defineProperty(exports, "ElementAttribute", ({ enumerable: true, get: function () { return DomQuery_1.ElementAttribute; } }));
+Object.defineProperty(exports, "DomQueryCollector", ({ enumerable: true, get: function () { return DomQuery_1.DomQueryCollector; } }));
+Object.defineProperty(exports, "DQ", ({ enumerable: true, get: function () { return DomQuery_1.DQ; } }));
+var Lang_1 = __webpack_require__(/*! ./Lang */ "./node_modules/mona-dish/src/main/typescript/Lang.ts");
+Object.defineProperty(exports, "Lang", ({ enumerable: true, get: function () { return Lang_1.Lang; } }));
+var Monad_1 = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
+Object.defineProperty(exports, "Config", ({ enumerable: true, get: function () { return Monad_1.Config; } }));
+Object.defineProperty(exports, "Monad", ({ enumerable: true, get: function () { return Monad_1.Monad; } }));
+Object.defineProperty(exports, "Optional", ({ enumerable: true, get: function () { return Monad_1.Optional; } }));
+Object.defineProperty(exports, "ValueEmbedder", ({ enumerable: true, get: function () { return Monad_1.ValueEmbedder; } }));
+var XmlQuery_1 = __webpack_require__(/*! ./XmlQuery */ "./node_modules/mona-dish/src/main/typescript/XmlQuery.ts");
+Object.defineProperty(exports, "XMLQuery", ({ enumerable: true, get: function () { return XmlQuery_1.XMLQuery; } }));
+Object.defineProperty(exports, "XQ", ({ enumerable: true, get: function () { return XmlQuery_1.XQ; } }));
+var Stream_1 = __webpack_require__(/*! ./Stream */ "./node_modules/mona-dish/src/main/typescript/Stream.ts");
+Object.defineProperty(exports, "Stream", ({ enumerable: true, get: function () { return Stream_1.Stream; } }));
+Object.defineProperty(exports, "LazyStream", ({ enumerable: true, get: function () { return Stream_1.LazyStream; } }));
+var SourcesCollectors_1 = __webpack_require__(/*! ./SourcesCollectors */ "./node_modules/mona-dish/src/main/typescript/SourcesCollectors.ts");
+Object.defineProperty(exports, "ArrayStreamDataSource", ({ enumerable: true, get: function () { return SourcesCollectors_1.ArrayStreamDataSource; } }));
+Object.defineProperty(exports, "MappedStreamDataSource", ({ enumerable: true, get: function () { return SourcesCollectors_1.MappedStreamDataSource; } }));
+Object.defineProperty(exports, "FilteredStreamDatasource", ({ enumerable: true, get: function () { return SourcesCollectors_1.FilteredStreamDatasource; } }));
+Object.defineProperty(exports, "FlatMapStreamDataSource", ({ enumerable: true, get: function () { return SourcesCollectors_1.FlatMapStreamDataSource; } }));
+Object.defineProperty(exports, "SequenceDataSource", ({ enumerable: true, get: function () { return SourcesCollectors_1.SequenceDataSource; } }));
+Object.defineProperty(exports, "QueryFormStringCollector", ({ enumerable: true, get: function () { return SourcesCollectors_1.QueryFormStringCollector; } }));
+Object.defineProperty(exports, "ArrayCollector", ({ enumerable: true, get: function () { return SourcesCollectors_1.ArrayCollector; } }));
+Object.defineProperty(exports, "AssocArrayCollector", ({ enumerable: true, get: function () { return SourcesCollectors_1.AssocArrayCollector; } }));
+Object.defineProperty(exports, "FormDataCollector", ({ enumerable: true, get: function () { return SourcesCollectors_1.FormDataCollector; } }));
+Object.defineProperty(exports, "QueryFormDataCollector", ({ enumerable: true, get: function () { return SourcesCollectors_1.QueryFormDataCollector; } }));
+
 
 /***/ }),
 
@@ -18,7 +3519,6 @@
   \****************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
-"use strict";
 
 /* Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -286,7 +3786,6 @@ var myfaces;
   \**********************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-"use strict";
 
 /* Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -308,7 +3807,7 @@ exports.Implementation = void 0;
 var Response_1 = __webpack_require__(/*! ./xhrCore/Response */ "./src/main/typescript/impl/xhrCore/Response.ts");
 var XhrRequest_1 = __webpack_require__(/*! ./xhrCore/XhrRequest */ "./src/main/typescript/impl/xhrCore/XhrRequest.ts");
 var AsyncQueue_1 = __webpack_require__(/*! ./util/AsyncQueue */ "./src/main/typescript/impl/util/AsyncQueue.ts");
-var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/dist/js/commonjs/index_core.js");
+var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 var Assertions_1 = __webpack_require__(/*! ./util/Assertions */ "./src/main/typescript/impl/util/Assertions.ts");
 var XhrFormData_1 = __webpack_require__(/*! ./xhrCore/XhrFormData */ "./src/main/typescript/impl/xhrCore/XhrFormData.ts");
 var ExtDomQuery_1 = __webpack_require__(/*! ./util/ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
@@ -865,7 +4364,6 @@ var Implementation;
   \**********************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-"use strict";
 
 /**
  * Typescript port of the jsf.push part in the myfaces implementation
@@ -1090,7 +4588,6 @@ var PushImpl;
   \************************************************/
 /***/ ((__unused_webpack_module, exports) => {
 
-"use strict";
 
 /* Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -1235,7 +4732,6 @@ exports.UNKNOWN = "UNKNOWN";
   \****************************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.StateHolder = void 0;
@@ -1288,7 +4784,6 @@ exports.StateHolder = StateHolder;
   \***************************************************/
 /***/ ((__unused_webpack_module, exports) => {
 
-"use strict";
 
 /* Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -1412,11 +4907,10 @@ exports.Messages = Messages;
   \*****************************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Assertions = void 0;
-var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/dist/js/commonjs/index_core.js");
+var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 var Lang_1 = __webpack_require__(/*! ./Lang */ "./src/main/typescript/impl/util/Lang.ts");
 var getMessage = Lang_1.ExtLang.getMessage;
 var makeException = Lang_1.ExtLang.makeException;
@@ -1512,7 +5006,6 @@ var Assertions;
   \*****************************************************/
 /***/ ((__unused_webpack_module, exports) => {
 
-"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AsynchronousQueue = void 0;
@@ -1626,7 +5119,6 @@ exports.AsynchronousQueue = AsynchronousQueue;
   \******************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
-"use strict";
 
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
@@ -1645,7 +5137,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ExtDQ = exports.ExtDomquery = void 0;
-var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/dist/js/commonjs/index_core.js");
+var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 /**
  * detects whether a source is a jsf.js request
@@ -1819,7 +5311,6 @@ exports.ExtDQ = mona_dish_1.DQ;
   \***********************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-"use strict";
 
 /* Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -1841,7 +5332,7 @@ exports.ExtDQ = mona_dish_1.DQ;
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ExtLang = void 0;
-var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/dist/js/commonjs/index_core.js");
+var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 var Messages_1 = __webpack_require__(/*! ../i18n/Messages */ "./src/main/typescript/impl/i18n/Messages.ts");
 var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 var RequestDataResolver_1 = __webpack_require__(/*! ../xhrCore/RequestDataResolver */ "./src/main/typescript/impl/xhrCore/RequestDataResolver.ts");
@@ -2044,7 +5535,6 @@ var ExtLang;
   \*******************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
-"use strict";
 
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
@@ -2145,11 +5635,10 @@ exports.ErrorData = ErrorData;
   \*******************************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EventData = void 0;
-var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/dist/js/commonjs/index_core.js");
+var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 var EventData = /** @class */ (function () {
     function EventData() {
@@ -2185,7 +5674,6 @@ exports.EventData = EventData;
   \*****************************************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-"use strict";
 
 /* Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -2204,7 +5692,7 @@ exports.EventData = EventData;
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.resolveDefaults = exports.getEventTarget = exports.resolveWindowId = exports.resolveDelay = exports.resolveTimeout = exports.resolveForm = exports.resolveFinalUrl = exports.resolveTargetUrl = exports.resolveHandlerFunc = void 0;
-var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/dist/js/commonjs/index_core.js");
+var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 var Lang_1 = __webpack_require__(/*! ../util/Lang */ "./src/main/typescript/impl/util/Lang.ts");
 var ExtDomQuery_1 = __webpack_require__(/*! ../util/ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
@@ -2338,7 +5826,6 @@ exports.resolveDefaults = resolveDefaults;
   \*****************************************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-"use strict";
 
 /* Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -2357,9 +5844,9 @@ exports.resolveDefaults = resolveDefaults;
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.resolveSourceForm = exports.resolveSourceElement = exports.resolveContexts = exports.resolveResponseXML = void 0;
-var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/dist/js/commonjs/index_core.js");
+var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 var Assertions_1 = __webpack_require__(/*! ../util/Assertions */ "./src/main/typescript/impl/util/Assertions.ts");
-var mona_dish_2 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/dist/js/commonjs/index_core.js");
+var mona_dish_2 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 /**
  * Resolver functions for various aspects of the response data
@@ -2451,7 +5938,6 @@ function resolveSourceElementId(context, internalContext) {
   \******************************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-"use strict";
 
 /* Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -2470,7 +5956,7 @@ function resolveSourceElementId(context, internalContext) {
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Response = void 0;
-var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/dist/js/commonjs/index_core.js");
+var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 var ResponseProcessor_1 = __webpack_require__(/*! ./ResponseProcessor */ "./src/main/typescript/impl/xhrCore/ResponseProcessor.ts");
 var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 var ResonseDataResolver_1 = __webpack_require__(/*! ./ResonseDataResolver */ "./src/main/typescript/impl/xhrCore/ResonseDataResolver.ts");
@@ -2628,7 +6114,6 @@ var Response;
   \***************************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
-"use strict";
 
 /* Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -2656,7 +6141,7 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ResponseProcessor = void 0;
-var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/dist/js/commonjs/index_core.js");
+var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 var AjaxImpl_1 = __webpack_require__(/*! ../AjaxImpl */ "./src/main/typescript/impl/AjaxImpl.ts");
 var Assertions_1 = __webpack_require__(/*! ../util/Assertions */ "./src/main/typescript/impl/util/Assertions.ts");
 var ErrorData_1 = __webpack_require__(/*! ./ErrorData */ "./src/main/typescript/impl/xhrCore/ErrorData.ts");
@@ -3015,7 +6500,6 @@ exports.ResponseProcessor = ResponseProcessor;
   \*********************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
-"use strict";
 
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
@@ -3058,8 +6542,8 @@ exports.XhrFormData = void 0;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/dist/js/commonjs/index_core.js");
-var mona_dish_2 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/dist/js/commonjs/index_core.js");
+var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
+var mona_dish_2 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 var isString = mona_dish_1.Lang.isString;
 var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 /**
@@ -3298,7 +6782,6 @@ exports.XhrFormData = XhrFormData;
   \********************************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-"use strict";
 
 /* Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -3317,7 +6800,7 @@ exports.XhrFormData = XhrFormData;
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.XhrRequest = void 0;
-var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/dist/js/commonjs/index_core.js");
+var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 var AjaxImpl_1 = __webpack_require__(/*! ../AjaxImpl */ "./src/main/typescript/impl/AjaxImpl.ts");
 var XhrFormData_1 = __webpack_require__(/*! ./XhrFormData */ "./src/main/typescript/impl/xhrCore/XhrFormData.ts");
 var ErrorData_1 = __webpack_require__(/*! ./ErrorData */ "./src/main/typescript/impl/xhrCore/ErrorData.ts");

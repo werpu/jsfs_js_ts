@@ -26,11 +26,13 @@ function build(env: {[key:string]: string}, argv: {[key:string]: string}) {
             libraryTarget: libraryTarget,
             filename: (argv.mode == "production") ? "jsf.js" : "jsf-development.js"
         },
+
         resolve: {
             extensions: [".tsx", ".ts", ".json"],
             alias: {
                 /*we load the reduced core, because there are some parts we simply do not need*/
-               "mona-dish": path.resolve(__dirname, "node_modules/mona-dish/dist/js/commonjs/index_core.js")
+                //"mona-dish": path.resolve(__dirname, "node_modules/mona-dish/dist/js/commonjs/index_core.js")
+                "mona-dish": path.resolve(__dirname, "node_modules/mona-dish/src/main/typescript/index_core.ts")
             }
         },
         externals: {
@@ -42,8 +44,11 @@ function build(env: {[key:string]: string}, argv: {[key:string]: string}) {
                 // all files with a '.ts' or '.tsx' extension will be handled by 'ts-loader'
                 {
                     test: /\.tsx?$/, use: [{
-                        loader: "ts-loader"
-                    }], exclude: /node_modules/
+                        loader: "ts-loader",
+                        options: {
+                            allowTsInNodeModules: true
+                        }
+                    }]
                 }, {
                     test: /jsf\.js$/,
                     loader: 'string-replace-loader',
@@ -54,10 +59,6 @@ function build(env: {[key:string]: string}, argv: {[key:string]: string}) {
                 }
             ]
         },
-
-
-
-
 
 
         plugins: [

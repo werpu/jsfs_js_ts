@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ArrayCollector, Config, DomQuery, DomQueryCollector, Lang, LazyStream} from "mona-dish";
+import {ArrayCollector, Config, DomQueryCollector, Lang, LazyStream} from "mona-dish";
 
 import {Stream, DQ} from "mona-dish";
 import isString = Lang.isString;
@@ -43,7 +43,7 @@ export class XhrFormData extends Config {
      * @param dataSource either a form as DomQuery object or an encoded url string
      * @param partialIdsArray partial ids to collect, to reduce the data sent down
      */
-    constructor(private dataSource: DQ | string, private partialIdsArray?: string[], private encode = true) {
+    constructor(private dataSource: DQ | string, private partialIdsArray?: string[]) {
         super({});
         //a call to getViewState before must pass the encoded line
         //a call from getViewState passes the form element as datasource
@@ -73,7 +73,7 @@ export class XhrFormData extends Config {
         };
 
         let inputExists = (item: DQ) => {
-            return !!item.length;
+            return item.isPresent();
         };
 
         let applyInput = (item: DQ) => {
@@ -87,32 +87,14 @@ export class XhrFormData extends Config {
     }
 
     private getFileInputs(rootElment: DQ): DQ {
+        const rootFileInputs = rootElment
+            .filter(elem => elem.matchesSelector("input[type='file']"))
+        const childFileInputs = rootElment
+            .querySelectorAll("input[type='file']");
 
-        let resolveFileInputs = item => {
-
-            if (item.length == 1) {
-                if ((<string>item.tagName.get("booga").value).toLowerCase() == "input" &&
-                    (<string>item.attr("type")?.value || '').toLowerCase() == "file") {
-                    return item;
-                }
-
-                return rootElment.querySelectorAllDeep("input[type='file']");
-            }
-            return this.getFileInputs(item);
-        };
-
-        let itemExists = (item: DQ) => {
-            return !!item?.length;
-        }
-
-        let ret = rootElment.lazyStream
-            .map(resolveFileInputs)
-            .filter(itemExists)
-            .collect(new DomQueryCollector());
-
+        let ret = rootFileInputs.concat(childFileInputs);
         return ret;
     }
-
 
     private handleFormSource() {
         //encode and append the issuing item if not a partial ids array of ids is passed
@@ -148,21 +130,32 @@ export class XhrFormData extends Config {
      * @param encoded
      */
     assignEncodedString(encoded: string) {
+        //TODO reevaluate this method
         //this code filters out empty strings as key value pairs
-        let keyValueEntries = decodeURIComponent(encoded).split(/&/gi).filter(item => !!(item || '').replace(/\s+/g,''));
+        let keyValueEntries = decodeURIComponent(encoded).split(/&/gi)
+                .filter(item => !!(item || '')
+                .replace(/\s+/g,''));
         this.assignString(keyValueEntries);
     }
 
     assignString(keyValueEntries: string[]) {
         let toMerge = new Config({});
 
+        function splitToKeyVal(line: string) {
+            return line.split(/=(.*)/gi);
+        }
+
+        function fixKeyWithoutVal(keyVal: string[]) {
+            return keyVal.length < 3 ? [keyVal?.[0] ?? [], keyVal?.[1] ?? []] : keyVal;
+        }
+
         Stream.of(...keyValueEntries)
             //split only the first =
-            .map(line => line.split(/=(.*)/gi))
+            .map(line => splitToKeyVal(line))
             //special case of having keys without values
-            .map(keyVal => keyVal.length < 3 ? [keyVal?.[0] ?? [], keyVal?.[1] ?? []] : keyVal)
+            .map(keyVal => fixKeyWithoutVal(keyVal))
             .each(keyVal => {
-                toMerge.append(keyVal[0]).value = keyVal?.splice(1)?.join("") ?? "";
+                toMerge.append(keyVal[0] as string).value = keyVal?.splice(1)?.join("") ?? "";
             });
         //merge with overwrite but no append! (aka no double entries are allowed)
         this.shallowMerge(toMerge);

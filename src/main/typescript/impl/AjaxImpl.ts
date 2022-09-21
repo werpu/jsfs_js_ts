@@ -18,7 +18,7 @@ import {IListener} from "./util/ListenerQueue";
 import {Response} from "./xhrCore/Response";
 import {XhrRequest} from "./xhrCore/XhrRequest";
 import {AsynchronousQueue} from "./util/AsyncQueue";
-import {AssocArrayCollector, Config, DQ, Lang, Optional, Stream} from "mona-dish";
+import {AssocArrayCollector, Config, DQ, Lang, LazyStream, Optional, Stream} from "mona-dish";
 import {Assertions} from "./util/Assertions";
 import {XhrFormData} from "./xhrCore/XhrFormData";
 import {ExtDomquery} from "./util/ExtDomQuery";
@@ -114,7 +114,7 @@ export module Implementation {
     /**
      * fetches the separator char from the given script tags
      *
-     * @return {char} the separator char for the given script tags
+     * @return {string} the separator char for the given script tags
      */
     export function getSeparatorChar(): string {
         return resolveGlobalConfig()?.separator ??
@@ -152,7 +152,7 @@ export module Implementation {
     export function resolveProjectStateFromURL(): string | null {
 
         /* run through all script tags and try to find the one that includes jsf.js */
-        let foundStage = <string>ExtDomquery.searchJsfJsFor(/stage=([^&;]*)/).value;
+        const foundStage = ExtDomquery.searchJsfJsFor(/stage=([^&;]*)/).value as string;
         return (foundStage in ProjectStages) ? foundStage : null;
     }
 
@@ -164,27 +164,15 @@ export module Implementation {
      * @param funcs
      */
     export function chain(source: any, event: Event, ...funcs: EvalFuncs): boolean {
+        // we can use our lazy stream each functionality to run our chain here..
+        // by passing a boolean as return value into the onElem call
+        // we can stop early at the first false, just like the spec requests
 
-        let ret = true;
-        let resolveAndExecute = function (func: Function | string) {
-            if ("string" != typeof func) {
-                //function is passed down as chain parameter, can be executed as is
-                return (ret = ret && ((<Function>func).call(source, event) !== false));
-            } else {
-                //either a function or a string can be passed in case of a string we have to wrap it into another function
-                //it it is not a plain executable code but a definition
-                let sourceCode = trim(<string>func);
-                if (sourceCode.indexOf("function ") == 0) {
-                    sourceCode = `return ${sourceCode} (event)`;
-                }
-                return (ret = ret && (new Function("event", sourceCode).call(source, event) !== false));
-            }
-        };
-
-        //we can use our stream each functionality to run our chain here..
-        //the no return value == false stop stream functionality is handled by our resolveAndExecute
-        <any>Stream.of(...funcs).each(func => resolveAndExecute(func));
-        return ret;
+        return LazyStream.of(...funcs)
+            .map(func => resolveAndExecute(source, event, func))
+            // we use the return false == stop as an early stop
+            .onElem((opResult: boolean) => opResult)
+            .last().value;
     }
 
     /**
@@ -362,7 +350,7 @@ export module Implementation {
      */
     export function stdErrorHandler(request: XMLHttpRequest,
                                     context: Config,
-                                    exception: any,
+                                    exception: Error,
                                     clearRequestQueue = false) {
         //newer browsers do not allow to hold additional values on native objects like exceptions
         //we hence capsule it into the request, which is gced automatically
@@ -396,7 +384,7 @@ export module Implementation {
      * @param errorData the error data to be displayed
      * @param localHandler an optional local error handler which has to be processed before the error handler queue
      */
-    export function sendError(errorData: ErrorData, localHandler = function (data: any) {
+    export function sendError(errorData: ErrorData, localHandler = function (data: ErrorData) {
     }) {
 
         localHandler(errorData);
@@ -646,4 +634,27 @@ export module Implementation {
         return  window?.[MYFACES]?.config ?? {};
     }
 
+    /**
+     * Private helper to execute a function or code fragment
+     * @param source the source of the caller passed into the function as this
+     * @param event an event which needs to be passed down into the function
+     * @param func either a function or code fragment
+     * @return a boolean value, if the passed function returns false, then the
+     * caller is basically notified that the execution can now stop (JSF requirement for chain)
+     * @private
+     */
+    function resolveAndExecute(source: any, event: Event, func: Function | string): boolean {
+        if ("string" != typeof func) {
+            //function is passed down as chain parameter, can be executed as is
+            return (<Function>func).call(source, event) !== false;
+        } else {
+            //either a function or a string can be passed in case of a string we have to wrap it into another function
+            //it it is not a plain executable code but a definition
+            let sourceCode = trim(<string>func);
+            if (sourceCode.indexOf("function ") == 0) {
+                sourceCode = `return ${sourceCode} (event)`;
+            }
+            return new Function("event", sourceCode).call(source, event) !== false;
+        }
+    }
 }

@@ -19,6 +19,8 @@
 import {Implementation} from "../impl/AjaxImpl";
 import {PushImpl} from "../impl/PushImpl";
 
+//declare const Implementation: any;
+
 export module jsf {
     "use strict";
 

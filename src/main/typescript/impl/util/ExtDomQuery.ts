@@ -31,6 +31,8 @@ const IS_INTERNAL_SOURCE = (source: string): boolean => {
 }
 
 
+const ATTR_SRC = 'src';
+
 /**
  * Extension which adds implementation specific
  * meta data to our dom query
@@ -98,8 +100,8 @@ export class ExtDomquery extends DQ {
         let nonceScript = DQ
             .querySelectorAll("script[src], link[src]")
             .lazyStream
-            .filter((item) => item.attr("nonce").value != null && item.attr("src") != null)
-            .map(item => IS_JSF_SOURCE(item.attr('src').value))
+            .filter((item) => item.attr("nonce").value != null && item.attr(ATTR_SRC) != null)
+            .map(item => IS_JSF_SOURCE(item.attr(ATTR_SRC).value))
             .first();
 
         if (nonceScript.isPresent()) {
@@ -120,8 +122,8 @@ export class ExtDomquery extends DQ {
     searchJsfJsFor(rexp: RegExp): Optional<string> {
         //perfect application for lazy stream
         return DQ.querySelectorAll("script[src], link[src]").lazyStream
-                .filter(item => IS_JSF_SOURCE(item.attr('src').value))
-                .map(item => item.attr("src").value.match(rexp))
+                .filter(item => IS_JSF_SOURCE(item.attr(ATTR_SRC).value))
+                .map(item => item.attr(ATTR_SRC).value.match(rexp))
                 .filter(item => item != null && item.length > 1)
                 .map((result: string[]) => {
                     return decodeURIComponent(result[1]);

@@ -504,8 +504,12 @@ var DomQuery = /** @class */ (function () {
     Object.defineProperty(DomQuery.prototype, "asArray", {
         get: function () {
             //filter not supported by IE11
-            return [].concat(Stream_1.LazyStream.of.apply(Stream_1.LazyStream, this.rootNode).filter(function (item) { return item != null; })
-                .map(function (item) { return DomQuery.byId(item); }).collect(new SourcesCollectors_1.ArrayCollector()));
+            return [].concat(Stream_1.LazyStream.of.apply(Stream_1.LazyStream, this.rootNode).filter(function (item) {
+                return item != null;
+            })
+                .map(function (item) {
+                return DomQuery.byId(item);
+            }).collect(new SourcesCollectors_1.ArrayCollector()));
         },
         enumerable: false,
         configurable: true
@@ -896,7 +900,8 @@ var DomQuery = /** @class */ (function () {
     //code snippet license: https://creativecommons.org/licenses/by-sa/2.5/
     DomQuery.prototype._mozMatchesSelector = function (toMatch, selector) {
         var prot = toMatch;
-        var matchesSelector = prot.matchesSelector ||
+        var matchesSelector = prot.matches ||
+            prot.matchesSelector ||
             prot.mozMatchesSelector ||
             prot.msMatchesSelector ||
             prot.oMatchesSelector ||
@@ -925,14 +930,19 @@ var DomQuery = /** @class */ (function () {
         });
         return new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], matched, false)))();
     };
+    /**
+     * checks whether any item in this domQuery level matches the selector
+     * if there is one element only attached, as root the match is only
+     * performed on this element.
+     * @param selector
+     */
     DomQuery.prototype.matchesSelector = function (selector) {
         var _this = this;
-        this.eachElem(function (item) {
-            if (!_this._mozMatchesSelector(item, selector)) {
-                return false;
-            }
-        });
-        return true;
+        var ret = this.lazyStream
+            .map(function (item) { return _this._mozMatchesSelector(item.getAsElem(0).value, selector); })
+            .filter(function (match) { return match; })
+            .first();
+        return ret.isPresent();
     };
     /**
      * easy node traversal, you can pass
@@ -1618,6 +1628,19 @@ var DomQuery = /** @class */ (function () {
         this.pos++;
         return new DomQuery(this.values[this.pos]);
     };
+    DomQuery.prototype.lookAhead = function (cnt) {
+        if (cnt === void 0) { cnt = 1; }
+        if ((this.values.length - 1) < (this.pos + cnt)) {
+            return SourcesCollectors_1.ITERATION_STATUS.EO_STRM;
+        }
+        return new DomQuery(this.values[this.pos + cnt]);
+    };
+    DomQuery.prototype.current = function () {
+        if (this.pos == -1) {
+            return SourcesCollectors_1.ITERATION_STATUS.BEF_STRM;
+        }
+        return new DomQuery(this.values[this.pos]);
+    };
     DomQuery.prototype.reset = function () {
         this.pos = -1;
     };
@@ -1739,6 +1762,24 @@ var DomQuery = /** @class */ (function () {
                 };
             }
         };
+    };
+    /**
+     * concats the elements of two Dom Queries into a single one
+     * @param toAttach
+     */
+    DomQuery.prototype.concat = function (toAttach, filterDoubles) {
+        if (filterDoubles === void 0) { filterDoubles = true; }
+        var ret = this.lazyStream.concat(toAttach.lazyStream).collect(new DomQueryCollector());
+        //we now filter the doubles out
+        if (!filterDoubles) {
+            return ret;
+        }
+        var idx = {}; //ie11 does not support sets, we have to fake it
+        return ret.lazyStream.filter(function (node) {
+            var notFound = !(idx === null || idx === void 0 ? void 0 : idx[node.value.value.outerHTML]);
+            idx[node.value.value.outerHTML] = true;
+            return notFound;
+        }).collect(new DomQueryCollector());
     };
     DomQuery.absent = new DomQuery();
     return DomQuery;
@@ -2385,6 +2426,10 @@ var Config = /** @class */ (function (_super) {
         return _super.call(this, root) || this;
     }
     Object.defineProperty(Config.prototype, "shallowCopy", {
+        /**
+         * shallow copy getter, copies only the first level, references the deeper nodes
+         * in a shared manner
+         */
         get: function () {
             return new Config(Stream_1.Stream.ofAssoc(this.value).collect(new SourcesCollectors_1.AssocArrayCollector()));
         },
@@ -2392,12 +2437,19 @@ var Config = /** @class */ (function (_super) {
         configurable: true
     });
     Object.defineProperty(Config.prototype, "deepCopy", {
+        /**
+         * deep copy, copies all config nodes
+         */
         get: function () {
             return new Config(objAssign({}, this.value));
         },
         enumerable: false,
         configurable: true
     });
+    /**
+     * creates a config from an initial value or null
+     * @param value
+     */
     Config.fromNullable = function (value) {
         return new Config(value);
     };
@@ -2438,74 +2490,99 @@ var Config = /** @class */ (function (_super) {
      *
      * resulting in myConfig.foobaz == ["newValue, newValue2"]
      *
-     * @param keys
+     * @param {string[]} accessPath
      */
     Config.prototype.append = function () {
-        var keys = [];
+        var accessPath = [];
         for (var _i = 0; _i < arguments.length; _i++) {
-            keys[_i] = arguments[_i];
+            accessPath[_i] = arguments[_i];
         }
-        var noKeys = keys.length < 1;
+        var noKeys = accessPath.length < 1;
         if (noKeys) {
             return;
         }
-        var lastKey = keys[keys.length - 1];
+        var lastKey = accessPath[accessPath.length - 1];
         var currKey, finalKey = this.keyVal(lastKey);
-        var pathExists = this.getIf.apply(this, keys).isPresent();
-        this.buildPath(keys);
+        var pathExists = this.getIf.apply(this, accessPath).isPresent();
+        this.buildPath(accessPath);
         var finalKeyArrPos = this.arrayIndex(lastKey);
         if (finalKeyArrPos > -1) {
             throw Error("Append only possible on non array properties, use assign on indexed data");
         }
-        var value = this.getIf.apply(this, keys).value;
+        var value = this.getIf.apply(this, accessPath).value;
         if (!Array.isArray(value)) {
-            value = this.assign.apply(this, keys).value = [value];
+            value = this.assign.apply(this, accessPath).value = [value];
         }
         if (pathExists) {
             value.push({});
         }
         finalKeyArrPos = value.length - 1;
-        var retVal = new ConfigEntry(keys.length == 1 ? this.value : this.getIf.apply(this, keys.slice(0, keys.length - 1)).value, lastKey, finalKeyArrPos);
+        var retVal = new ConfigEntry(accessPath.length == 1 ? this.value : this.getIf.apply(this, accessPath.slice(0, accessPath.length - 1)).value, lastKey, finalKeyArrPos);
         return retVal;
     };
+    /**
+     * appends to an existing entry (or extends into an array and appends)
+     * if the condition is met
+     * @param {boolean} condition
+     * @param {string[]} accessPath
+     */
     Config.prototype.appendIf = function (condition) {
-        var keys = [];
+        var accessPath = [];
         for (var _i = 1; _i < arguments.length; _i++) {
-            keys[_i - 1] = arguments[_i];
+            accessPath[_i - 1] = arguments[_i];
         }
         if (!condition) {
             return { value: null };
         }
-        return this.append.apply(this, keys);
+        return this.append.apply(this, accessPath);
     };
+    /**
+     * assings an new value on the given access path
+     * @param accessPath
+     */
     Config.prototype.assign = function () {
-        var keys = [];
+        var accessPath = [];
         for (var _i = 0; _i < arguments.length; _i++) {
-            keys[_i] = arguments[_i];
+            accessPath[_i] = arguments[_i];
         }
-        if (keys.length < 1) {
+        if (accessPath.length < 1) {
             return;
         }
-        this.buildPath(keys);
-        var currKey = this.keyVal(keys[keys.length - 1]);
-        var arrPos = this.arrayIndex(keys[keys.length - 1]);
-        var retVal = new ConfigEntry(keys.length == 1 ? this.value : this.getIf.apply(this, keys.slice(0, keys.length - 1)).value, currKey, arrPos);
+        this.buildPath(accessPath);
+        var currKey = this.keyVal(accessPath[accessPath.length - 1]);
+        var arrPos = this.arrayIndex(accessPath[accessPath.length - 1]);
+        var retVal = new ConfigEntry(accessPath.length == 1 ? this.value : this.getIf.apply(this, accessPath.slice(0, accessPath.length - 1)).value, currKey, arrPos);
         return retVal;
     };
+    /**
+     * assign a value if the condition is set to true, otherwise skip it
+     *
+     * @param condition the condition, the access accessPath into the config
+     * @param accessPath
+     */
     Config.prototype.assignIf = function (condition) {
-        var keys = [];
+        var accessPath = [];
         for (var _i = 1; _i < arguments.length; _i++) {
-            keys[_i - 1] = arguments[_i];
+            accessPath[_i - 1] = arguments[_i];
         }
-        return condition ? this.assign.apply(this, keys) : { value: null };
+        return condition ? this.assign.apply(this, accessPath) : { value: null };
     };
+    /**
+     * get if the access path is present (get is reserved as getter with a default, on the current path)
+     * TODO will be renamed to something more meaningful and deprecated, the name is ambigous
+     * @param accessPath the access path
+     */
     Config.prototype.getIf = function () {
-        var keys = [];
+        var accessPath = [];
         for (var _i = 0; _i < arguments.length; _i++) {
-            keys[_i] = arguments[_i];
+            accessPath[_i] = arguments[_i];
         }
-        return this.getClass().fromNullable(_super.prototype.getIf.apply(this, keys).value);
+        return this.getClass().fromNullable(_super.prototype.getIf.apply(this, accessPath).value);
     };
+    /**
+     * gets the current node and if none is present returns a config with a default value
+     * @param defaultVal
+     */
     Config.prototype.get = function (defaultVal) {
         return this.getClass().fromNullable(_super.prototype.get.call(this, defaultVal).value);
     };
@@ -2516,6 +2593,9 @@ var Config = /** @class */ (function (_super) {
         }
         return this;
     };
+    /**
+     * converts the entire config into a json object
+     */
     Config.prototype.toJson = function () {
         return JSON.stringify(this.value);
     };
@@ -2528,9 +2608,9 @@ var Config = /** @class */ (function (_super) {
     /**
      * builds the config path
      *
-     * @param keys a sequential array of keys containing either a key name or an array reference name[<index>]
+     * @param accessPath a sequential array of accessPath containing either a key name or an array reference name[<index>]
      */
-    Config.prototype.buildPath = function (keys) {
+    Config.prototype.buildPath = function (accessPath) {
         var val = this;
         var parentVal = this.getClass().fromNullable(null);
         var parentPos = -1;
@@ -2541,9 +2621,9 @@ var Config = /** @class */ (function (_super) {
                 arr.push({});
             }
         };
-        for (var cnt = 0; cnt < keys.length; cnt++) {
-            var currKey = this.keyVal(keys[cnt]);
-            var arrPos = this.arrayIndex(keys[cnt]);
+        for (var cnt = 0; cnt < accessPath.length; cnt++) {
+            var currKey = this.keyVal(accessPath[cnt]);
+            var arrPos = this.arrayIndex(accessPath[cnt]);
             if (currKey === "" && arrPos >= 0) {
                 val.setVal((val.value instanceof Array) ? val.value : []);
                 alloc(val.value, arrPos + 1);
@@ -2615,8 +2695,16 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
     return to.concat(ar || Array.prototype.slice.call(from));
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.QueryFormStringCollector = exports.QueryFormDataCollector = exports.FormDataCollector = exports.AssocArrayCollector = exports.Run = exports.ArrayAssocArrayCollector = exports.ArrayCollector = exports.FlatMapStreamDataSource = exports.MappedStreamDataSource = exports.FilteredStreamDatasource = exports.ArrayStreamDataSource = exports.SequenceDataSource = void 0;
+exports.QueryFormStringCollector = exports.QueryFormDataCollector = exports.FormDataCollector = exports.AssocArrayCollector = exports.Run = exports.ArrayAssocArrayCollector = exports.ArrayCollector = exports.FlatMapStreamDataSource = exports.MappedStreamDataSource = exports.FilteredStreamDatasource = exports.ArrayStreamDataSource = exports.SequenceDataSource = exports.ITERATION_STATUS = void 0;
 var Stream_1 = __webpack_require__(/*! ./Stream */ "./node_modules/mona-dish/src/main/typescript/Stream.ts");
+/**
+ * special status of the datasource location pointer
+ */
+var ITERATION_STATUS;
+(function (ITERATION_STATUS) {
+    ITERATION_STATUS["EO_STRM"] = "__EO_STRM__";
+    ITERATION_STATUS["BEF_STRM"] = "___BEF_STRM__";
+})(ITERATION_STATUS = exports.ITERATION_STATUS || (exports.ITERATION_STATUS = {}));
 /**
  * defines a sequence of numbers for our stream input
  */
@@ -2624,16 +2712,30 @@ var SequenceDataSource = /** @class */ (function () {
     function SequenceDataSource(start, total) {
         this.total = total;
         this.start = start;
-        this.value = start;
+        this.value = start - 1;
     }
     SequenceDataSource.prototype.hasNext = function () {
-        return this.value < this.total;
+        return this.value < (this.total - 1);
     };
     SequenceDataSource.prototype.next = function () {
-        return Math.min(this.value++, this.total - 1);
+        this.value++;
+        return this.value <= (this.total - 1) ? this.value : ITERATION_STATUS.EO_STRM;
+    };
+    SequenceDataSource.prototype.lookAhead = function (cnt) {
+        if (cnt === void 0) { cnt = 1; }
+        if ((this.value + cnt) > this.total - 1) {
+            return ITERATION_STATUS.EO_STRM;
+        }
+        else {
+            return this.value + cnt;
+        }
     };
     SequenceDataSource.prototype.reset = function () {
-        this.value = 0;
+        this.value = this.start - 1;
+    };
+    SequenceDataSource.prototype.current = function () {
+        //first condition current without initial call for next
+        return (this.start - 1) ? ITERATION_STATUS.BEF_STRM : this.value;
     };
     return SequenceDataSource;
 }());
@@ -2650,15 +2752,26 @@ var ArrayStreamDataSource = /** @class */ (function () {
         this.dataPos = -1;
         this.value = value;
     }
+    ArrayStreamDataSource.prototype.lookAhead = function (cnt) {
+        if (cnt === void 0) { cnt = 1; }
+        if ((this.dataPos + cnt) > this.value.length - 1) {
+            return ITERATION_STATUS.EO_STRM;
+        }
+        return this.value[this.dataPos + cnt];
+    };
     ArrayStreamDataSource.prototype.hasNext = function () {
         return this.value.length - 1 > this.dataPos;
     };
     ArrayStreamDataSource.prototype.next = function () {
+        var _a;
         this.dataPos++;
-        return this.value[this.dataPos];
+        return (_a = this === null || this === void 0 ? void 0 : this.value[this.dataPos]) !== null && _a !== void 0 ? _a : ITERATION_STATUS.EO_STRM;
     };
     ArrayStreamDataSource.prototype.reset = function () {
         this.dataPos = -1;
+    };
+    ArrayStreamDataSource.prototype.current = function () {
+        return this.value[Math.max(0, this.dataPos)];
     };
     return ArrayStreamDataSource;
 }());
@@ -2671,7 +2784,11 @@ exports.ArrayStreamDataSource = ArrayStreamDataSource;
  */
 var FilteredStreamDatasource = /** @class */ (function () {
     function FilteredStreamDatasource(filterFunc, parent) {
-        this.filteredNext = null;
+        this._current = ITERATION_STATUS.BEF_STRM;
+        // we have to add a filter idx because the external filter values might change over time, so
+        // we cannot reset the state properly unless we do it from a snapshot
+        this._filterIdx = {};
+        this._unfilteredPos = 0;
         this.filterFunc = filterFunc;
         this.inputDataSource = parent;
     }
@@ -2682,32 +2799,61 @@ var FilteredStreamDatasource = /** @class */ (function () {
      * serve it via next
      */
     FilteredStreamDatasource.prototype.hasNext = function () {
-        while (this.filteredNext == null && this.inputDataSource.hasNext()) {
-            var next = this.inputDataSource.next();
+        var steps = 1;
+        var found = false;
+        var next;
+        while (!found && (next = this.inputDataSource.lookAhead(steps)) != ITERATION_STATUS.EO_STRM) {
             if (this.filterFunc(next)) {
-                this.filteredNext = next;
-                return true;
+                this._filterIdx[this._unfilteredPos + steps] = true;
+                found = true;
             }
             else {
-                this.filteredNext = null;
+                steps++;
             }
         }
-        return this.filteredNext != null;
+        return found;
     };
     /**
      * serve the next element
      */
     FilteredStreamDatasource.prototype.next = function () {
-        var ret = this.filteredNext;
-        this.filteredNext = null;
-        //We have to call hasNext, to roll another
-        //prefetch in case someone runs next
-        //sequentially without calling hasNext
-        this.hasNext();
-        return ret;
+        var _a, _b;
+        var found = ITERATION_STATUS.EO_STRM;
+        while (this.inputDataSource.hasNext()) {
+            this._unfilteredPos++;
+            var next = this.inputDataSource.next();
+            //again here we cannot call the filter function twice, because its state might change, so if indexed, we have a decent snapshot, either has next or next can trigger
+            //the snapshot
+            if (next != ITERATION_STATUS.EO_STRM &&
+                (((_b = (_a = this._filterIdx) === null || _a === void 0 ? void 0 : _a[this._unfilteredPos]) !== null && _b !== void 0 ? _b : false) || this.filterFunc(next))) {
+                this._filterIdx[this._unfilteredPos] = true;
+                found = next;
+                break;
+            }
+        }
+        this._current = found;
+        return found;
+    };
+    FilteredStreamDatasource.prototype.lookAhead = function (cnt) {
+        var _a;
+        if (cnt === void 0) { cnt = 1; }
+        var lookupVal;
+        for (var loop = 1; cnt > 0 && (lookupVal = this.inputDataSource.lookAhead(loop)) != ITERATION_STATUS.EO_STRM; loop++) {
+            var inCache = (_a = this._filterIdx) === null || _a === void 0 ? void 0 : _a[this._unfilteredPos + loop];
+            if (inCache || this.filterFunc(lookupVal)) {
+                cnt--;
+                this._filterIdx[this._unfilteredPos + loop] = true;
+            }
+        }
+        return lookupVal;
+    };
+    FilteredStreamDatasource.prototype.current = function () {
+        return this._current;
     };
     FilteredStreamDatasource.prototype.reset = function () {
-        this.filteredNext = null;
+        this._current = ITERATION_STATUS.BEF_STRM;
+        this._filterIdx = {};
+        this._unfilteredPos = 0;
         this.inputDataSource.reset();
     };
     return FilteredStreamDatasource;
@@ -2731,6 +2877,14 @@ var MappedStreamDataSource = /** @class */ (function () {
     MappedStreamDataSource.prototype.reset = function () {
         this.inputDataSource.reset();
     };
+    MappedStreamDataSource.prototype.current = function () {
+        return this.mapFunc(this.inputDataSource.current());
+    };
+    MappedStreamDataSource.prototype.lookAhead = function (cnt) {
+        if (cnt === void 0) { cnt = 1; }
+        var lookAheadVal = this.inputDataSource.lookAhead(cnt);
+        return (lookAheadVal == ITERATION_STATUS.EO_STRM) ? lookAheadVal : this.mapFunc(lookAheadVal);
+    };
     return MappedStreamDataSource;
 }());
 exports.MappedStreamDataSource = MappedStreamDataSource;
@@ -2739,38 +2893,84 @@ exports.MappedStreamDataSource = MappedStreamDataSource;
  */
 var FlatMapStreamDataSource = /** @class */ (function () {
     function FlatMapStreamDataSource(func, parent) {
+        this.walkedDataSources = [];
+        this._currPos = 0;
         this.mapFunc = func;
         this.inputDataSource = parent;
     }
     FlatMapStreamDataSource.prototype.hasNext = function () {
-        return this.resolveCurrentNext() || this.resolveNextNext();
+        return this.resolveActiveHasNext() || this.resolveNextHasNext();
     };
-    FlatMapStreamDataSource.prototype.resolveCurrentNext = function () {
+    FlatMapStreamDataSource.prototype.resolveActiveHasNext = function () {
         var next = false;
         if (this.activeDataSource) {
             next = this.activeDataSource.hasNext();
         }
         return next;
     };
-    FlatMapStreamDataSource.prototype.resolveNextNext = function () {
+    FlatMapStreamDataSource.prototype.lookAhead = function (cnt) {
+        var _a;
+        //easy access trial
+        if ((this === null || this === void 0 ? void 0 : this.activeDataSource) && ((_a = this === null || this === void 0 ? void 0 : this.activeDataSource) === null || _a === void 0 ? void 0 : _a.lookAhead(cnt)) != ITERATION_STATUS.EO_STRM) {
+            //this should coverr 95% of all accesses
+            return this === null || this === void 0 ? void 0 : this.activeDataSource.lookAhead(cnt);
+        }
+        //slower method we have to look ahead forward one by one until we hit the end or
+        //have to move on
+        for (var lookAheadPos = 1, topLevelLookAhead = 1; lookAheadPos <= cnt; topLevelLookAhead++) {
+            var foundItem = null;
+            var item = this.inputDataSource.lookAhead(topLevelLookAhead);
+            if (item === ITERATION_STATUS.EO_STRM) {
+                return item;
+            }
+            var mapped = this.mapFunc(item);
+            //it either comes in as datasource or as array
+            var currentDataSource = this.toDatasource(mapped);
+            //this is the inner loop which looks ahead on our flatmapped datasource
+            //we need an inner counter, but every look ahead also increases our loop
+            return currentDataSource.lookAhead(cnt);
+            /* for(let flatmapLookAhead = 1; lookAheadPos <= cnt && foundItem != ITERATION_STATUS.EO_STRM; flatmapLookAhead++, lookAheadPos++) {
+                 foundItem = currentDataSource.lookAhead(flatmapLookAhead);
+                 if(lookAheadPos >= cnt) {
+                     return foundItem;
+                 }
+             }*/
+        }
+        return ITERATION_STATUS.EO_STRM;
+    };
+    FlatMapStreamDataSource.prototype.toDatasource = function (mapped) {
+        var ds = Array.isArray(mapped) ? new (ArrayStreamDataSource.bind.apply(ArrayStreamDataSource, __spreadArray([void 0], mapped, false)))() : mapped;
+        this.walkedDataSources.push(ds);
+        return ds;
+    };
+    FlatMapStreamDataSource.prototype.resolveNextHasNext = function () {
         var next = false;
         while (!next && this.inputDataSource.hasNext()) {
             var mapped = this.mapFunc(this.inputDataSource.next());
-            if (Array.isArray(mapped)) {
-                this.activeDataSource = new (ArrayStreamDataSource.bind.apply(ArrayStreamDataSource, __spreadArray([void 0], mapped, false)))();
-            }
-            else {
-                this.activeDataSource = mapped;
-            }
+            this.activeDataSource = this.toDatasource(mapped);
+            ;
             next = this.activeDataSource.hasNext();
         }
         return next;
     };
     FlatMapStreamDataSource.prototype.next = function () {
-        return this.activeDataSource.next();
+        if (this.hasNext()) {
+            this._currPos++;
+            return this.activeDataSource.next();
+        }
     };
     FlatMapStreamDataSource.prototype.reset = function () {
         this.inputDataSource.reset();
+        this.walkedDataSources.forEach(function (ds) { return ds.reset(); });
+        this.walkedDataSources = [];
+        this._currPos = 0;
+        this.activeDataSource = null;
+    };
+    FlatMapStreamDataSource.prototype.current = function () {
+        if (!this.activeDataSource) {
+            this.hasNext();
+        }
+        return this.activeDataSource.current();
     };
     return FlatMapStreamDataSource;
 }());
@@ -3005,13 +3205,14 @@ var Stream = /** @class */ (function () {
     };
     Stream.prototype.each = function (fn) {
         this.onElem(fn);
+        this.reset();
     };
     Stream.prototype.map = function (fn) {
         if (!fn) {
             fn = function (inval) { return inval; };
         }
         var res = [];
-        this.each(function (item, cnt) {
+        this.each(function (item) {
             res.push(fn(item));
         });
         return new (Stream.bind.apply(Stream, __spreadArray([void 0], res, false)))();
@@ -3044,14 +3245,17 @@ var Stream = /** @class */ (function () {
         for (var cnt = offset; cnt < this.value.length && (this._limits == -1 || cnt < this._limits); cnt++) {
             val1 = fn(val1, this.value[cnt]);
         }
+        this.reset();
         return Monad_1.Optional.fromNullable(val1);
     };
     Stream.prototype.first = function () {
+        this.reset();
         return this.value && this.value.length ? Monad_1.Optional.fromNullable(this.value[0]) : Monad_1.Optional.absent;
     };
     Stream.prototype.last = function () {
         //could be done via reduce, but is faster this way
         var length = this._limits > 0 ? Math.min(this._limits, this.value.length) : this.value.length;
+        this.reset();
         return Monad_1.Optional.fromNullable(length ? this.value[length - 1] : null);
     };
     Stream.prototype.anyMatch = function (fn) {
@@ -3060,6 +3264,7 @@ var Stream = /** @class */ (function () {
                 return true;
             }
         }
+        this.reset();
         return false;
     };
     Stream.prototype.allMatch = function (fn) {
@@ -3072,6 +3277,7 @@ var Stream = /** @class */ (function () {
                 matches++;
             }
         }
+        this.reset();
         return matches == this.value.length;
     };
     Stream.prototype.noneMatch = function (fn) {
@@ -3081,6 +3287,7 @@ var Stream = /** @class */ (function () {
                 matches++;
             }
         }
+        this.reset();
         return matches == this.value.length;
     };
     Stream.prototype.sort = function (comparator) {
@@ -3089,6 +3296,7 @@ var Stream = /** @class */ (function () {
     };
     Stream.prototype.collect = function (collector) {
         this.each(function (data) { return collector.collect(data); });
+        this.reset();
         return collector.finalValue;
     };
     //-- internally exposed methods needed for the interconnectivity
@@ -3103,6 +3311,13 @@ var Stream = /** @class */ (function () {
         }
         this.pos++;
         return this.value[this.pos];
+    };
+    Stream.prototype.lookAhead = function (cnt) {
+        if (cnt === void 0) { cnt = 1; }
+        if ((this.pos + cnt) >= this.value.length) {
+            return SourcesCollectors_1.ITERATION_STATUS.EO_STRM;
+        }
+        return this.value[this.pos + cnt];
     };
     Stream.prototype[Symbol.iterator] = function () {
         var _this = this;
@@ -3190,9 +3405,16 @@ var LazyStream = /** @class */ (function () {
         this.pos++;
         return next;
     };
+    LazyStream.prototype.lookAhead = function (cnt) {
+        if (cnt === void 0) { cnt = 1; }
+        return this.dataSource.lookAhead(cnt);
+    };
+    LazyStream.prototype.current = function () {
+        return this.dataSource.current();
+    };
     LazyStream.prototype.reset = function () {
         this.dataSource.reset();
-        this.pos = 0;
+        this.pos = -1;
         this._limits = -1;
     };
     /**
@@ -3228,6 +3450,7 @@ var LazyStream = /** @class */ (function () {
             var t = this.next();
             collector.collect(t);
         }
+        this.reset();
         return collector.finalValue;
     };
     LazyStream.prototype.onElem = function (fn) {
@@ -3255,13 +3478,14 @@ var LazyStream = /** @class */ (function () {
                 this.stop();
             }
         }
+        this.reset();
     };
     LazyStream.prototype.reduce = function (fn, startVal) {
         if (startVal === void 0) { startVal = null; }
         if (!this.hasNext()) {
             return Monad_1.Optional.absent;
         }
-        var value1 = null;
+        var value1;
         var value2 = null;
         if (startVal != null) {
             value1 = startVal;
@@ -3279,6 +3503,7 @@ var LazyStream = /** @class */ (function () {
             value2 = this.next();
             value1 = fn(value1, value2);
         }
+        this.reset();
         return Monad_1.Optional.fromNullable(value1);
     };
     LazyStream.prototype.last = function () {
@@ -3348,6 +3573,7 @@ var LazyStream = /** @class */ (function () {
     }*/
     LazyStream.prototype.stop = function () {
         this.pos = this._limits + 1000000000;
+        this._limits = 0;
     };
     LazyStream.prototype.isOverLimits = function () {
         return this._limits != -1 && this.pos >= this._limits - 1;
@@ -3549,6 +3775,7 @@ exports.myfaces = exports.jsf = void 0;
 ///<reference types='../../types/typedefs'/>
 var AjaxImpl_1 = __webpack_require__(/*! ../impl/AjaxImpl */ "./src/main/typescript/impl/AjaxImpl.ts");
 var PushImpl_1 = __webpack_require__(/*! ../impl/PushImpl */ "./src/main/typescript/impl/PushImpl.ts");
+//declare const Implementation: any;
 var jsf;
 (function (jsf) {
     "use strict";
@@ -3864,7 +4091,7 @@ var Implementation;
     /**
      * fetches the separator char from the given script tags
      *
-     * @return {char} the separator char for the given script tags
+     * @return {string} the separator char for the given script tags
      */
     function getSeparatorChar() {
         var _a, _b, _c;
@@ -3911,30 +4138,17 @@ var Implementation;
      * @param funcs
      */
     function chain(source, event) {
+        // we can use our lazy stream each functionality to run our chain here..
+        // by passing a boolean as return value into the onElem call
+        // we can stop early at the first false, just like the spec requests
         var funcs = [];
         for (var _i = 2; _i < arguments.length; _i++) {
             funcs[_i - 2] = arguments[_i];
         }
-        var ret = true;
-        var resolveAndExecute = function (func) {
-            if ("string" != typeof func) {
-                //function is passed down as chain parameter, can be executed as is
-                return (ret = ret && (func.call(source, event) !== false));
-            }
-            else {
-                //either a function or a string can be passed in case of a string we have to wrap it into another function
-                //it it is not a plain executable code but a definition
-                var sourceCode = trim(func);
-                if (sourceCode.indexOf("function ") == 0) {
-                    sourceCode = "return ".concat(sourceCode, " (event)");
-                }
-                return (ret = ret && (new Function("event", sourceCode).call(source, event) !== false));
-            }
-        };
-        //we can use our stream each functionality to run our chain here..
-        //the no return value == false stop stream functionality is handled by our resolveAndExecute
-        mona_dish_1.Stream.of.apply(mona_dish_1.Stream, funcs).each(function (func) { return resolveAndExecute(func); });
-        return ret;
+        return mona_dish_1.LazyStream.of.apply(mona_dish_1.LazyStream, funcs).map(function (func) { return resolveAndExecute(source, event, func); })
+            // we use the return false == stop as an early stop
+            .onElem(function (opResult) { return opResult; })
+            .last().value;
     }
     Implementation.chain = chain;
     /**
@@ -4352,6 +4566,30 @@ var Implementation;
     function resolveGlobalConfig() {
         var _a, _b;
         return (_b = (_a = window === null || window === void 0 ? void 0 : window[Const_1.MYFACES]) === null || _a === void 0 ? void 0 : _a.config) !== null && _b !== void 0 ? _b : {};
+    }
+    /**
+     * Private helper to execute a function or code fragment
+     * @param source the source of the caller passed into the function as this
+     * @param event an event which needs to be passed down into the function
+     * @param func either a function or code fragment
+     * @return a boolean value, if the passed function returns false, then the
+     * caller is basically notified that the execution can now stop (JSF requirement for chain)
+     * @private
+     */
+    function resolveAndExecute(source, event, func) {
+        if ("string" != typeof func) {
+            //function is passed down as chain parameter, can be executed as is
+            return func.call(source, event) !== false;
+        }
+        else {
+            //either a function or a string can be passed in case of a string we have to wrap it into another function
+            //it it is not a plain executable code but a definition
+            var sourceCode = trim(func);
+            if (sourceCode.indexOf("function ") == 0) {
+                sourceCode = "return ".concat(sourceCode, " (event)");
+            }
+            return new Function("event", sourceCode).call(source, event) !== false;
+        }
     }
 })(Implementation = exports.Implementation || (exports.Implementation = {}));
 
@@ -5163,6 +5401,7 @@ var IS_JSF_SOURCE = function (source) {
 var IS_INTERNAL_SOURCE = function (source) {
     return source.search(/\/jsf[^\.]\.js.*ln\=myfaces.testscripts.*/gi) != -1;
 };
+var ATTR_SRC = 'src';
 /**
  * Extension which adds implementation specific
  * meta data to our dom query
@@ -5241,8 +5480,8 @@ var ExtDomquery = /** @class */ (function (_super) {
             var nonceScript = mona_dish_1.DQ
                 .querySelectorAll("script[src], link[src]")
                 .lazyStream
-                .filter(function (item) { return item.attr("nonce").value != null && item.attr("src") != null; })
-                .map(function (item) { return IS_JSF_SOURCE(item.attr('src').value); })
+                .filter(function (item) { return item.attr("nonce").value != null && item.attr(ATTR_SRC) != null; })
+                .map(function (item) { return IS_JSF_SOURCE(item.attr(ATTR_SRC).value); })
                 .first();
             if (nonceScript.isPresent()) {
                 nonce.value = mona_dish_1.DomQuery.byId(nonceScript.value, true).attr("nonce").value;
@@ -5263,8 +5502,8 @@ var ExtDomquery = /** @class */ (function (_super) {
     ExtDomquery.prototype.searchJsfJsFor = function (rexp) {
         //perfect application for lazy stream
         return mona_dish_1.DQ.querySelectorAll("script[src], link[src]").lazyStream
-            .filter(function (item) { return IS_JSF_SOURCE(item.attr('src').value); })
-            .map(function (item) { return item.attr("src").value.match(rexp); })
+            .filter(function (item) { return IS_JSF_SOURCE(item.attr(ATTR_SRC).value); })
+            .map(function (item) { return item.attr(ATTR_SRC).value.match(rexp); })
             .filter(function (item) { return item != null && item.length > 1; })
             .map(function (result) {
             return decodeURIComponent(result[1]);
@@ -6567,12 +6806,10 @@ var XhrFormData = /** @class */ (function (_super) {
      * @param dataSource either a form as DomQuery object or an encoded url string
      * @param partialIdsArray partial ids to collect, to reduce the data sent down
      */
-    function XhrFormData(dataSource, partialIdsArray, encode) {
-        if (encode === void 0) { encode = true; }
+    function XhrFormData(dataSource, partialIdsArray) {
         var _this = _super.call(this, {}) || this;
         _this.dataSource = dataSource;
         _this.partialIdsArray = partialIdsArray;
-        _this.encode = encode;
         _this.fileInputs = {};
         //a call to getViewState before must pass the encoded line
         //a call from getViewState passes the form element as datasource
@@ -6608,7 +6845,7 @@ var XhrFormData = /** @class */ (function (_super) {
             }
         };
         var inputExists = function (item) {
-            return !!item.length;
+            return item.isPresent();
         };
         var applyInput = function (item) {
             _this.fileInputs[_this.resolveSubmitIdentifier(item.getAsElem(0).value)] = true;
@@ -6618,25 +6855,11 @@ var XhrFormData = /** @class */ (function (_super) {
             .each(applyInput);
     };
     XhrFormData.prototype.getFileInputs = function (rootElment) {
-        var _this = this;
-        var resolveFileInputs = function (item) {
-            var _a;
-            if (item.length == 1) {
-                if (item.tagName.get("booga").value.toLowerCase() == "input" &&
-                    (((_a = item.attr("type")) === null || _a === void 0 ? void 0 : _a.value) || '').toLowerCase() == "file") {
-                    return item;
-                }
-                return rootElment.querySelectorAllDeep("input[type='file']");
-            }
-            return _this.getFileInputs(item);
-        };
-        var itemExists = function (item) {
-            return !!(item === null || item === void 0 ? void 0 : item.length);
-        };
-        var ret = rootElment.lazyStream
-            .map(resolveFileInputs)
-            .filter(itemExists)
-            .collect(new mona_dish_1.DomQueryCollector());
+        var rootFileInputs = rootElment
+            .filter(function (elem) { return elem.matchesSelector("input[type='file']"); });
+        var childFileInputs = rootElment
+            .querySelectorAll("input[type='file']");
+        var ret = rootFileInputs.concat(childFileInputs);
         return ret;
     };
     XhrFormData.prototype.handleFormSource = function () {
@@ -6669,15 +6892,25 @@ var XhrFormData = /** @class */ (function (_super) {
      * @param encoded
      */
     XhrFormData.prototype.assignEncodedString = function (encoded) {
+        //TODO reevaluate this method
         //this code filters out empty strings as key value pairs
-        var keyValueEntries = decodeURIComponent(encoded).split(/&/gi).filter(function (item) { return !!(item || '').replace(/\s+/g, ''); });
+        var keyValueEntries = decodeURIComponent(encoded).split(/&/gi)
+            .filter(function (item) { return !!(item || '')
+            .replace(/\s+/g, ''); });
         this.assignString(keyValueEntries);
     };
     XhrFormData.prototype.assignString = function (keyValueEntries) {
         var toMerge = new mona_dish_1.Config({});
-        mona_dish_2.Stream.of.apply(mona_dish_2.Stream, keyValueEntries).map(function (line) { return line.split(/=(.*)/gi); })
+        function splitToKeyVal(line) {
+            return line.split(/=(.*)/gi);
+        }
+        function fixKeyWithoutVal(keyVal) {
+            var _a, _b;
+            return keyVal.length < 3 ? [(_a = keyVal === null || keyVal === void 0 ? void 0 : keyVal[0]) !== null && _a !== void 0 ? _a : [], (_b = keyVal === null || keyVal === void 0 ? void 0 : keyVal[1]) !== null && _b !== void 0 ? _b : []] : keyVal;
+        }
+        mona_dish_2.Stream.of.apply(mona_dish_2.Stream, keyValueEntries).map(function (line) { return splitToKeyVal(line); })
             //special case of having keys without values
-            .map(function (keyVal) { var _a, _b; return keyVal.length < 3 ? [(_a = keyVal === null || keyVal === void 0 ? void 0 : keyVal[0]) !== null && _a !== void 0 ? _a : [], (_b = keyVal === null || keyVal === void 0 ? void 0 : keyVal[1]) !== null && _b !== void 0 ? _b : []] : keyVal; })
+            .map(function (keyVal) { return fixKeyWithoutVal(keyVal); })
             .each(function (keyVal) {
             var _a, _b;
             toMerge.append(keyVal[0]).value = (_b = (_a = keyVal === null || keyVal === void 0 ? void 0 : keyVal.splice(1)) === null || _a === void 0 ? void 0 : _a.join("")) !== null && _b !== void 0 ? _b : "";

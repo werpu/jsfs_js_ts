@@ -330,6 +330,8 @@ export module StandardInits {
             let Implementation = require("../../../../impl/AjaxImpl");
             let PushImpl = require("../../../../impl/PushImpl");
             applyJsfToGlobals(data, Implementation, PushImpl);
+        }).catch(err => {
+            console.error(err);
         });
     };
 

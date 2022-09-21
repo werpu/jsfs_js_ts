@@ -2699,6 +2699,14 @@ exports.QueryFormStringCollector = exports.QueryFormDataCollector = exports.Form
 var Stream_1 = __webpack_require__(/*! ./Stream */ "./node_modules/mona-dish/src/main/typescript/Stream.ts");
 /**
  * special status of the datasource location pointer
+ * if an access, outside of the possible data boundaries is happening
+ * (example for instance current without a first next call, or next
+ * which goes over the last possible dataset), an iteration status return
+ * value is returned marking this boundary instead of a classical element
+ *
+ * Note this is only internally used but must be implemented to fullfill
+ * internal contracts, the end user will never see those values if he uses
+ * streams!
  */
 var ITERATION_STATUS;
 (function (ITERATION_STATUS) {
@@ -2910,33 +2918,50 @@ var FlatMapStreamDataSource = /** @class */ (function () {
     };
     FlatMapStreamDataSource.prototype.lookAhead = function (cnt) {
         var _a;
+        if (cnt === void 0) { cnt = 1; }
         //easy access trial
         if ((this === null || this === void 0 ? void 0 : this.activeDataSource) && ((_a = this === null || this === void 0 ? void 0 : this.activeDataSource) === null || _a === void 0 ? void 0 : _a.lookAhead(cnt)) != ITERATION_STATUS.EO_STRM) {
             //this should coverr 95% of all accesses
             return this === null || this === void 0 ? void 0 : this.activeDataSource.lookAhead(cnt);
         }
-        //slower method we have to look ahead forward one by one until we hit the end or
-        //have to move on
-        for (var lookAheadPos = 1, topLevelLookAhead = 1; lookAheadPos <= cnt; topLevelLookAhead++) {
-            var foundItem = null;
-            var item = this.inputDataSource.lookAhead(topLevelLookAhead);
-            if (item === ITERATION_STATUS.EO_STRM) {
-                return item;
+        /**
+         * we only can determine how many elems datasource has by going up
+         * (for now this suffices, however not ideal, we might have to introduce a numElements or so)
+         * @param datasource
+         */
+        function howManyElems(datasource) {
+            var cnt = 1;
+            while (datasource.lookAhead(cnt) !== ITERATION_STATUS.EO_STRM) {
+                cnt++;
             }
-            var mapped = this.mapFunc(item);
+            return cnt - 1;
+        }
+        function readjustSkip(dataSource) {
+            var skippedElems = (dataSource) ? howManyElems(dataSource) : 0;
+            cnt = cnt - skippedElems;
+        }
+        if (this.activeDataSource) {
+            readjustSkip(this.activeDataSource);
+        }
+        //the idea is basically to look into the streams subsequentially for a match
+        //after each stream we have to take into consideration that the skipCnt is
+        //reduced by the number of datasets we already have looked into in the previous stream/datasource
+        //unfortunately for now we have to loop into them so we introduce a small o2 here
+        for (var dsLoop = 1; true; dsLoop++) {
+            var currDatasource = this.inputDataSource.lookAhead(dsLoop);
+            //we have looped out
+            if (currDatasource === ITERATION_STATUS.EO_STRM) {
+                return ITERATION_STATUS.EO_STRM;
+            }
+            var mapped = this.mapFunc(currDatasource);
             //it either comes in as datasource or as array
             var currentDataSource = this.toDatasource(mapped);
-            //this is the inner loop which looks ahead on our flatmapped datasource
-            //we need an inner counter, but every look ahead also increases our loop
-            return currentDataSource.lookAhead(cnt);
-            /* for(let flatmapLookAhead = 1; lookAheadPos <= cnt && foundItem != ITERATION_STATUS.EO_STRM; flatmapLookAhead++, lookAheadPos++) {
-                 foundItem = currentDataSource.lookAhead(flatmapLookAhead);
-                 if(lookAheadPos >= cnt) {
-                     return foundItem;
-                 }
-             }*/
+            var ret = currentDataSource.lookAhead(cnt);
+            if (ret != ITERATION_STATUS.EO_STRM) {
+                return ret;
+            }
+            readjustSkip(currDatasource);
         }
-        return ITERATION_STATUS.EO_STRM;
     };
     FlatMapStreamDataSource.prototype.toDatasource = function (mapped) {
         var ds = Array.isArray(mapped) ? new (ArrayStreamDataSource.bind.apply(ArrayStreamDataSource, __spreadArray([void 0], mapped, false)))() : mapped;

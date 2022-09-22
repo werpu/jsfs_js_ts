@@ -52,7 +52,7 @@ export module Response {
      * and processing its tags
      *
      * @param {XMLHttpRequest} request (xhrRequest) - xhr request object
-     * @param ASSOC_ARR<any> context (Map) - AJAX context
+     * @param context {Context} context (Map) - AJAX context
      *
      */
     export function processResponse(request: XMLHttpRequest, context: Context) {
@@ -90,7 +90,7 @@ export module Response {
         const SEL_SUB_TAGS = [CMD_ERROR, CMD_REDIRECT, CMD_CHANGES].join(",");
 
         //now we can process the main operations
-        node.getIf(SEL_SUB_TAGS).each((node: XMLQuery) => {
+        node.querySelectorAll(SEL_SUB_TAGS).each((node: XMLQuery) => {
             switch (node.tagName.value) {
                 case CMD_ERROR:
                     responseProcessor.error(node);
@@ -123,8 +123,8 @@ export module Response {
      * @param responseProcessor
      */
      function processChangesTag(node: XMLQuery, responseProcessor: IResponseProcessor): boolean {
-        const ALLOWED_TAGS = [CMD_UPDATE, CMD_EVAL, CMD_INSERT, CMD_DELETE, CMD_ATTRIBUTES, CMD_EXTENSION].join(",");
-        node.getIf(ALLOWED_TAGS).each(
+        const ALLOWED_TAGS = [CMD_UPDATE, CMD_EVAL, CMD_INSERT, CMD_DELETE, CMD_ATTRIBUTES, CMD_EXTENSION].join(", ");
+        node.querySelectorAll(ALLOWED_TAGS).each(
             (node: XMLQuery) => {
                 switch (node.tagName.value) {
                     case CMD_UPDATE:
@@ -168,7 +168,7 @@ export module Response {
     }
 
     /**
-     * branch tag update.. drill further down into the updates
+     * branch tag update. drill further down into the updates
      * special case viewstate in that case it is a leaf
      * and the viewstate must be processed
      *
@@ -206,7 +206,6 @@ export module Response {
             default://htmlItem replacement
                 responseProcessor.update(node, cdataBlock);
                 break;
-
         }
     }
 }

@@ -19,7 +19,9 @@
  * Ever object in the asynchronous queue needs to implement this interface
  *
  * the usage should be similar as a Promise from the outside.
- * but with a dedicated start point
+ * but with a dedicated start point. The problem why we cannot use
+ * promises here, is mostly related to the needed cancel functionality
+ * and that the queue expects a runnable as entry.
  *
  * from the implementation side it is mostly registering callbacks
  * and calling them at the appropriate time.
@@ -36,8 +38,8 @@ export interface AsyncRunnable<T> {
     cancel();
 
     /**
-     * callback for then functinality
-     * triggered when the asynch run is complete
+     * callback for then functionality
+     * triggered when the async run is complete
      *
      * the async runnable must register the passed function
      * and then triggers all the registered thens

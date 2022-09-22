@@ -13,11 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ArrayCollector, Config, DomQueryCollector, Lang, LazyStream} from "mona-dish";
-
-import {Stream, DQ} from "mona-dish";
+import {ArrayCollector, Config, DQ, Lang, LazyStream, Stream} from "mona-dish";
+import {EMPTY_STR, IDENT_ALL, IDENT_FORM, P_VIEWSTATE} from "../core/Const";
 import isString = Lang.isString;
-import {EMPTY_STR, P_VIEWSTATE} from "../core/Const";
 
 
 /**
@@ -28,43 +26,55 @@ import {EMPTY_STR, P_VIEWSTATE} from "../core/Const";
  * due to api constraints on the HTML Form object in IE11
  * and due to the url encoding constraint given by the jsf.js spec
  *
- * TODO not ideal. too many encoding calls
  * probably only one needed and one overlay!
- * the entire fileinput storing probably is redundant now
- * that domquery has been fixed
+ * the entire file input storing probably is redundant now
+ * that dom query has been fixed //TODO check this
  */
 export class XhrFormData extends Config {
-
-    private fileInputs = {};
+    /**
+     * Checks if the given datasource is a multipart request source
+     * multipart is only needed if one of the executes is a file input
+     * since file inputs are stateless, they fall out of the view state
+     * and need special handling. With file submits we have to send a formData object
+     * instead of an encoded string files cannot be sent that way
+     */
+    isMultipartRequest: boolean = false;
 
     /**
      * data collector from a given form
      *
      * @param dataSource either a form as DomQuery object or an encoded url string
-     * @param partialIdsArray partial ids to collect, to reduce the data sent down
+     * @param viewState the form view state or an external viewstate coming in as string
+     * @param executes the executes id list for the elements to being processed
+     * @param partialIds partial ids to collect, to reduce the data sent down
      */
-    constructor(private dataSource: DQ | string, private partialIdsArray?: string[]) {
+    constructor(private dataSource: DQ | string, viewState?: string, executes?: string[], private partialIds?: string[]) {
         super({});
         //a call to getViewState before must pass the encoded line
-        //a call from getViewState passes the form element as datasource
+        //a call from getViewState passes the form element as datasource,
         //so we have two call points
         if (isString(dataSource)) {
             this.assignEncodedString(<string>this.dataSource);
         } else {
-            this.handleFormSource();
+            this.applyFormDataToConfig();
+        }
+        if('undefined' != typeof viewState) {
+            this.assignEncodedString(viewState)
+        }
+        if(executes) {
+            this.postInit(...executes);
         }
     }
 
     /**
-     * generic application of ids
+     * generic post init code, for now, this peforms some post assign data post processing
      * @param executes
      */
-    applyFileInputs(...executes: Array<string>) {
-
+    postInit(...executes: Array<string>) {
         let fetchInput = (id: string): DQ => {
-            if (id == "@all") {
+            if (id == IDENT_ALL) {
                 return DQ.querySelectorAllDeep("input[type='file']");
-            } else if (id == "@form") {
+            } else if (id == IDENT_FORM) {
                 return (<DQ>this.dataSource).querySelectorAllDeep("input[type='file']");
             } else {
                 let element = DQ.byId(id, true);
@@ -76,48 +86,17 @@ export class XhrFormData extends Config {
             return item.isPresent();
         };
 
-        let applyInput = (item: DQ) => {
-            this.fileInputs[this.resolveSubmitIdentifier(<HTMLInputElement>item.getAsElem(0).value)] = true;
-        };
 
-        LazyStream.of(...executes)
+        this.isMultipartRequest = LazyStream.of(...executes)
             .map(fetchInput)
             .filter(inputExists)
-            .each(applyInput);
-    }
-
-    private getFileInputs(rootElment: DQ): DQ {
-        const rootFileInputs = rootElment
-            .filter(elem => elem.matchesSelector("input[type='file']"))
-        const childFileInputs = rootElment
-            .querySelectorAll("input[type='file']");
-
-        let ret = rootFileInputs.concat(childFileInputs);
-        return ret;
-    }
-
-    private handleFormSource() {
-        //encode and append the issuing item if not a partial ids array of ids is passed
-        /*
-         * Spec. 13.3.1
-         * Collect and encode input elements.
-         * Additionally the hidden element javax.faces.ViewState
-         * Enhancement partial page submit
-         *
-         */
-        this.encodeSubmittableFields(this, <DQ>this.dataSource, this.partialIdsArray);
-
-        if (this.getIf(P_VIEWSTATE).isPresent()) {
-            return;
-        }
-
-        this.applyViewState(<DQ>this.dataSource);
+            .first().isPresent();
     }
 
     /**
-     * special case viewstate handling
+     * special case view state handling
      *
-     * @param form the form holding the viewstate value
+     * @param form the form holding the view state value
      */
     private applyViewState(form: DQ) {
         let viewState = form.byId(P_VIEWSTATE, true).inputValue;
@@ -125,19 +104,22 @@ export class XhrFormData extends Config {
     }
 
     /**
-     * assignes a url encoded string to this xhrFormData object
+     * assigns an url encoded string to this xhrFormData object
      * as key value entry
      * @param encoded
      */
     assignEncodedString(encoded: string) {
-        //TODO reevaluate this method
-        //this code filters out empty strings as key value pairs
+        // this code filters out empty strings as key value pairs
         let keyValueEntries = decodeURIComponent(encoded).split(/&/gi)
                 .filter(item => !!(item || '')
                 .replace(/\s+/g,''));
         this.assignString(keyValueEntries);
     }
 
+    /**
+     * assign a set of key value pairs passed as array ['key=val1', 'key2=val2']
+     * @param keyValueEntries
+     */
     assignString(keyValueEntries: string[]) {
         let toMerge = new Config({});
 
@@ -161,29 +143,12 @@ export class XhrFormData extends Config {
         this.shallowMerge(toMerge);
     }
 
-// noinspection JSUnusedGlobalSymbols
     /**
-     * @returns a Form data representation
+     * @returns a Form data representation, this is needed for file submits
      */
     toFormData(): FormData {
         let ret: any = new FormData();
-
-        LazyStream.of(...Object.keys(this.value))
-            .filter(key => !(key in this.fileInputs))
-            .each(key => {
-                Stream.of(...this.value[key]).each(item => ret.append(key, item));
-            });
-        Stream.of<string>(...Object.keys(this.fileInputs)).each((key: string) => {
-            DQ.querySelectorAllDeep(`[name='${key}'], [id="${key}"]`).eachElem((elem: HTMLInputElement) => {
-                let identifier = this.resolveSubmitIdentifier(elem);
-                if (!elem?.files?.length) {
-                    ret.append(identifier, elem.value);
-                    return;
-                }
-
-                ret.append(identifier, elem.files[0]);
-            })
-        });
+        this.appendInputs(ret);
         return ret;
     }
 
@@ -214,6 +179,42 @@ export class XhrFormData extends Config {
     }
 
     /**
+     * helper to fetch all file inputs from as given root element
+     * @param rootElement
+     * @private
+     */
+    private getFileInputs(rootElement: DQ): DQ {
+        const rootFileInputs = rootElement
+            .filter(elem => elem.matchesSelector("input[type='file']"))
+        const childFileInputs = rootElement
+            .querySelectorAll("input[type='file']");
+
+        return rootFileInputs.concat(childFileInputs);
+    }
+
+    /**
+     * encode the given fields and apply the view state
+     * @private
+     */
+    private applyFormDataToConfig() {
+        //encode and append the issuing item if not a partial ids array of ids is passed
+        /*
+         * Spec. 13.3.1
+         * Collect and encode input elements.
+         * Additionally the hidden element javax.faces.ViewState
+         * Enhancement partial page submit
+         *
+         */
+        this.encodeSubmittableFields(this, <DQ>this.dataSource, this.partialIds);
+
+        if (this.getIf(P_VIEWSTATE).isPresent()) {
+            return;
+        }
+
+        this.applyViewState(<DQ>this.dataSource);
+    }
+
+    /**
      * determines fields to submit
      * @param {Object} targetBuf - the target form buffer receiving the data
      * @param {Node} parentItem - form element item is nested in
@@ -222,30 +223,25 @@ export class XhrFormData extends Config {
     private encodeSubmittableFields(targetBuf: Config,
                                     parentItem: DQ, partialIds ?: string[]) {
         let toEncode = null;
-        if (this.partialIdsArray && this.partialIdsArray.length) {
-            //in case of our myfaces reduced ppr we only
-            //only submit the partials
+        if (this.partialIds && this.partialIds.length) {
+            // in case of our myfaces reduced ppr we
+            // only submit the partials
             this._value = {};
-            toEncode = new DQ(...this.partialIdsArray);
+            toEncode = new DQ(...this.partialIds);
 
         } else {
-            if (parentItem.isAbsent()) throw "NO_PARITEM";
+            if (parentItem.isAbsent()) throw 'NO_PAR_ITEM';
             toEncode = parentItem;
         }
 
         //lets encode the form elements
-
         this.shallowMerge(toEncode.deepElements.encodeFormElement());
     }
 
-    /**
-     * checks if the given datasource is a multipart request source
-     * multipart is only needed if one of the executes is a file input
-     * since file inputs are stateless, they fall out of the viewstate
-     * and need special handling
-     */
-    get isMultipartRequest(): boolean {
-        return !!Object.keys(this.fileInputs).length;
+    private appendInputs(ret: any) {
+        Stream.of(...Object.keys(this.value))
+            .each(key => {
+                Stream.of(...this.value[key]).each(item => ret.append(key, item));
+            });
     }
-
 }

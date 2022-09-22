@@ -102,9 +102,9 @@ export function resolveSourceForm(internalContext: Config, elem: DQ): DQ {
     let sourceFormId = internalContext.getIf(CTX_PARAM_SRC_FRM_ID);
     let sourceForm = new DQ(sourceFormId.isPresent() ? document.forms[sourceFormId.value] : null);
 
-    sourceForm = sourceForm.orElse(elem.parents(TAG_FORM))
-        .orElse(elem.querySelectorAll(TAG_FORM))
-        .orElse(DQ.querySelectorAll(TAG_FORM));
+    sourceForm = sourceForm.orElseLazy(() => elem.parents(TAG_FORM))
+        .orElseLazy(() => elem.querySelectorAll(TAG_FORM))
+        .orElseLazy(() => DQ.querySelectorAll(TAG_FORM));
 
     return sourceForm;
 }

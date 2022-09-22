@@ -95,6 +95,54 @@ enum BlockFilter {
  * however a dedicated api makes sense for readability reasons
  */
 export module Implementation {
+/*
+ Small internal explanation, this code is optimized for readability
+ and cuts off a ton of old legacy code.
+ Aka older browsers are not supported anymore.
+ We use a self written helper library to keep the number of exernal
+ code dependencies down.
+ The library is called mona-dish and started as a small sideproject of mine
+ it provides following
+
+ a) Monad like structures for querying because this keeps the code denser and adds abstractions
+ that always was the strong point of jquery and it still is better in this regard than what ecmascript provides
+
+ b) Streams and lazystreams like java has, a pull like construct, ecmascript does not have anything like Lazystreams.
+ Another option would have been rxjs but that would have introduced a code dependency and probably more code. We might
+ move to RXJS if the need arises however. But for now I would rather stick with my small self grown library which works
+ quite well and where I can patch quickly (I have used it in several industrial projects, so it works well
+ and is heavily fortified by unit tests (140 testcases as time of writing this))
+
+ c) A neutral json like configuration which allows assignments of arbitrary values with reduce code which then can be
+ transformed into different data representations
+
+ examples:
+ internalCtx.assign(MYPARAM, CTX_PARAM_SRC_FRM_ID).value = form.id.value;
+ passes a value into context.MYPARAM.CTX_PARAM_SRC_FRM_ID
+
+ basically an abbreviation for
+
+ internalCtxt[MYPARAM] = internalCtxt?.[MYPARAM] ?  internalCtxt[MYPARAM] : {};
+ internalCtxt[MYPARAM][CTX_PARAM_SRC_FRM_ID] = internalCtxt?.[MYPARAM][CTX_PARAM_SRC_FRM_ID] ?  internalCtxt[MYPARAM][CTX_PARAM_SRC_FRM_ID] : {};
+ internalCtxt[MYPARAM][CTX_PARAM_SRC_FRM_ID] = form.id.value;
+
+
+ internalCtx.assign(condition, MYPARAM, CTX_PARAM_SRC_FRM_ID).value = form.id.value;
+ passes a value into context.MYPARAM.CTX_PARAM_SRC_FRM_ID if condition === true otherwise it is ignored
+
+ abbreviates:
+ if(condition) {
+    internalCtxt[MYPARAM] = internalCtxt?.[MYPARAM] ?  internalCtxt[MYPARAM] : {};
+    internalCtxt[MYPARAM][CTX_PARAM_SRC_FRM_ID] = internalCtxt?.[MYPARAM][CTX_PARAM_SRC_FRM_ID] ?  internalCtxt[MYPARAM][CTX_PARAM_SRC_FRM_ID] : {};
+    internalCtxt[MYPARAM][CTX_PARAM_SRC_FRM_ID] = form.id.value;
+ }
+
+
+ d) Optional constructs, while under heavy debate we only use them lightly where the api requires it from mona-dish
+
+ Note the inclusion of this library uses a reduced build which only includes the part of it, which we really use
+
+ */
 
     import trim = Lang.trim;
     import getMessage = ExtLang.getMessage;
@@ -170,8 +218,9 @@ export module Implementation {
 
         return LazyStream.of(...funcs)
             .map(func => resolveAndExecute(source, event, func))
-            // we use the return false == stop as an early stop
+            // we use the return false == stop as an early stop, onElem stops at the first false
             .onElem((opResult: boolean) => opResult)
+            //last ensures we run until the first false is returned
             .last().value;
     }
 
@@ -208,17 +257,27 @@ export module Implementation {
 
         Assertions.assertRequestIntegrity(options, elem);
 
+        /**
+         * fetch the parent form
+         *
+         * note we also add an override possibility here
+         * so that people can use dummy forms and work
+         * with detached objects
+         */
+        const form: DQ = resolveForm(requestCtx, elem, resolvedEvent);
+        const formId = form.id.value;
+        const delay: number = resolveDelay(options);
+        const timeout: number = resolveTimeout(options);
+
         requestCtx.assignIf(!!windowId, P_WINDOW_ID).value = windowId;
-
         requestCtx.assign(CTX_PARAM_PASS_THR).value = filterPassthroughValues(options.value);
-
         requestCtx.assignIf(!!resolvedEvent, CTX_PARAM_PASS_THR, P_EVT).value = resolvedEvent?.type;
 
         /**
          * ajax pass through context with the source
-         * onresolvedEvent and onerror
+         * onresolved Event and onerror Event
          */
-        requestCtx.assign(SOURCE).value = elementId.value;
+        requestCtx.assign(SOURCE).value = elementId;
 
         /**
          * on resolvedEvent and onError...
@@ -232,29 +291,16 @@ export module Implementation {
          * lets drag the myfaces config params also in
          */
         requestCtx.assign(MYFACES).value = options.value?.myfaces;
-        /**
-         * fetch the parent form
-         *
-         * note we also add an override possibility here
-         * so that people can use dummy forms and work
-         * with detached objects
-         */
-        let form: DQ = resolveForm(requestCtx, elem, resolvedEvent);
 
         /**
          * binding contract the javax.faces.source must be set
          */
-        requestCtx.assign(CTX_PARAM_PASS_THR, P_PARTIAL_SOURCE).value = elementId.value;
+        requestCtx.assign(CTX_PARAM_PASS_THR, P_PARTIAL_SOURCE).value = elementId;
 
         /**
          * javax.faces.partial.ajax must be set to true
          */
         requestCtx.assign(CTX_PARAM_PASS_THR, P_AJAX).value = true;
-
-        /**
-         * binding contract the javax.faces.source must be set
-         */
-        requestCtx.assign(CTX_PARAM_PASS_THR, P_PARTIAL_SOURCE).value = elementId.value;
 
         /**
          * if resetValues is set to true
@@ -265,27 +311,22 @@ export module Implementation {
          */
         requestCtx.assignIf(isResetValues, CTX_PARAM_PASS_THR, P_RESET_VALUES).value = true;
 
-        //additional meta information to speed things up, note internal non jsf
-        //pass through options are stored under _mfInternal in the context
-        internalCtx.assign(CTX_PARAM_SRC_FRM_ID).value = form.id.value;
-        internalCtx.assign(CTX_PARAM_SRC_CTL_ID).value = elementId.value;
+        // additional meta information to speed things up, note internal non jsf
+        // pass through options are stored under _mfInternal in the context
+        internalCtx.assign(CTX_PARAM_SRC_FRM_ID).value = formId;
+
+        // mojarra compatibility, mojarra is sending the form id as well
+        // this is not documented behavior but can be determined by running
+        // mojarra under blackbox conditions.
+        // I assume it does the same as our formId_submit=1 so leaving it out
+        // won't hurt but for the sake of compatibility we are going to add it
+        requestCtx.assign(CTX_PARAM_PASS_THR, formId).value = formId;
+        internalCtx.assign(CTX_PARAM_SRC_CTL_ID).value = elementId;
         internalCtx.assign(CTX_PARAM_TR_TYPE).value = REQ_TYPE_POST;
 
-        //mojarra compatibility, mojarra is sending the form id as well
-        //this is not documented behavior but can be determined by running
-        //mojarra under blackbox conditions
-        //i assume it does the same as our formId_submit=1 so leaving it out
-        //wont hurt but for the sake of compatibility we are going to add it
-
-        requestCtx.assign(CTX_PARAM_PASS_THR, form.id.value).value = form.id.value;
-
         assignClientWindowId(form, requestCtx);
-
-        assignExecute(options, requestCtx, form, elementId.value);
-        assignRender(options, requestCtx, form, elementId.value);
-
-        let delay: number = resolveDelay(options);
-        let timeout: number = resolveTimeout(options);
+        assignExecute(options, requestCtx, form, elementId);
+        assignRender(options, requestCtx, form, elementId);
 
         //now we enqueue the request as asynchronous runnable into our request
         //queue and let the queue take over the rest
@@ -308,7 +349,6 @@ export module Implementation {
      * @param errorListener the error listener handler
      */
     export function addOnError(errorListener: IListener<ErrorData>) {
-        /*error handling already done in the assert of the queue*/
         errorQueue.push(errorListener);
     }
 
@@ -318,7 +358,6 @@ export module Implementation {
      * @param eventListener the event listener handler
      */
     export function addOnEvent(eventListener: IListener<EventData>) {
-        /*error handling already done in the assert of the queue*/
         eventQueue.push(eventListener);
     }
 
@@ -480,7 +519,7 @@ export module Implementation {
 
     /**
      * this at the first sight looks like a weird construct, but we need to do it this way
-     * for testing, we cannot proxy addRequestToQueue from the testing frameworks directly
+     * for testing, we cannot proxy addRequestToQueue from the testing frameworks directly,
      * but we need to keep it under unit tests.
      */
     export let queueHandler = {
@@ -572,15 +611,12 @@ export module Implementation {
     function remapDefaultConstants(targetConfig: Config, targetKey: string, userValues: string, issuingForm: DQ, issuingElementId: string): Config {
         //a cleaner implementation of the transform list method
 
-        let iterValues = (userValues) ? trim(userValues).split(/\s+/gi) : [];
+        let iterValues: string[] = (userValues) ? trim(userValues).split(/\s+/gi) : [];
         let ret = [];
-        let processed = {};
+        let processed: {[key: string]: boolean} = {};
 
-        //the idea is simply to loop over all values and then replace
-        //their generic values and filter out doubles
-        //this is more readable than the old indexed based solution
-        //and not really slower because we had to build up the index in our old solution
-        //anyway
+        // in this case we do not use lazy stream because it wont bring any code reduction
+        // or speedup
         for (let cnt = 0; cnt < iterValues.length; cnt++) {
             //avoid doubles
             if (iterValues[cnt] in processed) {
@@ -649,7 +685,7 @@ export module Implementation {
             return (<Function>func).call(source, event) !== false;
         } else {
             //either a function or a string can be passed in case of a string we have to wrap it into another function
-            //it it is not a plain executable code but a definition
+            //it is not a plain executable code but a definition
             let sourceCode = trim(<string>func);
             if (sourceCode.indexOf("function ") == 0) {
                 sourceCode = `return ${sourceCode} (event)`;

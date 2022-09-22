@@ -46,7 +46,7 @@ import {ExtDomquery} from "../util/ExtDomQuery";
  */
 export function resolveHandlerFunc(requestContext: Config, responseContext: Config, funcName: string) {
     return responseContext.getIf(funcName)
-        .orElse(requestContext.getIf(funcName).value)
+        .orElseLazy(() =>requestContext.getIf(funcName).value)
         .orElse(EMPTY_FUNC).value;
 }
 
@@ -72,7 +72,7 @@ export function resolveFinalUrl(sourceForm: DomQuery, formData: XhrFormData, aja
  * @param event
  */
 export function resolveForm(requestCtx: Config, elem: DQ, event: Event): DQ {
-    const configId = requestCtx.value?.myfaces?.form ?? MF_NONE; //requestCtx.getIf(MYFACES, "form").orElse(MF_NONE).value;
+    const configId = requestCtx.value?.myfaces?.form ?? MF_NONE;
     return DQ
         .byId(configId, true)
         .orElseLazy(() => ExtLang.getForm(elem.getAsElem(0).value, event));
@@ -142,7 +142,7 @@ export function resolveDefaults(event: Event, opts: any = {}, el: Element | stri
     const resolvedEvent = event,
         options = new Config(opts).deepCopy,
         elem = DQ.byId(el || <Element>resolvedEvent.target, true),
-        elementId = elem.id, requestCtx = new Config({}),
+        elementId = elem.id.value, requestCtx = new Config({}),
         internalCtx = new Config({}), windowId = resolveWindowId(options),
         isResetValues = true === options.value?.resetValues;
 

@@ -6,7 +6,7 @@ import {AsyncRunnable} from "./AsyncRunnable";
  *
  * Every callback must be of async runnable
  * which is sort of an extended promise which has
- * added a decicated cancel and start point
+ * added a dedicated cancel and start point
  *
  * This interface can be used as wrapper contract
  * for normal promises if needed.
@@ -21,12 +21,15 @@ export class AsynchronousQueue<T extends AsyncRunnable<any>> {
     constructor() {
     }
 
+    /**
+     * simple is empty accessor, returns true if queue is empty atm
+     */
     get isEmpty(): boolean {
         return !this.runnableQueue.length;
     }
 
     /**
-     * enequeues an element and starts the
+     * enqueues an element and starts the
      * asynchronous work loop if not already running
      *
      * @param element the element to be queued and processed
@@ -46,13 +49,37 @@ export class AsynchronousQueue<T extends AsyncRunnable<any>> {
         }
     }
 
-    dequeue(): T {
+    /**
+     * fetches the next element from the queue (first in first out order)
+     */
+    dequeue(): T | undefined{
         return this.runnableQueue.shift();
     }
 
+    /**
+     * clears up all elements from the queue
+     */
     cleanup() {
         this.currentlyRunning = null;
         this.runnableQueue.length = 0;
+    }
+
+    /**
+     * cancels the currently running element and then cleans up the queue
+     * aka cancel the queue entirely
+     */
+    cancel() {
+        try {
+            if (this.currentlyRunning) {
+                this.currentlyRunning.cancel();
+            }
+        } finally {
+            this.cleanup();
+        }
+    }
+
+    private callForNextElementToProcess() {
+        this.runEntry();
     }
 
     private appendElement(element: T) {
@@ -87,19 +114,5 @@ export class AsynchronousQueue<T extends AsyncRunnable<any>> {
                 //(the browser engine will take care of that)
                 () => this.callForNextElementToProcess()
             ).start();
-    }
-
-    cancel() {
-        try {
-            if (this.currentlyRunning) {
-                this.currentlyRunning.cancel();
-            }
-        } finally {
-            this.cleanup();
-        }
-    }
-
-    private callForNextElementToProcess() {
-        this.runEntry();
     }
 }

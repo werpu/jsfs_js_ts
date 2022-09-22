@@ -1,5 +1,5 @@
 import {Config, IValueHolder, Optional, DomQuery, DQ} from "mona-dish";
-import {EMPTY_STR, P_WINDOW_ID} from "../core/Const";
+import {P_WINDOW_ID} from "../core/Const";
 
 declare let window: any;
 
@@ -13,9 +13,9 @@ declare let window: any;
  */
 const IS_JSF_SOURCE = (source?: string): boolean => {
     return source && !!(source?.search(/\/javax\.faces\.resource.*\/jsf\.js.*/) != -1 ||
-        source?.search(/\/jsf\-development\.js.*/) != -1 ||
-        source?.search(/\/jsf\-uncompressed\.js.*/) != -1 ||
-        source?.search(/\/jsf[^\.]\.js.*ln\=javax.faces.*/gi) != -1);
+        source?.search(/\/jsf-development\.js.*/) != -1 ||
+        source?.search(/\/jsf-uncompressed\.js.*/) != -1 ||
+        source?.search(/\/jsf[^.]*\.js.*ln=javax.faces.*/gi) != -1);
 }
 
 /**
@@ -27,7 +27,7 @@ const IS_JSF_SOURCE = (source?: string): boolean => {
  * @constructor
  */
 const IS_INTERNAL_SOURCE = (source: string): boolean => {
-    return  source.search(/\/jsf[^\.]\.js.*ln\=myfaces.testscripts.*/gi) != -1;
+    return  source.search(/\/jsf[^.]*\.js.*ln=myfaces.testscripts.*/gi) != -1;
 }
 
 
@@ -131,7 +131,7 @@ export class ExtDomquery extends DQ {
     }
 
     globalEval(code: string, nonce ?: string): DQ {
-        return super.globalEval(code, nonce ?? this.nonce);
+        return new ExtDomquery(super.globalEval(code, nonce ?? this.nonce));
     }
 
     /**
@@ -150,12 +150,12 @@ export class ExtDomquery extends DQ {
      * byId producer
      *
      * @param selector id
+     * @param deep whether the search should go into embedded shadow dom elements
      * @return a DomQuery containing the found elements
      */
     static byId(selector: string | DomQuery | Element, deep = false): DomQuery {
         const ret = DomQuery.byId(selector, deep);
-        //return new ExtDomquery(ret);
-        return ret;
+        return new ExtDomquery(ret);
     }
 }
 

@@ -71,9 +71,13 @@ import {ExtDomquery} from "../util/ExtDomQuery";
 export class ResponseProcessor implements IResponseProcessor {
 
     constructor(private request: Config, private externalContext: Config, private internalContext: Config) {
-
     }
 
+    /**
+     * head replacement
+     * @param shadowDocument incoming shadow head data (aka cdata as xml reference or dom element)
+     * the data incoming must represent the html representation of the head itself one way or the other
+     */
     replaceHead(shadowDocument: XMLQuery | DQ) {
         let shadowHead = shadowDocument.querySelectorAll(TAG_HEAD);
         if (!shadowHead.isPresent()) {
@@ -85,6 +89,9 @@ export class ResponseProcessor implements IResponseProcessor {
         //delete all to avoid script and style overlays
         oldHead.querySelectorAll(SEL_SCRIPTS_STYLES).delete();
 
+        // we cannot replace new elements in the head, but we can eval the elements
+        // eval means the scripts will get attached (eval script attach method)
+        // but this is done by DomQuery not in this code
         this.storeForEval(shadowHead);
     }
 
@@ -108,6 +115,8 @@ export class ResponseProcessor implements IResponseProcessor {
         let resultingBody = <DQ>DQ.querySelectorAll(TAG_BODY).html(shadowInnerHTML);
         let updateForms = resultingBody.querySelectorAll(TAG_FORM);
 
+        // main difference, we cannot replace the body itself, but only its content
+        // we need a separate step for post processing the incoming attributes, like classes, styles etc...
         resultingBody.copyAttrs(shadowBody);
 
         this.storeForPostProcessing(updateForms, resultingBody);
@@ -157,10 +166,6 @@ export class ResponseProcessor implements IResponseProcessor {
         Implementation.sendError(errorData);
     }
 
-    private triggerOnError(errorData: ErrorData) {
-        this.externalContext.getIf(ON_ERROR).orElse(this.internalContext.getIf(ON_ERROR).value).orElse(EMPTY_FUNC).value(errorData);
-    }
-
     /**
      * process the redirect operation
      *
@@ -182,12 +187,16 @@ export class ResponseProcessor implements IResponseProcessor {
      */
     update(node: XMLQuery, cdataBlock: string) {
         let result = ExtDomquery.byId(node.id.value, true).outerHTML(cdataBlock, false, false);
-        let sourceForm = result?.parents(TAG_FORM).orElse(result.byTagName(TAG_FORM, true));
+        let sourceForm = result?.parents(TAG_FORM).orElseLazy(() => result.byTagName(TAG_FORM, true));
         if (sourceForm) {
             this.storeForPostProcessing(sourceForm, result);
         }
     }
 
+    /**
+     * Delete handler, simply deleetes the node referenced by the xml data
+     * @param node
+     */
     delete(node: XMLQuery) {
         DQ.byId(node.id.value, true).delete();
     }
@@ -214,7 +223,7 @@ export class ResponseProcessor implements IResponseProcessor {
     }
 
     /**
-     * insert handling, either before or after
+     * Insert handling, either before or after
      *
      * @param node
      */
@@ -239,7 +248,7 @@ export class ResponseProcessor implements IResponseProcessor {
     }
 
     /**
-     * handler for the case &lt;insert <&lt; before id="...
+     * Handler for the case &lt;insert <&lt; before id="...
      *
      * @param node the node hosting the insert data
      */
@@ -267,7 +276,7 @@ export class ResponseProcessor implements IResponseProcessor {
     }
 
     /**
-     * process the viewState update, update the affected
+     * Process the viewState update, update the affected
      * forms with their respective new viewstate values
      *
      */
@@ -298,7 +307,10 @@ export class ResponseProcessor implements IResponseProcessor {
     }
 
     /**
-     * post processing viewstate fixing
+     * Postprocessing view state fixing
+     * this appends basically the incoming view states to the forms.
+     * It is called from outside after all forms have been processed basically
+     * as last lifecycle step, before going into the next request.
      */
     fixViewStates() {
         Stream.ofAssoc<StateHolder>(this.internalContext.getIf(APPLIED_VST).orElse({}).value)
@@ -312,6 +324,10 @@ export class ResponseProcessor implements IResponseProcessor {
             });
     }
 
+    /**
+     * same as with view states before applies the incoming client windows as last step after the rest of the processing
+     * is done.
+     */
     fixClientWindow() {
         Stream.ofAssoc<StateHolder>(this.internalContext.getIf(APPLIED_CLIENT_WINDOW).orElse({}).value)
             .each((item: Array<any>) => {
@@ -331,7 +347,7 @@ export class ResponseProcessor implements IResponseProcessor {
         let eventData = EventData.createFromRequest(this.request.value, this.externalContext, SUCCESS);
 
         //because some frameworks might decorate them over the context in the response
-        let eventHandler = this.externalContext.getIf(ON_EVENT).orElse(this.internalContext.getIf(ON_EVENT).value).orElse(EMPTY_FUNC).value;
+        let eventHandler = this.externalContext.getIf(ON_EVENT).orElseLazy(() => this.internalContext.getIf(ON_EVENT).value).orElse(EMPTY_FUNC).value;
         Implementation.sendEvent(eventData, eventHandler);
     }
 
@@ -439,6 +455,10 @@ export class ResponseProcessor implements IResponseProcessor {
         return "undefined" != typeof node?.id?.value && (node?.id?.value == P_CLIENT_WINDOW ||
             node?.id?.value?.indexOf([separatorChar, P_CLIENT_WINDOW].join(EMPTY_STR)) != -1 ||
             node?.id?.value?.indexOf([P_CLIENT_WINDOW, separatorChar].join(EMPTY_STR)) != -1);
+    }
+
+    private triggerOnError(errorData: ErrorData) {
+        this.externalContext.getIf(ON_ERROR).orElse(this.internalContext.getIf(ON_ERROR).value).orElse(EMPTY_FUNC).value(errorData);
     }
 
 }

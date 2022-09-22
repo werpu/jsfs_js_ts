@@ -78,6 +78,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
      *
      * Optional Parameters
      *
+     * @param internalContext internal context with internal info which is passed through, not used by the user
      * @param partialIdsArray an optional restricting partial ids array for encoding
      * @param timeout optional xhr timeout
      * @param ajaxType optional request type, default "POST"
@@ -120,19 +121,24 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             let viewState = jsf.getViewState(formElement);
             //encoded we need to decode
             //We generated a base representation of the current form
-            let formData: XhrFormData = new XhrFormData(this.sourceForm);
             //in case someone has overloaded the viewstate with addtional decorators we merge
             //that in, there is no way around it, the spec allows it and getViewState
             //must be called, so whatever getViewState delivers has higher priority then
             //whatever the formData object delivers
-            formData.assignEncodedString(viewState);
-            formData.applyFileInputs(...executesArr());
+            //the partialIdsArray arr is almost deprecated legacy code where we allowed to send a separate list of partial
+            //ids for reduced load and server processing, this will be removed soon, we can handle the same via execute
+            //anyway TODO remove the partial ids array
+            let formData: XhrFormData = new XhrFormData(this.sourceForm, viewState, executesArr(), this.partialIdsArray);
 
             this.contentType = formData.isMultipartRequest ? "undefined" : this.contentType;
 
             //next step the pass through parameters are merged in for post params
             let requestContext = this.requestContext;
             let passThroughParams = requestContext.getIf(CTX_PARAM_PASS_THR);
+
+            // this is an extension where we allow pass through parameters to be sent down additionally
+            // this can be used and is used in the impl to enrich the post request parameters with additional
+            // information
             formData.shallowMerge(passThroughParams, true, true);
 
             this.responseContext = passThroughParams.deepCopy;
@@ -162,7 +168,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
 
             //probably not needed anymore, will test this
             //some webkit based mobile browsers do not follow the w3c spec of
-            // setting the accept headers automatically
+            // setting, they accept headers automatically
             ignoreErr(() => xhrObject.setRequestHeader(REQ_ACCEPT, STD_ACCEPT));
 
             this.sendEvent(BEGIN);
@@ -223,23 +229,23 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
      * @param resolve
      * @param reject
      */
-    protected registerXhrCallbacks(resolve: Consumer<any>, reject: Consumer<any>) {
+    private registerXhrCallbacks(resolve: Consumer<any>, reject: Consumer<any>) {
         let xhrObject = this.xhrObject;
 
         xhrObject.onabort = () => {
-            this.onAbort(resolve, reject);
+            this.onAbort(reject);
         };
         xhrObject.ontimeout = () => {
-            this.onTimeout(resolve, reject);
+            this.onTimeout(reject);
         };
         xhrObject.onload = () => {
-            this.onSuccess(this.xhrObject, resolve, reject)
+            this.onSuccess(resolve)
         };
         xhrObject.onloadend = () => {
-            this.onDone(this.xhrObject, resolve, reject);
+            this.onDone(this.xhrObject, resolve);
         };
         xhrObject.onerror = (errorData: any) => {
-            this.onError(errorData, resolve, reject);
+            this.onError(errorData, reject);
         };
     }
 
@@ -250,29 +256,29 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
      * the xhr object depending on its own state
      */
 
-    protected onAbort(resolve: Consumer<any>, reject: Consumer<any>) {
+    private onAbort(reject: Consumer<any>) {
         reject();
     }
 
-    protected onTimeout(resolve: Consumer<any>, reject: Consumer<any>) {
+    private onTimeout(reject: Consumer<any>) {
         this.sendEvent(STATE_EVT_TIMEOUT);
         reject();
     }
 
-    protected onSuccess(data: any, resolve: Consumer<any>, reject: Consumer<any>) {
+    private onSuccess(resolve: Consumer<any>) {
 
         this.sendEvent(COMPLETE);
 
         //malforms always result in empty response xml
         if (!this?.xhrObject?.responseXML) {
-            this.handleMalFormedXML(resolve, reject);
+            this.handleMalFormedXML(resolve);
             return;
         }
 
         jsf.ajax.response(this.xhrObject, this.responseContext.value ?? {});
     }
 
-    private handleMalFormedXML(resolve: Function, reject: Function) {
+    private handleMalFormedXML(resolve: Function) {
         this.stopProgress = true;
         let errorData = {
             type: ERROR,
@@ -293,16 +299,27 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         //non blocking non clearing
     }
 
-    protected onDone(data: any, resolve: Consumer<any>, reject: Consumer<any>) {
+    private onDone(data: any, resolve: Consumer<any>) {
         if (this.stopProgress) {
             return;
         }
         resolve(data);
     }
 
-    protected onError(errorData: any, resolve: Consumer<any>, reject: Consumer<any>) {
+    private onError(errorData: any,  reject: Consumer<any>) {
         this.handleError(errorData);
         reject();
+    }
+
+    private sendRequest(formData: XhrFormData) {
+        let isPost = this.ajaxType != REQ_TYPE_GET;
+        if (formData.isMultipartRequest) {
+            //in case of a multipart request we send in a formData object as body
+            this.xhrObject.send((isPost) ? formData.toFormData() : null);
+        } else {
+            //in case of a normal request we send it normally
+            this.xhrObject.send((isPost) ? formData.toString() : null);
+        }
     }
 
     /*
@@ -329,17 +346,6 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
 
         let eventHandler = resolveHandlerFunc(this.requestContext, this.responseContext, ON_ERROR);
         Implementation.sendError(errorData, eventHandler);
-    }
-
-    protected sendRequest(formData: XhrFormData) {
-        let isPost = this.ajaxType != REQ_TYPE_GET;
-        if (formData.isMultipartRequest) {
-            //in case of a multipart request we send in a formData object as body
-            this.xhrObject.send((isPost) ? formData.toFormData() : null);
-        } else {
-            //in case of a normal request we send it normally
-            this.xhrObject.send((isPost) ? formData.toString() : null);
-        }
     }
 
 }

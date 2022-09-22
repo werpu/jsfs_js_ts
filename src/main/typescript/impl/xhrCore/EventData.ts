@@ -17,8 +17,8 @@ export class EventData {
         eventData.status = name;
 
         let sourceId: string = context.getIf(SOURCE)
-            .orElse(context.getIf(P_PARTIAL_SOURCE).value)
-            .orElse(context.getIf(CTX_PARAM_PASS_THR, P_PARTIAL_SOURCE).value).value;
+            .orElseLazy(() => context.getIf(P_PARTIAL_SOURCE).value)
+            .orElseLazy(() => context.getIf(CTX_PARAM_PASS_THR, P_PARTIAL_SOURCE).value).value;
         if (sourceId) {
             eventData.source = DQ.byId(sourceId, true).first().value.value;
         }

@@ -1575,6 +1575,8 @@ var DomQuery = /** @class */ (function () {
                     if (files === null || files === void 0 ? void 0 : files.length) {
                         //xhr level2
                         target.append(name).value = files[0];
+                        //TODO we have to know that the entry is a file element, so that we can reuse
+                        //this information
                     }
                     else {
                         target.append(name).value = element.inputValue.value;
@@ -4102,6 +4104,54 @@ var BlockFilter;
  */
 var Implementation;
 (function (Implementation) {
+    /*
+     Small internal explanation, this code is optimized for readability
+     and cuts off a ton of old legacy code.
+     Aka older browsers are not supported anymore.
+     We use a self written helper library to keep the number of exernal
+     code dependencies down.
+     The library is called mona-dish and started as a small sideproject of mine
+     it provides following
+    
+     a) Monad like structures for querying because this keeps the code denser and adds abstractions
+     that always was the strong point of jquery and it still is better in this regard than what ecmascript provides
+    
+     b) Streams and lazystreams like java has, a pull like construct, ecmascript does not have anything like Lazystreams.
+     Another option would have been rxjs but that would have introduced a code dependency and probably more code. We might
+     move to RXJS if the need arises however. But for now I would rather stick with my small self grown library which works
+     quite well and where I can patch quickly (I have used it in several industrial projects, so it works well
+     and is heavily fortified by unit tests (140 testcases as time of writing this))
+    
+     c) A neutral json like configuration which allows assignments of arbitrary values with reduce code which then can be
+     transformed into different data representations
+    
+     examples:
+     internalCtx.assign(MYPARAM, CTX_PARAM_SRC_FRM_ID).value = form.id.value;
+     passes a value into context.MYPARAM.CTX_PARAM_SRC_FRM_ID
+    
+     basically an abbreviation for
+    
+     internalCtxt[MYPARAM] = internalCtxt?.[MYPARAM] ?  internalCtxt[MYPARAM] : {};
+     internalCtxt[MYPARAM][CTX_PARAM_SRC_FRM_ID] = internalCtxt?.[MYPARAM][CTX_PARAM_SRC_FRM_ID] ?  internalCtxt[MYPARAM][CTX_PARAM_SRC_FRM_ID] : {};
+     internalCtxt[MYPARAM][CTX_PARAM_SRC_FRM_ID] = form.id.value;
+    
+    
+     internalCtx.assign(condition, MYPARAM, CTX_PARAM_SRC_FRM_ID).value = form.id.value;
+     passes a value into context.MYPARAM.CTX_PARAM_SRC_FRM_ID if condition === true otherwise it is ignored
+    
+     abbreviates:
+     if(condition) {
+        internalCtxt[MYPARAM] = internalCtxt?.[MYPARAM] ?  internalCtxt[MYPARAM] : {};
+        internalCtxt[MYPARAM][CTX_PARAM_SRC_FRM_ID] = internalCtxt?.[MYPARAM][CTX_PARAM_SRC_FRM_ID] ?  internalCtxt[MYPARAM][CTX_PARAM_SRC_FRM_ID] : {};
+        internalCtxt[MYPARAM][CTX_PARAM_SRC_FRM_ID] = form.id.value;
+     }
+    
+    
+     d) Optional constructs, while under heavy debate we only use them lightly where the api requires it from mona-dish
+    
+     Note the inclusion of this library uses a reduced build which only includes the part of it, which we really use
+    
+     */
     var trim = mona_dish_1.Lang.trim;
     var getMessage = Lang_1.ExtLang.getMessage;
     var getGlobalConfig = Lang_1.ExtLang.getGlobalConfig;
@@ -4171,8 +4221,9 @@ var Implementation;
             funcs[_i - 2] = arguments[_i];
         }
         return mona_dish_1.LazyStream.of.apply(mona_dish_1.LazyStream, funcs).map(function (func) { return resolveAndExecute(source, event, func); })
-            // we use the return false == stop as an early stop
+            // we use the return false == stop as an early stop, onElem stops at the first false
             .onElem(function (opResult) { return opResult; })
+            //last ensures we run until the first false is returned
             .last().value;
     }
     Implementation.chain = chain;
@@ -4198,14 +4249,25 @@ var Implementation;
         var _a, _b, _c;
         var _d = (0, RequestDataResolver_1.resolveDefaults)(event, opts, el), resolvedEvent = _d.resolvedEvent, options = _d.options, elem = _d.elem, elementId = _d.elementId, requestCtx = _d.requestCtx, internalCtx = _d.internalCtx, windowId = _d.windowId, isResetValues = _d.isResetValues;
         Assertions_1.Assertions.assertRequestIntegrity(options, elem);
+        /**
+         * fetch the parent form
+         *
+         * note we also add an override possibility here
+         * so that people can use dummy forms and work
+         * with detached objects
+         */
+        var form = (0, RequestDataResolver_1.resolveForm)(requestCtx, elem, resolvedEvent);
+        var formId = form.id.value;
+        var delay = (0, RequestDataResolver_1.resolveDelay)(options);
+        var timeout = (0, RequestDataResolver_1.resolveTimeout)(options);
         requestCtx.assignIf(!!windowId, Const_1.P_WINDOW_ID).value = windowId;
         requestCtx.assign(Const_1.CTX_PARAM_PASS_THR).value = filterPassthroughValues(options.value);
         requestCtx.assignIf(!!resolvedEvent, Const_1.CTX_PARAM_PASS_THR, Const_1.P_EVT).value = resolvedEvent === null || resolvedEvent === void 0 ? void 0 : resolvedEvent.type;
         /**
          * ajax pass through context with the source
-         * onresolvedEvent and onerror
+         * onresolved Event and onerror Event
          */
-        requestCtx.assign(Const_1.SOURCE).value = elementId.value;
+        requestCtx.assign(Const_1.SOURCE).value = elementId;
         /**
          * on resolvedEvent and onError...
          * those values will be traversed later on
@@ -4218,25 +4280,13 @@ var Implementation;
          */
         requestCtx.assign(Const_1.MYFACES).value = (_c = options.value) === null || _c === void 0 ? void 0 : _c.myfaces;
         /**
-         * fetch the parent form
-         *
-         * note we also add an override possibility here
-         * so that people can use dummy forms and work
-         * with detached objects
-         */
-        var form = (0, RequestDataResolver_1.resolveForm)(requestCtx, elem, resolvedEvent);
-        /**
          * binding contract the javax.faces.source must be set
          */
-        requestCtx.assign(Const_1.CTX_PARAM_PASS_THR, Const_1.P_PARTIAL_SOURCE).value = elementId.value;
+        requestCtx.assign(Const_1.CTX_PARAM_PASS_THR, Const_1.P_PARTIAL_SOURCE).value = elementId;
         /**
          * javax.faces.partial.ajax must be set to true
          */
         requestCtx.assign(Const_1.CTX_PARAM_PASS_THR, Const_1.P_AJAX).value = true;
-        /**
-         * binding contract the javax.faces.source must be set
-         */
-        requestCtx.assign(Const_1.CTX_PARAM_PASS_THR, Const_1.P_PARTIAL_SOURCE).value = elementId.value;
         /**
          * if resetValues is set to true
          * then we have to set javax.faces.resetValues as well
@@ -4245,22 +4295,20 @@ var Implementation;
          * the specs jsdoc
          */
         requestCtx.assignIf(isResetValues, Const_1.CTX_PARAM_PASS_THR, Const_1.P_RESET_VALUES).value = true;
-        //additional meta information to speed things up, note internal non jsf
-        //pass through options are stored under _mfInternal in the context
-        internalCtx.assign(Const_1.CTX_PARAM_SRC_FRM_ID).value = form.id.value;
-        internalCtx.assign(Const_1.CTX_PARAM_SRC_CTL_ID).value = elementId.value;
+        // additional meta information to speed things up, note internal non jsf
+        // pass through options are stored under _mfInternal in the context
+        internalCtx.assign(Const_1.CTX_PARAM_SRC_FRM_ID).value = formId;
+        // mojarra compatibility, mojarra is sending the form id as well
+        // this is not documented behavior but can be determined by running
+        // mojarra under blackbox conditions.
+        // I assume it does the same as our formId_submit=1 so leaving it out
+        // won't hurt but for the sake of compatibility we are going to add it
+        requestCtx.assign(Const_1.CTX_PARAM_PASS_THR, formId).value = formId;
+        internalCtx.assign(Const_1.CTX_PARAM_SRC_CTL_ID).value = elementId;
         internalCtx.assign(Const_1.CTX_PARAM_TR_TYPE).value = Const_1.REQ_TYPE_POST;
-        //mojarra compatibility, mojarra is sending the form id as well
-        //this is not documented behavior but can be determined by running
-        //mojarra under blackbox conditions
-        //i assume it does the same as our formId_submit=1 so leaving it out
-        //wont hurt but for the sake of compatibility we are going to add it
-        requestCtx.assign(Const_1.CTX_PARAM_PASS_THR, form.id.value).value = form.id.value;
         assignClientWindowId(form, requestCtx);
-        assignExecute(options, requestCtx, form, elementId.value);
-        assignRender(options, requestCtx, form, elementId.value);
-        var delay = (0, RequestDataResolver_1.resolveDelay)(options);
-        var timeout = (0, RequestDataResolver_1.resolveTimeout)(options);
+        assignExecute(options, requestCtx, form, elementId);
+        assignRender(options, requestCtx, form, elementId);
         //now we enqueue the request as asynchronous runnable into our request
         //queue and let the queue take over the rest
         Implementation.queueHandler.addRequestToQueue(elem, form, requestCtx, internalCtx, delay, timeout);
@@ -4282,7 +4330,6 @@ var Implementation;
      * @param errorListener the error listener handler
      */
     function addOnError(errorListener) {
-        /*error handling already done in the assert of the queue*/
         errorQueue.push(errorListener);
     }
     Implementation.addOnError = addOnError;
@@ -4292,7 +4339,6 @@ var Implementation;
      * @param eventListener the event listener handler
      */
     function addOnEvent(eventListener) {
-        /*error handling already done in the assert of the queue*/
         eventQueue.push(eventListener);
     }
     Implementation.addOnEvent = addOnEvent;
@@ -4445,7 +4491,7 @@ var Implementation;
     Implementation.getViewState = getViewState;
     /**
      * this at the first sight looks like a weird construct, but we need to do it this way
-     * for testing, we cannot proxy addRequestToQueue from the testing frameworks directly
+     * for testing, we cannot proxy addRequestToQueue from the testing frameworks directly,
      * but we need to keep it under unit tests.
      */
     Implementation.queueHandler = {
@@ -4536,11 +4582,8 @@ var Implementation;
         var iterValues = (userValues) ? trim(userValues).split(/\s+/gi) : [];
         var ret = [];
         var processed = {};
-        //the idea is simply to loop over all values and then replace
-        //their generic values and filter out doubles
-        //this is more readable than the old indexed based solution
-        //and not really slower because we had to build up the index in our old solution
-        //anyway
+        // in this case we do not use lazy stream because it wont bring any code reduction
+        // or speedup
         for (var cnt = 0; cnt < iterValues.length; cnt++) {
             //avoid doubles
             if (iterValues[cnt] in processed) {
@@ -4608,7 +4651,7 @@ var Implementation;
         }
         else {
             //either a function or a string can be passed in case of a string we have to wrap it into another function
-            //it it is not a plain executable code but a definition
+            //it is not a plain executable code but a definition
             var sourceCode = trim(func);
             if (sourceCode.indexOf("function ") == 0) {
                 sourceCode = "return ".concat(sourceCode, " (event)");
@@ -5278,7 +5321,7 @@ exports.AsynchronousQueue = void 0;
  *
  * Every callback must be of async runnable
  * which is sort of an extended promise which has
- * added a decicated cancel and start point
+ * added a dedicated cancel and start point
  *
  * This interface can be used as wrapper contract
  * for normal promises if needed.
@@ -5288,6 +5331,9 @@ var AsynchronousQueue = /** @class */ (function () {
         this.runnableQueue = [];
     }
     Object.defineProperty(AsynchronousQueue.prototype, "isEmpty", {
+        /**
+         * simple is empty accessor, returns true if queue is empty atm
+         */
         get: function () {
             return !this.runnableQueue.length;
         },
@@ -5295,7 +5341,7 @@ var AsynchronousQueue = /** @class */ (function () {
         configurable: true
     });
     /**
-     * enequeues an element and starts the
+     * enqueues an element and starts the
      * asynchronous work loop if not already running
      *
      * @param element the element to be queued and processed
@@ -5317,12 +5363,35 @@ var AsynchronousQueue = /** @class */ (function () {
             this.appendElement(element);
         }
     };
+    /**
+     * fetches the next element from the queue (first in first out order)
+     */
     AsynchronousQueue.prototype.dequeue = function () {
         return this.runnableQueue.shift();
     };
+    /**
+     * clears up all elements from the queue
+     */
     AsynchronousQueue.prototype.cleanup = function () {
         this.currentlyRunning = null;
         this.runnableQueue.length = 0;
+    };
+    /**
+     * cancels the currently running element and then cleans up the queue
+     * aka cancel the queue entirely
+     */
+    AsynchronousQueue.prototype.cancel = function () {
+        try {
+            if (this.currentlyRunning) {
+                this.currentlyRunning.cancel();
+            }
+        }
+        finally {
+            this.cleanup();
+        }
+    };
+    AsynchronousQueue.prototype.callForNextElementToProcess = function () {
+        this.runEntry();
     };
     AsynchronousQueue.prototype.appendElement = function (element) {
         //only if the first element is added we start with a trigger
@@ -5355,19 +5424,6 @@ var AsynchronousQueue = /** @class */ (function () {
         //which we can use, to decouple the calls from a recursive stack call
         //(the browser engine will take care of that)
         function () { return _this.callForNextElementToProcess(); }).start();
-    };
-    AsynchronousQueue.prototype.cancel = function () {
-        try {
-            if (this.currentlyRunning) {
-                this.currentlyRunning.cancel();
-            }
-        }
-        finally {
-            this.cleanup();
-        }
-    };
-    AsynchronousQueue.prototype.callForNextElementToProcess = function () {
-        this.runEntry();
     };
     return AsynchronousQueue;
 }());
@@ -5558,7 +5614,6 @@ var ExtDomquery = /** @class */ (function (_super) {
     ExtDomquery.byId = function (selector, deep) {
         if (deep === void 0) { deep = false; }
         var ret = mona_dish_1.DomQuery.byId(selector, deep);
-        //return new ExtDomquery(ret);
         return ret;
     };
     return ExtDomquery;
@@ -5913,8 +5968,8 @@ var EventData = /** @class */ (function () {
         eventData.type = Const_1.EVENT;
         eventData.status = name;
         var sourceId = context.getIf(Const_1.SOURCE)
-            .orElse(context.getIf(Const_1.P_PARTIAL_SOURCE).value)
-            .orElse(context.getIf(Const_1.CTX_PARAM_PASS_THR, Const_1.P_PARTIAL_SOURCE).value).value;
+            .orElseLazy(function () { return context.getIf(Const_1.P_PARTIAL_SOURCE).value; })
+            .orElseLazy(function () { return context.getIf(Const_1.CTX_PARAM_PASS_THR, Const_1.P_PARTIAL_SOURCE).value; }).value;
         if (sourceId) {
             eventData.source = mona_dish_1.DQ.byId(sourceId, true).first().value.value;
         }
@@ -5976,7 +6031,7 @@ var ExtDomQuery_1 = __webpack_require__(/*! ../util/ExtDomQuery */ "./src/main/t
  */
 function resolveHandlerFunc(requestContext, responseContext, funcName) {
     return responseContext.getIf(funcName)
-        .orElse(requestContext.getIf(funcName).value)
+        .orElseLazy(function () { return requestContext.getIf(funcName).value; })
         .orElse(Const_1.EMPTY_FUNC).value;
 }
 exports.resolveHandlerFunc = resolveHandlerFunc;
@@ -6003,7 +6058,7 @@ exports.resolveFinalUrl = resolveFinalUrl;
  */
 function resolveForm(requestCtx, elem, event) {
     var _a, _b, _c;
-    var configId = (_c = (_b = (_a = requestCtx.value) === null || _a === void 0 ? void 0 : _a.myfaces) === null || _b === void 0 ? void 0 : _b.form) !== null && _c !== void 0 ? _c : Const_1.MF_NONE; //requestCtx.getIf(MYFACES, "form").orElse(MF_NONE).value;
+    var configId = (_c = (_b = (_a = requestCtx.value) === null || _a === void 0 ? void 0 : _a.myfaces) === null || _b === void 0 ? void 0 : _b.form) !== null && _c !== void 0 ? _c : Const_1.MF_NONE;
     return mona_dish_1.DQ
         .byId(configId, true)
         .orElseLazy(function () { return Lang_1.ExtLang.getForm(elem.getAsElem(0).value, event); });
@@ -6076,7 +6131,7 @@ function resolveDefaults(event, opts, el) {
     if (opts === void 0) { opts = {}; }
     if (el === void 0) { el = null; }
     //deep copy the options, so that further transformations to not backfire into the callers
-    var resolvedEvent = event, options = new mona_dish_1.Config(opts).deepCopy, elem = mona_dish_1.DQ.byId(el || resolvedEvent.target, true), elementId = elem.id, requestCtx = new mona_dish_1.Config({}), internalCtx = new mona_dish_1.Config({}), windowId = resolveWindowId(options), isResetValues = true === ((_a = options.value) === null || _a === void 0 ? void 0 : _a.resetValues);
+    var resolvedEvent = event, options = new mona_dish_1.Config(opts).deepCopy, elem = mona_dish_1.DQ.byId(el || resolvedEvent.target, true), elementId = elem.id.value, requestCtx = new mona_dish_1.Config({}), internalCtx = new mona_dish_1.Config({}), windowId = resolveWindowId(options), isResetValues = true === ((_a = options.value) === null || _a === void 0 ? void 0 : _a.resetValues);
     return { resolvedEvent: resolvedEvent, options: options, elem: elem, elementId: elementId, requestCtx: requestCtx, internalCtx: internalCtx, windowId: windowId, isResetValues: isResetValues };
 }
 exports.resolveDefaults = resolveDefaults;
@@ -6181,9 +6236,9 @@ exports.resolveSourceElement = resolveSourceElement;
 function resolveSourceForm(internalContext, elem) {
     var sourceFormId = internalContext.getIf(Const_1.CTX_PARAM_SRC_FRM_ID);
     var sourceForm = new mona_dish_2.DQ(sourceFormId.isPresent() ? document.forms[sourceFormId.value] : null);
-    sourceForm = sourceForm.orElse(elem.parents(Const_1.TAG_FORM))
-        .orElse(elem.querySelectorAll(Const_1.TAG_FORM))
-        .orElse(mona_dish_2.DQ.querySelectorAll(Const_1.TAG_FORM));
+    sourceForm = sourceForm.orElseLazy(function () { return elem.parents(Const_1.TAG_FORM); })
+        .orElseLazy(function () { return elem.querySelectorAll(Const_1.TAG_FORM); })
+        .orElseLazy(function () { return mona_dish_2.DQ.querySelectorAll(Const_1.TAG_FORM); });
     return sourceForm;
 }
 exports.resolveSourceForm = resolveSourceForm;
@@ -6433,6 +6488,11 @@ var ResponseProcessor = /** @class */ (function () {
         this.externalContext = externalContext;
         this.internalContext = internalContext;
     }
+    /**
+     * head replacement
+     * @param shadowDocument incoming shadow head data (aka cdata as xml reference or dom element)
+     * the data incoming must represent the html representation of the head itself one way or the other
+     */
     ResponseProcessor.prototype.replaceHead = function (shadowDocument) {
         var shadowHead = shadowDocument.querySelectorAll(Const_1.TAG_HEAD);
         if (!shadowHead.isPresent()) {
@@ -6441,6 +6501,9 @@ var ResponseProcessor = /** @class */ (function () {
         var oldHead = mona_dish_1.DQ.querySelectorAll(Const_1.TAG_HEAD);
         //delete all to avoid script and style overlays
         oldHead.querySelectorAll(Const_1.SEL_SCRIPTS_STYLES).delete();
+        // we cannot replace new elements in the head, but we can eval the elements
+        // eval means the scripts will get attached (eval script attach method)
+        // but this is done by DomQuery not in this code
         this.storeForEval(shadowHead);
     };
     /**
@@ -6459,6 +6522,8 @@ var ResponseProcessor = /** @class */ (function () {
         var shadowInnerHTML = shadowBody.html().value;
         var resultingBody = mona_dish_1.DQ.querySelectorAll(Const_1.TAG_BODY).html(shadowInnerHTML);
         var updateForms = resultingBody.querySelectorAll(Const_1.TAG_FORM);
+        // main difference, we cannot replace the body itself, but only its content
+        // we need a separate step for post processing the incoming attributes, like classes, styles etc...
         resultingBody.copyAttrs(shadowBody);
         this.storeForPostProcessing(updateForms, resultingBody);
     };
@@ -6498,9 +6563,6 @@ var ResponseProcessor = /** @class */ (function () {
         this.triggerOnError(errorData);
         AjaxImpl_1.Implementation.sendError(errorData);
     };
-    ResponseProcessor.prototype.triggerOnError = function (errorData) {
-        this.externalContext.getIf(Const_1.ON_ERROR).orElse(this.internalContext.getIf(Const_1.ON_ERROR).value).orElse(Const_1.EMPTY_FUNC).value(errorData);
-    };
     /**
      * process the redirect operation
      *
@@ -6520,11 +6582,15 @@ var ResponseProcessor = /** @class */ (function () {
      */
     ResponseProcessor.prototype.update = function (node, cdataBlock) {
         var result = ExtDomQuery_1.ExtDomquery.byId(node.id.value, true).outerHTML(cdataBlock, false, false);
-        var sourceForm = result === null || result === void 0 ? void 0 : result.parents(Const_1.TAG_FORM).orElse(result.byTagName(Const_1.TAG_FORM, true));
+        var sourceForm = result === null || result === void 0 ? void 0 : result.parents(Const_1.TAG_FORM).orElseLazy(function () { return result.byTagName(Const_1.TAG_FORM, true); });
         if (sourceForm) {
             this.storeForPostProcessing(sourceForm, result);
         }
     };
+    /**
+     * Delete handler, simply deleetes the node referenced by the xml data
+     * @param node
+     */
     ResponseProcessor.prototype.delete = function (node) {
         mona_dish_1.DQ.byId(node.id.value, true).delete();
     };
@@ -6547,7 +6613,7 @@ var ResponseProcessor = /** @class */ (function () {
         this.replaceBody(shadowDocument);
     };
     /**
-     * insert handling, either before or after
+     * Insert handling, either before or after
      *
      * @param node
      */
@@ -6567,7 +6633,7 @@ var ResponseProcessor = /** @class */ (function () {
         }
     };
     /**
-     * handler for the case &lt;insert <&lt; before id="...
+     * Handler for the case &lt;insert <&lt; before id="...
      *
      * @param node the node hosting the insert data
      */
@@ -6593,7 +6659,7 @@ var ResponseProcessor = /** @class */ (function () {
         });
     };
     /**
-     * process the viewState update, update the affected
+     * Process the viewState update, update the affected
      * forms with their respective new viewstate values
      *
      */
@@ -6621,7 +6687,10 @@ var ResponseProcessor = /** @class */ (function () {
         updateElems.runScripts();
     };
     /**
-     * post processing viewstate fixing
+     * Postprocessing view state fixing
+     * this appends basically the incoming view states to the forms.
+     * It is called from outside after all forms have been processed basically
+     * as last lifecycle step, before going into the next request.
      */
     ResponseProcessor.prototype.fixViewStates = function () {
         var _this = this;
@@ -6634,6 +6703,10 @@ var ResponseProcessor = /** @class */ (function () {
             _this.appendViewStateToForms(new mona_dish_1.DomQuery(affectedForms, affectedForms2), value.value);
         });
     };
+    /**
+     * same as with view states before applies the incoming client windows as last step after the rest of the processing
+     * is done.
+     */
     ResponseProcessor.prototype.fixClientWindow = function () {
         var _this = this;
         mona_dish_1.Stream.ofAssoc(this.internalContext.getIf(Const_1.APPLIED_CLIENT_WINDOW).orElse({}).value)
@@ -6649,9 +6722,10 @@ var ResponseProcessor = /** @class */ (function () {
      * all processing done we can close the request and send the appropriate events
      */
     ResponseProcessor.prototype.done = function () {
+        var _this = this;
         var eventData = EventData_1.EventData.createFromRequest(this.request.value, this.externalContext, Const_1.SUCCESS);
         //because some frameworks might decorate them over the context in the response
-        var eventHandler = this.externalContext.getIf(Const_1.ON_EVENT).orElse(this.internalContext.getIf(Const_1.ON_EVENT).value).orElse(Const_1.EMPTY_FUNC).value;
+        var eventHandler = this.externalContext.getIf(Const_1.ON_EVENT).orElseLazy(function () { return _this.internalContext.getIf(Const_1.ON_EVENT).value; }).orElse(Const_1.EMPTY_FUNC).value;
         AjaxImpl_1.Implementation.sendEvent(eventData, eventHandler);
     };
     /**
@@ -6751,6 +6825,9 @@ var ResponseProcessor = /** @class */ (function () {
             ((_d = (_c = node === null || node === void 0 ? void 0 : node.id) === null || _c === void 0 ? void 0 : _c.value) === null || _d === void 0 ? void 0 : _d.indexOf([separatorChar, Const_1.P_CLIENT_WINDOW].join(Const_1.EMPTY_STR))) != -1 ||
             ((_f = (_e = node === null || node === void 0 ? void 0 : node.id) === null || _e === void 0 ? void 0 : _e.value) === null || _f === void 0 ? void 0 : _f.indexOf([Const_1.P_CLIENT_WINDOW, separatorChar].join(Const_1.EMPTY_STR))) != -1);
     };
+    ResponseProcessor.prototype.triggerOnError = function (errorData) {
+        this.externalContext.getIf(Const_1.ON_ERROR).orElse(this.internalContext.getIf(Const_1.ON_ERROR).value).orElse(Const_1.EMPTY_FUNC).value(errorData);
+    };
     return ResponseProcessor;
 }());
 exports.ResponseProcessor = ResponseProcessor;
@@ -6807,9 +6884,8 @@ exports.XhrFormData = void 0;
  * limitations under the License.
  */
 var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
-var mona_dish_2 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
-var isString = mona_dish_1.Lang.isString;
 var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
+var isString = mona_dish_1.Lang.isString;
 /**
  * A unified form data class
  * which builds upon our configuration.
@@ -6818,10 +6894,9 @@ var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/im
  * due to api constraints on the HTML Form object in IE11
  * and due to the url encoding constraint given by the jsf.js spec
  *
- * TODO not ideal. too many encoding calls
  * probably only one needed and one overlay!
- * the entire fileinput storing probably is redundant now
- * that domquery has been fixed
+ * the entire file input storing probably is redundant now
+ * that dom query has been fixed //TODO check this
  */
 var XhrFormData = /** @class */ (function (_super) {
     __extends(XhrFormData, _super);
@@ -6829,101 +6904,93 @@ var XhrFormData = /** @class */ (function (_super) {
      * data collector from a given form
      *
      * @param dataSource either a form as DomQuery object or an encoded url string
-     * @param partialIdsArray partial ids to collect, to reduce the data sent down
+     * @param viewState the form view state or an external viewstate coming in as string
+     * @param executes the executes id list for the elements to being processed
+     * @param partialIds partial ids to collect, to reduce the data sent down
      */
-    function XhrFormData(dataSource, partialIdsArray) {
+    function XhrFormData(dataSource, viewState, executes, partialIds) {
         var _this = _super.call(this, {}) || this;
         _this.dataSource = dataSource;
-        _this.partialIdsArray = partialIdsArray;
-        _this.fileInputs = {};
+        _this.partialIds = partialIds;
+        /**
+         * Checks if the given datasource is a multipart request source
+         * multipart is only needed if one of the executes is a file input
+         * since file inputs are stateless, they fall out of the view state
+         * and need special handling. With file submits we have to send a formData object
+         * instead of an encoded string files cannot be sent that way
+         */
+        _this.isMultipartRequest = false;
         //a call to getViewState before must pass the encoded line
-        //a call from getViewState passes the form element as datasource
+        //a call from getViewState passes the form element as datasource,
         //so we have two call points
         if (isString(dataSource)) {
             _this.assignEncodedString(_this.dataSource);
         }
         else {
-            _this.handleFormSource();
+            _this.applyFormDataToConfig();
+        }
+        if ('undefined' != typeof viewState) {
+            _this.assignEncodedString(viewState);
+        }
+        if (executes) {
+            _this.postInit.apply(_this, executes);
         }
         return _this;
     }
     /**
-     * generic application of ids
+     * generic post init code, for now, this peforms some post assign data post processing
      * @param executes
      */
-    XhrFormData.prototype.applyFileInputs = function () {
+    XhrFormData.prototype.postInit = function () {
         var _this = this;
         var executes = [];
         for (var _i = 0; _i < arguments.length; _i++) {
             executes[_i] = arguments[_i];
         }
         var fetchInput = function (id) {
-            if (id == "@all") {
-                return mona_dish_2.DQ.querySelectorAllDeep("input[type='file']");
+            if (id == Const_1.IDENT_ALL) {
+                return mona_dish_1.DQ.querySelectorAllDeep("input[type='file']");
             }
-            else if (id == "@form") {
+            else if (id == Const_1.IDENT_FORM) {
                 return _this.dataSource.querySelectorAllDeep("input[type='file']");
             }
             else {
-                var element = mona_dish_2.DQ.byId(id, true);
+                var element = mona_dish_1.DQ.byId(id, true);
                 return _this.getFileInputs(element);
             }
         };
         var inputExists = function (item) {
             return item.isPresent();
         };
-        var applyInput = function (item) {
-            _this.fileInputs[_this.resolveSubmitIdentifier(item.getAsElem(0).value)] = true;
-        };
-        mona_dish_1.LazyStream.of.apply(mona_dish_1.LazyStream, executes).map(fetchInput)
+        this.isMultipartRequest = mona_dish_1.LazyStream.of.apply(mona_dish_1.LazyStream, executes).map(fetchInput)
             .filter(inputExists)
-            .each(applyInput);
-    };
-    XhrFormData.prototype.getFileInputs = function (rootElment) {
-        var rootFileInputs = rootElment
-            .filter(function (elem) { return elem.matchesSelector("input[type='file']"); });
-        var childFileInputs = rootElment
-            .querySelectorAll("input[type='file']");
-        var ret = rootFileInputs.concat(childFileInputs);
-        return ret;
-    };
-    XhrFormData.prototype.handleFormSource = function () {
-        //encode and append the issuing item if not a partial ids array of ids is passed
-        /*
-         * Spec. 13.3.1
-         * Collect and encode input elements.
-         * Additionally the hidden element javax.faces.ViewState
-         * Enhancement partial page submit
-         *
-         */
-        this.encodeSubmittableFields(this, this.dataSource, this.partialIdsArray);
-        if (this.getIf(Const_1.P_VIEWSTATE).isPresent()) {
-            return;
-        }
-        this.applyViewState(this.dataSource);
+            .first().isPresent();
     };
     /**
-     * special case viewstate handling
+     * special case view state handling
      *
-     * @param form the form holding the viewstate value
+     * @param form the form holding the view state value
      */
     XhrFormData.prototype.applyViewState = function (form) {
         var viewState = form.byId(Const_1.P_VIEWSTATE, true).inputValue;
         this.appendIf(viewState.isPresent(), Const_1.P_VIEWSTATE).value = viewState.value;
     };
     /**
-     * assignes a url encoded string to this xhrFormData object
+     * assigns an url encoded string to this xhrFormData object
      * as key value entry
      * @param encoded
      */
     XhrFormData.prototype.assignEncodedString = function (encoded) {
-        //TODO reevaluate this method
-        //this code filters out empty strings as key value pairs
+        // this code filters out empty strings as key value pairs
         var keyValueEntries = decodeURIComponent(encoded).split(/&/gi)
             .filter(function (item) { return !!(item || '')
             .replace(/\s+/g, ''); });
         this.assignString(keyValueEntries);
     };
+    /**
+     * assign a set of key value pairs passed as array ['key=val1', 'key2=val2']
+     * @param keyValueEntries
+     */
     XhrFormData.prototype.assignString = function (keyValueEntries) {
         var toMerge = new mona_dish_1.Config({});
         function splitToKeyVal(line) {
@@ -6933,7 +7000,7 @@ var XhrFormData = /** @class */ (function (_super) {
             var _a, _b;
             return keyVal.length < 3 ? [(_a = keyVal === null || keyVal === void 0 ? void 0 : keyVal[0]) !== null && _a !== void 0 ? _a : [], (_b = keyVal === null || keyVal === void 0 ? void 0 : keyVal[1]) !== null && _b !== void 0 ? _b : []] : keyVal;
         }
-        mona_dish_2.Stream.of.apply(mona_dish_2.Stream, keyValueEntries).map(function (line) { return splitToKeyVal(line); })
+        mona_dish_1.Stream.of.apply(mona_dish_1.Stream, keyValueEntries).map(function (line) { return splitToKeyVal(line); })
             //special case of having keys without values
             .map(function (keyVal) { return fixKeyWithoutVal(keyVal); })
             .each(function (keyVal) {
@@ -6943,28 +7010,12 @@ var XhrFormData = /** @class */ (function (_super) {
         //merge with overwrite but no append! (aka no double entries are allowed)
         this.shallowMerge(toMerge);
     };
-    // noinspection JSUnusedGlobalSymbols
     /**
-     * @returns a Form data representation
+     * @returns a Form data representation, this is needed for file submits
      */
     XhrFormData.prototype.toFormData = function () {
-        var _this = this;
         var ret = new FormData();
-        mona_dish_1.LazyStream.of.apply(mona_dish_1.LazyStream, Object.keys(this.value)).filter(function (key) { return !(key in _this.fileInputs); })
-            .each(function (key) {
-            mona_dish_2.Stream.of.apply(mona_dish_2.Stream, _this.value[key]).each(function (item) { return ret.append(key, item); });
-        });
-        mona_dish_2.Stream.of.apply(mona_dish_2.Stream, Object.keys(this.fileInputs)).each(function (key) {
-            mona_dish_2.DQ.querySelectorAllDeep("[name='".concat(key, "'], [id=\"").concat(key, "\"]")).eachElem(function (elem) {
-                var _a;
-                var identifier = _this.resolveSubmitIdentifier(elem);
-                if (!((_a = elem === null || elem === void 0 ? void 0 : elem.files) === null || _a === void 0 ? void 0 : _a.length)) {
-                    ret.append(identifier, elem.value);
-                    return;
-                }
-                ret.append(identifier, elem.files[0]);
-            });
-        });
+        this.appendInputs(ret);
         return ret;
     };
     XhrFormData.prototype.resolveSubmitIdentifier = function (elem) {
@@ -6985,12 +7036,43 @@ var XhrFormData = /** @class */ (function (_super) {
             return defaultStr;
         }
         var entries = mona_dish_1.LazyStream.of.apply(mona_dish_1.LazyStream, Object.keys(this.value)).filter(function (key) { return _this.value.hasOwnProperty(key); })
-            .flatMap(function (key) { return mona_dish_2.Stream.of.apply(mona_dish_2.Stream, _this.value[key]).map(function (val) { return [key, val]; }).collect(new mona_dish_1.ArrayCollector()); })
+            .flatMap(function (key) { return mona_dish_1.Stream.of.apply(mona_dish_1.Stream, _this.value[key]).map(function (val) { return [key, val]; }).collect(new mona_dish_1.ArrayCollector()); })
             .map(function (keyVal) {
             return "".concat(encodeURIComponent(keyVal[0]), "=").concat(encodeURIComponent(keyVal[1]));
         })
             .collect(new mona_dish_1.ArrayCollector());
         return entries.join("&");
+    };
+    /**
+     * helper to fetch all file inputs from as given root element
+     * @param rootElement
+     * @private
+     */
+    XhrFormData.prototype.getFileInputs = function (rootElement) {
+        var rootFileInputs = rootElement
+            .filter(function (elem) { return elem.matchesSelector("input[type='file']"); });
+        var childFileInputs = rootElement
+            .querySelectorAll("input[type='file']");
+        return rootFileInputs.concat(childFileInputs);
+    };
+    /**
+     * encode the given fields and apply the view state
+     * @private
+     */
+    XhrFormData.prototype.applyFormDataToConfig = function () {
+        //encode and append the issuing item if not a partial ids array of ids is passed
+        /*
+         * Spec. 13.3.1
+         * Collect and encode input elements.
+         * Additionally the hidden element javax.faces.ViewState
+         * Enhancement partial page submit
+         *
+         */
+        this.encodeSubmittableFields(this, this.dataSource, this.partialIds);
+        if (this.getIf(Const_1.P_VIEWSTATE).isPresent()) {
+            return;
+        }
+        this.applyViewState(this.dataSource);
     };
     /**
      * determines fields to submit
@@ -7000,33 +7082,26 @@ var XhrFormData = /** @class */ (function (_super) {
      */
     XhrFormData.prototype.encodeSubmittableFields = function (targetBuf, parentItem, partialIds) {
         var toEncode = null;
-        if (this.partialIdsArray && this.partialIdsArray.length) {
-            //in case of our myfaces reduced ppr we only
-            //only submit the partials
+        if (this.partialIds && this.partialIds.length) {
+            // in case of our myfaces reduced ppr we
+            // only submit the partials
             this._value = {};
-            toEncode = new (mona_dish_2.DQ.bind.apply(mona_dish_2.DQ, __spreadArray([void 0], this.partialIdsArray, false)))();
+            toEncode = new (mona_dish_1.DQ.bind.apply(mona_dish_1.DQ, __spreadArray([void 0], this.partialIds, false)))();
         }
         else {
             if (parentItem.isAbsent())
-                throw "NO_PARITEM";
+                throw 'NO_PAR_ITEM';
             toEncode = parentItem;
         }
         //lets encode the form elements
         this.shallowMerge(toEncode.deepElements.encodeFormElement());
     };
-    Object.defineProperty(XhrFormData.prototype, "isMultipartRequest", {
-        /**
-         * checks if the given datasource is a multipart request source
-         * multipart is only needed if one of the executes is a file input
-         * since file inputs are stateless, they fall out of the viewstate
-         * and need special handling
-         */
-        get: function () {
-            return !!Object.keys(this.fileInputs).length;
-        },
-        enumerable: false,
-        configurable: true
-    });
+    XhrFormData.prototype.appendInputs = function (ret) {
+        var _this = this;
+        mona_dish_1.Stream.of.apply(mona_dish_1.Stream, Object.keys(this.value)).each(function (key) {
+            mona_dish_1.Stream.of.apply(mona_dish_1.Stream, _this.value[key]).each(function (item) { return ret.append(key, item); });
+        });
+    };
     return XhrFormData;
 }(mona_dish_1.Config));
 exports.XhrFormData = XhrFormData;
@@ -7077,6 +7152,7 @@ var XhrRequest = /** @class */ (function () {
      *
      * Optional Parameters
      *
+     * @param internalContext internal context with internal info which is passed through, not used by the user
      * @param partialIdsArray an optional restricting partial ids array for encoding
      * @param timeout optional xhr timeout
      * @param ajaxType optional request type, default "POST"
@@ -7127,17 +7203,21 @@ var XhrRequest = /** @class */ (function () {
             var viewState = jsf.getViewState(formElement);
             //encoded we need to decode
             //We generated a base representation of the current form
-            var formData = new XhrFormData_1.XhrFormData(this.sourceForm);
             //in case someone has overloaded the viewstate with addtional decorators we merge
             //that in, there is no way around it, the spec allows it and getViewState
             //must be called, so whatever getViewState delivers has higher priority then
             //whatever the formData object delivers
-            formData.assignEncodedString(viewState);
-            formData.applyFileInputs.apply(formData, executesArr());
+            //the partialIdsArray arr is almost deprecated legacy code where we allowed to send a separate list of partial
+            //ids for reduced load and server processing, this will be removed soon, we can handle the same via execute
+            //anyway TODO remove the partial ids array
+            var formData = new XhrFormData_1.XhrFormData(this.sourceForm, viewState, executesArr(), this.partialIdsArray);
             this.contentType = formData.isMultipartRequest ? "undefined" : this.contentType;
             //next step the pass through parameters are merged in for post params
             var requestContext = this.requestContext;
             var passThroughParams = requestContext.getIf(Const_1.CTX_PARAM_PASS_THR);
+            // this is an extension where we allow pass through parameters to be sent down additionally
+            // this can be used and is used in the impl to enrich the post request parameters with additional
+            // information
             formData.shallowMerge(passThroughParams, true, true);
             this.responseContext = passThroughParams.deepCopy;
             //we have to shift the internal passthroughs around to build up our response context
@@ -7158,7 +7238,7 @@ var XhrRequest = /** @class */ (function () {
             ignoreErr(function () { return xhrObject.setRequestHeader(Const_1.HEAD_FACES_REQ, Const_1.VAL_AJAX); });
             //probably not needed anymore, will test this
             //some webkit based mobile browsers do not follow the w3c spec of
-            // setting the accept headers automatically
+            // setting, they accept headers automatically
             ignoreErr(function () { return xhrObject.setRequestHeader(Const_1.REQ_ACCEPT, Const_1.STD_ACCEPT); });
             this.sendEvent(Const_1.BEGIN);
             this.sendRequest(formData);
@@ -7215,19 +7295,19 @@ var XhrRequest = /** @class */ (function () {
         var _this = this;
         var xhrObject = this.xhrObject;
         xhrObject.onabort = function () {
-            _this.onAbort(resolve, reject);
+            _this.onAbort(reject);
         };
         xhrObject.ontimeout = function () {
-            _this.onTimeout(resolve, reject);
+            _this.onTimeout(reject);
         };
         xhrObject.onload = function () {
-            _this.onSuccess(_this.xhrObject, resolve, reject);
+            _this.onSuccess(resolve);
         };
         xhrObject.onloadend = function () {
-            _this.onDone(_this.xhrObject, resolve, reject);
+            _this.onDone(_this.xhrObject, resolve);
         };
         xhrObject.onerror = function (errorData) {
-            _this.onError(errorData, resolve, reject);
+            _this.onError(errorData, reject);
         };
     };
     /*
@@ -7236,24 +7316,24 @@ var XhrRequest = /** @class */ (function () {
      * Those methods are the callbacks called by
      * the xhr object depending on its own state
      */
-    XhrRequest.prototype.onAbort = function (resolve, reject) {
+    XhrRequest.prototype.onAbort = function (reject) {
         reject();
     };
-    XhrRequest.prototype.onTimeout = function (resolve, reject) {
+    XhrRequest.prototype.onTimeout = function (reject) {
         this.sendEvent(Const_1.STATE_EVT_TIMEOUT);
         reject();
     };
-    XhrRequest.prototype.onSuccess = function (data, resolve, reject) {
+    XhrRequest.prototype.onSuccess = function (resolve) {
         var _a, _b;
         this.sendEvent(Const_1.COMPLETE);
         //malforms always result in empty response xml
         if (!((_a = this === null || this === void 0 ? void 0 : this.xhrObject) === null || _a === void 0 ? void 0 : _a.responseXML)) {
-            this.handleMalFormedXML(resolve, reject);
+            this.handleMalFormedXML(resolve);
             return;
         }
         jsf.ajax.response(this.xhrObject, (_b = this.responseContext.value) !== null && _b !== void 0 ? _b : {});
     };
-    XhrRequest.prototype.handleMalFormedXML = function (resolve, reject) {
+    XhrRequest.prototype.handleMalFormedXML = function (resolve) {
         var _a;
         this.stopProgress = true;
         var errorData = {
@@ -7275,15 +7355,26 @@ var XhrRequest = /** @class */ (function () {
         }
         //non blocking non clearing
     };
-    XhrRequest.prototype.onDone = function (data, resolve, reject) {
+    XhrRequest.prototype.onDone = function (data, resolve) {
         if (this.stopProgress) {
             return;
         }
         resolve(data);
     };
-    XhrRequest.prototype.onError = function (errorData, resolve, reject) {
+    XhrRequest.prototype.onError = function (errorData, reject) {
         this.handleError(errorData);
         reject();
+    };
+    XhrRequest.prototype.sendRequest = function (formData) {
+        var isPost = this.ajaxType != Const_1.REQ_TYPE_GET;
+        if (formData.isMultipartRequest) {
+            //in case of a multipart request we send in a formData object as body
+            this.xhrObject.send((isPost) ? formData.toFormData() : null);
+        }
+        else {
+            //in case of a normal request we send it normally
+            this.xhrObject.send((isPost) ? formData.toString() : null);
+        }
     };
     /*
      * other helpers
@@ -7308,17 +7399,6 @@ var XhrRequest = /** @class */ (function () {
         var errorData = (responseFormatError) ? ErrorData_1.ErrorData.fromHttpConnection(exception.source, exception.type, exception.status, exception.responseText, exception.responseCode, exception.status) : ErrorData_1.ErrorData.fromClient(exception);
         var eventHandler = (0, RequestDataResolver_1.resolveHandlerFunc)(this.requestContext, this.responseContext, Const_1.ON_ERROR);
         AjaxImpl_1.Implementation.sendError(errorData, eventHandler);
-    };
-    XhrRequest.prototype.sendRequest = function (formData) {
-        var isPost = this.ajaxType != Const_1.REQ_TYPE_GET;
-        if (formData.isMultipartRequest) {
-            //in case of a multipart request we send in a formData object as body
-            this.xhrObject.send((isPost) ? formData.toFormData() : null);
-        }
-        else {
-            //in case of a normal request we send it normally
-            this.xhrObject.send((isPost) ? formData.toString() : null);
-        }
     };
     return XhrRequest;
 }());

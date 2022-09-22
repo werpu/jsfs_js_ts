@@ -5467,9 +5467,9 @@ var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/im
  */
 var IS_JSF_SOURCE = function (source) {
     return source && !!((source === null || source === void 0 ? void 0 : source.search(/\/javax\.faces\.resource.*\/jsf\.js.*/)) != -1 ||
-        (source === null || source === void 0 ? void 0 : source.search(/\/jsf\-development\.js.*/)) != -1 ||
-        (source === null || source === void 0 ? void 0 : source.search(/\/jsf\-uncompressed\.js.*/)) != -1 ||
-        (source === null || source === void 0 ? void 0 : source.search(/\/jsf[^\.]\.js.*ln\=javax.faces.*/gi)) != -1);
+        (source === null || source === void 0 ? void 0 : source.search(/\/jsf-development\.js.*/)) != -1 ||
+        (source === null || source === void 0 ? void 0 : source.search(/\/jsf-uncompressed\.js.*/)) != -1 ||
+        (source === null || source === void 0 ? void 0 : source.search(/\/jsf[^.]*\.js.*ln=javax.faces.*/gi)) != -1);
 };
 /**
  * namespace myfaces.testscripts can be used as extension point for internal
@@ -5480,7 +5480,7 @@ var IS_JSF_SOURCE = function (source) {
  * @constructor
  */
 var IS_INTERNAL_SOURCE = function (source) {
-    return source.search(/\/jsf[^\.]\.js.*ln\=myfaces.testscripts.*/gi) != -1;
+    return source.search(/\/jsf[^.]*\.js.*ln=myfaces.testscripts.*/gi) != -1;
 };
 var ATTR_SRC = 'src';
 /**
@@ -5591,7 +5591,7 @@ var ExtDomquery = /** @class */ (function (_super) {
         }).first();
     };
     ExtDomquery.prototype.globalEval = function (code, nonce) {
-        return _super.prototype.globalEval.call(this, code, nonce !== null && nonce !== void 0 ? nonce : this.nonce);
+        return new ExtDomquery(_super.prototype.globalEval.call(this, code, nonce !== null && nonce !== void 0 ? nonce : this.nonce));
     };
     /**
      * decorated run scripts which takes our jsf extensions into consideration
@@ -5609,12 +5609,13 @@ var ExtDomquery = /** @class */ (function (_super) {
      * byId producer
      *
      * @param selector id
+     * @param deep whether the search should go into embedded shadow dom elements
      * @return a DomQuery containing the found elements
      */
     ExtDomquery.byId = function (selector, deep) {
         if (deep === void 0) { deep = false; }
         var ret = mona_dish_1.DomQuery.byId(selector, deep);
-        return ret;
+        return new ExtDomquery(ret);
     };
     return ExtDomquery;
 }(mona_dish_1.DQ));

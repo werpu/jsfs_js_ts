@@ -18,6 +18,8 @@
 
 import {Implementation} from "../impl/AjaxImpl";
 import {PushImpl} from "../impl/PushImpl";
+import {oam as _oam} from "../myfaces/OamSubmit";
+
 
 //declare const Implementation: any;
 
@@ -219,18 +221,9 @@ export module jsf {
         }
 
     }
-
-    //We hook the old namespace system into our npm system
-    //if ("undefined" == window.jsf) {
-    //    window.jsf = jsf;
-    //}
-
-
 }
 
-
-
-//fullfill the window contract
+//fullfill the window contract for the myfaces namespace
 export module myfaces {
 
     /**
@@ -258,6 +251,11 @@ export module myfaces {
 
         jsf.ajax.request(source, event, options);
     }
+
+    /**
+     * legacy oam functions
+     */
+    export const oam = _oam;
 }
 
 

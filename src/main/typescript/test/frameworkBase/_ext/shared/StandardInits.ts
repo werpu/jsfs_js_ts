@@ -19,6 +19,7 @@ import {DomQuery} from "mona-dish";
 
 declare let global;
 declare let jsf: any;
+declare let myfaces: any;
 
 /**
  * helpers with various init and html patterns
@@ -298,7 +299,9 @@ export module StandardInits {
      */
     let applyJsfToGlobals = function (data, Implementation, PushImpl) {
         (<any>global).jsf = data.jsf;
+        (<any>global).myfaces = data.myfaces;
         (<any>global).window.jsf = data.jsf;
+        (<any>global).window.myfaces = data.myfaces;
         (<any>global).Implementation = Implementation.Implementation;
         (<any>global).PushImpl = PushImpl.PushImpl;
         //bypass a bug on windows jsdom, domparser not an auto global but on window only
@@ -343,6 +346,7 @@ export module StandardInits {
         (<any>global)?.PushImpl?.reset();
 
         delete (<any>global).jsf;
+        delete (<any>global).myfaces;
         delete (<any>global).Implementation;
         delete (<any>global).PushImpl;
     };

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {IListener} from "./util/ListenerQueue";
+import {IListener} from "./util/IListener";
 import {Response} from "./xhrCore/Response";
 import {XhrRequest} from "./xhrCore/XhrRequest";
 import {AsynchronousQueue} from "./util/AsyncQueue";

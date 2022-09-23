@@ -13,27 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export class FakeWebsocket {
-
-    onopen: Function = () => {}
-    onmessage: Function = () => {}
-    onclose: Function = () => {}
-
-    constructor(data?: any) {
-        setTimeout(() => {
-            this.onopen();
-        }, 10);
-    }
-
-
-    send(msg: any) {
-    }
-
-    _respond(response: any) {
-        this.onmessage(response);
-    }
-
-    close() {
-        this.onclose();
-    }
+export interface IListener<T> {
+    (data: T): void;
 }

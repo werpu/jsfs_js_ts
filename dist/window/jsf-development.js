@@ -3803,6 +3803,7 @@ exports.myfaces = exports.jsf = void 0;
 ///<reference types='../../types/typedefs'/>
 var AjaxImpl_1 = __webpack_require__(/*! ../impl/AjaxImpl */ "./src/main/typescript/impl/AjaxImpl.ts");
 var PushImpl_1 = __webpack_require__(/*! ../impl/PushImpl */ "./src/main/typescript/impl/PushImpl.ts");
+var OamSubmit_1 = __webpack_require__(/*! ../myfaces/OamSubmit */ "./src/main/typescript/myfaces/OamSubmit.ts");
 //declare const Implementation: any;
 var jsf;
 (function (jsf) {
@@ -3996,12 +3997,8 @@ var jsf;
         }
         push.close = close;
     })(push = jsf.push || (jsf.push = {}));
-    //We hook the old namespace system into our npm system
-    //if ("undefined" == window.jsf) {
-    //    window.jsf = jsf;
-    //}
 })(jsf = exports.jsf || (exports.jsf = {}));
-//fullfill the window contract
+//fullfill the window contract for the myfaces namespace
 var myfaces;
 (function (myfaces) {
     /**
@@ -4030,6 +4027,10 @@ var myfaces;
         jsf.ajax.request(source, event, options);
     }
     myfaces.ab = ab;
+    /**
+     * legacy oam functions
+     */
+    myfaces.oam = OamSubmit_1.oam;
 })(myfaces = exports.myfaces || (exports.myfaces = {}));
 
 
@@ -4672,11 +4673,26 @@ var Implementation;
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
-/**
- * Typescript port of the jsf.push part in the myfaces implementation
+/* Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PushImpl = void 0;
+/**
+ * Typescript port of the jsf.push part in the myfaces implementation
+ */
 //TODO still work in progress
 //this is a 1:1 port for the time being
 var Jsf_1 = __webpack_require__(/*! ../api/Jsf */ "./src/main/typescript/api/Jsf.ts");
@@ -5217,6 +5233,21 @@ exports.Messages = Messages;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Assertions = void 0;
+/* Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 var Lang_1 = __webpack_require__(/*! ./Lang */ "./src/main/typescript/impl/util/Lang.ts");
 var getMessage = Lang_1.ExtLang.getMessage;
@@ -5457,6 +5488,21 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ExtDQ = exports.ExtDomquery = void 0;
+/* Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 /**
@@ -5874,6 +5920,21 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ErrorData = exports.ErrorType = void 0;
+/* Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 var EventData_1 = __webpack_require__(/*! ./EventData */ "./src/main/typescript/impl/xhrCore/EventData.ts");
 var Lang_1 = __webpack_require__(/*! ../util/Lang */ "./src/main/typescript/impl/util/Lang.ts");
@@ -5959,6 +6020,21 @@ exports.ErrorData = ErrorData;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EventData = void 0;
+/* Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 var EventData = /** @class */ (function () {
@@ -7405,6 +7481,143 @@ var XhrRequest = /** @class */ (function () {
     return XhrRequest;
 }());
 exports.XhrRequest = XhrRequest;
+
+
+/***/ }),
+
+/***/ "./src/main/typescript/myfaces/OamSubmit.ts":
+/*!**************************************************!*\
+  !*** ./src/main/typescript/myfaces/OamSubmit.ts ***!
+  \**************************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+
+/* Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.oam = void 0;
+var oam;
+(function (oam) {
+    /**
+     * sets a hidden input field
+     * @param formname the formName
+     * @param name the hidden field
+     * @param value the value to be rendered
+     */
+    oam.setHiddenInput = function (formname, name, value) {
+        var form = document.forms[formname];
+        if (typeof form == 'undefined') {
+            form = document.getElementById(formname);
+        }
+        if (typeof form.elements[name] != 'undefined' && (form.elements[name].nodeName == 'INPUT' || form.elements[name].nodeName == 'input')) {
+            form.elements[name].value = value;
+        }
+        else {
+            var newInput = document.createElement('input');
+            newInput.setAttribute('type', 'hidden');
+            newInput.setAttribute('id', name);
+            newInput.setAttribute('name', name);
+            newInput.setAttribute('value', value);
+            form.appendChild(newInput);
+        }
+    };
+    /**
+     * clears a hidden input field
+     *
+     * @param formname formName for the input
+     * @param name the name of the input field
+     */
+    oam.clearHiddenInput = function (formname, name) {
+        var form = document.forms[formname];
+        if (typeof form == 'undefined') {
+            form = document.getElementById(formname);
+        }
+        var hInput = form.elements[name];
+        if (typeof hInput != 'undefined') {
+            form.removeChild(hInput);
+        }
+    };
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     * does special form submit remapping
+     * remaps the issuing command link into something
+     * the decode of the command link on the server can understand
+     *
+     * @param formName
+     * @param linkId
+     * @param target
+     * @param params
+     */
+    oam.submitForm = function (formName, linkId, target, params) {
+        var _a, _b;
+        var clearFn = 'clearFormHiddenParams_' + formName.replace(/-/g, '\$:').replace(/:/g, '_');
+        if (typeof window[clearFn] == 'function') {
+            window[clearFn](formName);
+        }
+        var form = document.forms[formName];
+        if (typeof form == 'undefined') {
+            form = document.getElementById(formName);
+        }
+        //autoscroll code
+        if (((_b = (_a = window === null || window === void 0 ? void 0 : window.myfaces) === null || _a === void 0 ? void 0 : _a.core) === null || _b === void 0 ? void 0 : _b.config.autoScroll) && typeof (window === null || window === void 0 ? void 0 : window.getScrolling) != 'undefined') {
+            myfaces.oam.setHiddenInput(formName, 'autoScroll', window === null || window === void 0 ? void 0 : window.getScrolling());
+        }
+        var oldTarget = form.target;
+        if (target != null) {
+            form.target = target;
+        }
+        if ((typeof params != 'undefined') && params != null) {
+            for (var i = 0, param = void 0; (param = params[i]); i++) {
+                myfaces.oam.setHiddenInput(formName, param[0], param[1]);
+            }
+        }
+        myfaces.oam.setHiddenInput(formName, formName + ':' + '_idcl', linkId);
+        if (form.onsubmit) {
+            var result = form.onsubmit();
+            if ((typeof result == 'undefined') || result) {
+                try {
+                    form.submit();
+                }
+                catch (e) {
+                    if (window.console) {
+                        console.error(e);
+                    }
+                }
+            }
+        }
+        else {
+            try {
+                form.submit();
+            }
+            catch (e) {
+                if (window.console) {
+                    console.error(e);
+                }
+            }
+        }
+        form.target = oldTarget;
+        if ((typeof params != 'undefined') && params != null) {
+            for (var i = 0, param = void 0; (param = params[i]); i++) {
+                myfaces.oam.clearHiddenInput(formName, param[0], param[1]);
+            }
+        }
+        myfaces.oam.clearHiddenInput(formName, formName + ':' + '_idcl', linkId);
+        return false;
+    };
+})(oam = exports.oam || (exports.oam = {}));
 
 
 /***/ })

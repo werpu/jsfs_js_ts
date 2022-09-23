@@ -957,6 +957,7 @@ var DomQuery = /** @class */ (function () {
         for (var _i = 0; _i < arguments.length; _i++) {
             nodeSelector[_i] = arguments[_i];
         }
+        debugger;
         var selectorStage = this.childNodes;
         for (var cnt = 0; cnt < nodeSelector.length; cnt++) {
             selectorStage = selectorStage.filterSelector(nodeSelector[cnt]);
@@ -6290,7 +6291,7 @@ var Response;
      * and processing its tags
      *
      * @param {XMLHttpRequest} request (xhrRequest) - xhr request object
-     * @param ASSOC_ARR<any> context (Map) - AJAX context
+     * @param context {Context} context (Map) - AJAX context
      *
      */
     function processResponse(request, context) {
@@ -6321,7 +6322,7 @@ var Response;
         internalContext.assign(Const_1.PARTIAL_ID).value = node.id;
         var SEL_SUB_TAGS = [Const_1.CMD_ERROR, Const_1.CMD_REDIRECT, Const_1.CMD_CHANGES].join(",");
         //now we can process the main operations
-        node.getIf(SEL_SUB_TAGS).each(function (node) {
+        node.querySelectorAll(SEL_SUB_TAGS).each(function (node) {
             switch (node.tagName.value) {
                 case Const_1.CMD_ERROR:
                     responseProcessor.error(node);
@@ -6351,8 +6352,8 @@ var Response;
      * @param responseProcessor
      */
     function processChangesTag(node, responseProcessor) {
-        var ALLOWED_TAGS = [Const_1.CMD_UPDATE, Const_1.CMD_EVAL, Const_1.CMD_INSERT, Const_1.CMD_DELETE, Const_1.CMD_ATTRIBUTES, Const_1.CMD_EXTENSION].join(",");
-        node.getIf(ALLOWED_TAGS).each(function (node) {
+        var ALLOWED_TAGS = [Const_1.CMD_UPDATE, Const_1.CMD_EVAL, Const_1.CMD_INSERT, Const_1.CMD_DELETE, Const_1.CMD_ATTRIBUTES, Const_1.CMD_EXTENSION].join(", ");
+        node.querySelectorAll(ALLOWED_TAGS).each(function (node) {
             switch (node.tagName.value) {
                 case Const_1.CMD_UPDATE:
                     processUpdateTag(node, responseProcessor);
@@ -6387,7 +6388,7 @@ var Response;
         return responseProcessor.processViewState(node) || responseProcessor.processClientWindow(node);
     }
     /**
-     * branch tag update.. drill further down into the updates
+     * branch tag update. drill further down into the updates
      * special case viewstate in that case it is a leaf
      * and the viewstate must be processed
      *
@@ -7447,4 +7448,4 @@ exports.XhrRequest = XhrRequest;
 /******/ })()
 ;
 //# sourceMappingURL=jsf-development.js.map
-//# sourceMappingURL=jsf-development.js.map.jsf?ln=scripts
+//# sourceMappingURL=jsf-development.js.map.jsf?ln=javax.faces

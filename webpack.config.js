@@ -42,13 +42,6 @@ function build(env, argv) {
                                 allowTsInNodeModules: true
                             }
                         }]
-                }, {
-                    test: /jsf\.js$/,
-                    loader: 'string-replace-loader',
-                    options: {
-                        search: 'jsf.js.map',
-                        replace: 'jsf.js.map\n//# sourceMappingURL=jsf.js.map.jsf?ln=scripts'
-                    }
                 }
             ]
         },

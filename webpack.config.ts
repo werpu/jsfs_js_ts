@@ -49,13 +49,6 @@ function build(env: {[key:string]: string}, argv: {[key:string]: string}) {
                             allowTsInNodeModules: true
                         }
                     }]
-                }, {
-                    test: /jsf\.js$/,
-                    loader: 'string-replace-loader',
-                    options: {
-                        search: 'jsf.js.map',
-                        replace: 'jsf.js.map\n//# sourceMappingURL=jsf.js.map.jsf?ln=scripts',
-                    }
                 }
             ]
         },

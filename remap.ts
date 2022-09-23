@@ -35,7 +35,7 @@ let option = {
     //development
     files: 'dist/**/*.js',
     from: (buildStage == "-development") ? /jsf-development.js\.map/g : /jsf.js\.map/g,
-    to: `jsf${buildStage}.js.map\n//# sourceMappingURL=jsf${buildStage}.js.map.jsf?ln=scripts`
+    to: `jsf${buildStage}.js.map\n//# sourceMappingURL=jsf${buildStage}.js.map.jsf?ln=javax.faces`
 }
 
 try {

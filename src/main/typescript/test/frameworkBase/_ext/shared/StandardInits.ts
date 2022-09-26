@@ -16,9 +16,10 @@
 
 
 import {DomQuery} from "mona-dish";
+import {remapNamespacesFor23, remapNamespacesFor40} from "../../../../impl/core/Const";
 
 declare let global;
-declare let jsf: any;
+declare let faces: any;
 declare let myfaces: any;
 
 /**
@@ -60,7 +61,7 @@ export module StandardInits {
 <body>
 <form id="blarg">
     <input type="text" id="blarg:input_1" name="blarg:input_1" value="input_1_val"></input>
-    <input type="hidden" id="javax.faces.ViewState" name="javax.faces.ViewState" value="blubbblubblubb"></input>
+    <input type="hidden" id="jakarta.faces.ViewState" name="jakarta.faces.ViewState" value="blubbblubblubb"></input>
     <input type="button" id="blarg:input_2" name="blarg:input_2" value="input_1_val"></input>
     <div id="shadowDomArea">
             <input type="button" id="blarg:input_3" name="blarg:input_3" value="input_3_val"></input>
@@ -70,7 +71,7 @@ export module StandardInits {
 </html>`;
 
     /**
-     * a page simulating basically a simple jsf form
+     * a page simulating basically a simple faces form
      */
     const HTML_FORM_DEFAULT = `<!DOCTYPE html>
 <html lang="en">
@@ -81,14 +82,16 @@ export module StandardInits {
 <body>
 <form id="blarg">
     <input type="text" id="input_1" name="input_1" value="input_1_val"></input>
-    <input type="hidden" id="javax.faces.ViewState" name="javax.faces.ViewState" value="blubbblubblubb"></input>
+    <input type="hidden" id="jakarta.faces.ViewState" name="jakarta.faces.ViewState" value="blubbblubblubb"></input>
     <input type="button" id="input_2" name="input_2" value="input_1_val"></input>
 </form>
 </body>
 </html>`;
 
+
+
     /**
-     * a page simulating basically a simple jsf form
+     * a page simulating basically a simple faces form
      */
     const HTML_FILE_FORM_DEFAULT = `<!DOCTYPE html>
 <html lang="en">
@@ -100,7 +103,7 @@ export module StandardInits {
 <form id="blarg" enctype="multipart/form-data">
     <input type="file" id="fíleupload"></input>
     <input type="text" id="input_1" name="input_1" value="input_1_val"></input>
-    <input type="hidden" id="javax.faces.ViewState" name="javax.faces.ViewState" value="blubbblubblubb"></input>
+    <input type="hidden" id="jakarta.faces.ViewState" name="jakarta.faces.ViewState" value="blubbblubblubb"></input>
     <input type="button" id="input_2" name="input_2" value="input_1_val"></input>
 </form>
 </body>
@@ -108,21 +111,21 @@ export module StandardInits {
 
 
 
-    export const STD_XML = `<?xml version="1.0" encoding="utf-8"?><partial-response><changes><update id="value_1"><![CDATA[<span id="out1">2</span>]]></update><update id="javax.faces.ViewState"><![CDATA[j_id1:j_id3]]></update></changes></partial-response>`;
+    export const STD_XML = `<?xml version="1.0" encoding="utf-8"?><partial-response><changes><update id="value_1"><![CDATA[<span id="out1">2</span>]]></update><update id="jakarta.faces.ViewState"><![CDATA[j_id1:j_id3]]></update></changes></partial-response>`;
 
     /**
-     * a page containing a jsf.js input with a new separator char
+     * a page containing a faces.js input with a new separator char
      * @param separatorChar
      * @constructor
      */
-    function HTML_DEFAULT_SEPARATOR_CHAR(separatorChar: string) {
+    function HTML_DEFAULT_SEPARATOR_CHAR(separatorChar: string, IS_40=true) {
         return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
     <script type="text/javascript"
-            src="/wfmportal/javax.faces.resource/jsf.js.jsf?ln=javax.faces&separator=${separatorChar}"></script>
+            src="/wfmportal/${IS_40 ? 'jakarta' : 'javax'}.faces.resource/${IS_40 ? 'faces': 'jsf'}.js.jsf?ln=jakarta.faces&separator=${separatorChar}"></script>
 </head>
 <body>
 <form id="blarg">
@@ -140,7 +143,7 @@ export module StandardInits {
      * testing the various aspects of the protocol
      * under pure html conditions
      *
-     * We get the jsf out of the way and bascially simulate what the browser sees
+     * We get the jsf out of the way and basically simulate what the browser sees
      */
     export const PROTOCOL_PAGE = `<!DOCTYPE html>
 <html lang="en">
@@ -183,7 +186,7 @@ export module StandardInits {
 
     <form id="form1" action="boog.html">
     
-        <input type="hidden" id="javax.faces.ViewState" name="javax.faces.ViewState" value="blubbblubblubb"></input>
+        <input type="hidden" id="jakarta.faces.ViewState" name="jakarta.faces.ViewState" value="blubbblubblubb"></input>
     
         <input type="button" id="cmd_eval" value="eval"
                onclick="emitPPR(this, ('undefined' == typeof event)? null: event, 'eval1');"/>
@@ -213,7 +216,7 @@ export module StandardInits {
                onclick="emitPPR(this, ('undefined' == typeof event)? null: event, 'errors');"/>
 
         <input type="button" id="cmd_error_component" value="Error: no component given"
-               onclick="jsf.ajax.request(null, event, {}); return false"/>
+               onclick="faces.ajax.request(null, event, {}); return false"/>
 
     </form>
 
@@ -225,7 +228,7 @@ export module StandardInits {
         function emitPPR(source, event, action, useIframe, formName) {
             document.getElementById(formName || "form1").action = target;
 
-            jsf.ajax.request(/*String|Dom Node*/ source, /*|EVENT|*/ (window.event) ? window.event : event, /*{|OPTIONS|}*/ {op: action});
+            faces.ajax.request(/*String|Dom Node*/ source, /*|EVENT|*/ (window.event) ? window.event : event, /*{|OPTIONS|}*/ {op: action});
         }
     </script>
 </div>
@@ -254,12 +257,21 @@ export module StandardInits {
     export function defaultHtml(withJsf = true): Promise<() => void> {
         return init(HTML_DEFAULT, withJsf);
     }
+    export function defaultHtml_23(withJsf = true): Promise<() => void> {
+        return init(HTML_DEFAULT.replace(/jakarta/gi, "javax"), withJsf, false);
+    }
 
     export function defaultMyFaces(withJsf = true): Promise<() => void> {
         return init(HTML_FORM_DEFAULT, withJsf);
     }
+    export function defaultMyFaces23(withJsf = true): Promise<() => void> {
+        return init(HTML_FORM_DEFAULT.replace(/jakarta/gi, "javax"), withJsf, false);
+    }
     export function defaultFileForm(withJsf = true): Promise<() => void> {
         return init(HTML_FILE_FORM_DEFAULT, withJsf);
+    }
+    export function defaultFileForm_23(withJsf = true): Promise<() => void> {
+        return init(HTML_FILE_FORM_DEFAULT.replace(/jakarta/gi, "javax"), withJsf, false);
     }
 
     export function shadowDomMyFaces(withJsf = true): Promise<() => void> {
@@ -273,12 +285,12 @@ export module StandardInits {
         });
     }
 
-    export function protocolPage(withJsf = true): Promise<() => void> {
-        return <any>init(PROTOCOL_PAGE, withJsf);
+    export function protocolPage(withJsf = true, IS_40 = true): Promise<() => void> {
+        return <any>init((IS_40) ? PROTOCOL_PAGE : PROTOCOL_PAGE.replace(/jakarta/gi,"javax"), withJsf, IS_40);
     }
 
-    export function defaultSeparatorChar(separatorChar: string, withJsf = true): Promise<() => void> {
-        let template = HTML_DEFAULT_SEPARATOR_CHAR(separatorChar);
+    export function defaultSeparatorChar(separatorChar: string, withJsf = true, IS_40 = true): Promise<() => void> {
+        let template = HTML_DEFAULT_SEPARATOR_CHAR(separatorChar, IS_40);
         return init(template, withJsf);
     }
 
@@ -296,9 +308,9 @@ export module StandardInits {
      * @param Implementation
      */
     let applyJsfToGlobals = function (data, Implementation, PushImpl) {
-        (<any>global).jsf = data.jsf;
+        (<any>global).faces = data.faces;
         (<any>global).myfaces = data.myfaces;
-        (<any>global).window.jsf = data.jsf;
+        (<any>global).window.faces = data.faces;
         (<any>global).window.myfaces = data.myfaces;
         (<any>global).Implementation = Implementation.Implementation;
         (<any>global).PushImpl = PushImpl.PushImpl;
@@ -306,6 +318,20 @@ export module StandardInits {
         (<any>global).DOMParser = (<any>global)?.DOMParser ?? window.DOMParser;
         (<any>global).document = (<any>global)?.document ?? window.document;
     };
+
+    let applyJsfToGlobals23 = function (data, Implementation, PushImpl) {
+        (<any>global).jsf = data.jsf;
+        (<any>global).myfaces = data.myfaces;
+        (<any>global).window.jsf = data.jsf;
+        (<any>global).window.myfaces = data.myfaces;
+        (<any>global).Implementation = Implementation.Implementation;
+        (<any>global).window.Implementation = Implementation.Implementation;
+        (<any>global).PushImpl = PushImpl.PushImpl;
+        //bypass a bug on windows jsdom, domparser not an auto global but on window only
+        (<any>global).DOMParser = (<any>global)?.DOMParser ?? window.DOMParser;
+        (<any>global).document = (<any>global)?.document ?? window.document;
+    };
+
 
     /**
      * init the jsdom global
@@ -320,19 +346,22 @@ export module StandardInits {
                 runScripts: "dangerously"
             };
             //we have two different apis depending whether we allow module interop with sinon or not
-            return domIt?.default?.(template, params) ?? domIt?.(template, params);
+            return (domIt?.default ?? domIt)?.(template, params) ;
         });
     };
 
     /**
      * init the jsf subsystem
      */
-    let initJSF = async function () {
+    let initJSF = async function (IS_40: boolean = true) {
         // @ts-ignore
-        return import("../../../../api/Jsf").then((data) => {
+
+        const facesImport = IS_40 ? import("../../../../api/faces") : import("../../../../api/jsf");
+
+        return facesImport.then((data) => {
             let Implementation = require("../../../../impl/AjaxImpl");
             let PushImpl = require("../../../../impl/PushImpl");
-            applyJsfToGlobals(data, Implementation, PushImpl);
+            IS_40 ? applyJsfToGlobals(data, Implementation, PushImpl): applyJsfToGlobals23(data, Implementation, PushImpl);
         }).catch(err => {
             console.error(err);
         });
@@ -345,10 +374,12 @@ export module StandardInits {
         (<any>global)?.Implementation?.reset();
         (<any>global)?.PushImpl?.reset();
 
-        delete (<any>global).jsf;
+        ((<any>global).faces) ? delete (<any>global).faces : null;
+        ((<any>global).jsf) ? delete (<any>global).jsf : null;
         delete (<any>global).myfaces;
-        delete (<any>global).Implementation;
+        ((<any>global).Implementation) ? delete (<any>global).Implementation : null;
         delete (<any>global).PushImpl;
+        remapNamespacesFor40();
     };
 
     /**
@@ -357,7 +388,7 @@ export module StandardInits {
      * @param template
      * @param withJsf
      */
-    async function init(template: string, withJsf = true): Promise<() => void> {
+    async function init(template: string, withJsf = true, IS_JSF_40 = true): Promise<() => void> {
         //let dom2 = new JSDOM(template)
         //return initMyFacesFromDom(dom2);
         let clean = null;
@@ -368,11 +399,11 @@ export module StandardInits {
             resetGlobals();
             // @ts-ignore
             await initJSDOM(template).then(data => clean = data);
-            await initJSF();
+            await initJSF(IS_JSF_40);
         } else {
             // @ts-ignore
             await import('jsdom-global').then((domIt) => {
-                clean = domIt(template);
+                clean = (domIt?.default ?? domIt)?.(template);
             });
         }
         //the async is returning a promise on the caller level

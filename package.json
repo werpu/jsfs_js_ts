@@ -1,8 +1,8 @@
 {
   "name": "jsf.js_next_gen",
-  "version": "1.0.0-beta-20",
+  "version": "4.0.0-beta-1",
   "description": "A next generation typescript reimplementation of jsf.js",
-  "main": "dist/window/jsf.js",
+  "main": "dist/window/faces.js",
   "scripts": {
     "doc": "npx typedoc --tsconfig src/main/typescript/tsconfig-typedoc.json",
     "test": "env TS_NODE_PROJECT=./src/main/typescript/tsconfig.json mocha",

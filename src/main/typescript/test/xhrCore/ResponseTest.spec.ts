@@ -25,7 +25,7 @@ import protocolPage = StandardInits.protocolPage;
 import {DQ} from "mona-dish";
 import {Optional} from "mona-dish";
 
-declare var jsf: any;
+declare var faces: any;
 declare var Implementation: any;
 
 /**
@@ -205,7 +205,7 @@ describe('Tests of the various aspects of the response protocol functionality', 
         DQ.byId("cmd_viewstate").click();
 
         this.respond(XmlResponses.VIEWSTATE_1);
-        let viewStateElem = DQ.byId('javax.faces.ViewState');
+        let viewStateElem = DQ.byId('jakarta.faces.ViewState');
         expect(viewStateElem.inputValue.value == "hello world").to.be.true;
     });
 
@@ -235,7 +235,7 @@ describe('Tests of the various aspects of the response protocol functionality', 
         /*js full submit form, coming from the integration tests*/
         window.document.body.innerHTML = `<form id="j_id__v_0" name="j_id__v_0" method="post" action="/IntegrationJSTest/integrationtestsjasmine/test7-eventtest.jsf"
       enctype="application/x-www-form-urlencoded"><span id="updatePanel">hello world</span><a href="#"
-                                                                                              onclick="return jsf.util.chain(this, event,'return false;', 'return myfaces.ab(\'j_id_1l\',\'updateTrigger\');');"
+                                                                                              onclick="return faces.util.chain(this, event,'return false;', 'return myfaces.ab(\'j_id_1l\',\'updateTrigger\');');"
                                                                                               id="updateTrigger"
                                                                                               name="updateTrigger"
                                                                                               class="updateTrigger">[Press
@@ -243,7 +243,7 @@ describe('Tests of the various aspects of the response protocol functionality', 
 </form>`;
 
 
-        jsf.ajax.request(window.document.getElementById("updateTrigger"), null, {
+        faces.ajax.request(window.document.getElementById("updateTrigger"), null, {
             render: "updatePanel",
             execute: "updatePanel updateTrigger"
         });
@@ -253,15 +253,15 @@ describe('Tests of the various aspects of the response protocol functionality', 
             <partial-response id="j_id__v_0">
                 <changes>
                     <update id="updatePanel"><![CDATA[<span id="updatePanel">hello world</span>]]></update>
-                    <update id="j_id__v_0:javax.faces.ViewState:1"><![CDATA[RTUyRDI0NzE4QzAxM0E5RDAwMDAwMDVD]]></update>
+                    <update id="j_id__v_0:jakarta.faces.ViewState:1"><![CDATA[RTUyRDI0NzE4QzAxM0E5RDAwMDAwMDVD]]></update>
                 </changes>
             </partial-response>`);
 
 
-        expect(DQ.byId("javax.faces.ViewState").isAbsent()).to.be.false;
+        expect(DQ.byId("jakarta.faces.ViewState").isAbsent()).to.be.false;
 
-        expect((<HTMLInputElement>document.getElementById("javax.faces.ViewState")).value == "RTUyRDI0NzE4QzAxM0E5RDAwMDAwMDVD").to.be.true;
-        expect(DQ.byId("javax.faces.ViewState").inputValue.value == "RTUyRDI0NzE4QzAxM0E5RDAwMDAwMDVD").to.be.true;
+        expect((<HTMLInputElement>document.getElementById("jakarta.faces.ViewState")).value == "RTUyRDI0NzE4QzAxM0E5RDAwMDAwMDVD").to.be.true;
+        expect(DQ.byId("jakarta.faces.ViewState").inputValue.value == "RTUyRDI0NzE4QzAxM0E5RDAwMDAwMDVD").to.be.true;
     });
 
 
@@ -272,7 +272,7 @@ describe('Tests of the various aspects of the response protocol functionality', 
         /*js full submit form, coming from the integration tests*/
         window.document.body.innerHTML = `<form id="j_id__v_0" name="j_id__v_0" method="post" action="/IntegrationJSTest/integrationtestsjasmine/test7-eventtest.jsf"
       enctype="application/x-www-form-urlencoded"><span id="updatePanel">hello world</span><a href="#"
-                                                                                              onclick="return jsf.util.chain(this, event,'return false;', 'return myfaces.ab(\'j_id_1l\',\'updateTrigger\');');"
+                                                                                              onclick="return faces.util.chain(this, event,'return false;', 'return myfaces.ab(\'j_id_1l\',\'updateTrigger\');');"
                                                                                               id="updateTrigger"
                                                                                               name="updateTrigger"
                                                                                               class="updateTrigger">[Press
@@ -280,7 +280,7 @@ describe('Tests of the various aspects of the response protocol functionality', 
 </form>`;
 
 
-        jsf.ajax.request(window.document.getElementById("updateTrigger"), null, {
+        faces.ajax.request(window.document.getElementById("updateTrigger"), null, {
             render: "updatePanel",
             execute: "updatePanel updateTrigger"
         });
@@ -290,17 +290,17 @@ describe('Tests of the various aspects of the response protocol functionality', 
             <partial-response id="j_id__v_0">
                 <changes>
                     <update id="updatePanel"><![CDATA[<span id="updatePanel">hello world</span>]]></update>
-                    <update id="j_id__v_0:javax.faces.ViewState:1"><![CDATA[RTUyRDI0NzE4QzAxM0E5RDAwMDAwMDVD]]><!-- 
+                    <update id="j_id__v_0:jakarta.faces.ViewState:1"><![CDATA[RTUyRDI0NzE4QzAxM0E5RDAwMDAwMDVD]]><!-- 
                         Some random junk which is sent by the server
                     --></update>
                 </changes>
             </partial-response>`);
 
 
-        expect(DQ.byId("javax.faces.ViewState").isAbsent()).to.be.false;
+        expect(DQ.byId("jakarta.faces.ViewState").isAbsent()).to.be.false;
 
-        expect((<HTMLInputElement>document.getElementById("javax.faces.ViewState")).value == "RTUyRDI0NzE4QzAxM0E5RDAwMDAwMDVD").to.be.true;
-        expect(DQ.byId("javax.faces.ViewState").inputValue.value == "RTUyRDI0NzE4QzAxM0E5RDAwMDAwMDVD").to.be.true;
+        expect((<HTMLInputElement>document.getElementById("jakarta.faces.ViewState")).value == "RTUyRDI0NzE4QzAxM0E5RDAwMDAwMDVD").to.be.true;
+        expect(DQ.byId("jakarta.faces.ViewState").inputValue.value == "RTUyRDI0NzE4QzAxM0E5RDAwMDAwMDVD").to.be.true;
     });
 
 
@@ -312,7 +312,7 @@ describe('Tests of the various aspects of the response protocol functionality', 
     it("must have updated the client window tag properly", function () {
         window.document.body.innerHTML = `<tobago-page locale='en' class='container-fluid' id='page'>
    <form action='/IntegrationJSTest/integrationtestsjasmine/tobago-jfwid-test.jsf' id='page::form' method='post' accept-charset='UTF-8' data-tobago-context-path=''>
-    <input type='hidden' name='javax.faces.source' id='javax.faces.source' disabled='disabled'>
+    <input type='hidden' name='jakarta.faces.source' id='jakarta.faces.source' disabled='disabled'>
     <tobago-focus id='page::lastFocusId'>
      <input type='hidden' name='page::lastFocusId' id='page::lastFocusId::field'>
     </tobago-focus>
@@ -326,19 +326,19 @@ describe('Tests of the various aspects of the response protocol functionality', 
     </div>
     <div class='tobago-page-menuStore'></div>
     <span id='page::jsf-state-container'>
-      <input type='hidden' name='javax.faces.ViewState' id='j_id__v_0:javax.faces.ViewState:1' value='RkExQ0Q1NTYzOTNCNzg0RjAwMDAwMDE4' autocomplete='off'>
-      <input type='hidden' name='javax.faces.RenderKitId' value='tobago'>
-      <input type='hidden' id='j_id__v_0:javax.faces.ClientWindow:1' name='javax.faces.ClientWindow' value='5m10kooxi'>
+      <input type='hidden' name='jakarta.faces.ViewState' id='j_id__v_0:jakarta.faces.ViewState:1' value='RkExQ0Q1NTYzOTNCNzg0RjAwMDAwMDE4' autocomplete='off'>
+      <input type='hidden' name='jakarta.faces.RenderKitId' value='tobago'>
+      <input type='hidden' id='j_id__v_0:jakarta.faces.ClientWindow:1' name='jakarta.faces.ClientWindow' value='5m10kooxi'>
     </span>
    </form>
   </tobago-page>`;
 
         expect(DQ.querySelectorAll("#page\\:output tobago-out").textContent() === "").to.be.true;
-        expect(DQ.byId("j_id__v_0:javax.faces.ViewState:1").isAbsent()).to.be.false;
-        expect(DQ.byId("j_id__v_0:javax.faces.ClientWindow:1").isAbsent()).to.be.false;
+        expect(DQ.byId("j_id__v_0:jakarta.faces.ViewState:1").isAbsent()).to.be.false;
+        expect(DQ.byId("j_id__v_0:jakarta.faces.ClientWindow:1").isAbsent()).to.be.false;
 
-        jsf.ajax.request(window.document.getElementById("page:input"), "change", {
-            "javax.faces.behavior.event": "change",
+        faces.ajax.request(window.document.getElementById("page:input"), "change", {
+            "jakarta.faces.behavior.event": "change",
             execute: "page:input",
             render: "page:output"
         });
@@ -351,16 +351,16 @@ describe('Tests of the various aspects of the response protocol functionality', 
 <tobago-out class='form-control-plaintext'>Alice</tobago-out>
 </div>]]>
 </update>
-<update id='j_id__v_0:javax.faces.ViewState:1'><![CDATA[MDQwQzkxNkU0MTg0RTQxRjAwMDAwMDE3]]>
+<update id='j_id__v_0:jakarta.faces.ViewState:1'><![CDATA[MDQwQzkxNkU0MTg0RTQxRjAwMDAwMDE3]]>
 </update>
-<update id='j_id__v_0:javax.faces.ClientWindow:1'><![CDATA[5m10kooxg]]>
+<update id='j_id__v_0:jakarta.faces.ClientWindow:1'><![CDATA[5m10kooxg]]>
 </update>
 </changes>
 </partial-response>`);
 
         expect(DQ.querySelectorAll("#page\\:output tobago-out").textContent() === "Alice").to.be.true;
-        expect(DQ.byId("j_id__v_0:javax.faces.ViewState:1").isAbsent()).to.be.false;
-        expect(DQ.byId("j_id__v_0:javax.faces.ClientWindow:1").isAbsent()).to.be.false;
+        expect(DQ.byId("j_id__v_0:jakarta.faces.ViewState:1").isAbsent()).to.be.false;
+        expect(DQ.byId("j_id__v_0:jakarta.faces.ClientWindow:1").isAbsent()).to.be.false;
     });
 
 

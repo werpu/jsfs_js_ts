@@ -8,7 +8,7 @@ Special config to generate the tsdocs
 
   },
   "typedocOptions": {
-    "entryPoints": ["api/Jsf.ts"],
+    "entryPoints": ["api/faces.ts"],
     "out": "../../../dist/docs",
     "externalPattern": "**/node_modules/**",
     "exclude": "**/{node_modules,test,doc,impl,myfaces}/**/*",

@@ -25,32 +25,32 @@ import { expect } from "chai";
 describe("test for proper request param patterns identical to the old implementation", function () {
     const DELETE_PATTERN = {
         op: "delete1",
-        "javax.faces.source": "cmd_delete",
-        "javax.faces.partial.event": "click",
-        "javax.faces.partial.ajax": "true",
-        "javax.faces.partial.execute": "cmd_delete",
+        "jakarta.faces.source": "cmd_delete",
+        "jakarta.faces.partial.event": "click",
+        "jakarta.faces.partial.ajax": "true",
+        "jakarta.faces.partial.execute": "cmd_delete",
         "form1": "form1",
-        "javax.faces.ViewState": "blubbblubblubb"
+        "jakarta.faces.ViewState": "blubbblubblubb"
     }
 
     const UPDATE_INSERT_2 = {
         "op": "updateinsert2",
-        "javax.faces.partial.event": "click",
-        "javax.faces.source": "cmd_update_insert2",
-        "javax.faces.partial.ajax": "true",
-        "javax.faces.partial.execute": "cmd_update_insert2",
+        "jakarta.faces.partial.event": "click",
+        "jakarta.faces.source": "cmd_update_insert2",
+        "jakarta.faces.partial.ajax": "true",
+        "jakarta.faces.partial.execute": "cmd_update_insert2",
         "form1": "form1",
-        "javax.faces.ViewState": "blubbblubblubb"
+        "jakarta.faces.ViewState": "blubbblubblubb"
     }
 
     const ERRORS = {
         "op": "errors",
-        "javax.faces.partial.event": "click",
-        "javax.faces.source": "cmd_error",
-        "javax.faces.partial.ajax": "true",
-        "javax.faces.partial.execute": "cmd_error",
+        "jakarta.faces.partial.event": "click",
+        "jakarta.faces.source": "cmd_error",
+        "jakarta.faces.partial.ajax": "true",
+        "jakarta.faces.partial.execute": "cmd_error",
         "form1": "form1",
-        "javax.faces.ViewState": "blubbblubblubb"
+        "jakarta.faces.ViewState": "blubbblubblubb"
     }
 
     /**
@@ -83,7 +83,7 @@ describe("test for proper request param patterns identical to the old implementa
             (<any>global).XMLHttpRequest = this.xhr;
             (<any>window).XMLHttpRequest = this.xhr;
 
-            this.jsfAjaxResponse = sinon.stub((<any>global).jsf.ajax, "response");
+            this.jsfAjaxResponse = sinon.stub((<any>global).faces.ajax, "response");
 
             this.closeIt = () => {
                 (<any>global).XMLHttpRequest = (<any>window).XMLHttpRequest = this.xhr.restore();
@@ -111,37 +111,37 @@ describe("test for proper request param patterns identical to the old implementa
 
     it("must handle base64 encoded strings properly as request data", function() {
         let probe = "YWFhYWFhc1Rlc3RpdCDDpGtvNDU5NjczMDA9PSsrNDU5MGV3b3UkJiUmLyQmJQ==";
-        DQ.byId("javax.faces.ViewState").inputValue.value = probe;
+        DQ.byId("jakarta.faces.ViewState").inputValue.value = probe;
         DQ.byId("cmd_update_insert2").click();
         let requestBody = this.requests[0].requestBody;
         //We check if the base64 encoded string matches the original
         let formData = new XhrFormData(requestBody);
 
-        expect(decodeURIComponent(formData.getIf("javax.faces.ViewState").value) == probe).to.be.true;
+        expect(decodeURIComponent(formData.getIf("jakarta.faces.ViewState").value) == probe).to.be.true;
     });
 
 
     it("must handle empty parameters properly", function() {
         let probe = "";
-        DQ.byId("javax.faces.ViewState").inputValue.value = probe;
+        DQ.byId("jakarta.faces.ViewState").inputValue.value = probe;
         DQ.byId("cmd_update_insert2").click();
         let requestBody = this.requests[0].requestBody;
         //We check if the base64 encoded string matches the original
         let formData = new XhrFormData(requestBody);
 
-        expect(decodeURIComponent(formData.getIf("javax.faces.ViewState").value) == probe).to.be.true;
+        expect(decodeURIComponent(formData.getIf("jakarta.faces.ViewState").value) == probe).to.be.true;
     });
 
     //KssbpZfCe+0lwDhgMRQ44wRFkaM1o1lbMMUO3lini5YhXWm6
 
     it("must handle base64 special cases properly (+ in encoding)", function() {
         let probe = "KssbpZfCe+0lwDhgMRQ44wRFkaM1o1lbMMUO3lini5YhXWm6";
-        DQ.byId("javax.faces.ViewState").inputValue.value = probe;
+        DQ.byId("jakarta.faces.ViewState").inputValue.value = probe;
         DQ.byId("cmd_update_insert2").click();
         let requestBody = this.requests[0].requestBody;
         //We check if the base64 encoded string matches the original
         let formData = new XhrFormData(requestBody);
 
-        expect(decodeURIComponent(formData.getIf("javax.faces.ViewState").value) == probe).to.be.true;
+        expect(decodeURIComponent(formData.getIf("jakarta.faces.ViewState").value) == probe).to.be.true;
     });
 });

@@ -59,7 +59,7 @@ import {
 } from "./xhrCore/RequestDataResolver";
 
 
-declare var jsf: any;
+declare var faces: any;
 
 /*
  * allowed project stages
@@ -149,7 +149,7 @@ export module Implementation {
     import getGlobalConfig = ExtLang.getGlobalConfig;
     import assert = Assertions.assert;
 
-
+    declare const window: any;
 
     let projectStage: string = null;
     let separator: string = null;
@@ -185,7 +185,7 @@ export module Implementation {
     /**
      * @return the project stage also emitted by the server:
      * it cannot be cached and must be delivered over the server
-     * The value for it comes from the requestInternal parameter of the jsf.js script called "stage".
+     * The value for it comes from the requestInternal parameter of the faces.js script called "stage".
      */
     export function getProjectStage(): string | null {
         return resolveGlobalConfig()?.projectStage ??
@@ -199,13 +199,13 @@ export module Implementation {
      */
     export function resolveProjectStateFromURL(): string | null {
 
-        /* run through all script tags and try to find the one that includes jsf.js */
+        /* run through all script tags and try to find the one that includes faces.js */
         const foundStage = ExtDomquery.searchJsfJsFor(/stage=([^&;]*)/).value as string;
         return (foundStage in ProjectStages) ? foundStage : null;
     }
 
     /**
-     * implementation of the jsf.util.chain functionality
+     * implementation of the faces.util.chain functionality
      *
      * @param source
      * @param event
@@ -270,6 +270,7 @@ export module Implementation {
         const timeout: number = resolveTimeout(options);
 
         requestCtx.assignIf(!!windowId, P_WINDOW_ID).value = windowId;
+
         requestCtx.assign(CTX_PARAM_PASS_THR).value = filterPassthroughValues(options.value);
         requestCtx.assignIf(!!resolvedEvent, CTX_PARAM_PASS_THR, P_EVT).value = resolvedEvent?.type;
 
@@ -293,18 +294,18 @@ export module Implementation {
         requestCtx.assign(MYFACES).value = options.value?.myfaces;
 
         /**
-         * binding contract the javax.faces.source must be set
+         * binding contract the jakarta.faces.source must be set
          */
         requestCtx.assign(CTX_PARAM_PASS_THR, P_PARTIAL_SOURCE).value = elementId;
 
         /**
-         * javax.faces.partial.ajax must be set to true
+         * jakarta.faces.partial.ajax must be set to true
          */
         requestCtx.assign(CTX_PARAM_PASS_THR, P_AJAX).value = true;
 
         /**
          * if resetValues is set to true
-         * then we have to set javax.faces.resetValues as well
+         * then we have to set jakarta.faces.resetValues as well
          * as pass through parameter
          * the value has to be explicitly true, according to
          * the specs jsdoc
@@ -435,7 +436,7 @@ export module Implementation {
     }
 
     /**
-     * @node optional element or id defining a rootnode where an element with the id "javax.faces.windowId" is hosted
+     * @node optional element or id defining a rootnode where an element with the id "jakarta.faces.windowId" is hosted
      * @return the client window id of the current window, if one is given if none is found, null is returned
      */
     export function getClientWindow(node ?: Element | string): string | null {
@@ -496,7 +497,7 @@ export module Implementation {
 
     /**
      * collect and encode data for a given form element (must be of type form)
-     * find the javax.faces.ViewState element and encode its value as well!
+     * find the jakarta.faces.ViewState element and encode its value as well!
      * @return a concatenated string of the encoded values!
      *
      * @throws Error in case of the given element not being of type form!
@@ -543,10 +544,10 @@ export module Implementation {
      *
      * This function does it for the render parameters
      *
-     * @param requestOptions the source options coming in as options object from jsf.ajax.request (options parameter)
+     * @param requestOptions the source options coming in as options object from faces.ajax.request (options parameter)
      * @param targetContext the receiving target context
      * @param issuingForm the issuing form
-     * @param sourceElementId the executing element triggering the jsf.ajax.request (id of it)
+     * @param sourceElementId the executing element triggering the faces.ajax.request (id of it)
      */
     function assignRender(requestOptions: Config, targetContext: Config, issuingForm: DQ, sourceElementId: string) {
         if (requestOptions.getIf(RENDER).isPresent()) {
@@ -561,10 +562,10 @@ export module Implementation {
      *
      * This function does it for the execute parameters
      *
-     * @param requestOptions the source options coming in as options object from jsf.ajax.request (options parameter)
+     * @param requestOptions the source options coming in as options object from faces.ajax.request (options parameter)
      * @param targetContext the receiving target context
      * @param issuingForm the issuing form
-     * @param sourceElementId the executing element triggering the jsf.ajax.request (id of it)
+     * @param sourceElementId the executing element triggering the faces.ajax.request (id of it)
      */
     function assignExecute(requestOptions: Config, targetContext: Config, issuingForm: DQ, sourceElementId: string) {
 
@@ -587,7 +588,8 @@ export module Implementation {
      * @param targetContext the target context receiving the value
      */
     function assignClientWindowId(form: DQ, targetContext: Config) {
-        let clientWindow = jsf.getClientWindow(form.getAsElem(0).value);
+
+        let clientWindow = (window?.faces ?? window?.jsf).getClientWindow(form.getAsElem(0).value);
         if (clientWindow) {
             targetContext.assign(CTX_PARAM_PASS_THR, P_CLIENT_WINDOW).value = clientWindow;
         }

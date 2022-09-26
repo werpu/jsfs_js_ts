@@ -25,7 +25,7 @@ const jsdom = require("jsdom");
 const {JSDOM} = jsdom;
 sinon.reset();
 
-declare var jsf: any;
+declare var faces: any;
 declare var Implementation: any;
 
 describe('various tests for get separator char', () => {
@@ -35,7 +35,7 @@ describe('various tests for get separator char', () => {
         let waitForResult = defaultMyFaces();
         waitForResult.then((close) => {
             try {
-                let separator = jsf.separatorchar;
+                let separator = faces.separatorchar;
                 expect(separator).to.eq(":");
             } finally {
                 Implementation.reset();
@@ -47,12 +47,15 @@ describe('various tests for get separator char', () => {
 
     it("should have a custom separator char", (done) => {
 
-        let waitForResult = defaultSeparatorChar("$");
+        let waitForResult = defaultSeparatorChar("$", false);
         waitForResult.then((close) => {
             try {
                 let separator = Implementation.getSeparatorChar();
                 expect(separator).to.eq("$");
                 done();
+            } catch(ex) {
+                console.error(ex);
+                expect(false).to.eq(true);
             } finally {
                 Implementation.reset();
                 close();

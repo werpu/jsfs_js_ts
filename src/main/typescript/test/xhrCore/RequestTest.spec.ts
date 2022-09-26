@@ -32,11 +32,11 @@ import {
 import defaultMyFaces = StandardInits.defaultMyFaces;
 import STD_XML = StandardInits.STD_XML;
 
-declare var jsf: any;
+declare var faces: any;
 declare var Implementation: any;
 
 let issueStdReq = function (element) {
-    jsf.ajax.request(element, null, {
+    faces.ajax.request(element, null, {
         execute: "input_1",
         render: "@form",
         pass1: "pass1",
@@ -62,7 +62,7 @@ describe('Tests on the xhr core when it starts to call the request', function ()
             (<any>global).XMLHttpRequest = this.xhr;
             (<any>window).XMLHttpRequest = this.xhr;
 
-            this.jsfAjaxResponse = sinon.spy((<any>global).jsf.ajax, "response");
+            this.jsfAjaxResponse = sinon.spy((<any>global).faces.ajax, "response");
 
             this.closeIt = () => {
                 (<any>global).XMLHttpRequest = (<any>window).XMLHttpRequest = this.xhr.restore();
@@ -78,7 +78,7 @@ describe('Tests on the xhr core when it starts to call the request', function ()
     });
 
     it('must have the standard parameters all in', function (done) {
-        //issue a standard jsf.ajax.request upon the standard simple form case and check the passed parameters
+        //issue a standard faces.ajax.request upon the standard simple form case and check the passed parameters
         //and whether send was called
         let send = sinon.spy(XMLHttpRequest.prototype, "send");
 
@@ -92,7 +92,7 @@ describe('Tests on the xhr core when it starts to call the request', function ()
             expect(send.called).to.be.true;
             expect(send.callCount).to.eq(1);
 
-            //sent params javax.faces.ViewState=null&execute=input_1&render=%40form&pass1=pass1&pass2=pass2&javax.faces.windowId=null&javax.faces.source=input_2&javax.faces.partial.ajax=input_2&blarg=blarg&javax.faces.partial.execute=input_1%20input_2&javax.faces.partial.render=blarg
+            //sent params jakarta.faces.ViewState=null&execute=input_1&render=%40form&pass1=pass1&pass2=pass2&jakarta.faces.windowId=null&jakarta.faces.source=input_2&jakarta.faces.partial.ajax=input_2&blarg=blarg&jakarta.faces.partial.execute=input_1%20input_2&jakarta.faces.partial.render=blarg
 
         } finally {
 
@@ -167,7 +167,7 @@ describe('Tests after core when it hits response', function () {
             (<any>global).XMLHttpRequest = this.xhr = sinon.useFakeXMLHttpRequest();
             (<any>window).XMLHttpRequest = this.xhr = sinon.useFakeXMLHttpRequest();
 
-            this.jsfAjaxResponse = sinon.spy((<any>global).jsf.ajax, "response");
+            this.jsfAjaxResponse = sinon.spy((<any>global).faces.ajax, "response");
 
             this.closeIt = () => {
                 (<any>global).XMLHttpRequest = (<any>window).XMLHttpRequest = this.xhr.restore();
@@ -189,10 +189,10 @@ describe('Tests after core when it hits response', function () {
         let localCnt = 0;
         try {
             let element = DomQuery.byId("input_2").getAsElem(0).value;
-            jsf.ajax.addOnEvent(() => {
+            faces.ajax.addOnEvent(() => {
                 globalCnt++;
             });
-            jsf.ajax.request(element, null, {
+            faces.ajax.request(element, null, {
                 execute: "input_1",
                 render: "@form",
                 pass1: "pass1",
@@ -227,12 +227,12 @@ describe('Tests after core when it hits response', function () {
 
         try {
             let element = DomQuery.byId("input_2").getAsElem(0).value;
-            jsf.ajax.addOnEvent(() => {
+            faces.ajax.addOnEvent(() => {
                 globalCnt++;
             });
 
 
-            jsf.ajax.request(element, null, {
+            faces.ajax.request(element, null, {
                 execute: "input_1",
                 render: "@form",
                 pass1: "pass1",
@@ -292,7 +292,7 @@ describe('Tests after core when it hits response', function () {
         try {
             let errorCnt = 0;
             let element = DomQuery.byId("input_2").getAsElem(0).value;
-            jsf.ajax.request(element, null, {
+            faces.ajax.request(element, null, {
                 execute: "input_1",
                 render: "@form",
                 pass1: "pass1",

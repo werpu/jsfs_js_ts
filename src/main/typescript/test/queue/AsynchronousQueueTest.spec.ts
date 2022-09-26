@@ -40,7 +40,7 @@ describe('Asynchronous Queue tests', () => {
             (<any>global).XMLHttpRequest = this.xhr;
             (<any>window).XMLHttpRequest = this.xhr;
 
-            this.jsfAjaxResponse = sinon.stub((<any>global).jsf.ajax, "response");
+            this.jsfAjaxResponse = sinon.stub((<any>global).faces.ajax, "response");
 
             this.closeIt = () => {
                 (<any>global).XMLHttpRequest = (<any>window).XMLHttpRequest = this.xhr.restore();

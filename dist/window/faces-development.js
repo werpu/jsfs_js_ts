@@ -7681,49 +7681,15 @@ var oam;
 /******/ 	}
 /******/ 	
 /************************************************************************/
-var __webpack_exports__ = {};
-// This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
-(() => {
-var exports = __webpack_exports__;
-/*!****************************************!*\
-  !*** ./src/main/typescript/api/jsf.ts ***!
-  \****************************************/
-
-var _a;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.jsf = void 0;
-/* Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to you under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-var faces_1 = __webpack_require__(/*! ./faces */ "./src/main/typescript/api/faces.ts");
-var Const_1 = __webpack_require__(/*! ../impl/core/Const */ "./src/main/typescript/impl/core/Const.ts");
-/**
- * jsf.js back compatibility shim layer
- * the entire namespace for jsf and javax still is provided
- */
-window['jsf'] = (_a = window === null || window === void 0 ? void 0 : window.jsf) !== null && _a !== void 0 ? _a : faces_1.faces;
-window.jsf.specversion = 230000;
-exports.jsf = window.jsf;
-(0, Const_1.remapNamespacesFor23)();
-
-})();
-
-var __webpack_export_target__ = window;
-for(var i in __webpack_exports__) __webpack_export_target__[i] = __webpack_exports__[i];
-if(__webpack_exports__.__esModule) Object.defineProperty(__webpack_export_target__, "__esModule", { value: true });
+/******/ 	
+/******/ 	// startup
+/******/ 	// Load entry module and return exports
+/******/ 	// This entry module is referenced by other modules so it can't be inlined
+/******/ 	var __webpack_exports__ = __webpack_require__("./src/main/typescript/api/faces.ts");
+/******/ 	var __webpack_export_target__ = window;
+/******/ 	for(var i in __webpack_exports__) __webpack_export_target__[i] = __webpack_exports__[i];
+/******/ 	if(__webpack_exports__.__esModule) Object.defineProperty(__webpack_export_target__, "__esModule", { value: true });
+/******/ 	
 /******/ })()
 ;
-//# sourceMappingURL=jsf-development.js.map
-//# sourceMappingURL=jsf-development.js.map.jsf?ln=javax.faces
+//# sourceMappingURL=faces-development.js.map

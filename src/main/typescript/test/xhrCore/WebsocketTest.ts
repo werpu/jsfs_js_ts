@@ -25,7 +25,7 @@ import {Lang} from "mona-dish";
 import {FakeWebsocket} from "./FakeWebsocket";
 import assertType = Lang.assertType;
 
-declare var jsf: any;
+declare var faces: any;
 
 describe('Tests the jsf websocket client side api on high level (generic test without any myfaces dependencies', function () {
 
@@ -43,7 +43,7 @@ describe('Tests the jsf websocket client side api on high level (generic test wi
             (<any>global).XMLHttpRequest = this.xhr;
             (<any>window).XMLHttpRequest = this.xhr;
 
-            this.jsfAjaxResponse = sinon.stub((<any>global).jsf.ajax, "response");
+            this.jsfAjaxResponse = sinon.stub((<any>global).faces.ajax, "response");
 
             this.fakeWebsocket = new FakeWebsocket();
             this.socket = sinon.stub(window, 'WebSocket').returns(this.fakeWebsocket);
@@ -86,7 +86,7 @@ describe('Tests the jsf websocket client side api on high level (generic test wi
 
         try {
 
-            jsf.push.init("clientId1", "booga.ws", "mychannel", () => {
+            faces.push.init("clientId1", "booga.ws", "mychannel", () => {
                     done();
                 },
                 () => {
@@ -127,7 +127,7 @@ describe('Tests the jsf websocket client side api on high level (generic test wi
         let msg = null;
         let cnl = null;
         new Promise((resolve, reject) => {
-            jsf.push.init("blarg", "booga.ws", "mychannel", () => {
+            faces.push.init("blarg", "booga.ws", "mychannel", () => {
                     openCalled = true;
                     this.fakeWebsocket._respond({data: '"booga"'});
                 },
@@ -155,7 +155,7 @@ describe('Tests the jsf websocket client side api on high level (generic test wi
 
             expect(closeCalled, "websocket still open").to.be.false;
 
-            jsf.push.close("blarg");
+            faces.push.close("blarg");
             expect(closeCalled, "websocket now closed").to.be.true;
 
 
@@ -175,7 +175,7 @@ describe('Tests the jsf websocket client side api on high level (generic test wi
         let msg = null;
         let cnl = null;
         new Promise((resolve, reject) => {
-            jsf.push.init("blarg", "booga.ws", "mychannel", () => {
+            faces.push.init("blarg", "booga.ws", "mychannel", () => {
                     openCalled = true;
                     this.fakeWebsocket._respond({data: '"booga"'});
                 },
@@ -192,7 +192,7 @@ describe('Tests the jsf websocket client side api on high level (generic test wi
                 "",
                 false
             );
-            jsf.push.open("blarg");
+            faces.push.open("blarg");
         }).then(() => {
             expect(openCalled, "Open must have been called due to open").to.be.true;
 
@@ -202,7 +202,7 @@ describe('Tests the jsf websocket client side api on high level (generic test wi
 
             expect(closeCalled, "websocket still open").to.be.false;
 
-            jsf.push.close("blarg");
+            faces.push.close("blarg");
             expect(closeCalled, "websocket now closed").to.be.true;
 
 

@@ -131,7 +131,7 @@ export function getEventTarget(evt: Event): Element {
 /**
  * resolves a bunch of default values
  * which can be further processed from the given
- * call parameters of jsf.ajax.request
+ * call parameters of faces.ajax.request
  *
  * @param event
  * @param opts

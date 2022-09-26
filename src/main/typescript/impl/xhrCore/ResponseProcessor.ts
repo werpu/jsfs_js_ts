@@ -55,6 +55,8 @@ import {
 import trim = Lang.trim;
 import {ExtDomquery} from "../util/ExtDomQuery";
 
+declare const window: any;
+
 /**
  * Response processor
  *
@@ -438,7 +440,7 @@ export class ResponseProcessor implements IResponseProcessor {
      * @returns true of it ii
      */
     private static isViewStateNode(node: XMLQuery): boolean {
-        let separatorChar = (<any>window).jsf.separatorchar;
+        let separatorChar = (window?.faces ?? window?.jsf).separatorchar;
         return "undefined" != typeof node?.id?.value && (node?.id?.value == P_VIEWSTATE ||
             node?.id?.value?.indexOf([separatorChar, P_VIEWSTATE].join(EMPTY_STR)) != -1 ||
             node?.id?.value?.indexOf([P_VIEWSTATE, separatorChar].join(EMPTY_STR)) != -1);
@@ -451,7 +453,7 @@ export class ResponseProcessor implements IResponseProcessor {
      * @returns true of it ii
      */
     private static isClientWindowNode(node: XMLQuery): boolean {
-        let separatorChar = (<any>window).jsf.separatorchar;
+        let separatorChar = (window?.faces ?? window?.jsf).separatorchar;
         return "undefined" != typeof node?.id?.value && (node?.id?.value == P_CLIENT_WINDOW ||
             node?.id?.value?.indexOf([separatorChar, P_CLIENT_WINDOW].join(EMPTY_STR)) != -1 ||
             node?.id?.value?.indexOf([P_CLIENT_WINDOW, separatorChar].join(EMPTY_STR)) != -1);

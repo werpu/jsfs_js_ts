@@ -23,13 +23,13 @@ import {oam as _oam} from "../myfaces/OamSubmit";
 
 //declare const Implementation: any;
 
-export module jsf {
+export module faces {
     "use strict";
 
     /*
-     * Version of the implementation for the jsf.js.
+     * Version of the implementation for the faces.js.
      * <p />
-     * as specified within the jsf specifications jsf.html:
+     * as specified within the jsf specifications faces.html:
      * <ul>
      * <li>left two digits major release number</li>
      * <li>middle two digits minor spec release number</li>
@@ -37,7 +37,7 @@ export module jsf {
      * </ul>
      * @constant
      */
-    export var specversion = 220000;
+    export var specversion = 400000;
     /**
      * Implementation version as specified within the jsf specification.
      * <p />
@@ -67,7 +67,7 @@ export module jsf {
      * </li>
      *
      * @return {String} the current project state emitted by the server side method:
-     * <i>javax.faces.application.Application.getProjectStage()</i>
+     * <i>jakarta.faces.application.Application.getProjectStage()</i>
      */
     export function getProjectStage(): string {
         return Implementation.getProjectStage();
@@ -75,7 +75,7 @@ export module jsf {
 
     /**
      * collect and encode data for a given form element (must be of type form)
-     * find the javax.faces.ViewState element and encode its value as well!
+     * find the jakarta.faces.ViewState element and encode its value as well!
      * return a concatenated string of the encoded values!
      *
      * @throws an exception in case of the given element not being of type form!
@@ -233,14 +233,18 @@ export module myfaces {
      *
      * @param source the event source
      * @param event the event
-     * @param eventName event name for java.javax.faces.behavior.evemnt
-     * @param execute execute list as passed down in jsf.ajax.request
+     * @param eventName event name for java.jakarta.faces.behavior.evemnt
+     * @param execute execute list as passed down in faces.ajax.request
      * @param render
      * @param options
      */
     export function ab(source: Element, event: Event, eventName: string, execute: string, render: string, options: Context = {}) {
         if (eventName) {
-            options["javax.faces.behavior.event"] = eventName;
+            if(!(window as any)?.jsf) {
+                options["jakarta.faces.behavior.event"] = eventName;
+            } else {
+                options["javax.faces.behavior.event"] = eventName;
+            }
         }
         if (execute) {
             options["execute"] = execute;
@@ -249,7 +253,7 @@ export module myfaces {
             options["render"] = render;
         }
 
-        jsf.ajax.request(source, event, options);
+        faces.ajax.request(source, event, options);
     }
 
     /**

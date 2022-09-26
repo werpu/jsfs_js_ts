@@ -22,40 +22,41 @@ import * as sinon from 'sinon';
 import {DomQuery} from "mona-dish";
 
 import {StandardInits} from "../frameworkBase/_ext/shared/StandardInits";
-import defaultMyFaces = StandardInits.defaultMyFaces;
 import {P_EXECUTE, P_RENDER} from "../../impl/core/Const";
+import defaultMyFaces23 = StandardInits.defaultMyFaces23;
 
 sinon.reset();
 
-declare var faces: any;
+declare var jsf: any;
 declare var Implementation: any;
 
 /**
- * testing the faces.ajax.request api without triggering any
+ * testing the javax.ajax.request api without triggering any
  * xhr request...
  * the idea is to shim the code which triggers the request out and check what is going in
  * and what is coming out
  */
 
-describe('faces.ajax.request test suite', () => {
+describe('javax.ajax.request test suite', () => {
 
     beforeEach(async () => {
-        return await defaultMyFaces();
+        let ret = await defaultMyFaces23();
+        return ret;
     });
 
-    it("faces.ajax.request can be called", () => {
+    it("jsf.ajax.request can be called", () => {
         //we stub the addRequestToQueue, to enable the request check only
         //without any xhr and response, both will be tested separately for
         //proper behavior
         const Impl = Implementation;
         const addRequestToQueue = sinon.stub(Impl.queueHandler, "addRequestToQueue");
-        //now the faces.ajax.request should trigger but should not go into
+        //now the javax.ajax.request should trigger but should not go into
         //the asynchronous event loop.
         //lets check it out
 
         try {
             DomQuery.byId("input_2").addEventListener("click", (event: Event) => {
-                faces.ajax.request(null, event, {render: '@all', execute: '@form'})
+                jsf.ajax.request(null, event, {render: '@all', execute: '@form'})
             }).click();
 
             expect(addRequestToQueue.called).to.be.true;
@@ -74,12 +75,12 @@ describe('faces.ajax.request test suite', () => {
 
     });
 
-    it("faces.ajax.request passthroughs must end up in passthrough", (done) => {
+    it("javax.ajax.request passthroughs must end up in passthrough", (done) => {
         //TODO implementation
         done();
     });
 
-    it("faces.util.chain must work", () => {
+    it("javax.util.chain must work", () => {
         let called = {};
         (<any>window).called = called;
 
@@ -108,7 +109,7 @@ describe('faces.ajax.request test suite', () => {
             return false;
         };
 
-        faces.util.chain(this, called, func1, func2, func3, func4, func5);
+        (window as any).jsf.util.chain(this, called, func1, func2, func3, func4, func5);
 
         expect(called["func1"]).to.be.true;
         expect(called["func2"]).to.be.true;
@@ -117,7 +118,7 @@ describe('faces.ajax.request test suite', () => {
         expect(!!called["func5"]).to.be.false;
 
         called = {};
-        faces.util.chain(this, called, func1, func2, func4, func5);
+        (window as any).jsf.util.chain(this, called, func1, func2, func4, func5);
         expect(called["func1"]).to.be.true;
         expect(called["func2"]).to.be.true;
         expect(!!called["func4"]).to.be.true;

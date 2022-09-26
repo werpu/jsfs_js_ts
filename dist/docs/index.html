@@ -49,6 +49,15 @@ I probably will make a release before 2022.
 It has been testing in MyFaces Tobago now for a year
 and atm is being integrated into MyFaces as new
 JS codebase.</p>
+<p>Addition, for the integration in MyFaces, the api level has been
+uplifted to Jakarta Faces 4.0
+Note, this introduces some breaking changes, jsf jas been replaced with jakarta
+and javax has been replaced by faces
+so javax.faces.request becomes jakarta.faces.request</p>
+<p>Note, a shim layer for backwards compatibility has been provided
+you simply just need to load the generated. jsf.js file which goes down to 2.3 compatibility level
+while loading faces.js will provide 4.0 compatibility</p>
+<p>For this reason the version now also in the npm package is 4.0.x</p>
 
 <a href="#usage" id="usage" style="color: inherit; text-decoration: none;">
   <h2>Usage</h2>
@@ -164,11 +173,11 @@ bring was not worth it to keep them anymore.</p>
 <ul>
 <li class="current selected"><a href="modules.html">jsf.js_<wbr/>next_<wbr/>gen</a>
 <ul>
-<li class="tsd-kind-namespace"><a href="modules/jsf.html">jsf</a>
+<li class="tsd-kind-namespace"><a href="modules/faces.html">faces</a>
 <ul>
-<li class="tsd-kind-namespace tsd-parent-kind-namespace"><a href="modules/jsf.ajax.html">ajax</a></li>
-<li class="tsd-kind-namespace tsd-parent-kind-namespace"><a href="modules/jsf.push.html">push</a></li>
-<li class="tsd-kind-namespace tsd-parent-kind-namespace"><a href="modules/jsf.util.html">util</a></li></ul></li>
+<li class="tsd-kind-namespace tsd-parent-kind-namespace"><a href="modules/faces.ajax.html">ajax</a></li>
+<li class="tsd-kind-namespace tsd-parent-kind-namespace"><a href="modules/faces.push.html">push</a></li>
+<li class="tsd-kind-namespace tsd-parent-kind-namespace"><a href="modules/faces.util.html">util</a></li></ul></li>
 <li class="tsd-kind-namespace"><a href="modules/myfaces.html">myfaces</a></li></ul></li></ul></div></details></nav>
 <nav class="tsd-navigation secondary menu-sticky"></nav></div></div>
 <div class="container tsd-generator">

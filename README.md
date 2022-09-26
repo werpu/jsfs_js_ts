@@ -40,6 +40,18 @@ It has been testing in MyFaces Tobago now for a year
 and atm is being integrated into MyFaces as new
 JS codebase.
 
+Addition, for the integration in MyFaces, the api level has been
+uplifted to Jakarta Faces 4.0
+Note, this introduces some breaking changes, jsf jas been replaced with jakarta
+and javax has been replaced by faces
+so javax.faces.request becomes jakarta.faces.request
+
+Note, a shim layer for backwards compatibility has been provided
+you simply just need to load the generated. jsf.js file which goes down to 2.3 compatibility level
+while loading faces.js will provide 4.0 compatibility
+
+For this reason the version now also in the npm package is 4.0.x
+
 
 ## Usage
 

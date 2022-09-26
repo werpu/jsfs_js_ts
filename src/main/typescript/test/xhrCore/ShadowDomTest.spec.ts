@@ -28,9 +28,8 @@ import shadowDomMyFaces = StandardInits.shadowDomMyFaces;
 
 sinon.reset();
 
-declare var jsf: any;
 declare var Implementation: any;
-
+declare const window: any;
 
 describe('shadow dom testsuite', () => {
 
@@ -68,14 +67,13 @@ describe('shadow dom testsuite', () => {
 
 
     it("shadow dom behavior tested", function() {
-        const Impl = Implementation;
         //const addRequestToQueue = sinon.stub(Impl.queueHandler, "addRequestToQueue");
 
         expect(DomQuery.querySelectorAll("#shadowDomArea").length).to.eq(1);
         expect(DomQuery.querySelectorAll("* /shadow/ #shadowContent").length).to.eq(1);
 
         DomQuery.byId("blarg:input_1", true).addEventListener("click", (event: Event) => {
-            jsf.ajax.request(event.target, event, {render: 'shadowContent', execute: '@this'})
+            window.faces.ajax.request(event.target, event, {render: 'shadowContent', execute: '@this'})
         }).click();
         this.respond(XmlResponses.SHADOW_DOM_UPDATE);
 
@@ -94,7 +92,7 @@ describe('shadow dom testsuite', () => {
 
 
         DomQuery.byId("input_3", true).addEventListener("click", (event: Event) => {
-            jsf.ajax.request(event.target, event, {render: 'shadowContent', execute: '@this'})
+           window.faces.ajax.request(event.target, event, {render: 'shadowContent', execute: '@this'});
         }).click();
         this.respond(XmlResponses.SHADOW_DOM_UPDATE);
 

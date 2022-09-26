@@ -17,13 +17,13 @@
 /*
  * [export const] constants
  */
+export let P_PARTIAL_SOURCE = "jakarta.faces.source";
+export let PARTIAL_ID = "partialId";
+export let P_VIEWSTATE = "jakarta.faces.ViewState";
+export let P_VIEWROOT = "jakarta.faces.ViewRoot";
+export let P_VIEWHEAD = "jakarta.faces.ViewHead";
+export let P_VIEWBODY = "jakarta.faces.ViewBody";
 
-export const P_PARTIAL_SOURCE = "javax.faces.source";
-export const PARTIAL_ID = "partialId";
-export const P_VIEWSTATE = "javax.faces.ViewState";
-export const P_VIEWROOT = "javax.faces.ViewRoot";
-export const P_VIEWHEAD = "javax.faces.ViewHead";
-export const P_VIEWBODY = "javax.faces.ViewBody";
 
 /*some useful definitions*/
 
@@ -42,14 +42,14 @@ export const IDENT_THIS = "@this";
 export const IDENT_FORM = "@form";
 
 
-export const P_AJAX = "javax.faces.partial.ajax";
-export const P_EXECUTE = "javax.faces.partial.execute";
-export const P_RENDER = "javax.faces.partial.render";
-export const P_EVT = "javax.faces.partial.event";
-export const P_CLIENT_WINDOW = "javax.faces.ClientWindow";
-export const P_RESET_VALUES = "javax.faces.partial.resetValues";
+export let P_AJAX = "jakarta.faces.partial.ajax";
+export let P_EXECUTE = "jakarta.faces.partial.execute";
+export let P_RENDER = "jakarta.faces.partial.render";
+export let P_EVT = "jakarta.faces.partial.event";
+export let P_CLIENT_WINDOW = "jakarta.faces.ClientWindow";
+export let P_RESET_VALUES = "jakarta.faces.partial.resetValues";
+export let P_WINDOW_ID = "jakarta.faces.windowId";
 
-export const P_WINDOW_ID = "javax.faces.windowId";
 
 export const RENDER = "render";
 export const WINDOW_ID = "windowId";
@@ -103,7 +103,7 @@ export const CONTENT_TYPE = "Content-Type";
 export const HEAD_FACES_REQ = "Faces-Request";
 export const REQ_ACCEPT = "Accept";
 export const VAL_AJAX = "partial/ajax";
-export const ENCODED_URL = "javax.faces.encodedURL";
+export let ENCODED_URL = "jakarta.faces.encodedURL";
 export const REQ_TYPE_GET = "GET";
 export const REQ_TYPE_POST = "POST";
 export const STATE_EVT_BEGIN = "begin"; //TODO remove this
@@ -171,3 +171,41 @@ export const RECONNECT_INTERVAL = 500;
 export const MAX_RECONNECT_ATTEMPTS = 25;
 
 export const UNKNOWN = "UNKNOWN";
+
+
+/**
+ * helper to remap the namespaces variables for 2.3
+ * from 2.3 to 4.0 every javax namespace has been changed
+ * to faces
+ */
+export function remapNamespacesFor23() {
+     P_PARTIAL_SOURCE = "javax.faces.source";
+     P_VIEWSTATE = "javax.faces.ViewState";
+     P_VIEWROOT = "javax.faces.ViewRoot";
+     P_VIEWHEAD = "javax.faces.ViewHead";
+     P_VIEWBODY = "javax.faces.ViewBody";
+     P_AJAX = "javax.faces.partial.ajax";
+     P_EXECUTE = "javax.faces.partial.execute";
+     P_RENDER = "javax.faces.partial.render";
+     P_EVT = "javax.faces.partial.event";
+     P_CLIENT_WINDOW = "javax.faces.ClientWindow";
+     P_RESET_VALUES = "javax.faces.partial.resetValues";
+     P_WINDOW_ID = "javax.faces.windowId";
+    ENCODED_URL = "javax.faces.encodedURL";
+}
+
+export function remapNamespacesFor40() {
+     P_PARTIAL_SOURCE = "jakarta.faces.source";
+     P_VIEWSTATE = "jakarta.faces.ViewState";
+     P_VIEWROOT = "jakarta.faces.ViewRoot";
+     P_VIEWHEAD = "jakarta.faces.ViewHead";
+     P_VIEWBODY = "jakarta.faces.ViewBody";
+     P_AJAX = "jakarta.faces.partial.ajax";
+     P_EXECUTE = "jakarta.faces.partial.execute";
+     P_RENDER = "jakarta.faces.partial.render";
+     P_EVT = "jakarta.faces.partial.event";
+     P_CLIENT_WINDOW = "jakarta.faces.ClientWindow";
+     P_RESET_VALUES = "jakarta.faces.partial.resetValues";
+     P_WINDOW_ID = "jakarta.faces.windowId";
+     ENCODED_URL = "jakarta.faces.encodedURL";
+}

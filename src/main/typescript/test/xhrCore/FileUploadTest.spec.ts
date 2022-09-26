@@ -33,12 +33,12 @@ import STD_XML = StandardInits.STD_XML;
 import defaultFileForm = StandardInits.defaultFileForm;
 import {Implementation} from "../../impl/AjaxImpl";
 
-declare var jsf: any;
+declare var faces: any;
 declare var Impl
 
 
 let issueStdReq = function (element) {
-    jsf.ajax.request(element, null, {
+    faces.ajax.request(element, null, {
         execute: "input_1",
         render: "@form",
         pass1: "pass1",
@@ -95,7 +95,7 @@ describe('Tests on the xhr core when it starts to call the request', function ()
             let button = DomQuery.byId("input_1");
 
             button.addEventListener("click", (event: Event) => {
-                jsf.ajax.request(event.target, event, {render: '@all', execute: '@form'})
+                faces.ajax.request(event.target, event, {render: '@all', execute: '@form'})
             }).click();
             //this.resonse("ok");
 
@@ -126,7 +126,7 @@ describe('Tests on the xhr core when it starts to call the request', function ()
             let button = DomQuery.byId("input_1");
 
             button.addEventListener("click", (event: Event) => {
-                jsf.ajax.request(event.target, event, {render: '@all', execute: 'input_1 fíleupload'})
+                faces.ajax.request(event.target, event, {render: '@all', execute: 'input_1 fíleupload'})
             }).click();
             //this.resonse("ok");
 
@@ -157,7 +157,7 @@ describe('Tests on the xhr core when it starts to call the request', function ()
             let button = DomQuery.byId("input_1");
 
             button.addEventListener("click", (event: Event) => {
-                jsf.ajax.request(event.target, event, {render: '@all', execute: 'input_1 fileupload'});
+                faces.ajax.request(event.target, event, {render: '@all', execute: 'input_1 fileupload'});
             }).click();
 
             expect(this.requests.length).to.eq(1);

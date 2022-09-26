@@ -59,7 +59,7 @@ export class XmlResponses {
     static VIEWSTATE_1 = `
     <partial-response>
     <changes>
-        <update id="javax.faces.ViewState"><![CDATA[hello world]]></update>
+        <update id="jakarta.faces.ViewState"><![CDATA[hello world]]></update>
     </changes>
     </partial-response>
     `;
@@ -94,7 +94,7 @@ export class XmlResponses {
 
     static BODY_REPLACEMENT = `<partial-response>
     <changes>
-        <update id="javax.faces.ViewBody"><![CDATA[
+        <update id="jakarta.faces.ViewBody"><![CDATA[
             <body id="the_id" class="tundra">
             <div id='centerDiv'>
                 <h1>Test for body change done</h1>
@@ -121,7 +121,7 @@ export class XmlResponses {
 
     static HEAD_REPLACEMENT = `<partial-response>
     <changes>
-        <update id="javax.faces.ViewHead"><![CDATA[
+        <update id="jakarta.faces.ViewHead"><![CDATA[
             <head>
                 <meta blarg="blarg2"></meta>
                 <script type='text/javascript'>
@@ -137,7 +137,7 @@ export class XmlResponses {
 
     static VIEW_ROOT_REPLACEMENT = `<partial-response>
     <changes>
-        <update id="javax.faces.ViewRoot"><![CDATA[
+        <update id="jakarta.faces.ViewRoot"><![CDATA[
             <html>
             <head>
                 <meta blarg="blarg2"></meta>

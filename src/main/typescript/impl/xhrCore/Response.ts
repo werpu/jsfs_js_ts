@@ -45,8 +45,8 @@ export module Response {
 
 
     /**
-     * Standardized jsf.js response
-     * this one is called straight from jsf.js.response
+     * Standardized faces.js response
+     * this one is called straight from faces.js.response
      *
      * The processing follows the spec by going for the responseXML
      * and processing its tags

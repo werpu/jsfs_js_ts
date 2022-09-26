@@ -46,7 +46,7 @@ import {resolveFinalUrl, resolveHandlerFunc} from "./RequestDataResolver";
 import failSaveExecute = ExtLang.failSaveExecute;
 
 /**
- * JSFed XHR Request Wrapper
+ * Faces XHR Request Wrapper
  * as Asyncrunnable for our Asynchronous queue
  *
  * The idea is that we basically just enqueue
@@ -54,8 +54,7 @@ import failSaveExecute = ExtLang.failSaveExecute;
  * and let the queue do the processing.
  *
  */
-
-declare let jsf: any;
+declare const window: any;
 
 export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
 
@@ -118,7 +117,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         try {
 
             let formElement = this.sourceForm.getAsElem(0).value;
-            let viewState = jsf.getViewState(formElement);
+            let viewState = (window?.faces ?? window?.jsf).getViewState(formElement);
             //encoded we need to decode
             //We generated a base representation of the current form
             //in case someone has overloaded the viewstate with addtional decorators we merge
@@ -275,7 +274,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             return;
         }
 
-        jsf.ajax.response(this.xhrObject, this.responseContext.value ?? {});
+        (window?.faces ?? window.jsf).ajax.response(this.xhrObject, this.responseContext.value ?? {});
     }
 
     private handleMalFormedXML(resolve: Function) {

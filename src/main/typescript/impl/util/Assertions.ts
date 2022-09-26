@@ -43,7 +43,7 @@ export module Assertions {
         assertFunction(options.getIf(ON_EVENT).value);
         //improve the error messages if an empty elem is passed
         //Assertions.assertElementExists(elem);
-        assert(elem.isPresent(), getMessage("ERR_MUST_BE_PROVIDED1", "{0}: source  must be provided or exist", "source element id"), "jsf.ajax.request", "ArgNotSet",  )
+        assert(elem.isPresent(), getMessage("ERR_MUST_BE_PROVIDED1", "{0}: source  must be provided or exist", "source element id"), "faces.ajax.request", "ArgNotSet",  )
     }
 
     export function assertUrlExists(node: XMLQuery): void | never {

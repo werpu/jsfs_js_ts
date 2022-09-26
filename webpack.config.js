@@ -14,12 +14,15 @@ function build(env, argv) {
     var libraryTarget = (_a = env.TARGET_TYPE) !== null && _a !== void 0 ? _a : "window";
     var config = {
         context: __dirname,
-        entry: "./src/main/typescript/api/Jsf.ts",
+        entry: {
+            jsf: "./src/main/typescript/api/jsf.ts",
+            faces: "./src/main/typescript/api/faces.ts"
+        },
         devtool: "source-map",
         output: {
             path: path.resolve(__dirname, './dist/' + libraryTarget),
             libraryTarget: libraryTarget,
-            filename: (argv.mode == "production") ? "jsf.js" : "jsf-development.js"
+            filename: (argv.mode == "production") ? "[name].js" : "[name]-development.js"
         },
         resolve: {
             extensions: [".tsx", ".ts", ".json"],
@@ -47,14 +50,14 @@ function build(env, argv) {
         },
         plugins: [
             new CompressionPlugin({
-                filename: 'jsf.js.gz[query]',
+                filename: '[name].js.gz[query]',
                 algorithm: 'gzip',
                 test: /\.js$|\.css$|\.html$|\.eot?.+$|\.ttf?.+$|\.woff?.+$|\.svg?.+$/,
                 threshold: 10240,
                 minRatio: 0.3
             }),
             new CompressionPlugin({
-                filename: 'jsf.js.br[query]',
+                filename: '[name].js.br[query]',
                 algorithm: 'brotliCompress',
                 test: /\.(js|css|html|svg)$/,
                 threshold: 10240,

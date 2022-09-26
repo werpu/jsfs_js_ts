@@ -15,14 +15,14 @@
  */
 
 /**
- * Typescript port of the jsf.push part in the myfaces implementation
+ * Typescript port of the faces.push part in the myfaces implementation
  */
 
 //TODO still work in progress
 //this is a 1:1 port for the time being
-import {jsf} from "../api/Jsf";
 import {MAX_RECONNECT_ATTEMPTS, REASON_EXPIRED, RECONNECT_INTERVAL} from "./core/Const";
 
+declare const window: any;
 
 /**
  * Implementation class for the push functionality
@@ -99,7 +99,7 @@ export module PushImpl {
         }
 
         if (autoconnect) {
-            jsf.push.open(socketClientId);
+            (window?.faces ?? window?.jsf).push.open(socketClientId);
         }
     }
 

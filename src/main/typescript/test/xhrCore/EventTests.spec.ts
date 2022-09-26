@@ -24,7 +24,7 @@ import protocolPage = StandardInits.protocolPage;
 import {DQ} from "mona-dish";
 import {XmlResponses} from "../frameworkBase/_ext/shared/XmlResponses";
 
-declare var jsf: any;
+declare var faces: any;
 
 describe('tests the addOnEvent and addOnError handling', function () {
 
@@ -70,7 +70,7 @@ describe('tests the addOnEvent and addOnError handling', function () {
         let onEventCalled1 = 0;
         let onEventCalled2 = 0;
 
-        jsf.ajax.addOnEvent((data: any) => {
+        faces.ajax.addOnEvent((data: any) => {
             onEventCalled1++;
             if (onEventCalled1 == 1 && data.status != "begin") {
                 throw ("Wrong status")
@@ -82,7 +82,7 @@ describe('tests the addOnEvent and addOnError handling', function () {
                 throw ("Wrong status")
             }
         });
-        jsf.ajax.addOnEvent((data: any) => {
+        faces.ajax.addOnEvent((data: any) => {
             onEventCalled2++;
 
         });
@@ -99,12 +99,12 @@ describe('tests the addOnEvent and addOnError handling', function () {
 
         let errorTitle = '';
         let errorMessage = '';
-        jsf.ajax.addOnError((data: any) => {
+        faces.ajax.addOnError((data: any) => {
             errorTitle = data.errorName;
             errorMessage = data.errorMessage;
             onErrorCalled1++
         });
-        jsf.ajax.addOnError((data: any) => {
+        faces.ajax.addOnError((data: any) => {
             onErrorCalled2++;
         });
 
@@ -126,10 +126,10 @@ describe('tests the addOnEvent and addOnError handling', function () {
             expect(!!data?.source?.id).to.be.true;
         }
 
-        jsf.ajax.addOnEvent((data: any) => {
+        faces.ajax.addOnEvent((data: any) => {
             assertSourceExists(data);
         });
-        jsf.ajax.addOnEvent((data: any) => {
+        faces.ajax.addOnEvent((data: any) => {
             onEventCalled2++;
 
         });

@@ -24,7 +24,7 @@ import isString = Lang.isString;
  *
  * We cannot use standard html5 forms everywhere
  * due to api constraints on the HTML Form object in IE11
- * and due to the url encoding constraint given by the jsf.js spec
+ * and due to the url encoding constraint given by the faces.js spec
  *
  * probably only one needed and one overlay!
  * the entire file input storing probably is redundant now
@@ -201,7 +201,7 @@ export class XhrFormData extends Config {
         /*
          * Spec. 13.3.1
          * Collect and encode input elements.
-         * Additionally the hidden element javax.faces.ViewState
+         * Additionally the hidden element jakarta.faces.ViewState
          * Enhancement partial page submit
          *
          */

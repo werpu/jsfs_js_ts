@@ -34,8 +34,11 @@ where I just ran a set of 20 integration tests on macro scale.
 ## Status
 
 ATM I am function complete, and the code
-can be tested (alpha stage)
-I probably will make a release before 2020.
+can be tested (final beta stages)
+I probably will make a release before 2022.
+It has been testing in MyFaces Tobago now for a year
+and atm is being integrated into MyFaces as new
+JS codebase.
 
 
 ## Usage

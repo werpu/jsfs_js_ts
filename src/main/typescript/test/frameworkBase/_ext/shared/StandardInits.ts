@@ -223,8 +223,6 @@ export module StandardInits {
         var target = "./test.mockup";
 
         function emitPPR(source, event, action, useIframe, formName) {
-            debugger;
-            console.debug("emitting;");
             document.getElementById(formName || "form1").action = target;
 
             jsf.ajax.request(/*String|Dom Node*/ source, /*|EVENT|*/ (window.event) ? window.event : event, /*{|OPTIONS|}*/ {op: action});
@@ -317,10 +315,12 @@ export module StandardInits {
     let initJSDOM = async function (template: string) {
         // @ts-ignore
         return import('jsdom-global').then((domIt) => {
-            return domIt(template, {
+            let params = {
                 contentType: "text/html",
                 runScripts: "dangerously"
-            });
+            };
+            //we have two different apis depending whether we allow module interop with sinon or not
+            return domIt?.default?.(template, params) ?? domIt?.(template, params);
         });
     };
 

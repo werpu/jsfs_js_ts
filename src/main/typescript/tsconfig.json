@@ -9,6 +9,7 @@
     "sourceMap": false,
     "outDir": "../../../target",
     "moduleResolution": "node",
+    "esModuleInterop": true,
     "module": "commonjs",
     "sourceMap": true,
     "typeRoots": [

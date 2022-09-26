@@ -119,7 +119,6 @@ describe('Config tests', () => {
     it('array config', () => {
         let config = setup();
         config.assign("hello[5]", "world[3]", "from[5]").value = "me";
-        console.debug(JSON.stringify(config.toJson()));
         expect(config.getIf("hello[5]", "world[3]", "from[5]").value).to.be.eq("me");
         expect(config.value.hello[5].world[3].from[5]).to.be.eq("me");
         structure(config.value);
@@ -129,7 +128,6 @@ describe('Config tests', () => {
         let config = setup();
         config.assign("[5]", "world[3]", "from").value = "me";
         expect(config.getIf("[5]", "world[3]", "from").value).to.be.eq("me");
-        console.debug(JSON.stringify(config.toJson()));
         expect(config.value[5].world[3].from).to.be.eq("me");
         structureBroken(config.value);
     });
@@ -138,7 +136,6 @@ describe('Config tests', () => {
         let config = setup();
         config.assign("[5]", "[3]", "from").value = "me";
         expect(config.getIf("[5]", "[3]", "from").value).to.be.eq("me");
-        console.debug(JSON.stringify(config.toJson()));
         expect(config.value[5][3].from).to.be.eq("me");
         structureBroken(config.value);
     });
@@ -147,7 +144,6 @@ describe('Config tests', () => {
         let config = setup();
         config.assign("[5]", "[3]", "[2]").value = "me";
         expect(config.getIf("[5]", "[3]", "[2]").value).to.be.eq("me");
-        console.debug(JSON.stringify(config.toJson()));
         expect(config.value[5][3][2]).to.be.eq("me");
         structureBroken(config.value);
     });
@@ -156,7 +152,6 @@ describe('Config tests', () => {
         let config = setup();
         config.assign("[5]", "world[3]", "from[2]").value = "me";
         expect(config.getIf("[5]", "world[3]", "from[2]").value).to.be.eq("me");
-        console.debug(JSON.stringify(config.toJson()));
         expect(config.value[5].world[3].from[2]).to.be.eq("me");
         structureBroken(config.value);
     });

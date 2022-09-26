@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
+import {DQ, Stream} from "mona-dish";
+
 /**
  * legacy code to enable various aspects
  * of myfaces, used to be rendered inline
- * for jsf 2.0 we can externalized it into its own custom resource
+ * for jsf 2.0 we can externalize it into its own custom resource
  *
  * note this is a straight 1:1 port from the existing codebase
  * (not too much work has been spent here, the important thing is, that
@@ -28,124 +30,90 @@
 declare const window: any;
 declare const myfaces: any;
 
+//TODO add unit tests to check all this here that it works just as before
 export module oam {
-
     /**
      * sets a hidden input field
-     * @param formname the formName
+     * @param formName the formName
      * @param name the hidden field
      * @param value the value to be rendered
      */
-    export const setHiddenInput = function (formname, name, value) {
-        let form: HTMLFormElement = document.forms[formname];
-        if (typeof form == 'undefined') {
-            form = document.getElementById(formname) as HTMLFormElement;
-        }
-
-        if (typeof form.elements[name] != 'undefined' && (form.elements[name].nodeName == 'INPUT' || form.elements[name].nodeName == 'input')) {
-            (form.elements[name] as HTMLInputElement).value = value;
-        } else {
-            let newInput = document.createElement('input');
-            newInput.setAttribute('type', 'hidden');
-            newInput.setAttribute('id', name);
-            newInput.setAttribute('name', name);
-            newInput.setAttribute('value', value);
-            form.appendChild(newInput);
-        }
+    export const setHiddenInput = function (formName: string, name: string, value: string) {
+        DQ.byId(document.forms[formName])
+            .each(form => {
+                const input = form.querySelectorAll(`input[type='hidden'][name='${name}']`);
+                if (input.isPresent()) {
+                    input.inputValue.value = value;
+                } else {
+                    const newInput = DQ.fromMarkup(`<input type='hidden' id='${name}' name='${name}'>`);
+                    newInput.inputValue.value = value;
+                    newInput.appendTo(form);
+                }
+            });
     };
 
     /**
      * clears a hidden input field
      *
-     * @param formname formName for the input
+     * @param formName formName for the input
      * @param name the name of the input field
      */
-    export const clearHiddenInput = function (formname: string, name: string) {
-        let form: HTMLFormElement = document.forms[formname];
-
-        if (typeof form == 'undefined') {
-            form = document.getElementById(formname) as HTMLFormElement;
+    export const clearHiddenInput = function (formName: string, name: string) {
+        let element = document.forms?.[formName]?.elements?.[name];
+        if(!element) {
+            return;
         }
-
-        let hInput = form.elements[name];
-        if (typeof hInput != 'undefined') {
-            form.removeChild(hInput);
-        }
+        DQ.byId(element).delete();
     };
 
     // noinspection JSUnusedGlobalSymbols
     /**
      * does special form submit remapping
-     * remaps the issuing command link into something
-     * the decode of the command link on the server can understand
+     * re-maps the issuing command link into something,
+     * a decode of the command link on the server can understand
      *
      * @param formName
      * @param linkId
      * @param target
      * @param params
      */
-    export const submitForm = function (formName: string, linkId: string, target: HTMLElement, params: { [key: string]: any }) {
-
+    export const submitForm = function (formName: string, linkId: string, target: string, params: { [key: string]: any }) {
         let clearFn = 'clearFormHiddenParams_' + formName.replace(/-/g, '\$:').replace(/:/g, '_');
-        if (typeof window[clearFn] == 'function') {
-            window[clearFn](formName);
-        }
-
-        let form = document.forms[formName];
-        if (typeof form == 'undefined') {
-            form = document.getElementById(formName);
-        }
+        window?.[clearFn]?.(formName);
 
         //autoscroll code
-        if ((window as any)?.myfaces?.core?.config.autoScroll && typeof (window as any)?.getScrolling != 'undefined') {
+        if (window?.myfaces?.core?.config?.autoScroll && window?.getScrolling) {
             myfaces.oam.setHiddenInput(formName, 'autoScroll', window?.getScrolling());
         }
+        Stream.ofAssoc(params).each((param: [string, any]) => {
+            myfaces.oam.setHiddenInput(formName, param[0], param[1]);
+        });
 
-        let oldTarget = form.target;
-        if (target != null) {
-            form.target = target;
-        }
-        if ((typeof params != 'undefined') && params != null) {
-            for (let i = 0, param; (param = params[i]); i++) {
-                myfaces.oam.setHiddenInput(formName, param[0], param[1]);
-            }
+        //we call the namespaced function, to allow decoration, via a direct call we would
+        myfaces.oam.setHiddenInput(formName, `${formName}:_idcl`, linkId);
 
-        }
+        DQ.byId(document.forms[formName]).each(form => {
+            const ATTR_TARGET = "target";
+            const formElement = form.getAsElem(0).value as HTMLFormElement;
+            const oldTarget = form.attr(ATTR_TARGET).value;
+            form.attr(ATTR_TARGET).value = target;
 
-        myfaces.oam.setHiddenInput(formName, formName + ':' + '_idcl', linkId);
+            const result = formElement?.onsubmit?.(null);
 
-        if (form.onsubmit) {
-            let result = form.onsubmit();
-            if ((typeof result == 'undefined') || result) {
-                try {
-                    form.submit();
-                } catch (e) {
-                    if (window.console) {
-                        console.error(e);
-                    }
-                }
-            }
-
-        } else {
             try {
-                form.submit();
-            } catch (e) {
-                if (window.console) {
-                    console.error(e);
+                if ((!!result) || 'undefined' == typeof result) {
+                    formElement.submit();
                 }
-            }
-        }
-
-        form.target = oldTarget;
-        if ((typeof params != 'undefined') && params != null) {
-
-            for (let i = 0, param; (param = params[i]); i++) {
-                myfaces.oam.clearHiddenInput(formName, param[0], param[1]);
+            } catch (e) {
+                window?.console.error(e);
             }
 
-        }
-
-        myfaces.oam.clearHiddenInput(formName, formName + ':' + '_idcl', linkId);
+            form.attr(ATTR_TARGET).value = oldTarget;
+            Stream.ofAssoc(params).each((param: [string, any]) => {
+                myfaces.oam.clearHiddenInput(formName, param[0]);
+            });
+            myfaces.oam.clearHiddenInput(formName, `${formName}:_idcl`);
+        });
         return false;
     };
 }

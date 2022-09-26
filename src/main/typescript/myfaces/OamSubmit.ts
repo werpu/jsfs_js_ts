@@ -30,7 +30,6 @@ import {DQ, Stream} from "mona-dish";
 declare const window: any;
 declare const myfaces: any;
 
-//TODO add unit tests to check all this here that it works just as before
 export module oam {
     /**
      * sets a hidden input field

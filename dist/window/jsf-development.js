@@ -7489,7 +7489,7 @@ exports.XhrRequest = XhrRequest;
 /*!**************************************************!*\
   !*** ./src/main/typescript/myfaces/OamSubmit.ts ***!
   \**************************************************/
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 /* Licensed to the Apache Software Foundation (ASF) under one or more
@@ -7509,52 +7509,49 @@ exports.XhrRequest = XhrRequest;
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.oam = void 0;
+var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
+//TODO add unit tests to check all this here that it works just as before
 var oam;
 (function (oam) {
     /**
      * sets a hidden input field
-     * @param formname the formName
+     * @param formName the formName
      * @param name the hidden field
      * @param value the value to be rendered
      */
-    oam.setHiddenInput = function (formname, name, value) {
-        var form = document.forms[formname];
-        if (typeof form == 'undefined') {
-            form = document.getElementById(formname);
-        }
-        if (typeof form.elements[name] != 'undefined' && (form.elements[name].nodeName == 'INPUT' || form.elements[name].nodeName == 'input')) {
-            form.elements[name].value = value;
-        }
-        else {
-            var newInput = document.createElement('input');
-            newInput.setAttribute('type', 'hidden');
-            newInput.setAttribute('id', name);
-            newInput.setAttribute('name', name);
-            newInput.setAttribute('value', value);
-            form.appendChild(newInput);
-        }
+    oam.setHiddenInput = function (formName, name, value) {
+        mona_dish_1.DQ.byId(document.forms[formName])
+            .each(function (form) {
+            var input = form.querySelectorAll("input[type='hidden'][name='".concat(name, "']"));
+            if (input.isPresent()) {
+                input.inputValue.value = value;
+            }
+            else {
+                var newInput = mona_dish_1.DQ.fromMarkup("<input type='hidden' id='".concat(name, "' name='").concat(name, "'>"));
+                newInput.inputValue.value = value;
+                newInput.appendTo(form);
+            }
+        });
     };
     /**
      * clears a hidden input field
      *
-     * @param formname formName for the input
+     * @param formName formName for the input
      * @param name the name of the input field
      */
-    oam.clearHiddenInput = function (formname, name) {
-        var form = document.forms[formname];
-        if (typeof form == 'undefined') {
-            form = document.getElementById(formname);
+    oam.clearHiddenInput = function (formName, name) {
+        var _a, _b, _c;
+        var element = (_c = (_b = (_a = document.forms) === null || _a === void 0 ? void 0 : _a[formName]) === null || _b === void 0 ? void 0 : _b.elements) === null || _c === void 0 ? void 0 : _c[name];
+        if (!element) {
+            return;
         }
-        var hInput = form.elements[name];
-        if (typeof hInput != 'undefined') {
-            form.removeChild(hInput);
-        }
+        mona_dish_1.DQ.byId(element).delete();
     };
     // noinspection JSUnusedGlobalSymbols
     /**
      * does special form submit remapping
-     * remaps the issuing command link into something
-     * the decode of the command link on the server can understand
+     * re-maps the issuing command link into something,
+     * a decode of the command link on the server can understand
      *
      * @param formName
      * @param linkId
@@ -7562,59 +7559,39 @@ var oam;
      * @param params
      */
     oam.submitForm = function (formName, linkId, target, params) {
-        var _a, _b;
+        var _a, _b, _c, _d;
         var clearFn = 'clearFormHiddenParams_' + formName.replace(/-/g, '\$:').replace(/:/g, '_');
-        if (typeof window[clearFn] == 'function') {
-            window[clearFn](formName);
-        }
-        var form = document.forms[formName];
-        if (typeof form == 'undefined') {
-            form = document.getElementById(formName);
-        }
+        (_a = window === null || window === void 0 ? void 0 : window[clearFn]) === null || _a === void 0 ? void 0 : _a.call(window, formName);
         //autoscroll code
-        if (((_b = (_a = window === null || window === void 0 ? void 0 : window.myfaces) === null || _a === void 0 ? void 0 : _a.core) === null || _b === void 0 ? void 0 : _b.config.autoScroll) && typeof (window === null || window === void 0 ? void 0 : window.getScrolling) != 'undefined') {
+        if (((_d = (_c = (_b = window === null || window === void 0 ? void 0 : window.myfaces) === null || _b === void 0 ? void 0 : _b.core) === null || _c === void 0 ? void 0 : _c.config) === null || _d === void 0 ? void 0 : _d.autoScroll) && (window === null || window === void 0 ? void 0 : window.getScrolling)) {
             myfaces.oam.setHiddenInput(formName, 'autoScroll', window === null || window === void 0 ? void 0 : window.getScrolling());
         }
-        var oldTarget = form.target;
-        if (target != null) {
-            form.target = target;
-        }
-        if ((typeof params != 'undefined') && params != null) {
-            for (var i = 0, param = void 0; (param = params[i]); i++) {
-                myfaces.oam.setHiddenInput(formName, param[0], param[1]);
-            }
-        }
-        myfaces.oam.setHiddenInput(formName, formName + ':' + '_idcl', linkId);
-        if (form.onsubmit) {
-            var result = form.onsubmit();
-            if ((typeof result == 'undefined') || result) {
-                try {
-                    form.submit();
-                }
-                catch (e) {
-                    if (window.console) {
-                        console.error(e);
-                    }
-                }
-            }
-        }
-        else {
+        mona_dish_1.Stream.ofAssoc(params).each(function (param) {
+            myfaces.oam.setHiddenInput(formName, param[0], param[1]);
+        });
+        //we call the namespaced function, to allow decoration, via a direct call we would
+        myfaces.oam.setHiddenInput(formName, "".concat(formName, ":_idcl"), linkId);
+        mona_dish_1.DQ.byId(document.forms[formName]).each(function (form) {
+            var _a;
+            var ATTR_TARGET = "target";
+            var formElement = form.getAsElem(0).value;
+            var oldTarget = form.attr(ATTR_TARGET).value;
+            form.attr(ATTR_TARGET).value = target;
+            var result = (_a = formElement === null || formElement === void 0 ? void 0 : formElement.onsubmit) === null || _a === void 0 ? void 0 : _a.call(formElement, null);
             try {
-                form.submit();
+                if ((!!result) || 'undefined' == typeof result) {
+                    formElement.submit();
+                }
             }
             catch (e) {
-                if (window.console) {
-                    console.error(e);
-                }
+                window === null || window === void 0 ? void 0 : window.console.error(e);
             }
-        }
-        form.target = oldTarget;
-        if ((typeof params != 'undefined') && params != null) {
-            for (var i = 0, param = void 0; (param = params[i]); i++) {
-                myfaces.oam.clearHiddenInput(formName, param[0], param[1]);
-            }
-        }
-        myfaces.oam.clearHiddenInput(formName, formName + ':' + '_idcl', linkId);
+            form.attr(ATTR_TARGET).value = oldTarget;
+            mona_dish_1.Stream.ofAssoc(params).each(function (param) {
+                myfaces.oam.clearHiddenInput(formName, param[0]);
+            });
+            myfaces.oam.clearHiddenInput(formName, "".concat(formName, ":_idcl"));
+        });
         return false;
     };
 })(oam = exports.oam || (exports.oam = {}));

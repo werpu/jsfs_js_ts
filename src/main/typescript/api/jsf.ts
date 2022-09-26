@@ -22,7 +22,9 @@ declare const window: any;
  * jsf.js back compatibility shim layer
  * the entire namespace for jsf and javax still is provided
  */
-window['jsf'] = (window as any)?.jsf ?? faces;
-window.jsf.specversion = 230000;
+if(!window.jsf) {
+    window['jsf'] = (window as any)?.jsf ?? faces;
+    window.jsf.specversion = 230000;
+    remapNamespacesFor23();
+}
 export var jsf = window.jsf;
-remapNamespacesFor23();

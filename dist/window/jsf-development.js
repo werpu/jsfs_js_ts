@@ -7713,10 +7713,12 @@ var Const_1 = __webpack_require__(/*! ../impl/core/Const */ "./src/main/typescri
  * jsf.js back compatibility shim layer
  * the entire namespace for jsf and javax still is provided
  */
-window['jsf'] = (_a = window === null || window === void 0 ? void 0 : window.jsf) !== null && _a !== void 0 ? _a : faces_1.faces;
-window.jsf.specversion = 230000;
+if (!window.jsf) {
+    window['jsf'] = (_a = window === null || window === void 0 ? void 0 : window.jsf) !== null && _a !== void 0 ? _a : faces_1.faces;
+    window.jsf.specversion = 230000;
+    (0, Const_1.remapNamespacesFor23)();
+}
 exports.jsf = window.jsf;
-(0, Const_1.remapNamespacesFor23)();
 
 })();
 

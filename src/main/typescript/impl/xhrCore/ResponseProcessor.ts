@@ -23,6 +23,7 @@ import {StateHolder} from "../core/ImplTypes";
 import {EventData} from "./EventData";
 
 import {
+    $nsp,
     APPLIED_CLIENT_WINDOW,
     APPLIED_VST,
     ATTR_ID,
@@ -53,7 +54,7 @@ import {
     UPDATE_FORMS
 } from "../core/Const";
 import trim = Lang.trim;
-import {ExtDomquery} from "../util/ExtDomQuery";
+import {ExtConfig, ExtDomquery} from "../util/ExtDomQuery";
 
 declare const window: any;
 
@@ -147,7 +148,7 @@ export class ResponseProcessor implements IResponseProcessor {
          * <error>
          */
 
-        let mergedErrorData = new Config({});
+        let mergedErrorData = new ExtConfig({});
         mergedErrorData.assign(SOURCE).value = this.externalContext.getIf(P_PARTIAL_SOURCE).get(0).value;
         mergedErrorData.assign(ERROR_NAME).value = node.querySelectorAll(ERROR_NAME).textContent(EMPTY_STR);
         mergedErrorData.assign(ERROR_MESSAGE).value = node.querySelectorAll(ERROR_MESSAGE).cDATAAsString;
@@ -285,7 +286,7 @@ export class ResponseProcessor implements IResponseProcessor {
     processViewState(node: XMLQuery): boolean {
         if (ResponseProcessor.isViewStateNode(node)) {
             let state = node.cDATAAsString;
-            this.internalContext.assign(APPLIED_VST, node.id.value).value = new StateHolder(node.id.value, state);
+            this.internalContext.assign(APPLIED_VST, node.id.value).value = new StateHolder($nsp(node.id.value), state);
             return true;
         }
         return false;
@@ -294,7 +295,7 @@ export class ResponseProcessor implements IResponseProcessor {
     processClientWindow(node: XMLQuery): boolean {
         if (ResponseProcessor.isClientWindowNode(node)) {
             let state = node.cDATAAsString;
-            this.internalContext.assign(APPLIED_CLIENT_WINDOW, node.id.value).value = new StateHolder(node.id.value, state);
+            this.internalContext.assign(APPLIED_CLIENT_WINDOW, node.id.value).value = new StateHolder($nsp(node.id.value), state);
             return true;
         }
     }
@@ -360,7 +361,7 @@ export class ResponseProcessor implements IResponseProcessor {
      * @param viewState the final viewstate
      */
     private appendViewStateToForms(forms: DQ, viewState: string) {
-        this.assignState(forms, SEL_VIEWSTATE_ELEM, viewState);
+        this.assignState(forms, $nsp(SEL_VIEWSTATE_ELEM), viewState);
     }
 
 
@@ -371,7 +372,7 @@ export class ResponseProcessor implements IResponseProcessor {
      * @param clientWindow the final viewstate
      */
     private appendClientWindowToForms(forms: DQ, clientWindow: string) {
-        this.assignState(forms, SEL_CLIENT_WINDOW_ELEM, clientWindow);
+        this.assignState(forms, $nsp(SEL_CLIENT_WINDOW_ELEM), clientWindow);
     }
 
     /**
@@ -399,7 +400,7 @@ export class ResponseProcessor implements IResponseProcessor {
      * (usually a form node)
      */
     private static newViewStateElement(parent: DQ): DQ {
-        let newViewState = DQ.fromMarkup(HTML_VIEWSTATE);
+        let newViewState = DQ.fromMarkup($nsp(HTML_VIEWSTATE));
         newViewState.appendTo(parent);
         return newViewState;
     }
@@ -441,9 +442,9 @@ export class ResponseProcessor implements IResponseProcessor {
      */
     private static isViewStateNode(node: XMLQuery): boolean {
         let separatorChar = (window?.faces ?? window?.jsf).separatorchar;
-        return "undefined" != typeof node?.id?.value && (node?.id?.value == P_VIEWSTATE ||
-            node?.id?.value?.indexOf([separatorChar, P_VIEWSTATE].join(EMPTY_STR)) != -1 ||
-            node?.id?.value?.indexOf([P_VIEWSTATE, separatorChar].join(EMPTY_STR)) != -1);
+        return "undefined" != typeof node?.id?.value && (node?.id?.value == $nsp(P_VIEWSTATE) ||
+            node?.id?.value?.indexOf([separatorChar, $nsp(P_VIEWSTATE)].join(EMPTY_STR)) != -1 ||
+            node?.id?.value?.indexOf([$nsp(P_VIEWSTATE), separatorChar].join(EMPTY_STR)) != -1);
     }
 
     /**
@@ -454,9 +455,9 @@ export class ResponseProcessor implements IResponseProcessor {
      */
     private static isClientWindowNode(node: XMLQuery): boolean {
         let separatorChar = (window?.faces ?? window?.jsf).separatorchar;
-        return "undefined" != typeof node?.id?.value && (node?.id?.value == P_CLIENT_WINDOW ||
-            node?.id?.value?.indexOf([separatorChar, P_CLIENT_WINDOW].join(EMPTY_STR)) != -1 ||
-            node?.id?.value?.indexOf([P_CLIENT_WINDOW, separatorChar].join(EMPTY_STR)) != -1);
+        return "undefined" != typeof node?.id?.value && (node?.id?.value == $nsp(P_CLIENT_WINDOW) ||
+            node?.id?.value?.indexOf([separatorChar, $nsp(P_CLIENT_WINDOW)].join(EMPTY_STR)) != -1 ||
+            node?.id?.value?.indexOf([$nsp(P_CLIENT_WINDOW), separatorChar].join(EMPTY_STR)) != -1);
     }
 
     private triggerOnError(errorData: ErrorData) {

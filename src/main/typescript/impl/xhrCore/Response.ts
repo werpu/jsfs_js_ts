@@ -19,6 +19,7 @@ import {ResponseProcessor} from "./ResponseProcessor";
 
 import {IResponseProcessor} from "./IResponseProcessor";
 import {
+    $nsp,
     CMD_ATTRIBUTES,
     CMD_CHANGES,
     CMD_DELETE,
@@ -38,6 +39,7 @@ import {
     TAG_BEFORE
 } from "../core/Const";
 import {resolveContexts, resolveResponseXML} from "./ResonseDataResolver";
+import {ExtConfig} from "../util/ExtDomQuery";
 
 
 
@@ -57,7 +59,7 @@ export module Response {
      */
     export function processResponse(request: XMLHttpRequest, context: Context) {
 
-        let req = Config.fromNullable(request);
+        let req = ExtConfig.fromNullable(request);
         let {externalContext, internalContext} = resolveContexts(context);
         let responseXML: XMLQuery = resolveResponseXML(req);
         let responseProcessor = new ResponseProcessor(req, externalContext, internalContext);
@@ -191,15 +193,15 @@ export module Response {
      function handleElementUpdate(node: XMLQuery, responseProcessor: IResponseProcessor) {
         let cdataBlock = node.cDATAAsString;
         switch (node.id.value) {
-            case P_VIEWROOT :
+            case $nsp(P_VIEWROOT) :
                 responseProcessor.replaceViewRoot(DQ.fromMarkup(cdataBlock.substring(cdataBlock.indexOf("<html"))));
                 break;
 
-            case P_VIEWHEAD:
+            case $nsp(P_VIEWHEAD):
                 responseProcessor.replaceHead(DQ.fromMarkup(cdataBlock));
                 break;
 
-            case P_VIEWBODY:
+            case $nsp(P_VIEWBODY):
                 responseProcessor.replaceBody(DQ.fromMarkup(cdataBlock));
                 break;
 

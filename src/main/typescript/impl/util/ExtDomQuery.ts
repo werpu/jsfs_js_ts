@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Config, IValueHolder, Optional, DomQuery, DQ} from "mona-dish";
-import {P_WINDOW_ID} from "../core/Const";
+import {Config, IValueHolder, Optional, DomQuery, DQ, Stream, ArrayCollector} from "mona-dish";
+import {$nsp, P_WINDOW_ID} from "../core/Const";
+import {AssocArrayCollector} from "mona-dish/src/main/typescript/SourcesCollectors";
 
 declare let window: any;
 
@@ -109,7 +110,7 @@ export class ExtDomquery extends DQ {
     */
     get nonce(): string | null {
         //already processed
-        let myfacesConfig = new Config(window.myfaces);
+        let myfacesConfig = new ExtConfig(window.myfaces);
         let nonce: IValueHolder<string> = myfacesConfig.getIf("config", "cspMeta", "nonce");
         if (nonce.value) {
             return <string>nonce.value;
@@ -185,4 +186,77 @@ export class ExtDomquery extends DQ {
     }
 }
 
-export const ExtDQ = DQ;
+export const ExtDQ = ExtDomquery;
+
+export class ExtConfig extends  Config {
+
+    constructor(root: any) {
+        super(root);
+    }
+
+    assignIf(condition: boolean, ...accessPath): IValueHolder<any> {
+        const acessPathMapped = this.remap(accessPath);
+        return super.assignIf(condition, ...acessPathMapped);
+    }
+
+    assign(...accessPath): IValueHolder<any> {
+        const acessPathMapped = this.remap(accessPath);
+        return super.assign(...acessPathMapped);
+    }
+
+    append(...accessPath): IValueHolder<any> {
+        return super.append(...accessPath);
+    }
+
+    appendIf(condition: boolean, ...accessPath): IValueHolder<any> {
+        const acessPathMapped = this.remap(accessPath);
+        return super.appendIf(condition, ...acessPathMapped);
+    }
+
+    getIf(...accessPath): Config {
+        const acessPathMapped = this.remap(accessPath);
+        return super.getIf(...acessPathMapped);
+    }
+
+    get(defaultVal: any): Config {
+        return super.get($nsp(defaultVal));
+    }
+
+    delete(key: string): Config {
+        return super.delete($nsp(key));
+    }
+
+    /**
+     * creates a config from an initial value or null
+     * @param value
+     */
+    static fromNullable<T>(value?: T | null): Config {
+        return new ExtConfig(value);
+    }
+
+    protected getClass(): any {
+        return ExtConfig;
+    }
+
+    /**
+     * shallow copy getter, copies only the first level, references the deeper nodes
+     * in a shared manner
+     */
+    protected shallowCopy$(): Config {
+        const ret = super.shallowCopy$();
+        return new ExtConfig(ret);
+    }
+
+    /**
+     * deep copy, copies all config nodes
+     */
+    get deepCopy(): Config {
+        return new ExtConfig(super.deepCopy$());
+    }
+
+
+    private remap(accessPath: any[]) {
+        return Stream.of(...accessPath).map(key => $nsp(key)).collect(new ArrayCollector());
+    }
+
+}

@@ -27,7 +27,7 @@ import {
 } from "../core/Const";
 import {XhrFormData} from "./XhrFormData";
 import {ExtLang} from "../util/Lang";
-import {ExtDomquery} from "../util/ExtDomQuery";
+import {ExtConfig, ExtDomquery} from "../util/ExtDomQuery";
 
 /**
  * Resolver functions for various aspects of the request data
@@ -140,10 +140,10 @@ export function getEventTarget(evt: Event): Element {
 export function resolveDefaults(event: Event, opts: any = {}, el: Element | string = null) {
     //deep copy the options, so that further transformations to not backfire into the callers
     const resolvedEvent = event,
-        options = new Config(opts).deepCopy,
+        options = new ExtConfig(opts).deepCopy,
         elem = DQ.byId(el || <Element>resolvedEvent.target, true),
-        elementId = elem.id.value, requestCtx = new Config({}),
-        internalCtx = new Config({}), windowId = resolveWindowId(options),
+        elementId = elem.id.value, requestCtx = new ExtConfig({}),
+        internalCtx = new ExtConfig({}), windowId = resolveWindowId(options),
         isResetValues = true === options.value?.resetValues;
 
     return {resolvedEvent, options, elem, elementId, requestCtx, internalCtx, windowId, isResetValues};

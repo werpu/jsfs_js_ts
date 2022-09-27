@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 import {faces} from "./faces";
-import {remapNamespacesFor23} from "../impl/core/Const";
 
 declare const window: any;
 
@@ -23,8 +22,10 @@ declare const window: any;
  * the entire namespace for jsf and javax still is provided
  */
 if(!window.jsf) {
+    if(window?.faces) {
+        delete window.faces;
+    }
     window['jsf'] = (window as any)?.jsf ?? faces;
     window.jsf.specversion = 230000;
-    remapNamespacesFor23();
 }
 export var jsf = window.jsf;

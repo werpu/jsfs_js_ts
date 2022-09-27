@@ -26,6 +26,7 @@ import {ErrorData} from "./xhrCore/ErrorData";
 import {EventData} from "./xhrCore/EventData";
 import {ExtLang} from "./util/Lang";
 import {
+    $nsp,
     CTX_PARAM_EXECUTE,
     CTX_PARAM_PASS_THR,
     CTX_PARAM_SRC_CTL_ID,

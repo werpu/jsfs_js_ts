@@ -19,6 +19,7 @@ import {Config, Optional, XMLQuery} from "mona-dish";
 import {Assertions} from "../util/Assertions";
 import {DQ} from "mona-dish";
 import {
+    $nsp,
     CTX_PARAM_MF_INTERNAL,
     CTX_PARAM_SRC_CTL_ID,
     CTX_PARAM_SRC_FRM_ID,
@@ -28,6 +29,7 @@ import {
     UPDATE_ELEMS,
     UPDATE_FORMS
 } from "../core/Const";
+import {ExtConfig} from "../util/ExtDomQuery";
 
 /**
  * Resolver functions for various aspects of the response data
@@ -46,7 +48,7 @@ import {
  *
  */
 export function resolveResponseXML(request: Config): XMLQuery {
-    let ret = new XMLQuery(request.getIf(SEL_RESPONSE_XML).value);
+    let ret = new XMLQuery($nsp(request.getIf(SEL_RESPONSE_XML).value));
     Assertions.assertValidXMLResponse(ret);
 
     return ret;
@@ -64,10 +66,10 @@ export function resolveContexts(context: { [p: string]: any }): any {
      * we split the context apart into the external one and
      * some internal values
      */
-    let externalContext = Config.fromNullable(context);
+    let externalContext = ExtConfig.fromNullable(context);
     let internalContext = externalContext.getIf(CTX_PARAM_MF_INTERNAL);
     if (!internalContext.isPresent()) {
-        internalContext = Config.fromNullable({});
+        internalContext = ExtConfig.fromNullable({});
     }
 
     /**

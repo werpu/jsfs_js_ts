@@ -16,6 +16,7 @@
 import {ArrayCollector, Config, DQ, Lang, LazyStream, Stream} from "mona-dish";
 import {EMPTY_STR, IDENT_ALL, IDENT_FORM, P_VIEWSTATE} from "../core/Const";
 import isString = Lang.isString;
+import {ExtConfig} from "../util/ExtDomQuery";
 
 
 /**
@@ -121,7 +122,7 @@ export class XhrFormData extends Config {
      * @param keyValueEntries
      */
     assignString(keyValueEntries: string[]) {
-        let toMerge = new Config({});
+        let toMerge = new ExtConfig({});
 
         function splitToKeyVal(line: string) {
             return line.split(/=(.*)/gi);

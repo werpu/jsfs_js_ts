@@ -2417,21 +2417,27 @@ var Config = /** @class */ (function (_super) {
          * in a shared manner
          */
         get: function () {
-            return new Config(Stream_1.Stream.ofAssoc(this.value).collect(new SourcesCollectors_1.AssocArrayCollector()));
+            return this.shallowCopy$();
         },
         enumerable: false,
         configurable: true
     });
+    Config.prototype.shallowCopy$ = function () {
+        return new Config(Stream_1.Stream.ofAssoc(this.value).collect(new SourcesCollectors_1.AssocArrayCollector()));
+    };
     Object.defineProperty(Config.prototype, "deepCopy", {
         /**
          * deep copy, copies all config nodes
          */
         get: function () {
-            return new Config(objAssign({}, this.value));
+            return this.deepCopy$();
         },
         enumerable: false,
         configurable: true
     });
+    Config.prototype.deepCopy$ = function () {
+        return new Config(objAssign({}, this.value));
+    };
     /**
      * creates a config from an initial value or null
      * @param value
@@ -4940,7 +4946,7 @@ var PushImpl;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CTX_PARAM_RST = exports.CTX_PARAM_TIMEOUT = exports.CTX_PARAM_DELAY = exports.CTX_PARAM_PASS_THR = exports.CTX_PARAM_TR_TYPE = exports.CTX_PARAM_SRC_CTL_ID = exports.CTX_PARAM_SRC_FRM_ID = exports.CTX_PARAM_MF_INTERNAL = exports.TIMEOUT_EVENT = exports.CLIENT_ERROR = exports.SERVER_ERROR = exports.MALFORMEDXML = exports.EMPTY_RESPONSE = exports.HTTPERROR = exports.RESPONSE_XML = exports.RESPONSE_TEXT = exports.ERROR_MESSAGE = exports.ERROR_NAME = exports.STATUS = exports.SOURCE = exports.SUCCESS = exports.COMPLETE = exports.BEGIN = exports.ON_EVENT = exports.ON_ERROR = exports.EVENT = exports.ERROR = exports.WINDOW_ID = exports.RENDER = exports.P_WINDOW_ID = exports.P_RESET_VALUES = exports.P_CLIENT_WINDOW = exports.P_EVT = exports.P_RENDER = exports.P_EXECUTE = exports.P_AJAX = exports.IDENT_FORM = exports.IDENT_THIS = exports.IDENT_NONE = exports.IDENT_ALL = exports.HTML_VIEWSTATE = exports.EMPTY_MAP = exports.EMPTY_STR = exports.EMPTY_FUNC = exports.P_VIEWBODY = exports.P_VIEWHEAD = exports.P_VIEWROOT = exports.P_VIEWSTATE = exports.PARTIAL_ID = exports.P_PARTIAL_SOURCE = void 0;
 exports.RECONNECT_INTERVAL = exports.APPLIED_CLIENT_WINDOW = exports.APPLIED_VST = exports.REASON_EXPIRED = exports.MF_NONE = exports.SEL_SCRIPTS_STYLES = exports.MYFACES = exports.UPDATE_ELEMS = exports.UPDATE_FORMS = exports.CMD_REDIRECT = exports.CMD_EXTENSION = exports.CMD_ATTRIBUTES = exports.CMD_ERROR = exports.CMD_EVAL = exports.CMD_INSERT = exports.CMD_DELETE = exports.CMD_UPDATE = exports.CMD_CHANGES = exports.RESP_PARTIAL = exports.ATTR_ID = exports.ATTR_VALUE = exports.ATTR_NAME = exports.ATTR_URL = exports.ERR_NO_PARTIAL_RESPONSE = exports.PHASE_PROCESS_RESPONSE = exports.SEL_RESPONSE_XML = exports.SEL_CLIENT_WINDOW_ELEM = exports.SEL_VIEWSTATE_ELEM = exports.TAG_ATTR = exports.TAG_AFTER = exports.TAG_BEFORE = exports.TAG_BODY = exports.TAG_FORM = exports.TAG_HEAD = exports.STD_ACCEPT = exports.NO_TIMEOUT = exports.MULTIPART = exports.URL_ENCODED = exports.STATE_EVT_COMPLETE = exports.STATE_EVT_TIMEOUT = exports.STATE_EVT_BEGIN = exports.REQ_TYPE_POST = exports.REQ_TYPE_GET = exports.ENCODED_URL = exports.VAL_AJAX = exports.REQ_ACCEPT = exports.HEAD_FACES_REQ = exports.CONTENT_TYPE = exports.STAGE_DEVELOPMENT = exports.CTX_PARAM_EXECUTE = void 0;
-exports.remapNamespacesFor40 = exports.remapNamespacesFor23 = exports.UNKNOWN = exports.MAX_RECONNECT_ATTEMPTS = void 0;
+exports.$nsp = exports.UNKNOWN = exports.MAX_RECONNECT_ATTEMPTS = void 0;
 /*
  * [export const] constants
  */
@@ -5060,38 +5066,13 @@ exports.UNKNOWN = "UNKNOWN";
  * from 2.3 to 4.0 every javax namespace has been changed
  * to faces
  */
-function remapNamespacesFor23() {
-    exports.P_PARTIAL_SOURCE = "javax.faces.source";
-    exports.P_VIEWSTATE = "javax.faces.ViewState";
-    exports.P_VIEWROOT = "javax.faces.ViewRoot";
-    exports.P_VIEWHEAD = "javax.faces.ViewHead";
-    exports.P_VIEWBODY = "javax.faces.ViewBody";
-    exports.P_AJAX = "javax.faces.partial.ajax";
-    exports.P_EXECUTE = "javax.faces.partial.execute";
-    exports.P_RENDER = "javax.faces.partial.render";
-    exports.P_EVT = "javax.faces.partial.event";
-    exports.P_CLIENT_WINDOW = "javax.faces.ClientWindow";
-    exports.P_RESET_VALUES = "javax.faces.partial.resetValues";
-    exports.P_WINDOW_ID = "javax.faces.windowId";
-    exports.ENCODED_URL = "javax.faces.encodedURL";
+function $nsp(inputNamespace) {
+    if (!(inputNamespace === null || inputNamespace === void 0 ? void 0 : inputNamespace.replace)) {
+        return inputNamespace;
+    }
+    return (!!(window === null || window === void 0 ? void 0 : window.faces)) ? inputNamespace.replace(/javax\.faces/gi, "jakarta.faces") : inputNamespace.replace(/jakarta\.faces/gi, "javax.faces");
 }
-exports.remapNamespacesFor23 = remapNamespacesFor23;
-function remapNamespacesFor40() {
-    exports.P_PARTIAL_SOURCE = "jakarta.faces.source";
-    exports.P_VIEWSTATE = "jakarta.faces.ViewState";
-    exports.P_VIEWROOT = "jakarta.faces.ViewRoot";
-    exports.P_VIEWHEAD = "jakarta.faces.ViewHead";
-    exports.P_VIEWBODY = "jakarta.faces.ViewBody";
-    exports.P_AJAX = "jakarta.faces.partial.ajax";
-    exports.P_EXECUTE = "jakarta.faces.partial.execute";
-    exports.P_RENDER = "jakarta.faces.partial.render";
-    exports.P_EVT = "jakarta.faces.partial.event";
-    exports.P_CLIENT_WINDOW = "jakarta.faces.ClientWindow";
-    exports.P_RESET_VALUES = "jakarta.faces.partial.resetValues";
-    exports.P_WINDOW_ID = "jakarta.faces.windowId";
-    exports.ENCODED_URL = "jakarta.faces.encodedURL";
-}
-exports.remapNamespacesFor40 = remapNamespacesFor40;
+exports.$nsp = $nsp;
 
 
 /***/ }),
@@ -5533,8 +5514,17 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ExtDQ = exports.ExtDomquery = void 0;
+exports.ExtConfig = exports.ExtDQ = exports.ExtDomquery = void 0;
 /*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -5650,7 +5640,7 @@ var ExtDomquery = /** @class */ (function (_super) {
         */
         get: function () {
             //already processed
-            var myfacesConfig = new mona_dish_1.Config(window.myfaces);
+            var myfacesConfig = new ExtConfig(window.myfaces);
             var nonce = myfacesConfig.getIf("config", "cspMeta", "nonce");
             if (nonce.value) {
                 return nonce.value;
@@ -5725,7 +5715,91 @@ var ExtDomquery = /** @class */ (function (_super) {
     return ExtDomquery;
 }(mona_dish_1.DQ));
 exports.ExtDomquery = ExtDomquery;
-exports.ExtDQ = mona_dish_1.DQ;
+exports.ExtDQ = ExtDomquery;
+var ExtConfig = /** @class */ (function (_super) {
+    __extends(ExtConfig, _super);
+    function ExtConfig(root) {
+        return _super.call(this, root) || this;
+    }
+    ExtConfig.prototype.assignIf = function (condition) {
+        var accessPath = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            accessPath[_i - 1] = arguments[_i];
+        }
+        var acessPathMapped = this.remap(accessPath);
+        return _super.prototype.assignIf.apply(this, __spreadArray([condition], acessPathMapped, false));
+    };
+    ExtConfig.prototype.assign = function () {
+        var accessPath = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            accessPath[_i] = arguments[_i];
+        }
+        var acessPathMapped = this.remap(accessPath);
+        return _super.prototype.assign.apply(this, acessPathMapped);
+    };
+    ExtConfig.prototype.append = function () {
+        var accessPath = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            accessPath[_i] = arguments[_i];
+        }
+        return _super.prototype.append.apply(this, accessPath);
+    };
+    ExtConfig.prototype.appendIf = function (condition) {
+        var accessPath = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            accessPath[_i - 1] = arguments[_i];
+        }
+        var acessPathMapped = this.remap(accessPath);
+        return _super.prototype.appendIf.apply(this, __spreadArray([condition], acessPathMapped, false));
+    };
+    ExtConfig.prototype.getIf = function () {
+        var accessPath = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            accessPath[_i] = arguments[_i];
+        }
+        var acessPathMapped = this.remap(accessPath);
+        return _super.prototype.getIf.apply(this, acessPathMapped);
+    };
+    ExtConfig.prototype.get = function (defaultVal) {
+        return _super.prototype.get.call(this, (0, Const_1.$nsp)(defaultVal));
+    };
+    ExtConfig.prototype.delete = function (key) {
+        return _super.prototype.delete.call(this, (0, Const_1.$nsp)(key));
+    };
+    /**
+     * creates a config from an initial value or null
+     * @param value
+     */
+    ExtConfig.fromNullable = function (value) {
+        return new ExtConfig(value);
+    };
+    ExtConfig.prototype.getClass = function () {
+        return ExtConfig;
+    };
+    /**
+     * shallow copy getter, copies only the first level, references the deeper nodes
+     * in a shared manner
+     */
+    ExtConfig.prototype.shallowCopy$ = function () {
+        var ret = _super.prototype.shallowCopy$.call(this);
+        return new ExtConfig(ret);
+    };
+    Object.defineProperty(ExtConfig.prototype, "deepCopy", {
+        /**
+         * deep copy, copies all config nodes
+         */
+        get: function () {
+            return new ExtConfig(_super.prototype.deepCopy$.call(this));
+        },
+        enumerable: false,
+        configurable: true
+    });
+    ExtConfig.prototype.remap = function (accessPath) {
+        return mona_dish_1.Stream.of.apply(mona_dish_1.Stream, accessPath).map(function (key) { return (0, Const_1.$nsp)(key); }).collect(new mona_dish_1.ArrayCollector());
+    };
+    return ExtConfig;
+}(mona_dish_1.Config));
+exports.ExtConfig = ExtConfig;
 
 
 /***/ }),
@@ -6268,7 +6342,7 @@ function resolveDefaults(event, opts, el) {
     if (opts === void 0) { opts = {}; }
     if (el === void 0) { el = null; }
     //deep copy the options, so that further transformations to not backfire into the callers
-    var resolvedEvent = event, options = new mona_dish_1.Config(opts).deepCopy, elem = mona_dish_1.DQ.byId(el || resolvedEvent.target, true), elementId = elem.id.value, requestCtx = new mona_dish_1.Config({}), internalCtx = new mona_dish_1.Config({}), windowId = resolveWindowId(options), isResetValues = true === ((_a = options.value) === null || _a === void 0 ? void 0 : _a.resetValues);
+    var resolvedEvent = event, options = new ExtDomQuery_1.ExtConfig(opts).deepCopy, elem = mona_dish_1.DQ.byId(el || resolvedEvent.target, true), elementId = elem.id.value, requestCtx = new ExtDomQuery_1.ExtConfig({}), internalCtx = new ExtDomQuery_1.ExtConfig({}), windowId = resolveWindowId(options), isResetValues = true === ((_a = options.value) === null || _a === void 0 ? void 0 : _a.resetValues);
     return { resolvedEvent: resolvedEvent, options: options, elem: elem, elementId: elementId, requestCtx: requestCtx, internalCtx: internalCtx, windowId: windowId, isResetValues: isResetValues };
 }
 exports.resolveDefaults = resolveDefaults;
@@ -6304,6 +6378,7 @@ var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish
 var Assertions_1 = __webpack_require__(/*! ../util/Assertions */ "./src/main/typescript/impl/util/Assertions.ts");
 var mona_dish_2 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
+var ExtDomQuery_1 = __webpack_require__(/*! ../util/ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
 /**
  * Resolver functions for various aspects of the response data
  *
@@ -6320,7 +6395,7 @@ var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/im
  *
  */
 function resolveResponseXML(request) {
-    var ret = new mona_dish_1.XMLQuery(request.getIf(Const_1.SEL_RESPONSE_XML).value);
+    var ret = new mona_dish_1.XMLQuery((0, Const_1.$nsp)(request.getIf(Const_1.SEL_RESPONSE_XML).value));
     Assertions_1.Assertions.assertValidXMLResponse(ret);
     return ret;
 }
@@ -6337,10 +6412,10 @@ function resolveContexts(context) {
      * we split the context apart into the external one and
      * some internal values
      */
-    var externalContext = mona_dish_1.Config.fromNullable(context);
+    var externalContext = ExtDomQuery_1.ExtConfig.fromNullable(context);
     var internalContext = externalContext.getIf(Const_1.CTX_PARAM_MF_INTERNAL);
     if (!internalContext.isPresent()) {
-        internalContext = mona_dish_1.Config.fromNullable({});
+        internalContext = ExtDomQuery_1.ExtConfig.fromNullable({});
     }
     /**
      * prepare storage for some deferred operations
@@ -6416,6 +6491,7 @@ var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish
 var ResponseProcessor_1 = __webpack_require__(/*! ./ResponseProcessor */ "./src/main/typescript/impl/xhrCore/ResponseProcessor.ts");
 var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 var ResonseDataResolver_1 = __webpack_require__(/*! ./ResonseDataResolver */ "./src/main/typescript/impl/xhrCore/ResonseDataResolver.ts");
+var ExtDomQuery_1 = __webpack_require__(/*! ../util/ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
 var Response;
 (function (Response) {
     /**
@@ -6430,7 +6506,7 @@ var Response;
      *
      */
     function processResponse(request, context) {
-        var req = mona_dish_1.Config.fromNullable(request);
+        var req = ExtDomQuery_1.ExtConfig.fromNullable(request);
         var _a = (0, ResonseDataResolver_1.resolveContexts)(context), externalContext = _a.externalContext, internalContext = _a.internalContext;
         var responseXML = (0, ResonseDataResolver_1.resolveResponseXML)(req);
         var responseProcessor = new ResponseProcessor_1.ResponseProcessor(req, externalContext, internalContext);
@@ -6545,13 +6621,13 @@ var Response;
     function handleElementUpdate(node, responseProcessor) {
         var cdataBlock = node.cDATAAsString;
         switch (node.id.value) {
-            case Const_1.P_VIEWROOT:
+            case (0, Const_1.$nsp)(Const_1.P_VIEWROOT):
                 responseProcessor.replaceViewRoot(mona_dish_1.DQ.fromMarkup(cdataBlock.substring(cdataBlock.indexOf("<html"))));
                 break;
-            case Const_1.P_VIEWHEAD:
+            case (0, Const_1.$nsp)(Const_1.P_VIEWHEAD):
                 responseProcessor.replaceHead(mona_dish_1.DQ.fromMarkup(cdataBlock));
                 break;
-            case Const_1.P_VIEWBODY:
+            case (0, Const_1.$nsp)(Const_1.P_VIEWBODY):
                 responseProcessor.replaceBody(mona_dish_1.DQ.fromMarkup(cdataBlock));
                 break;
             default: //htmlItem replacement
@@ -6685,7 +6761,7 @@ var ResponseProcessor = /** @class */ (function () {
          *      <error-message><![CDATA[message]]></error-message>
          * <error>
          */
-        var mergedErrorData = new mona_dish_1.Config({});
+        var mergedErrorData = new ExtDomQuery_1.ExtConfig({});
         mergedErrorData.assign(Const_1.SOURCE).value = this.externalContext.getIf(Const_1.P_PARTIAL_SOURCE).get(0).value;
         mergedErrorData.assign(Const_1.ERROR_NAME).value = node.querySelectorAll(Const_1.ERROR_NAME).textContent(Const_1.EMPTY_STR);
         mergedErrorData.assign(Const_1.ERROR_MESSAGE).value = node.querySelectorAll(Const_1.ERROR_MESSAGE).cDATAAsString;
@@ -6803,7 +6879,7 @@ var ResponseProcessor = /** @class */ (function () {
     ResponseProcessor.prototype.processViewState = function (node) {
         if (ResponseProcessor.isViewStateNode(node)) {
             var state = node.cDATAAsString;
-            this.internalContext.assign(Const_1.APPLIED_VST, node.id.value).value = new ImplTypes_1.StateHolder(node.id.value, state);
+            this.internalContext.assign(Const_1.APPLIED_VST, node.id.value).value = new ImplTypes_1.StateHolder((0, Const_1.$nsp)(node.id.value), state);
             return true;
         }
         return false;
@@ -6811,7 +6887,7 @@ var ResponseProcessor = /** @class */ (function () {
     ResponseProcessor.prototype.processClientWindow = function (node) {
         if (ResponseProcessor.isClientWindowNode(node)) {
             var state = node.cDATAAsString;
-            this.internalContext.assign(Const_1.APPLIED_CLIENT_WINDOW, node.id.value).value = new ImplTypes_1.StateHolder(node.id.value, state);
+            this.internalContext.assign(Const_1.APPLIED_CLIENT_WINDOW, node.id.value).value = new ImplTypes_1.StateHolder((0, Const_1.$nsp)(node.id.value), state);
             return true;
         }
     };
@@ -6872,7 +6948,7 @@ var ResponseProcessor = /** @class */ (function () {
      * @param viewState the final viewstate
      */
     ResponseProcessor.prototype.appendViewStateToForms = function (forms, viewState) {
-        this.assignState(forms, Const_1.SEL_VIEWSTATE_ELEM, viewState);
+        this.assignState(forms, (0, Const_1.$nsp)(Const_1.SEL_VIEWSTATE_ELEM), viewState);
     };
     /**
      * proper clientwindow -> form assignment
@@ -6881,7 +6957,7 @@ var ResponseProcessor = /** @class */ (function () {
      * @param clientWindow the final viewstate
      */
     ResponseProcessor.prototype.appendClientWindowToForms = function (forms, clientWindow) {
-        this.assignState(forms, Const_1.SEL_CLIENT_WINDOW_ELEM, clientWindow);
+        this.assignState(forms, (0, Const_1.$nsp)(Const_1.SEL_CLIENT_WINDOW_ELEM), clientWindow);
     };
     /**
      * generic append state which appends a certain state as hidden element to an existing set of forms
@@ -6906,7 +6982,7 @@ var ResponseProcessor = /** @class */ (function () {
      * (usually a form node)
      */
     ResponseProcessor.newViewStateElement = function (parent) {
-        var newViewState = mona_dish_1.DQ.fromMarkup(Const_1.HTML_VIEWSTATE);
+        var newViewState = mona_dish_1.DQ.fromMarkup((0, Const_1.$nsp)(Const_1.HTML_VIEWSTATE));
         newViewState.appendTo(parent);
         return newViewState;
     };
@@ -6945,9 +7021,9 @@ var ResponseProcessor = /** @class */ (function () {
     ResponseProcessor.isViewStateNode = function (node) {
         var _a, _b, _c, _d, _e, _f, _g;
         var separatorChar = ((_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : window === null || window === void 0 ? void 0 : window.jsf).separatorchar;
-        return "undefined" != typeof ((_b = node === null || node === void 0 ? void 0 : node.id) === null || _b === void 0 ? void 0 : _b.value) && (((_c = node === null || node === void 0 ? void 0 : node.id) === null || _c === void 0 ? void 0 : _c.value) == Const_1.P_VIEWSTATE ||
-            ((_e = (_d = node === null || node === void 0 ? void 0 : node.id) === null || _d === void 0 ? void 0 : _d.value) === null || _e === void 0 ? void 0 : _e.indexOf([separatorChar, Const_1.P_VIEWSTATE].join(Const_1.EMPTY_STR))) != -1 ||
-            ((_g = (_f = node === null || node === void 0 ? void 0 : node.id) === null || _f === void 0 ? void 0 : _f.value) === null || _g === void 0 ? void 0 : _g.indexOf([Const_1.P_VIEWSTATE, separatorChar].join(Const_1.EMPTY_STR))) != -1);
+        return "undefined" != typeof ((_b = node === null || node === void 0 ? void 0 : node.id) === null || _b === void 0 ? void 0 : _b.value) && (((_c = node === null || node === void 0 ? void 0 : node.id) === null || _c === void 0 ? void 0 : _c.value) == (0, Const_1.$nsp)(Const_1.P_VIEWSTATE) ||
+            ((_e = (_d = node === null || node === void 0 ? void 0 : node.id) === null || _d === void 0 ? void 0 : _d.value) === null || _e === void 0 ? void 0 : _e.indexOf([separatorChar, (0, Const_1.$nsp)(Const_1.P_VIEWSTATE)].join(Const_1.EMPTY_STR))) != -1 ||
+            ((_g = (_f = node === null || node === void 0 ? void 0 : node.id) === null || _f === void 0 ? void 0 : _f.value) === null || _g === void 0 ? void 0 : _g.indexOf([(0, Const_1.$nsp)(Const_1.P_VIEWSTATE), separatorChar].join(Const_1.EMPTY_STR))) != -1);
     };
     /**
      * incoming client window node also needs special processing
@@ -6958,9 +7034,9 @@ var ResponseProcessor = /** @class */ (function () {
     ResponseProcessor.isClientWindowNode = function (node) {
         var _a, _b, _c, _d, _e, _f, _g;
         var separatorChar = ((_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : window === null || window === void 0 ? void 0 : window.jsf).separatorchar;
-        return "undefined" != typeof ((_b = node === null || node === void 0 ? void 0 : node.id) === null || _b === void 0 ? void 0 : _b.value) && (((_c = node === null || node === void 0 ? void 0 : node.id) === null || _c === void 0 ? void 0 : _c.value) == Const_1.P_CLIENT_WINDOW ||
-            ((_e = (_d = node === null || node === void 0 ? void 0 : node.id) === null || _d === void 0 ? void 0 : _d.value) === null || _e === void 0 ? void 0 : _e.indexOf([separatorChar, Const_1.P_CLIENT_WINDOW].join(Const_1.EMPTY_STR))) != -1 ||
-            ((_g = (_f = node === null || node === void 0 ? void 0 : node.id) === null || _f === void 0 ? void 0 : _f.value) === null || _g === void 0 ? void 0 : _g.indexOf([Const_1.P_CLIENT_WINDOW, separatorChar].join(Const_1.EMPTY_STR))) != -1);
+        return "undefined" != typeof ((_b = node === null || node === void 0 ? void 0 : node.id) === null || _b === void 0 ? void 0 : _b.value) && (((_c = node === null || node === void 0 ? void 0 : node.id) === null || _c === void 0 ? void 0 : _c.value) == (0, Const_1.$nsp)(Const_1.P_CLIENT_WINDOW) ||
+            ((_e = (_d = node === null || node === void 0 ? void 0 : node.id) === null || _d === void 0 ? void 0 : _d.value) === null || _e === void 0 ? void 0 : _e.indexOf([separatorChar, (0, Const_1.$nsp)(Const_1.P_CLIENT_WINDOW)].join(Const_1.EMPTY_STR))) != -1 ||
+            ((_g = (_f = node === null || node === void 0 ? void 0 : node.id) === null || _f === void 0 ? void 0 : _f.value) === null || _g === void 0 ? void 0 : _g.indexOf([(0, Const_1.$nsp)(Const_1.P_CLIENT_WINDOW), separatorChar].join(Const_1.EMPTY_STR))) != -1);
     };
     ResponseProcessor.prototype.triggerOnError = function (errorData) {
         this.externalContext.getIf(Const_1.ON_ERROR).orElse(this.internalContext.getIf(Const_1.ON_ERROR).value).orElse(Const_1.EMPTY_FUNC).value(errorData);
@@ -7023,6 +7099,7 @@ exports.XhrFormData = void 0;
 var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 var isString = mona_dish_1.Lang.isString;
+var ExtDomQuery_1 = __webpack_require__(/*! ../util/ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
 /**
  * A unified form data class
  * which builds upon our configuration.
@@ -7129,7 +7206,7 @@ var XhrFormData = /** @class */ (function (_super) {
      * @param keyValueEntries
      */
     XhrFormData.prototype.assignString = function (keyValueEntries) {
-        var toMerge = new mona_dish_1.Config({});
+        var toMerge = new ExtDomQuery_1.ExtConfig({});
         function splitToKeyVal(line) {
             return line.split(/=(.*)/gi);
         }

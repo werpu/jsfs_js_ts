@@ -172,40 +172,19 @@ export const MAX_RECONNECT_ATTEMPTS = 25;
 
 export const UNKNOWN = "UNKNOWN";
 
+declare const window: any;
+
 
 /**
  * helper to remap the namespaces variables for 2.3
  * from 2.3 to 4.0 every javax namespace has been changed
  * to faces
  */
-export function remapNamespacesFor23() {
-     P_PARTIAL_SOURCE = "javax.faces.source";
-     P_VIEWSTATE = "javax.faces.ViewState";
-     P_VIEWROOT = "javax.faces.ViewRoot";
-     P_VIEWHEAD = "javax.faces.ViewHead";
-     P_VIEWBODY = "javax.faces.ViewBody";
-     P_AJAX = "javax.faces.partial.ajax";
-     P_EXECUTE = "javax.faces.partial.execute";
-     P_RENDER = "javax.faces.partial.render";
-     P_EVT = "javax.faces.partial.event";
-     P_CLIENT_WINDOW = "javax.faces.ClientWindow";
-     P_RESET_VALUES = "javax.faces.partial.resetValues";
-     P_WINDOW_ID = "javax.faces.windowId";
-    ENCODED_URL = "javax.faces.encodedURL";
+
+export function $nsp(inputNamespace: any) {
+     if(!inputNamespace?.replace) {
+          return inputNamespace;
+     }
+     return (!!window?.faces) ? inputNamespace.replace(/javax\.faces/gi,"jakarta.faces"): inputNamespace.replace(/jakarta\.faces/gi, "javax.faces");
 }
 
-export function remapNamespacesFor40() {
-     P_PARTIAL_SOURCE = "jakarta.faces.source";
-     P_VIEWSTATE = "jakarta.faces.ViewState";
-     P_VIEWROOT = "jakarta.faces.ViewRoot";
-     P_VIEWHEAD = "jakarta.faces.ViewHead";
-     P_VIEWBODY = "jakarta.faces.ViewBody";
-     P_AJAX = "jakarta.faces.partial.ajax";
-     P_EXECUTE = "jakarta.faces.partial.execute";
-     P_RENDER = "jakarta.faces.partial.render";
-     P_EVT = "jakarta.faces.partial.event";
-     P_CLIENT_WINDOW = "jakarta.faces.ClientWindow";
-     P_RESET_VALUES = "jakarta.faces.partial.resetValues";
-     P_WINDOW_ID = "jakarta.faces.windowId";
-     ENCODED_URL = "jakarta.faces.encodedURL";
-}

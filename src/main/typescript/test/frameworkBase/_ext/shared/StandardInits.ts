@@ -16,10 +16,11 @@
 
 
 import {DomQuery} from "mona-dish";
-import {remapNamespacesFor23, remapNamespacesFor40} from "../../../../impl/core/Const";
+
 
 declare let global;
 declare let faces: any;
+declare let jsf: any;
 declare let myfaces: any;
 
 /**
@@ -216,7 +217,7 @@ export module StandardInits {
                onclick="emitPPR(this, ('undefined' == typeof event)? null: event, 'errors');"/>
 
         <input type="button" id="cmd_error_component" value="Error: no component given"
-               onclick="faces.ajax.request(null, event, {}); return false"/>
+               onclick="(window.faces || window.jsf).ajax.request(null, event, {}); return false"/>
 
     </form>
 
@@ -228,7 +229,7 @@ export module StandardInits {
         function emitPPR(source, event, action, useIframe, formName) {
             document.getElementById(formName || "form1").action = target;
 
-            faces.ajax.request(/*String|Dom Node*/ source, /*|EVENT|*/ (window.event) ? window.event : event, /*{|OPTIONS|}*/ {op: action});
+            (window?.faces ?? window.jsf).ajax.request(/*String|Dom Node*/ source, /*|EVENT|*/ (window.event) ? window.event : event, /*{|OPTIONS|}*/ {op: action});
         }
     </script>
 </div>
@@ -379,7 +380,6 @@ export module StandardInits {
         delete (<any>global).myfaces;
         ((<any>global).Implementation) ? delete (<any>global).Implementation : null;
         delete (<any>global).PushImpl;
-        remapNamespacesFor40();
     };
 
     /**

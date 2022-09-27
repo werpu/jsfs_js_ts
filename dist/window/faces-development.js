@@ -9,7 +9,8 @@
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
-/* Licensed to the Apache Software Foundation (ASF) under one or more
+/*!
+ * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to you under the Apache License, Version 2.0
@@ -837,28 +838,11 @@ var DomQuery = /** @class */ (function () {
      * or are one
      */
     DomQuery.prototype.isMultipartCandidate = function (deep) {
-        var _this = this;
         if (deep === void 0) { deep = false; }
-        var isCandidate = function (item) {
-            var _a;
-            if (item.length == 0) {
-                return false;
-            }
-            if (item.length == 1) {
-                if (item.tagName.get("booga").value.toLowerCase() == "input" &&
-                    (((_a = item.attr("type")) === null || _a === void 0 ? void 0 : _a.value) || "").toLowerCase() == "file") {
-                    return true;
-                }
-                if (deep) {
-                    return _this.querySelectorAllDeep("input[type='file']").firstElem().isPresent();
-                }
-                else {
-                    return _this.querySelectorAll("input[type='file']").firstElem().isPresent();
-                }
-            }
-            return item.isMultipartCandidate(deep);
-        };
-        var ret = this.stream.filter(function (item) { return isCandidate(item); }).first().isPresent();
+        var FILE_INPUT = "input[type='file']";
+        var ret = this.matchesSelector(FILE_INPUT) ||
+            ((!deep) ? this.querySelectorAll(FILE_INPUT) :
+                this.querySelectorAllDeep(FILE_INPUT)).first().isPresent();
         return ret;
     };
     /**
@@ -957,7 +941,6 @@ var DomQuery = /** @class */ (function () {
         for (var _i = 0; _i < arguments.length; _i++) {
             nodeSelector[_i] = arguments[_i];
         }
-        debugger;
         var selectorStage = this.childNodes;
         for (var cnt = 0; cnt < nodeSelector.length; cnt++) {
             selectorStage = selectorStage.filterSelector(nodeSelector[cnt]);
@@ -1576,8 +1559,6 @@ var DomQuery = /** @class */ (function () {
                     if (files === null || files === void 0 ? void 0 : files.length) {
                         //xhr level2
                         target.append(name).value = files[0];
-                        //TODO we have to know that the entry is a file element, so that we can reuse
-                        //this information
                     }
                     else {
                         target.append(name).value = element.inputValue.value;
@@ -1829,7 +1810,8 @@ exports.DQ = DomQuery;
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
-/* Licensed to the Apache Software Foundation (ASF) under one or more
+/*!
+ * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to you under the Apache License, Version 2.0
@@ -2018,7 +2000,8 @@ var Lang;
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
-/* Licensed to the Apache Software Foundation (ASF) under one or more
+/*!
+ * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to you under the Apache License, Version 2.0
@@ -2673,7 +2656,8 @@ exports.Config = Config;
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
-/* Licensed to the Apache Software Foundation (ASF) under one or more
+/*!
+ * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to you under the Apache License, Version 2.0
@@ -3139,7 +3123,8 @@ exports.QueryFormStringCollector = QueryFormStringCollector;
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
-/* Licensed to the Apache Software Foundation (ASF) under one or more
+/*!
+ * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to you under the Apache License, Version 2.0
@@ -3620,7 +3605,8 @@ exports.LazyStream = LazyStream;
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
-/* Licensed to the Apache Software Foundation (ASF) under one or more
+/*!
+ * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to you under the Apache License, Version 2.0
@@ -3734,6 +3720,24 @@ exports.XQ = XMLQuery;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.QueryFormDataCollector = exports.FormDataCollector = exports.AssocArrayCollector = exports.ArrayCollector = exports.QueryFormStringCollector = exports.SequenceDataSource = exports.FlatMapStreamDataSource = exports.FilteredStreamDatasource = exports.MappedStreamDataSource = exports.ArrayStreamDataSource = exports.LazyStream = exports.Stream = exports.XQ = exports.XMLQuery = exports.ValueEmbedder = exports.Optional = exports.Monad = exports.Config = exports.Lang = exports.DQ = exports.DomQueryCollector = exports.ElementAttribute = exports.DomQuery = void 0;
+/*!
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 var DomQuery_1 = __webpack_require__(/*! ./DomQuery */ "./node_modules/mona-dish/src/main/typescript/DomQuery.ts");
 Object.defineProperty(exports, "DomQuery", ({ enumerable: true, get: function () { return DomQuery_1.DomQuery; } }));
 Object.defineProperty(exports, "ElementAttribute", ({ enumerable: true, get: function () { return DomQuery_1.ElementAttribute; } }));
@@ -3774,7 +3778,7 @@ Object.defineProperty(exports, "QueryFormDataCollector", ({ enumerable: true, ge
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
-/* Licensed to the Apache Software Foundation (ASF) under one or more
+/*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to you under the Apache License, Version 2.0
@@ -4048,7 +4052,7 @@ var myfaces;
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
-/* Licensed to the Apache Software Foundation (ASF) under one or more
+/*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to you under the Apache License, Version 2.0
@@ -4679,7 +4683,7 @@ var Implementation;
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
-/* Licensed to the Apache Software Foundation (ASF) under one or more
+/*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to you under the Apache License, Version 2.0
@@ -4918,7 +4922,7 @@ var PushImpl;
 /***/ ((__unused_webpack_module, exports) => {
 
 
-/* Licensed to the Apache Software Foundation (ASF) under one or more
+/*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to you under the Apache License, Version 2.0
@@ -5101,7 +5105,7 @@ exports.remapNamespacesFor40 = remapNamespacesFor40;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.StateHolder = void 0;
-/* Licensed to the Apache Software Foundation (ASF) under one or more
+/*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to you under the Apache License, Version 2.0
@@ -5151,7 +5155,7 @@ exports.StateHolder = StateHolder;
 /***/ ((__unused_webpack_module, exports) => {
 
 
-/* Licensed to the Apache Software Foundation (ASF) under one or more
+/*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to you under the Apache License, Version 2.0
@@ -5276,7 +5280,7 @@ exports.Messages = Messages;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Assertions = void 0;
-/* Licensed to the Apache Software Foundation (ASF) under one or more
+/*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to you under the Apache License, Version 2.0
@@ -5531,7 +5535,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ExtDQ = exports.ExtDomquery = void 0;
-/* Licensed to the Apache Software Foundation (ASF) under one or more
+/*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to you under the Apache License, Version 2.0
@@ -5733,7 +5737,7 @@ exports.ExtDQ = mona_dish_1.DQ;
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
-/* Licensed to the Apache Software Foundation (ASF) under one or more
+/*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to you under the Apache License, Version 2.0
@@ -5974,7 +5978,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ErrorData = exports.ErrorType = void 0;
-/* Licensed to the Apache Software Foundation (ASF) under one or more
+/*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to you under the Apache License, Version 2.0
@@ -6074,7 +6078,7 @@ exports.ErrorData = ErrorData;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EventData = void 0;
-/* Licensed to the Apache Software Foundation (ASF) under one or more
+/*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to you under the Apache License, Version 2.0
@@ -6127,7 +6131,7 @@ exports.EventData = EventData;
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
-/* Licensed to the Apache Software Foundation (ASF) under one or more
+/*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to you under the Apache License, Version 2.0
@@ -6279,7 +6283,7 @@ exports.resolveDefaults = resolveDefaults;
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
-/* Licensed to the Apache Software Foundation (ASF) under one or more
+/*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to you under the Apache License, Version 2.0
@@ -6391,7 +6395,7 @@ function resolveSourceElementId(context, internalContext) {
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
-/* Licensed to the Apache Software Foundation (ASF) under one or more
+/*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to you under the Apache License, Version 2.0
@@ -6567,7 +6571,7 @@ var Response;
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
-/* Licensed to the Apache Software Foundation (ASF) under one or more
+/*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to you under the Apache License, Version 2.0
@@ -7001,7 +7005,7 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.XhrFormData = void 0;
-/* Licensed to the Apache Software Foundation (ASF) under one or more
+/*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to you under the Apache License, Version 2.0
@@ -7249,7 +7253,7 @@ exports.XhrFormData = XhrFormData;
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
-/* Licensed to the Apache Software Foundation (ASF) under one or more
+/*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to you under the Apache License, Version 2.0
@@ -7548,7 +7552,7 @@ exports.XhrRequest = XhrRequest;
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
-/* Licensed to the Apache Software Foundation (ASF) under one or more
+/*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to you under the Apache License, Version 2.0

@@ -179,10 +179,12 @@ declare const window: any;
  * helper to remap the namespaces variables for 2.3
  * from 2.3 to 4.0 every javax namespace has been changed
  * to faces
+ * To take the compatibility layer out this method just has to be
+ * changed to a simple value passthrough
  */
 
-export function $nsp(inputNamespace: any) {
-     if(!inputNamespace?.replace) {
+export function $nsp(inputNamespace?: any): any {
+     if((!inputNamespace) || !inputNamespace?.replace) {
           return inputNamespace;
      }
      return (!!window?.faces) ? inputNamespace.replace(/javax\.faces/gi,"jakarta.faces"): inputNamespace.replace(/jakarta\.faces/gi, "javax.faces");

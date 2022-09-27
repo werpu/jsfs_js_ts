@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+/**
+ * Request test, testing on the 2.3 namespace fallback code
+ *
+ */
 import {describe, it} from "mocha";
 import * as sinon from "sinon";
 import {expect} from "chai";
@@ -25,20 +29,23 @@ import {
 } from "../../impl/core/Const";
 
 
+/**
+ * wherever we reference the namespaces they must be mapped to javax instead of jakarta
+ */
 function remapNamespacesFor23() {
-    P_PARTIAL_SOURCE = "javax.faces.source";
-    P_VIEWSTATE = "javax.faces.ViewState";
-    P_VIEWROOT = "javax.faces.ViewRoot";
-    P_VIEWHEAD = "javax.faces.ViewHead";
-    P_VIEWBODY = "javax.faces.ViewBody";
-    P_AJAX = "javax.faces.partial.ajax";
-    P_EXECUTE = "javax.faces.partial.execute";
-    P_RENDER = "javax.faces.partial.render";
-    P_EVT = "javax.faces.partial.event";
-    P_CLIENT_WINDOW = "javax.faces.ClientWindow";
-    P_RESET_VALUES = "javax.faces.partial.resetValues";
-    P_WINDOW_ID = "javax.faces.windowId";
-    ENCODED_URL = "javax.faces.encodedURL";
+    const P_PARTIAL_SOURCE = "javax.faces.source";
+    const P_VIEWSTATE = "javax.faces.ViewState";
+    const P_VIEWROOT = "javax.faces.ViewRoot";
+    const P_VIEWHEAD = "javax.faces.ViewHead";
+    const P_VIEWBODY = "javax.faces.ViewBody";
+    const P_AJAX = "javax.faces.partial.ajax";
+    const P_EXECUTE = "javax.faces.partial.execute";
+    const P_RENDER = "javax.faces.partial.render";
+    const P_EVT = "javax.faces.partial.event";
+    const P_CLIENT_WINDOW = "javax.faces.ClientWindow";
+    const P_RESET_VALUES = "javax.faces.partial.resetValues";
+    const P_WINDOW_ID = "javax.faces.windowId";
+    const ENCODED_URL = "javax.faces.encodedURL";
     return {
         P_PARTIAL_SOURCE, P_VIEWSTATE, P_VIEWROOT, P_VIEWHEAD, P_VIEWBODY,
         P_AJAX, P_EXECUTE, P_RENDER, P_EVT, P_CLIENT_WINDOW, P_RESET_VALUES,

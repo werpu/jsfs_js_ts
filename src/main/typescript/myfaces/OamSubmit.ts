@@ -105,13 +105,14 @@ export module oam {
                 }
             } catch (e) {
                 window?.console.error(e);
+            } finally {
+                form.attr(ATTR_TARGET).value = oldTarget;
+                Stream.ofAssoc(params).each((param: [string, any]) => {
+                    myfaces.oam.clearHiddenInput(formName, param[0]);
+                });
+                myfaces.oam.clearHiddenInput(formName, `${formName}:_idcl`);
             }
 
-            form.attr(ATTR_TARGET).value = oldTarget;
-            Stream.ofAssoc(params).each((param: [string, any]) => {
-                myfaces.oam.clearHiddenInput(formName, param[0]);
-            });
-            myfaces.oam.clearHiddenInput(formName, `${formName}:_idcl`);
         });
         return false;
     };

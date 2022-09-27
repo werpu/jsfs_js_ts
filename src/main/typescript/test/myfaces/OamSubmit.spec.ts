@@ -62,9 +62,7 @@ describe('Tests on the xhr core when it starts to call the request', function ()
     it('submit form must work', function() {
         let FORM_ID = "blarg";
         let form = DomQuery.byId(FORM_ID);
-        let submitCalled;
-        (form.value.value as any).submit = () => {
-            submitCalled = true;
+        const submit_spy = Sinon.spy(() => {
             expect(form.querySelectorAll('input[name=\'booga1\']').isPresent()).to.eq(true);
             expect(form.querySelectorAll('input[name=\'booga1\']').length == 1).to.eq(true);
             expect(form.querySelectorAll('input[name=\'booga1\']').inputValue.value == 'val_booga1').to.eq(true);
@@ -75,7 +73,8 @@ describe('Tests on the xhr core when it starts to call the request', function ()
             expect(form.querySelectorAll(`input[name='${FORM_ID}:_idcl']`).length == 1).to.eq(true);
             expect(form.querySelectorAll(`input[name='${FORM_ID}:_idcl']`).inputValue.value == 'mylink').to.eq(true);
             expect(form.attr("target").value).to.eq('target1');
-        }
+        });
+        (form.value.value as any).submit = submit_spy;
 
 
         submitForm(FORM_ID, 'mylink', 'target1', {
@@ -83,27 +82,18 @@ describe('Tests on the xhr core when it starts to call the request', function ()
             booga2: "val_booga2"
         });
 
-        expect(submitCalled).to.eq(true);
+        expect(submit_spy.called).to.eq(true);
         form = DomQuery.byId(FORM_ID);
         expect(form.querySelectorAll('input[name=\'booga1\']').isAbsent()).to.eq(true);
         expect(form.querySelectorAll('input[name=\'booga2\']').isAbsent()).to.eq(true);
         expect(form.querySelectorAll(`input[name='${FORM_ID}:_idcl']`).isAbsent()).to.eq(true);
 
-       //const os_spy = Sinon.spy(form.getAsElem(0).value, 'onsubmit' as keyof Element);
-       const submit_spy = Sinon.spy(form.getAsElem(0).value, 'submit' as keyof Element);
-       expect
-
-        //we also have to interceot onsbumit
-       // expect(os_spy.called).to.eq(true);
-       // expect(submit_spy.called).to.eq(true);
     })
 
     it('onsubmit form must work', function() {
         let FORM_ID = "blarg";
         let form = DomQuery.byId(FORM_ID);
-        let onSubmitCalled;
-        (form.value.value as any).onsubmit = () => {
-            onSubmitCalled = true;
+        const onsumbit = () => {
             expect(form.querySelectorAll('input[name=\'booga1\']').isPresent()).to.eq(true);
             expect(form.querySelectorAll('input[name=\'booga1\']').length == 1).to.eq(true);
             expect(form.querySelectorAll('input[name=\'booga1\']').inputValue.value == 'val_booga1').to.eq(true);
@@ -114,7 +104,12 @@ describe('Tests on the xhr core when it starts to call the request', function ()
             expect(form.querySelectorAll(`input[name='${FORM_ID}:_idcl']`).length == 1).to.eq(true);
             expect(form.querySelectorAll(`input[name='${FORM_ID}:_idcl']`).inputValue.value == 'mylink').to.eq(true);
             expect(form.attr("target").value).to.eq('target1');
+            return false;
         }
+        const os_spy = Sinon.spy(onsumbit);
+        const submit_spy = Sinon.spy(() => {});
+        (form.value.value as any).onsubmit = os_spy;
+        (form.value.value as any).submit = submit_spy;
 
 
         submitForm(FORM_ID, 'mylink', 'target1', {
@@ -122,18 +117,14 @@ describe('Tests on the xhr core when it starts to call the request', function ()
             booga2: "val_booga2"
         });
 
-        expect(onSubmitCalled).to.eq(true);
+        //we also have to interceot onsbumit
+        expect(os_spy.called).to.eq(true);
+        expect(submit_spy.called).to.eq(false);
+
         form = DomQuery.byId(FORM_ID);
         expect(form.querySelectorAll('input[name=\'booga1\']').isAbsent()).to.eq(true);
         expect(form.querySelectorAll('input[name=\'booga2\']').isAbsent()).to.eq(true);
         expect(form.querySelectorAll(`input[name='${FORM_ID}:_idcl']`).isAbsent()).to.eq(true);
-
-        //const os_spy = Sinon.spy(form.getAsElem(0).value, 'onsubmit' as keyof Element);
-        const submit_spy = Sinon.spy(form.getAsElem(0).value, 'submit' as keyof Element);
-        expect
-
-        //we also have to interceot onsbumit
-        // expect(os_spy.called).to.eq(true);
         // expect(submit_spy.called).to.eq(true);
     })
 

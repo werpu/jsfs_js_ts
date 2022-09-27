@@ -15,7 +15,6 @@
  */
 import {Config, IValueHolder, Optional, DomQuery, DQ, Stream, ArrayCollector} from "mona-dish";
 import {$nsp, P_WINDOW_ID} from "../core/Const";
-import {AssocArrayCollector} from "mona-dish/src/main/typescript/SourcesCollectors";
 
 declare let window: any;
 
@@ -29,17 +28,16 @@ declare let window: any;
  */
 const IS_FACES_SOURCE = (source?: string): boolean => {
     //spec version smaller 4 we have to deal with the jsf namespace
-    if (window.jsf) {
-        // fallback into 2.3 api level
-        return source && !!(source?.search(/\/javax\.faces\.resource.*\/jsf\.js.*/) != -1 ||
-            source?.search(/\/jsf-development\.js.*/) != -1 ||
-            source?.search(/\/jsf-uncompressed\.js.*/) != -1 ||
-            source?.search(/\/jsf[^.]*\.js.*ln=javax.faces.*/gi) != -1);
-    }
+
     return source && !!(source?.search(/\/jakarta\.faces\.resource.*\/faces\.js.*/) != -1 ||
         source?.search(/\/faces-development\.js.*/) != -1 ||
         source?.search(/\/faces-uncompressed\.js.*/) != -1 ||
-        source?.search(/\/faces[^.]*\.js.*ln=jakarta.faces.*/gi) != -1);
+        source?.search(/\/faces[^.]*\.js.*ln=jakarta.faces.*/gi) != -1 ||
+        //fallback without check for jsf, that way we allow both bookmarks
+        source?.search(/\/javax\.faces\.resource.*\/jsf\.js.*/) != -1 ||
+            source?.search(/\/jsf-development\.js.*/) != -1 ||
+            source?.search(/\/jsf-uncompressed\.js.*/) != -1 ||
+            source?.search(/\/jsf[^.]*\.js.*ln=javax.faces.*/gi) != -1);
 }
 
 /**
@@ -51,10 +49,7 @@ const IS_FACES_SOURCE = (source?: string): boolean => {
  * @constructor
  */
 const IS_INTERNAL_SOURCE = (source: string): boolean => {
-    if (window?.jsf) {
-        return source.search(/\/jsf[^.]*\.js.*ln=myfaces.testscripts.*/gi) != -1;
-    }
-    return source.search(/\/faces[^.]*\.js.*ln=myfaces.testscripts.*/gi) != -1;
+    return source.search(/\/faces[^.]*\.js.*ln=myfaces.testscripts.*/gi) != -1 || source.search(/\/jsf[^.]*\.js.*ln=myfaces.testscripts.*/gi) != -1;
 }
 
 
@@ -188,6 +183,10 @@ export class ExtDomquery extends DQ {
 
 export const ExtDQ = ExtDomquery;
 
+/**
+ * in order to reduce the number of interception points for the fallbacks we add
+ * the namespace remapping straight to our config accessors
+ */
 export class ExtConfig extends  Config {
 
     constructor(root: any) {

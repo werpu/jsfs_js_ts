@@ -1,5 +1,6 @@
 {
     "extends": "@istanbuljs/nyc-config-typescript",
     "all": true,
-    "exclude": ["**/test/**/*.*","**/*.config.*", "**/Messages_*.*","**/*Probe*.*",  "**/*.js"]
+    "exclude": ["**/test/**/*.*","**/*.config.*", "**/Messages_*.*","**/*Probe*.*",  "**/*.js"],
+    "license": "Apache-2.0"
 }

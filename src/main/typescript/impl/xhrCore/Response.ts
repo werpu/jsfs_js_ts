@@ -47,8 +47,8 @@ export module Response {
 
 
     /**
-     * Standardized faces.js response
-     * this one is called straight from faces.js.response
+     * Standardized faces.ts response
+     * this one is called straight from faces.ts.response
      *
      * The processing follows the spec by going for the responseXML
      * and processing its tags

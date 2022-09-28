@@ -3357,13 +3357,15 @@ Object.defineProperty(exports, "QueryFormDataCollector", ({ enumerable: true, ge
 
 /***/ }),
 
-/***/ "./src/main/typescript/api/faces.ts":
-/*!******************************************!*\
-  !*** ./src/main/typescript/api/faces.ts ***!
-  \******************************************/
+/***/ "./src/main/typescript/api/_api.ts":
+/*!*****************************************!*\
+  !*** ./src/main/typescript/api/_api.ts ***!
+  \*****************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.myfaces = exports.faces = void 0;
 /*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -3379,18 +3381,16 @@ Object.defineProperty(exports, "QueryFormDataCollector", ({ enumerable: true, ge
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.myfaces = exports.faces = void 0;
-///<reference types='../../types/typedefs'/>
 const AjaxImpl_1 = __webpack_require__(/*! ../impl/AjaxImpl */ "./src/main/typescript/impl/AjaxImpl.ts");
 const PushImpl_1 = __webpack_require__(/*! ../impl/PushImpl */ "./src/main/typescript/impl/PushImpl.ts");
 const OamSubmit_1 = __webpack_require__(/*! ../myfaces/OamSubmit */ "./src/main/typescript/myfaces/OamSubmit.ts");
-//declare const Implementation: any;
+const Const_1 = __webpack_require__(/*! ../impl/core/Const */ "./src/main/typescript/impl/core/Const.ts");
+//we use modules to get a proper jsdoc and static/map structure in the calls
+//as per spec requirement
 var faces;
 (function (faces) {
-    "use strict";
     /*
-     * Version of the implementation for the faces.js.
+     * Version of the implementation for the faces.ts.
      * <p />
      * as specified within the jsf specifications faces.html:
      * <ul>
@@ -3575,7 +3575,6 @@ var faces;
         push.close = close;
     })(push = faces.push || (faces.push = {}));
 })(faces = exports.faces || (exports.faces = {}));
-//fullfill the window contract for the myfaces namespace
 var myfaces;
 (function (myfaces) {
     /**
@@ -3591,13 +3590,9 @@ var myfaces;
      * @param options
      */
     function ab(source, event, eventName, execute, render, options = {}) {
+        var _a;
         if (eventName) {
-            if (!(window === null || window === void 0 ? void 0 : window.jsf)) {
-                options["jakarta.faces.behavior.event"] = eventName;
-            }
-            else {
-                options["javax.faces.behavior.event"] = eventName;
-            }
+            options[(0, Const_1.$nsp)("jakarta.faces.behavior.event")] = eventName;
         }
         if (execute) {
             options["execute"] = execute;
@@ -3605,7 +3600,7 @@ var myfaces;
         if (render) {
             options["render"] = render;
         }
-        faces.ajax.request(source, event, options);
+        ((_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : window.jsf).ajax.request(source, event, options);
     }
     myfaces.ab = ab;
     /**
@@ -5918,8 +5913,8 @@ const ExtDomQuery_1 = __webpack_require__(/*! ../util/ExtDomQuery */ "./src/main
 var Response;
 (function (Response) {
     /**
-     * Standardized faces.js response
-     * this one is called straight from faces.js.response
+     * Standardized faces.ts response
+     * this one is called straight from faces.ts.response
      *
      * The processing follows the spec by going for the responseXML
      * and processing its tags
@@ -7133,15 +7128,56 @@ var oam;
 /******/ 	}
 /******/ 	
 /************************************************************************/
-/******/ 	
-/******/ 	// startup
-/******/ 	// Load entry module and return exports
-/******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __webpack_require__("./src/main/typescript/api/faces.ts");
-/******/ 	var __webpack_export_target__ = window;
-/******/ 	for(var i in __webpack_exports__) __webpack_export_target__[i] = __webpack_exports__[i];
-/******/ 	if(__webpack_exports__.__esModule) Object.defineProperty(__webpack_export_target__, "__esModule", { value: true });
-/******/ 	
+var __webpack_exports__ = {};
+// This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
+(() => {
+var exports = __webpack_exports__;
+/*!******************************************!*\
+  !*** ./src/main/typescript/api/faces.ts ***!
+  \******************************************/
+/*! Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference types='../../types/typedefs'/>
+
+var _a, _b, _c;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.myfaces = exports.faces = void 0;
+/**
+ * faces.js init layer which provides as per spec the proper
+ * window namespace if it does not exist already
+ */
+if (!window.faces) {
+    //we lazily load the code to prevent ram bloat
+    const faces = (__webpack_require__(/*! ./_api */ "./src/main/typescript/api/_api.ts").faces);
+    window['faces'] = (_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : faces;
+}
+if (!((_b = window === null || window === void 0 ? void 0 : window.myfaces) === null || _b === void 0 ? void 0 : _b.ab)) {
+    const myfaces = (__webpack_require__(/*! ./_api */ "./src/main/typescript/api/_api.ts").myfaces);
+    //namespace might be extended is not exclusively reserved so we merge
+    window["myfaces"] = (_c = window === null || window === void 0 ? void 0 : window.myfaces) !== null && _c !== void 0 ? _c : {};
+    Object.keys(myfaces).forEach(key => { var _a, _b; return window.myfaces[key] = (_b = (_a = window.myfaces) === null || _a === void 0 ? void 0 : _a[key]) !== null && _b !== void 0 ? _b : myfaces[key]; });
+}
+exports.faces = window.faces;
+exports.myfaces = window.myfaces;
+
+})();
+
+var __webpack_export_target__ = window;
+for(var i in __webpack_exports__) __webpack_export_target__[i] = __webpack_exports__[i];
+if(__webpack_exports__.__esModule) Object.defineProperty(__webpack_export_target__, "__esModule", { value: true });
 /******/ })()
 ;
 //# sourceMappingURL=faces-development.js.map

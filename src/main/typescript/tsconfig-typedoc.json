@@ -24,7 +24,7 @@ Special config to generate the tsdocs
 
   },
   "typedocOptions": {
-    "entryPoints": ["api/faces.ts"],
+    "entryPoints": ["api/_api.ts"],
     "out": "../../../dist/docs",
     "externalPattern": "**/node_modules/**",
     "exclude": "**/{node_modules,test,doc,impl,myfaces}/**/*",

@@ -14,7 +14,7 @@
 
 /***/ "./src/main/typescript/api/Jsf.ts":
 /*!****************************************!*\
-  !*** ./src/main/typescript/api/faces.ts ***!
+  !*** ./src/main/typescript/api/_api.ts ***!
   \****************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 

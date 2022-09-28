@@ -3389,7 +3389,8 @@ const Const_1 = __webpack_require__(/*! ../impl/core/Const */ "./src/main/typesc
 //as per spec requirement
 var faces;
 (function (faces) {
-    /*
+    faces.contextpath = '#{facesContext.externalContext.requestContextPath}';
+    /**
      * Version of the implementation for the faces.ts.
      * <p />
      * as specified within the jsf specifications faces.html:
@@ -3411,10 +3412,15 @@ var faces;
      */
     faces.implversion = 0;
     /**
-     * SeparatorChar as defined by UINamingContainer.getNamingContainerSeparatorChar()
+     * SeparatorChar as defined by facesContext.getNamingContainerSeparatorChar()
      * @type {Char}
      */
     faces.separatorchar = getSeparatorChar();
+    /**
+     * Context Path as defined externalContext.requestContextPath
+     */
+    faces.contextpath = '#{facesContext.externalContext.requestContextPath}';
+    // we do not have a fallback here, for now
     /**
      * This method is responsible for the return of a given project stage as defined
      * by the jsf specification.
@@ -3457,7 +3463,9 @@ var faces;
     faces.getClientWindow = getClientWindow;
     //private helper functions
     function getSeparatorChar() {
-        return AjaxImpl_1.Implementation.getSeparatorChar();
+        const sep = '#{facesContext.namingContainerSeparatorChar}';
+        //We now enable standalone mode, the separator char was not mapped we make a fallback to 2.3 behavior
+        return (faces.separatorchar.indexOf(/\#\{/gi) != -1) ? AjaxImpl_1.Implementation.getSeparatorChar() : sep;
     }
     let ajax;
     (function (ajax) {
@@ -3751,6 +3759,16 @@ var Implementation;
         return (_c = (_b = (_a = resolveGlobalConfig()) === null || _a === void 0 ? void 0 : _a.separator) !== null && _b !== void 0 ? _b : this === null || this === void 0 ? void 0 : this.separator) !== null && _c !== void 0 ? _c : (separator = ExtDomQuery_1.ExtDomquery.searchJsfJsFor(/separator=([^&;]*)/).orElse(":").value);
     }
     Implementation.getSeparatorChar = getSeparatorChar;
+    /**
+     * fetches the separator char from the given script tags
+     *
+     * @return {string} the separator char for the given script tags
+     */
+    function getContextPath() {
+        var _a, _b, _c;
+        return (_c = (_b = (_a = resolveGlobalConfig()) === null || _a === void 0 ? void 0 : _a.separator) !== null && _b !== void 0 ? _b : this === null || this === void 0 ? void 0 : this.separator) !== null && _c !== void 0 ? _c : (separator = ExtDomQuery_1.ExtDomquery.searchJsfJsFor(/separator=([^&;]*)/).orElse(":").value);
+    }
+    Implementation.getContextPath = getContextPath;
     /**
      * this is for testing purposes only, since AjaxImpl is a module
      * we need to reset for every unit test its internal states
@@ -7166,6 +7184,7 @@ if (!window.jsf) {
     const faces = (__webpack_require__(/*! ./_api */ "./src/main/typescript/api/_api.ts").faces);
     window['jsf'] = (_a = window === null || window === void 0 ? void 0 : window.jsf) !== null && _a !== void 0 ? _a : faces;
     window.jsf.specversion = 230000;
+    delete window.jsf.contextpath;
 }
 if (!((_b = window === null || window === void 0 ? void 0 : window.myfaces) === null || _b === void 0 ? void 0 : _b.ab)) {
     const myfaces = (__webpack_require__(/*! ./_api */ "./src/main/typescript/api/_api.ts").myfaces);
@@ -7178,7 +7197,6 @@ if (!((_b = window === null || window === void 0 ? void 0 : window.myfaces) === 
         Object.keys(myfaces).forEach(key => { var _a, _b; return window.myfaces[key] = (_b = (_a = window.myfaces) === null || _a === void 0 ? void 0 : _a[key]) !== null && _b !== void 0 ? _b : myfaces[key]; });
     }
 }
-alert("init");
 exports.jsf = window.jsf;
 exports.myfaces = window.myfaces;
 

@@ -15,6 +15,7 @@
  */
 ///<reference types='../../types/typedefs'/>
 "use strict";
+
 declare const window: any;
 
 /**
@@ -27,6 +28,7 @@ if(!window.jsf) {
     const faces = require("./_api").faces;
     window['jsf'] = (window as any)?.jsf ?? faces;
     window.jsf.specversion = 230000;
+    delete window.jsf.contextpath;
 }
 if(!window?.myfaces?.ab) {
     const myfaces = require("./_api").myfaces;
@@ -34,14 +36,11 @@ if(!window?.myfaces?.ab) {
     window["myfaces"] = window?.myfaces ?? {};
     if(!window?.myfaces?.ab) {
         const myfaces = require("./_api").myfaces;
-
         //namespace might be extended is not exclusively reserved so we merge
         window["myfaces"] = window?.myfaces ?? {};
         Object.keys(myfaces).forEach(key => window.myfaces[key] = window.myfaces?.[key] ?? myfaces[key]);
     }
-
 }
-alert("init")
 
 export var jsf = window.jsf;
 export var myfaces = window.myfaces;

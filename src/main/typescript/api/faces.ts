@@ -15,6 +15,8 @@
  */
 ///<reference types='../../types/typedefs'/>
 "use strict";
+import {Implementation} from "../impl/AjaxImpl";
+
 declare const window: any;
 
 /**

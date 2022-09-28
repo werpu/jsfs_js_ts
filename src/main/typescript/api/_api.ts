@@ -24,6 +24,7 @@ declare const window: any;
 //as per spec requirement
 export module faces {
 
+    export var contextpath = '#{facesContext.externalContext.requestContextPath}';
 
     /**
      * Version of the implementation for the faces.ts.
@@ -48,10 +49,16 @@ export module faces {
     export var implversion = 0;
 
     /**
-     * SeparatorChar as defined by UINamingContainer.getNamingContainerSeparatorChar()
+     * SeparatorChar as defined by facesContext.getNamingContainerSeparatorChar()
      * @type {Char}
      */
     export var separatorchar = getSeparatorChar();
+
+    /**
+     * Context Path as defined externalContext.requestContextPath
+     */
+    export var contextpath = '#{facesContext.externalContext.requestContextPath}';
+    // we do not have a fallback here, for now
 
     /**
      * This method is responsible for the return of a given project stage as defined
@@ -95,8 +102,14 @@ export module faces {
 
     //private helper functions
     function getSeparatorChar() {
-        return Implementation.getSeparatorChar();
+        const sep = '#{facesContext.namingContainerSeparatorChar}';
+        //We now enable standalone mode, the separator char was not mapped we make a fallback to 2.3 behavior
+        //the idea is that the separator char is provided from the underlying container, but if not then we
+        //will perform a fallback (aka 2.3 has the url fallback behavior)
+        return (sep.match(/\#\{facesContext.namingContainerSeparatorChar\}/gi)) ? Implementation.getSeparatorChar() : sep;
     }
+
+
 
 
     export module ajax {

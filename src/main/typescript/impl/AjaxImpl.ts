@@ -172,6 +172,18 @@ export module Implementation {
     }
 
     /**
+     * fetches the separator char from the given script tags
+     *
+     * @return {string} the separator char for the given script tags
+     */
+    export function getContextPath(): string {
+        return resolveGlobalConfig()?.separator ??
+            this?.separator ??
+            (separator = ExtDomquery.searchJsfJsFor(/separator=([^&;]*)/).orElse(":").value);
+    }
+
+
+    /**
      * this is for testing purposes only, since AjaxImpl is a module
      * we need to reset for every unit test its internal states
      */

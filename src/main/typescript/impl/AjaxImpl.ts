@@ -47,7 +47,7 @@ import {
     P_RENDER,
     P_RESET_VALUES,
     P_WINDOW_ID,
-    RENDER,
+    CTX_PARAM_RENDER,
     REQ_TYPE_POST,
     SOURCE,
     TAG_FORM
@@ -551,8 +551,8 @@ export module Implementation {
      * @param sourceElementId the executing element triggering the faces.ajax.request (id of it)
      */
     function assignRender(requestOptions: Config, targetContext: Config, issuingForm: DQ, sourceElementId: string) {
-        if (requestOptions.getIf(RENDER).isPresent()) {
-            remapDefaultConstants(targetContext.getIf(CTX_PARAM_PASS_THR).get({}), P_RENDER, <string>requestOptions.getIf(RENDER).value, issuingForm, <any>sourceElementId);
+        if (requestOptions.getIf(CTX_PARAM_RENDER).isPresent()) {
+            remapDefaultConstants(targetContext.getIf(CTX_PARAM_PASS_THR).get({}), P_RENDER, <string>requestOptions.getIf(CTX_PARAM_RENDER).value, issuingForm, <any>sourceElementId);
         }
     }
 

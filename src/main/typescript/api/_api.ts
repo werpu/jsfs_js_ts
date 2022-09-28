@@ -16,7 +16,7 @@
 import {Implementation} from "../impl/AjaxImpl";
 import {PushImpl} from "../impl/PushImpl";
 import {oam as _oam} from "../myfaces/OamSubmit";
-import {$nsp} from "../impl/core/Const";
+import {$nsp, CTX_PARAM_EXECUTE, CTX_PARAM_RENDER, P_BEHAVIOR_EVENT} from "../impl/core/Const";
 
 
 declare const window: any;
@@ -25,7 +25,7 @@ declare const window: any;
 export module faces {
 
 
-    /*
+    /**
      * Version of the implementation for the faces.ts.
      * <p />
      * as specified within the jsf specifications faces.html:
@@ -237,13 +237,13 @@ export module myfaces {
      */
     export function ab(source: Element, event: Event, eventName: string, execute: string, render: string, options: Context = {}) {
         if (eventName) {
-           options[$nsp("jakarta.faces.behavior.event")] = eventName;
+           options[$nsp(P_BEHAVIOR_EVENT)] = eventName;
         }
         if (execute) {
-            options["execute"] = execute;
+            options[CTX_PARAM_EXECUTE] = execute;
         }
         if (render) {
-            options["render"] = render;
+            options[CTX_PARAM_RENDER] = render;
         }
 
         (window?.faces ?? window.jsf).ajax.request(source, event, options);

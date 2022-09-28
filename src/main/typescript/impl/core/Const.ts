@@ -17,13 +17,12 @@
 /*
  * [export const] constants
  */
-export let P_PARTIAL_SOURCE = "jakarta.faces.source";
-export let PARTIAL_ID = "partialId";
-export let P_VIEWSTATE = "jakarta.faces.ViewState";
-export let P_VIEWROOT = "jakarta.faces.ViewRoot";
-export let P_VIEWHEAD = "jakarta.faces.ViewHead";
-export let P_VIEWBODY = "jakarta.faces.ViewBody";
-
+export const P_PARTIAL_SOURCE = "jakarta.faces.source";
+export const PARTIAL_ID = "partialId";
+export const P_VIEWSTATE = "jakarta.faces.ViewState";
+export const P_VIEWROOT = "jakarta.faces.ViewRoot";
+export const P_VIEWHEAD = "jakarta.faces.ViewHead";
+export const P_VIEWBODY = "jakarta.faces.ViewBody";
 
 /*some useful definitions*/
 
@@ -42,16 +41,17 @@ export const IDENT_THIS = "@this";
 export const IDENT_FORM = "@form";
 
 
-export let P_AJAX = "jakarta.faces.partial.ajax";
-export let P_EXECUTE = "jakarta.faces.partial.execute";
-export let P_RENDER = "jakarta.faces.partial.render";
-export let P_EVT = "jakarta.faces.partial.event";
-export let P_CLIENT_WINDOW = "jakarta.faces.ClientWindow";
-export let P_RESET_VALUES = "jakarta.faces.partial.resetValues";
-export let P_WINDOW_ID = "jakarta.faces.windowId";
+export const P_AJAX = "jakarta.faces.partial.ajax";
+export const P_EXECUTE = "jakarta.faces.partial.execute";
+export const P_RENDER = "jakarta.faces.partial.render";
+export const P_EVT = "jakarta.faces.partial.event";
+export const P_CLIENT_WINDOW = "jakarta.faces.ClientWindow";
+export const P_RESET_VALUES = "jakarta.faces.partial.resetValues";
+export const P_WINDOW_ID = "jakarta.faces.windowId";
 
+export const P_BEHAVIOR_EVENT = "jakarta.faces.behavior.event";
 
-export const RENDER = "render";
+export const CTX_PARAM_RENDER = "render";
 export const WINDOW_ID = "windowId";
 
 /* message types */
@@ -103,7 +103,7 @@ export const CONTENT_TYPE = "Content-Type";
 export const HEAD_FACES_REQ = "Faces-Request";
 export const REQ_ACCEPT = "Accept";
 export const VAL_AJAX = "partial/ajax";
-export let ENCODED_URL = "jakarta.faces.encodedURL";
+export const ENCODED_URL = "jakarta.faces.encodedURL";
 export const REQ_TYPE_GET = "GET";
 export const REQ_TYPE_POST = "POST";
 export const STATE_EVT_BEGIN = "begin"; //TODO remove this

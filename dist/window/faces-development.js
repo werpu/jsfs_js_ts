@@ -3465,7 +3465,9 @@ var faces;
     function getSeparatorChar() {
         const sep = '#{facesContext.namingContainerSeparatorChar}';
         //We now enable standalone mode, the separator char was not mapped we make a fallback to 2.3 behavior
-        return (faces.separatorchar.indexOf(/\#\{/gi) != -1) ? AjaxImpl_1.Implementation.getSeparatorChar() : sep;
+        //the idea is that the separator char is provided from the underlying container, but if not then we
+        //will perform a fallback (aka 2.3 has the url fallback behavior)
+        return (sep.match(/\#\{facesContext.namingContainerSeparatorChar\}/gi)) ? AjaxImpl_1.Implementation.getSeparatorChar() : sep;
     }
     let ajax;
     (function (ajax) {

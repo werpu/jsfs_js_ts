@@ -16,22 +16,26 @@ unnecessary colliding dependencies.
 But it still uses classes modules and inheritance
 for code structuring.
 The reason for this is, I do not like the one function for all
-approach, Webpack can take care of the packaging.
+approach, especially given we have Typescript now as implementation language
+which allows a proper code structuring and modularization.
 
-Having smaller code parts makes it easier to test certain
+Webpack can take care of the packaging.
+
+Having smaller code parts, makes it easier to test certain
 aspects of the implementation.
 
-Also one additional aspect of the new implementation it has a proper
-test coverage via unit tests.
+Also one additional aspect of the new implementation: it has a proper
+test coverage via Mocha based unit tests.
 
 This was also severely lacking in my old implementation
 where I just ran a set of 20 integration tests on macro scale.
 
 ## Status
 
-ATM I am function complete, and the code
+ATM I am function in beta bugfixing stage, and the code
 can be tested (final beta stages)
-I probably will make a release before end of 2022.
+I probably will make a release at the same time MyFaces 4.0 
+final hits the scene.
 It has been testing in MyFaces Tobago now for a year
 and atm is being integrated into MyFaces as new
 JS/TS codebase.

@@ -3,7 +3,7 @@
 ## What is this?
 
 This project is a work in progress for a next gen typescript based 
-reimplementation of jsf.js
+reimplementation of jsf.js/faces.js
 
 The main goal is maintainability. It omits legacy browsers
 with Edge 14 and Ecmascript 2015 being the browser and ES baseline for the moment.

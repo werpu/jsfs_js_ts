@@ -6,16 +6,12 @@ This project is a work in progress for a next gen typescript based
 reimplementation of jsf.js
 
 The main goal is maintainability. It omits legacy browsers
-with IE11 being the future the baseline for the moment.
+with Edge 14 and Ecmascript 2015 being the browser and ES baseline for the moment.
 
 It uses functional constructs on micro scale
 to keep the maintainability and uses 
 my own [mona-dish](https://github.com/werpu/mona-dish/) project as core framework base, to avoid
 unnecessary colliding dependencies.
-
-I might roll in MonaDish in the future
-via npm, but for now simply having it in the codebase suffices
-and prevents collisions with other frameworks.
 
 But it still uses classes modules and inheritance
 for code structuring.
@@ -35,10 +31,10 @@ where I just ran a set of 20 integration tests on macro scale.
 
 ATM I am function complete, and the code
 can be tested (final beta stages)
-I probably will make a release before 2022.
+I probably will make a release before end of 2022.
 It has been testing in MyFaces Tobago now for a year
 and atm is being integrated into MyFaces as new
-JS codebase.
+JS/TS codebase.
 
 Addition, for the integration in MyFaces, the api level has been
 uplifted to Jakarta Faces 4.0
@@ -51,6 +47,8 @@ you simply just need to load the generated. jsf.js file which goes down to 2.3 c
 while loading faces.js will provide 4.0 compatibility
 
 For this reason the version now also in the npm package is 4.0.x
+(the pre changes code can still be reached in the 2.3 branch although
+this branch is basically legacy, given we have the SHIM layer doing both)
 
 ### Special info    
 Due to a small api change, if you want to embed the 4.0 version (faces.js)
@@ -62,18 +60,18 @@ Now if you want to provide your own embedded solution and you will have
 to set this value yourself. While my code does not use the attribute in the faces
 namespace, other libraries or the users might.
 
-If you serve the code from MyFaxes 4 instead of embedding it, the value will be preset
+If you serve the code from MyFaces 4 instead of embedding it, the value will be preset
 by the internal resource loader.
 
 The JSF 2.3 version (jsf.js) is not affected by this change, so nothing needs to be done.
-In fact the contextpath attribute is not present there.
+In fact the *contextpath* attribute is not present there.
 All other attributes behave the same in both versions as in the original legacy codebase.
 
 
 
 ## Usage
 
-It still is a work in progress, but for testing purposes
+It still is code complete and in bugfixing phase, for testing purposes
 it can be used (check the dist directory for builds, I consider
 stable enough for testing, or your own builds)
 
@@ -121,7 +119,7 @@ so it is gone now
 
 * pps disabled for the moment
 
-we had a special pps handling introduced in myfaces, a feature
+We had a special pps handling introduced in myfaces, a feature
 probably never used (you basically could reduce the parameters
 sent down by sending a list of pps ids). I have disabled it for the time being.
 The code still is in there for the moment, but will be dropped
@@ -132,30 +130,28 @@ if no demand arises to enable it again.
 In order to improve the maintainability I have dropped a lot
 of shim and legacy code which was needed to support old browsers.
 Since our main aim is long term maintainability there is a clear cut.
-The lowest supported browser for the moment is Internet Explorer 11 
-older browsers are now cut off. This should suffice for most if 
+The lowest supported browser for the moment is Edge 14.
+Older browsers are now cut off. This should suffice for most, if 
 not all important environments. If you still use an older browser than 
-IE11 you still can revert to the old codebase for the time being
+Edge 14 you still can revert to the old codebase for the time being
 (final cutoff point probably will come within the next few years)
 
-IE11 might be cut off in the future, depending on the business requirements 
-by the myfaces users
 
 * performance
 
 Given that we now have faster browsers and end user devices in the mobile
-area than 10 years ago, my main focus was maintainability.
+area than 10 years ago and the spec conformity has improved a lot, my main focus was maintainability.
 Maintainability and readability now comes before performance. So I sacrificed some
 of the performance to achieve it.
 Given that the most critical performance hits do not happen in the ajax area
-this is a sacrifice I can live with for the time being.
+this is a sacrifice I can live with, for the time being.
 
 * Client side i18n
 
 The client side i18n error message translations have become more
 of a liability than a feature.
 For the time being all client side errors are reported in english.
-I can reintroduce them, if there is a real demand.
-But the size and maintainability tradeoff compared to what they
+I can reintroduce them, if there is real demand.
+But the size and maintainability tradeoff, compared to what they
 bring was not worth it to keep them anymore.
  

@@ -52,6 +52,24 @@ while loading faces.js will provide 4.0 compatibility
 
 For this reason the version now also in the npm package is 4.0.x
 
+### Special info    
+Due to a small api change, if you want to embed the 4.0 version (faces.js)
+in your code, a new attribute specified by the Faces 4.0 spec is not set
+at its proper value, *contextpath*. This attribute atm is a value expression
+which needs to be set by the loading implementation.
+
+Now if you want to provide your own embedded solution and you will have
+to set this value yourself. While my code does not use the attribute in the faces
+namespace, other libraries or the users might.
+
+If you serve the code from MyFaxes 4 instead of embedding it, the value will be preset
+by the internal resource loader.
+
+The JSF 2.3 version (jsf.js) is not affected by this change, so nothing needs to be done.
+In fact the contextpath attribute is not present there.
+All other attributes behave the same in both versions as in the original legacy codebase.
+
+
 
 ## Usage
 

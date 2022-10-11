@@ -35,7 +35,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.DQ = exports.DomQueryCollector = exports.DomQuery = exports.ElementAttribute = void 0;
+exports.DQ = exports.DomQueryCollector = exports.DomQuery = exports.Style = exports.ElementAttribute = void 0;
 const Monad_1 = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
 const Stream_1 = __webpack_require__(/*! ./Stream */ "./node_modules/mona-dish/src/main/typescript/Stream.ts");
 const SourcesCollectors_1 = __webpack_require__(/*! ./SourcesCollectors */ "./node_modules/mona-dish/src/main/typescript/SourcesCollectors.ts");
@@ -69,13 +69,36 @@ var Submittables;
 function waitUntilDom(root, condition, options = { attributes: true, childList: true, subtree: true, timeout: 500, interval: 100 }) {
     const ret = new Promise((success, error) => {
         const MUT_ERROR = new Error("Mutation observer timeout");
-        if ('undefined' != typeof window.MutationObserver) {
+        //we do the same but for now ignore the options on the dom query
+        //we cannot use absent here, because the condition might search for an absent element
+        function findElement(root, condition) {
+            let found = null;
+            if (condition(root)) {
+                return root;
+            }
+            if (options.childList) {
+                found = (condition(root)) ? root : root.childNodes.first(condition).value.value;
+            }
+            else if (options.subtree) {
+                found = (condition(root)) ? root : root.querySelectorAll(" * ").first(condition).value;
+            }
+            else {
+                found = (condition(root)) ? root : null;
+            }
+            return found;
+        }
+        let foundElement = root;
+        if (foundElement = findElement(foundElement, condition)) {
+            success(new DomQuery(foundElement));
+            return;
+        }
+        if ('undefined' != typeof MutationObserver) {
             const mutTimeout = setTimeout(() => {
                 return error(MUT_ERROR);
             }, options.timeout);
             const callback = (mutationList, observer) => {
                 const found = new DomQuery(mutationList.map((mut) => mut.target)).first(condition);
-                if (found.isPresent()) {
+                if (found) {
                     clearTimeout(mutTimeout);
                     success(found);
                 }
@@ -90,19 +113,9 @@ function waitUntilDom(root, condition, options = { attributes: true, childList: 
             });
         }
         else { //fallback for legacy browsers without mutation observer
-            //we do the same but for now ignore the options on the dom query
             let interval = setInterval(() => {
-                let found = null;
-                if (options.childList) {
-                    found = (condition(root)) ? root : root.childNodes.first(condition);
-                }
-                else if (options.subtree) {
-                    found = (condition(root)) ? root : root.querySelectorAll(" * ").first(condition);
-                }
-                else {
-                    found = (condition(root)) ? root : DomQuery.absent;
-                }
-                if (found.isPresent()) {
+                let found = findElement(root, condition);
+                if (found) {
                     if (timeout) {
                         clearTimeout(timeout);
                         clearInterval(interval);
@@ -150,6 +163,34 @@ class ElementAttribute extends Monad_1.ValueEmbedder {
     }
 }
 exports.ElementAttribute = ElementAttribute;
+class Style extends Monad_1.ValueEmbedder {
+    constructor(element, name, defaultVal = null) {
+        super(element, name);
+        this.element = element;
+        this.name = name;
+        this.defaultVal = defaultVal;
+    }
+    get value() {
+        let val = this.element.values;
+        if (!val.length) {
+            return this.defaultVal;
+        }
+        return val[0].style[this.name];
+    }
+    set value(value) {
+        let val = this.element.values;
+        for (let cnt = 0; cnt < val.length; cnt++) {
+            val[cnt].style[this.name] = value;
+        }
+    }
+    getClass() {
+        return ElementAttribute;
+    }
+    static fromNullable(value, valueKey = "value") {
+        return new ElementAttribute(value, valueKey);
+    }
+}
+exports.Style = Style;
 /**
  * small helper for the specialized jsf case
  * @param src
@@ -648,6 +689,9 @@ class DomQuery {
     attr(attr, defaultValue = null) {
         return new ElementAttribute(this, attr, defaultValue);
     }
+    style(cssProperty, defaultValue = null) {
+        return new Style(this, cssProperty, defaultValue);
+    }
     /**
      * hasclass, checks for an existing class in the class attributes
      *
@@ -896,7 +940,6 @@ class DomQuery {
         if (charSet) {
             xhr.setRequestHeader("Content-Type", "application/x-javascript; charset:" + charSet);
         }
-        xhr.send(null);
         xhr.onload = (responseData) => {
             //defer also means we have to process after the ajax response
             //has been processed
@@ -917,6 +960,7 @@ class DomQuery {
             throw Error(data);
         };
         //since we are synchronous we do it after not with onReadyStateChange
+        xhr.send(null);
         return this;
     }
     insertAfter(...toInsertParams) {
@@ -1146,7 +1190,7 @@ class DomQuery {
             }
         }
         catch (e) {
-            if (window.console && window.console.error) {
+            if (console && console.error) {
                 //not sure if we
                 //should use our standard
                 //error mechanisms here

@@ -16,6 +16,7 @@
 
     <properties>
         <java.version>1.8</java.version>
+        <myfaces-version>4.0.0-SNAPSHOT</myfaces-version>
     </properties>
 
     <dependencies>
@@ -39,6 +40,19 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.myfaces.core</groupId>
+            <artifactId>myfaces-api</artifactId>
+            <version>${myfaces-version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.myfaces.core</groupId>
+            <artifactId>myfaces-impl</artifactId>
+            <version>${myfaces-version}</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 

@@ -35,7 +35,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.DQ = exports.DomQueryCollector = exports.DomQuery = exports.Style = exports.ElementAttribute = void 0;
+exports.DQ$ = exports.DQ = exports.DomQueryCollector = exports.DomQuery = exports.Style = exports.ElementAttribute = void 0;
 const Monad_1 = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
 const Stream_1 = __webpack_require__(/*! ./Stream */ "./node_modules/mona-dish/src/main/typescript/Stream.ts");
 const SourcesCollectors_1 = __webpack_require__(/*! ./SourcesCollectors */ "./node_modules/mona-dish/src/main/typescript/SourcesCollectors.ts");
@@ -64,10 +64,12 @@ var Submittables;
 /**
  * helper to fix a common problem that a system has to wait until a certain condition is reached
  * depening on the browser this uses either the mutation observer or a semi compatible interval as fallback
- * @param condition
+ * @param root the root domquery element to start from
+ * @param condition the condition lambda to be fullfilled
+ * @param options options for the search
  */
 function waitUntilDom(root, condition, options = { attributes: true, childList: true, subtree: true, timeout: 500, interval: 100 }) {
-    const ret = new Promise((success, error) => {
+    return new Promise((success, error) => {
         const MUT_ERROR = new Error("Mutation observer timeout");
         //we do the same but for now ignore the options on the dom query
         //we cannot use absent here, because the condition might search for an absent element
@@ -88,7 +90,7 @@ function waitUntilDom(root, condition, options = { attributes: true, childList: 
             return found;
         }
         let foundElement = root;
-        if (foundElement = findElement(foundElement, condition)) {
+        if ((foundElement = findElement(foundElement, condition)) != null) {
             success(new DomQuery(foundElement));
             return;
         }
@@ -96,7 +98,7 @@ function waitUntilDom(root, condition, options = { attributes: true, childList: 
             const mutTimeout = setTimeout(() => {
                 return error(MUT_ERROR);
             }, options.timeout);
-            const callback = (mutationList, observer) => {
+            const callback = (mutationList) => {
                 const found = new DomQuery(mutationList.map((mut) => mut.target)).first(condition);
                 if (found) {
                     clearTimeout(mutTimeout);
@@ -132,7 +134,6 @@ function waitUntilDom(root, condition, options = { attributes: true, childList: 
             }, options.timeout);
         }
     });
-    return ret;
 }
 class ElementAttribute extends Monad_1.ValueEmbedder {
     constructor(element, name, defaultVal = null) {
@@ -193,10 +194,9 @@ class Style extends Monad_1.ValueEmbedder {
 exports.Style = Style;
 /**
  * small helper for the specialized jsf case
- * @param src
  * @constructor
  */
-const DEFAULT_WHITELIST = (src) => {
+const DEFAULT_WHITELIST = () => {
     return true;
 };
 /**
@@ -235,7 +235,6 @@ class DomQuery {
                 if (!rootNode[cnt]) {
                     //we skip possible null entries which can happen in
                     //certain corner conditions due to the constructor re-wrapping single elements into arrays.
-                    continue;
                 }
                 else if (isString(rootNode[cnt])) {
                     let foundElement = DomQuery.querySelectorAll(rootNode[cnt]);
@@ -324,6 +323,12 @@ class DomQuery {
             return Monad_1.ValueEmbedder.absent;
         }
     }
+    get val() {
+        return this.inputValue.value;
+    }
+    set val(value) {
+        this.inputValue.value = value;
+    }
     get checked() {
         return Stream_1.Stream.of(...this.values).allMatch(el => !!el.checked);
     }
@@ -409,6 +414,30 @@ class DomQuery {
             return DomQuery.byId(item);
         }).collect(new SourcesCollectors_1.ArrayCollector()));
     }
+    get offsetWidth() {
+        return Stream_1.LazyStream.of(...this.rootNode)
+            .filter(item => item != null)
+            .map(elem => elem.offsetWidth)
+            .reduce((accumulate, incoming) => accumulate + incoming, 0).value;
+    }
+    get offsetHeight() {
+        return Stream_1.LazyStream.of(...this.rootNode)
+            .filter(item => item != null)
+            .map(elem => elem.offsetHeight)
+            .reduce((accumulate, incoming) => accumulate + incoming, 0).value;
+    }
+    get offsetLeft() {
+        return Stream_1.LazyStream.of(...this.rootNode)
+            .filter(item => item != null)
+            .map(elem => elem.offsetLeft)
+            .reduce((accumulate, incoming) => accumulate + incoming, 0).value;
+    }
+    get offsetTop() {
+        return Stream_1.LazyStream.of(...this.rootNode)
+            .filter(item => item != null)
+            .map(elem => elem.offsetTop)
+            .reduce((accumulate, incoming) => accumulate + incoming, 0).value;
+    }
     get asNodeArray() {
         return [].concat(Stream_1.Stream.of(this.rootNode).filter(item => item != null).collect(new SourcesCollectors_1.ArrayCollector()));
     }
@@ -433,6 +462,7 @@ class DomQuery {
      * byId producer
      *
      * @param selector id
+     * @param deep true if you want to go into shadow areas
      * @return a DomQuery containing the found elements
      */
     static byId(selector, deep = false) {
@@ -615,7 +645,6 @@ class DomQuery {
         if (!((_a = this === null || this === void 0 ? void 0 : this.rootNode) === null || _a === void 0 ? void 0 : _a.length)) {
             return this;
         }
-        let nodes = [];
         let foundNodes = new DomQuery(...this.rootNode);
         let selectors = selector.split(/\/shadow\//);
         for (let cnt2 = 0; cnt2 < selectors.length; cnt2++) {
@@ -665,8 +694,9 @@ class DomQuery {
     }
     /**
      * same as byId just for the tag name
-     * @param tagName
-     * @param includeRoot
+     * @param tagName the tagname to search for
+     * @param includeRoot shall the root element be part of this search
+     * @param deep do we also want to go into shadow dom areas
      */
     byTagName(tagName, includeRoot, deep) {
         var _a;
@@ -731,10 +761,9 @@ class DomQuery {
      */
     isMultipartCandidate(deep = false) {
         const FILE_INPUT = "input[type='file']";
-        const ret = this.matchesSelector(FILE_INPUT) ||
+        return this.matchesSelector(FILE_INPUT) ||
             ((!deep) ? this.querySelectorAll(FILE_INPUT) :
                 this.querySelectorAllDeep(FILE_INPUT)).first().isPresent();
-        return ret;
     }
     /**
      * innerHtml equivalkent
@@ -747,9 +776,9 @@ class DomQuery {
      */
     html(inval) {
         if (Monad_1.Optional.fromNullable(inval).isAbsent()) {
-            return this.isPresent() ? Monad_1.Optional.fromNullable(this.innerHtml) : Monad_1.Optional.absent;
+            return this.isPresent() ? Monad_1.Optional.fromNullable(this.innerHTML) : Monad_1.Optional.absent;
         }
-        this.innerHtml = inval;
+        this.innerHTML = inval;
         return this;
     }
     /**
@@ -759,13 +788,19 @@ class DomQuery {
         this.eachElem(elem => elem.dispatchEvent(evt));
         return this;
     }
-    set innerHtml(inVal) {
+    set innerHTML(inVal) {
         this.eachElem(elem => elem.innerHTML = inVal);
     }
-    get innerHtml() {
+    get innerHTML() {
         let retArr = [];
         this.eachElem(elem => retArr.push(elem.innerHTML));
         return retArr.join("");
+    }
+    set innerHtml(inval) {
+        this.innerHTML = inval;
+    }
+    get innerHtml() {
+        return this.innerHTML;
     }
     //source: https://developer.mozilla.org/en-US/docs/Web/API/Element/matches
     //code snippet license: https://creativecommons.org/licenses/by-sa/2.5/
@@ -845,6 +880,12 @@ class DomQuery {
         }
         return this;
     }
+    lastElem(func = item => item) {
+        if (this.rootNode.length > 1) {
+            func(this.rootNode[this.rootNode.length - 1], 0);
+        }
+        return this;
+    }
     each(func) {
         Stream_1.Stream.of(...this.rootNode)
             .each((item, cnt) => {
@@ -865,6 +906,19 @@ class DomQuery {
         if (this.rootNode.length >= 1) {
             func(this.get(0), 0);
             return this.get(0);
+        }
+        return this;
+    }
+    /**
+     * returns a new dom query containing only the first element max
+     *
+     * @param func a an optional callback function to perform an operation on the first element
+     */
+    last(func = (item) => item) {
+        if (this.rootNode.length >= 1) {
+            let lastNode = this.get(this.rootNode.length - 1);
+            func(lastNode, 0);
+            return lastNode;
         }
         return this;
     }
@@ -891,7 +945,12 @@ class DomQuery {
         let head = document.getElementsByTagName("head")[0] || document.documentElement;
         let script = document.createElement("script");
         if (nonce) {
-            script.setAttribute("nonce", nonce);
+            if ('undefined' != typeof (script === null || script === void 0 ? void 0 : script.nonce)) {
+                script.nonce = nonce;
+            }
+            else {
+                script.setAttribute("nonce", nonce);
+            }
         }
         script.type = "text/javascript";
         script.innerHTML = code;
@@ -902,7 +961,6 @@ class DomQuery {
     /**
      * detaches a set of nodes from their parent elements
      * in a browser independend manner
-     * @param {Object} items the items which need to be detached
      * @return {Array} an array of nodes with the detached dom nodes
      */
     detach() {
@@ -917,15 +975,20 @@ class DomQuery {
      * @param elem
      */
     appendTo(elem) {
+        if (Lang_1.Lang.isString(elem)) {
+            this.appendTo(DomQuery.querySelectorAll(elem));
+            return this;
+        }
         this.eachElem((item) => {
             let value1 = elem.getAsElem(0).orElseLazy(() => {
                 return {
-                    appendChild: (theItem) => {
+                    appendChild: () => {
                     }
                 };
             }).value;
             value1.appendChild(item);
         });
+        return this;
     }
     /**
      * loads and evals a script from a source uri
@@ -934,25 +997,25 @@ class DomQuery {
      * @param defer in miliseconds execution default (0 == no defer)
      * @param charSet
      */
-    loadScriptEval(src, defer = 0, charSet = "utf-8") {
+    loadScriptEval(src, defer = 0, charSet = "utf-8", nonce) {
         let xhr = new XMLHttpRequest();
         xhr.open("GET", src, false);
         if (charSet) {
             xhr.setRequestHeader("Content-Type", "application/x-javascript; charset:" + charSet);
         }
-        xhr.onload = (responseData) => {
+        xhr.onload = () => {
             //defer also means we have to process after the ajax response
             //has been processed
             //we can achieve that with a small timeout, the timeout
             //triggers after the processing is done!
             if (!defer) {
-                this.globalEval(xhr.responseText.replace(/\n/g, "\r\n") + "\r\n//@ sourceURL=" + src);
+                this.globalEval(xhr.responseText.replace(/\n/g, "\r\n") + "\r\n//@ sourceURL=" + src, nonce);
             }
             else {
                 //TODO not ideal we maybe ought to move to something else here
                 //but since it is not in use yet, it is ok
                 setTimeout(() => {
-                    this.globalEval(xhr.responseText + "\r\n//@ sourceURL=" + src);
+                    this.globalEval(xhr.responseText + "\r\n//@ sourceURL=" + src, nonce);
                 }, defer);
             }
         };
@@ -1079,9 +1142,10 @@ class DomQuery {
      * for instance for your jsf.js we have a full
      * replace pattern which needs outerHTML processing
      *
-     * @param markup
-     * @param runEmbeddedScripts
-     * @param runEmbeddedCss
+     * @param markup the markup which should replace the root element
+     * @param runEmbeddedScripts if true the embedded scripts are executed
+     * @param runEmbeddedCss if true the embeddec css are executed
+     * @param deep should this also work for shadow dom (run scripts etc...)
      */
     outerHTML(markup, runEmbeddedScripts, runEmbeddedCss, deep = false) {
         var _a;
@@ -1126,7 +1190,33 @@ class DomQuery {
      * defaults to the standard jsf.js exclusion (we use this code for myfaces)
      */
     runScripts(whilteListed = DEFAULT_WHITELIST) {
+        const evalCollectedScripts = (finalScripts) => {
+            if (finalScripts.length) {
+                //script source means we have to eval the existing
+                //scripts before running the include
+                //this.globalEval(finalScripts.join("\n"));
+                let joinedScripts = [];
+                Stream_1.Stream.of(...finalScripts).each(item => {
+                    if (item.nonce == 'evalText') {
+                        joinedScripts.push(item.evalText);
+                    }
+                    else {
+                        if (joinedScripts.length) {
+                            this.globalEval(joinedScripts.join("\n"));
+                            joinedScripts.length = 0;
+                        }
+                        this.globalEval(item.evalText, item.nonce);
+                    }
+                });
+                if (joinedScripts.length) {
+                    this.globalEval(joinedScripts.join("\n"));
+                    joinedScripts.length = 0;
+                }
+                finalScripts = [];
+            }
+        };
         let finalScripts = [], equi = equalsIgnoreCase, execScrpt = (item) => {
+            var _a, _b, _c;
             let tagName = item.tagName;
             let itemType = item.type || "";
             if (tagName && equi(tagName, "script") &&
@@ -1138,17 +1228,15 @@ class DomQuery {
                 if ('undefined' != typeof src
                     && null != src
                     && src.length > 0) {
+                    let nonce = (_a = item === null || item === void 0 ? void 0 : item.nonce) !== null && _a !== void 0 ? _a : item.getAttribute('nonce').value;
                     //we have to move this into an inner if because chrome otherwise chokes
                     //due to changing the and order instead of relying on left to right
                     //if jsf.js is already registered we do not replace it anymore
                     if (whilteListed(src)) {
-                        if (finalScripts.length) {
-                            //script source means we have to eval the existing
-                            //scripts before running the include
-                            this.globalEval(finalScripts.join("\n"));
-                            finalScripts = [];
-                        }
-                        this.loadScriptEval(src, 0, "UTF-8");
+                        evalCollectedScripts(finalScripts);
+                        nonce != '' ? this.loadScriptEval(src, 0, "UTF-8", nonce) :
+                            //if no nonce is set we do not pass any once
+                            this.loadScriptEval(src, 0, "UTF-8");
                     }
                 }
                 else {
@@ -1172,9 +1260,13 @@ class DomQuery {
                             go = true;
                         }
                     }
+                    let nonce = (_c = (_b = item === null || item === void 0 ? void 0 : item.nonce) !== null && _b !== void 0 ? _b : item.getAttribute('nonce').value) !== null && _c !== void 0 ? _c : '';
                     // we have to run the script under a global context
                     //we store the script for less calls to eval
-                    finalScripts.push(evalText);
+                    finalScripts.push({
+                        nonce,
+                        evalText
+                    });
                 }
             }
         };
@@ -1185,9 +1277,7 @@ class DomQuery {
                 .flatMap(item => Stream_1.Stream.of(item.values))
                 .sort((node1, node2) => node1.compareDocumentPosition(node2) - 3) //preceding 2, following == 4)
                 .each(item => execScrpt(item));
-            if (finalScripts.length) {
-                this.globalEval(finalScripts.join("\n"));
-            }
+            evalCollectedScripts(finalScripts);
         }
         catch (e) {
             if (console && console.error) {
@@ -1301,7 +1391,6 @@ class DomQuery {
                         break;
                     default:
                         throw "fireEvent: Couldn't find an event class for event '" + eventName + "'.";
-                        break;
                 }
                 let event = doc.createEvent(eventClass);
                 event.initEvent(eventName, true, true); // All events created as bubbling and cancelable.
@@ -1422,7 +1511,6 @@ class DomQuery {
         return target;
     }
     get cDATAAsString() {
-        let cDataBlock = [];
         let TYPE_CDATA_BLOCK = 4;
         let res = this.lazyStream.flatMap(item => {
             return item.childNodes.stream;
@@ -1580,7 +1668,8 @@ class DomQuery {
     }
     /**
      * concats the elements of two Dom Queries into a single one
-     * @param toAttach
+     * @param toAttach the elements to attach
+     * @param filterDoubles filter out possible double elements (aka same markup)
      */
     concat(toAttach, filterDoubles = true) {
         const ret = this.lazyStream.concat(toAttach.lazyStream).collect(new DomQueryCollector());
@@ -1594,6 +1683,22 @@ class DomQuery {
             idx[node.value.value.outerHTML] = true;
             return notFound;
         }).collect(new DomQueryCollector());
+    }
+    append(elem) {
+        this.each(item => elem.appendTo(item));
+        return this;
+    }
+    prependTo(elem) {
+        elem.eachElem(item => {
+            item.prepend(...this.allElems());
+        });
+        return this;
+    }
+    prepend(elem) {
+        this.eachElem(item => {
+            item.prepend(...elem.allElems());
+        });
+        return this;
     }
 }
 exports.DomQuery = DomQuery;
@@ -1623,6 +1728,11 @@ exports.DomQueryCollector = DomQueryCollector;
  * abbreviation for DomQuery
  */
 exports.DQ = DomQuery;
+// noinspection JSUnusedGlobalSymbols
+/**
+ * replacement for the jquery $
+ */
+exports.DQ$ = DomQuery.querySelectorAll;
 
 
 /***/ }),
@@ -3349,7 +3459,7 @@ exports.XQ = XMLQuery;
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.QueryFormDataCollector = exports.FormDataCollector = exports.AssocArrayCollector = exports.ArrayCollector = exports.QueryFormStringCollector = exports.SequenceDataSource = exports.FlatMapStreamDataSource = exports.FilteredStreamDatasource = exports.MappedStreamDataSource = exports.ArrayStreamDataSource = exports.LazyStream = exports.Stream = exports.XQ = exports.XMLQuery = exports.ValueEmbedder = exports.Optional = exports.Monad = exports.Config = exports.Lang = exports.DQ = exports.DomQueryCollector = exports.ElementAttribute = exports.DomQuery = void 0;
+exports.QueryFormDataCollector = exports.FormDataCollector = exports.AssocArrayCollector = exports.ArrayCollector = exports.QueryFormStringCollector = exports.SequenceDataSource = exports.FlatMapStreamDataSource = exports.FilteredStreamDatasource = exports.MappedStreamDataSource = exports.ArrayStreamDataSource = exports.LazyStream = exports.Stream = exports.XQ = exports.XMLQuery = exports.ValueEmbedder = exports.Optional = exports.Monad = exports.Config = exports.Lang = exports.DQ$ = exports.DQ = exports.DomQueryCollector = exports.ElementAttribute = exports.DomQuery = void 0;
 /*!
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -3373,6 +3483,7 @@ Object.defineProperty(exports, "DomQuery", ({ enumerable: true, get: function ()
 Object.defineProperty(exports, "ElementAttribute", ({ enumerable: true, get: function () { return DomQuery_1.ElementAttribute; } }));
 Object.defineProperty(exports, "DomQueryCollector", ({ enumerable: true, get: function () { return DomQuery_1.DomQueryCollector; } }));
 Object.defineProperty(exports, "DQ", ({ enumerable: true, get: function () { return DomQuery_1.DQ; } }));
+Object.defineProperty(exports, "DQ$", ({ enumerable: true, get: function () { return DomQuery_1.DQ$; } }));
 var Lang_1 = __webpack_require__(/*! ./Lang */ "./node_modules/mona-dish/src/main/typescript/Lang.ts");
 Object.defineProperty(exports, "Lang", ({ enumerable: true, get: function () { return Lang_1.Lang; } }));
 var Monad_1 = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
@@ -5195,22 +5306,26 @@ class ExtDomquery extends mona_dish_1.DQ {
         }
         let curScript = new mona_dish_1.DQ(document.currentScript);
         //since our baseline atm is ie11 we cannot use document.currentScript globally
-        if (curScript.attr("nonce").value != null) {
+        if (!!this.extractNonce(curScript)) {
             // fastpath for modern browsers
-            return curScript.attr("nonce").value;
+            return this.extractNonce(curScript);
         }
         // fallback if the currentScript method fails, we just search the jsf tags for nonce, this is
         // the last possibility
         let nonceScript = mona_dish_1.DQ
             .querySelectorAll("script[src], link[src]")
             .lazyStream
-            .filter((item) => item.attr("nonce").value != null && item.attr(ATTR_SRC) != null)
-            .map(item => IS_FACES_SOURCE(item.attr(ATTR_SRC).value))
+            .filter((item) => this.extractNonce(item) && item.attr(ATTR_SRC) != null)
+            .filter(item => IS_FACES_SOURCE(item.attr(ATTR_SRC).value))
             .first();
         if (nonceScript.isPresent()) {
-            nonce.value = mona_dish_1.DomQuery.byId(nonceScript.value, true).attr("nonce").value;
+            return this.extractNonce(nonceScript.value);
         }
-        return nonce.value;
+        return null;
+    }
+    extractNonce(curScript) {
+        var _a, _b;
+        return (_b = (_a = curScript.getAsElem(0).value) === null || _a === void 0 ? void 0 : _a.nonce) !== null && _b !== void 0 ? _b : curScript.attr("nonce").value;
     }
     static searchJsfJsFor(item) {
         return new ExtDomquery(document).searchJsfJsFor(item);

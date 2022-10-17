@@ -1190,13 +1190,13 @@ class DomQuery {
      * defaults to the standard jsf.js exclusion (we use this code for myfaces)
      */
     runScripts(whilteListed = DEFAULT_WHITELIST) {
-        const evalCollectedScripts = (finalScripts) => {
-            if (finalScripts.length) {
+        const evalCollectedScripts = (scriptsToProcess) => {
+            if (scriptsToProcess.length) {
                 //script source means we have to eval the existing
                 //scripts before running the include
                 //this.globalEval(finalScripts.join("\n"));
                 let joinedScripts = [];
-                Stream_1.Stream.of(...finalScripts).each(item => {
+                Stream_1.Stream.of(...scriptsToProcess).each(item => {
                     if (!item.nonce) {
                         joinedScripts.push(item.evalText);
                     }
@@ -1212,8 +1212,9 @@ class DomQuery {
                     this.globalEval(joinedScripts.join("\n"));
                     joinedScripts.length = 0;
                 }
-                finalScripts = [];
+                scriptsToProcess = [];
             }
+            return scriptsToProcess;
         };
         let finalScripts = [], equi = equalsIgnoreCase, execScrpt = (item) => {
             var _a, _b, _c;
@@ -1234,7 +1235,7 @@ class DomQuery {
                     //if jsf.js is already registered we do not replace it anymore
                     if (whilteListed(src)) {
                         //we run the collected scripts before running, the include
-                        evalCollectedScripts(finalScripts);
+                        finalScripts = evalCollectedScripts(finalScripts);
                         (!!nonce) ? this.loadScriptEval(src, 0, "UTF-8", nonce) :
                             //if no nonce is set we do not pass any once
                             this.loadScriptEval(src, 0, "UTF-8");

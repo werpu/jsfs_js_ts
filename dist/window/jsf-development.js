@@ -62,27 +62,28 @@ var Submittables;
     Submittables["CHECKBOX"] = "checkbox";
 })(Submittables || (Submittables = {}));
 /**
- * helper to fix a common problem that a system has to wait until a certain condition is reached
- * depening on the browser this uses either the mutation observer or a semi compatible interval as fallback
- * @param root the root domquery element to start from
- * @param condition the condition lambda to be fullfilled
+ * helper to fix a common problem that a system has to wait, until a certain condition is reached.
+ * Depending on the browser this uses either the Mutation Observer or a semi compatible interval as fallback.
+ * @param root the root DomQuery element to start from
+ * @param condition the condition lambda to be fulfilled
  * @param options options for the search
  */
 function waitUntilDom(root, condition, options = { attributes: true, childList: true, subtree: true, timeout: 500, interval: 100 }) {
     return new Promise((success, error) => {
+        let observer = null;
         const MUT_ERROR = new Error("Mutation observer timeout");
         //we do the same but for now ignore the options on the dom query
         //we cannot use absent here, because the condition might search for an absent element
         function findElement(root, condition) {
             let found = null;
-            if (condition(root)) {
+            if (!!condition(root)) {
                 return root;
             }
             if (options.childList) {
-                found = (condition(root)) ? root : root.childNodes.first(condition).value.value;
+                found = (condition(root)) ? root : root.childNodes.filter(item => condition(item)).first().value.value;
             }
             else if (options.subtree) {
-                found = (condition(root)) ? root : root.querySelectorAll(" * ").first(condition).value;
+                found = (condition(root)) ? root : root.querySelectorAll(" * ").filter(item => condition(item)).first().value.value;
             }
             else {
                 found = (condition(root)) ? root : null;
@@ -90,22 +91,24 @@ function waitUntilDom(root, condition, options = { attributes: true, childList: 
             return found;
         }
         let foundElement = root;
-        if ((foundElement = findElement(foundElement, condition)) != null) {
+        if (!!(foundElement = findElement(foundElement, condition))) {
             success(new DomQuery(foundElement));
             return;
         }
         if ('undefined' != typeof MutationObserver) {
             const mutTimeout = setTimeout(() => {
+                observer.disconnect();
                 return error(MUT_ERROR);
             }, options.timeout);
             const callback = (mutationList) => {
-                const found = new DomQuery(mutationList.map((mut) => mut.target)).first(condition);
-                if (found) {
+                const found = new DomQuery(mutationList.map((mut) => mut.target)).filter(item => condition(item)).first();
+                if (found.isPresent()) {
                     clearTimeout(mutTimeout);
-                    success(found);
+                    observer.disconnect();
+                    success(new DomQuery(found || root));
                 }
             };
-            const observer = new window.MutationObserver(callback);
+            observer = new window.MutationObserver(callback);
             // browsers might ignore it, but we cannot break the api in the case
             // hence no timeout is passed
             let observableOpts = Object.assign({}, options);
@@ -117,13 +120,13 @@ function waitUntilDom(root, condition, options = { attributes: true, childList: 
         else { //fallback for legacy browsers without mutation observer
             let interval = setInterval(() => {
                 let found = findElement(root, condition);
-                if (found) {
+                if (!!found) {
                     if (timeout) {
                         clearTimeout(timeout);
                         clearInterval(interval);
                         interval = null;
-                        success(found);
                     }
+                    success(new DomQuery(found || root));
                 }
             }, options.interval);
             let timeout = setTimeout(() => {

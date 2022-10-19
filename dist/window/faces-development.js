@@ -7035,13 +7035,11 @@ class XhrRequest {
         }, data);
     }
     catch(func) {
-        //this.$promise.catch(func);
         this.catchFuncs.push(func);
         return this;
     }
     finally(func) {
         //no ie11 support we probably are going to revert to shims for that one
-        //(<any>this.$promise).then(func).catch(func);
         this.catchFuncs.push(func);
         this.thenFunc.push(func);
         return this;
@@ -7073,15 +7071,32 @@ class XhrRequest {
             this.onDone(this.xhrObject, resolve);
         };
         xhrObject.onerror = (errorData) => {
+            // some browsers trigger an error when cancelling a request internally
+            // in this case we simply ignore the request and clear up the queue, because
+            // it is not safe anymore to proceed with the current queue
+            // This bypasses a Safari issue where it keeps requests hanging after page unload
+            // and then triggers a cancel error on then instead of just stopping
+            // and clearing the code
+            if (this.isCancelledResponse(this.xhrObject)) {
+                reject();
+                this.stopProgress = true;
+                return;
+            }
             this.onError(errorData, reject);
         };
     }
+    isCancelledResponse(currentTarget) {
+        return (currentTarget === null || currentTarget === void 0 ? void 0 : currentTarget.status) === 0 && //cancelled by browser
+            (currentTarget === null || currentTarget === void 0 ? void 0 : currentTarget.readyState) === 4 &&
+            (currentTarget === null || currentTarget === void 0 ? void 0 : currentTarget.responseText) === '' &&
+            (currentTarget === null || currentTarget === void 0 ? void 0 : currentTarget.responseXML) === null;
+    }
     /*
-     * xhr processing callbacks
-     *
-     * Those methods are the callbacks called by
-     * the xhr object depending on its own state
-     */
+         * xhr processing callbacks
+         *
+         * Those methods are the callbacks called by
+         * the xhr object depending on its own state
+         */
     onAbort(reject) {
         reject();
     }
@@ -7115,13 +7130,14 @@ class XhrRequest {
             this.handleError(errorData, true);
         }
         finally {
-            //we issue a resolve in this case to allow the system to recover
+            // we issue a resolve in this case to allow the system to recover
+            // reject would clean up the queue
             resolve(errorData);
-            //reject();
         }
         //non blocking non clearing
     }
     onDone(data, resolve) {
+        // if stop progress a special handling including resolve is already performed
         if (this.stopProgress) {
             return;
         }
@@ -7150,7 +7166,7 @@ class XhrRequest {
         try {
             //user code error, we might cover
             //this in onError but also we cannot swallow it
-            //we need to resolve the local handlers lazyly,
+            //we need to resolve the local handlers lazily,
             //because some frameworks might decorate them over the context in the response
             let eventHandler = (0, RequestDataResolver_1.resolveHandlerFunc)(this.requestContext, this.responseContext, Const_1.ON_EVENT);
             AjaxImpl_1.Implementation.sendEvent(eventData, eventHandler);

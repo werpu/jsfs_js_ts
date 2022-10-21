@@ -29,8 +29,6 @@ import {MAX_RECONNECT_ATTEMPTS, REASON_EXPIRED, RECONNECT_INTERVAL} from "./core
  */
 export module PushImpl {
 
-
-    debugger;
     const URL_PROTOCOL = window.location.protocol.replace("http", "ws") + "//";
 
 

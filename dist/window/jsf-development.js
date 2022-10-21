@@ -4449,7 +4449,6 @@ const Const_1 = __webpack_require__(/*! ./core/Const */ "./src/main/typescript/i
  */
 var PushImpl;
 (function (PushImpl) {
-    debugger;
     const URL_PROTOCOL = window.location.protocol.replace("http", "ws") + "//";
     //we expose the member variables for testing purposes
     //they are not directly touched outside of tests

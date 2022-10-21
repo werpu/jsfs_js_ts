@@ -3549,7 +3549,6 @@ const Const_1 = __webpack_require__(/*! ../impl/core/Const */ "./src/main/typesc
 //as per spec requirement
 var faces;
 (function (faces) {
-    faces.contextpath = '#{facesContext.externalContext.requestContextPath}';
     /**
      * Version of the implementation for the faces.ts.
      * <p />
@@ -3649,7 +3648,6 @@ var faces;
          */
         function request(element, event, options) {
             AjaxImpl_1.Implementation.request(element, event, options);
-            //Implementation.getInstance().requestInternal(element, event, options);
         }
         ajax.request = request;
         /**
@@ -4445,11 +4443,13 @@ exports.PushImpl = void 0;
 //TODO still work in progress
 //this is a 1:1 port for the time being
 const Const_1 = __webpack_require__(/*! ./core/Const */ "./src/main/typescript/impl/core/Const.ts");
+;
 /**
  * Implementation class for the push functionality
  */
 var PushImpl;
 (function (PushImpl) {
+    debugger;
     const URL_PROTOCOL = window.location.protocol.replace("http", "ws") + "//";
     //we expose the member variables for testing purposes
     //they are not directly touched outside of tests
@@ -5648,7 +5648,6 @@ var ExtLang;
     ExtLang.getLocalOrGlobalConfig = getLocalOrGlobalConfig;
     /**
      * assert that the form exists and throw an exception in the case it does not
-     * (TODO move this into the assertions)
      *
      * @param form the form to check for
      */
@@ -6915,6 +6914,15 @@ const Lang_1 = __webpack_require__(/*! ../util/Lang */ "./src/main/typescript/im
 const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 const RequestDataResolver_1 = __webpack_require__(/*! ./RequestDataResolver */ "./src/main/typescript/impl/xhrCore/RequestDataResolver.ts");
 var failSaveExecute = Lang_1.ExtLang.failSaveExecute;
+/**
+ * Faces XHR Request Wrapper
+ * as Asyncrunnable for our Asynchronous queue
+ *
+ * The idea is that we basically just enqueue
+ * a single ajax request into our queue
+ * and let the queue do the processing.
+ *
+ */
 class XhrRequest {
     /**
      * Reqired Parameters
@@ -7212,6 +7220,17 @@ exports.XhrRequest = XhrRequest;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.oam = void 0;
 const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
+/**
+ * legacy code to enable various aspects
+ * of myfaces, used to be rendered inline
+ * for jsf 2.0 we can externalize it into its own custom resource
+ *
+ * note this is a straight 1:1 port from the existing codebase
+ * (not too much work has been spent here, the important thing is, that
+ * the namespace and functions need to be kept intact for legacy code)
+ *
+ * we might move the code over in the future, but for now a straight 1:1 port suffices
+ */
 var oam;
 (function (oam) {
     /**
@@ -7351,7 +7370,6 @@ var exports = __webpack_exports__;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-///<reference types='../../types/typedefs'/>
 
 var _a, _b, _c, _d, _e;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
@@ -7362,7 +7380,7 @@ exports.myfaces = exports.jsf = void 0;
  * if this file is included then the code falls back with its namespaces
  * on jsf2.3 or earlier level, for 4.0+ please include faces.js
  */
-if (!window.jsf) {
+if (!(window === null || window === void 0 ? void 0 : window.jsf)) {
     const faces = (__webpack_require__(/*! ./_api */ "./src/main/typescript/api/_api.ts").faces);
     window['jsf'] = (_a = window === null || window === void 0 ? void 0 : window.jsf) !== null && _a !== void 0 ? _a : faces;
     window.jsf.specversion = 230000;

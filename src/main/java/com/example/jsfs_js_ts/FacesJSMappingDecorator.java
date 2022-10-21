@@ -24,6 +24,11 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
 
+/**
+ * The core implementation of the mapping file decoration.
+ * We basically rip out the old mapping file reference
+ * and add the new one, on the fly, when the resource is loaded.
+ */
 public class FacesJSMappingDecorator extends Resource {
 
     public static final String URL_ENCODING = "UTF-8";

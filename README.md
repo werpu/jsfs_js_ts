@@ -159,3 +159,27 @@ I can reintroduce them, if there is real demand.
 But the size and maintainability tradeoff, compared to what they
 bring was not worth it to keep them anymore.
  
+
+* Mapping file support
+
+The original implementation had various builds to support easier debugging (split, combined, compressed)
+
+We now have only two builds prod and development.
+However I have introduced a mapping file support.
+To enable this support you have to reference the FacesJSMappingDecorator unless the mapping file
+is reachable via the normal request (mapping files are bundled).
+This works for normal includes, but if you include the jsf.js in a resource library you have to use
+the decorator provided.
+
+Usage *faces-config.xml*
+```xml
+
+<application>
+    <resource-handler>com.example.jsfs_js_ts.FacesJSMapFileResourceWrapper</resource-handler>
+</application>
+```
+
+This resource decorator detects automatically a faces*.js file coming from a resource library
+and adjusts the references in the resource accordingly to the request patterns
+
+

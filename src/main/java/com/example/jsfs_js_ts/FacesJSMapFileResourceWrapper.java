@@ -19,6 +19,16 @@ import jakarta.faces.application.Resource;
 import jakarta.faces.application.ResourceHandler;
 import jakarta.faces.application.ResourceHandlerWrapper;
 
+/**
+ * this class decorates a resource handler
+ * which dynamically adds the correct mapping data to the
+ * faces.js file depending on the configuration
+ *
+ * Note, you only need this class in your own projects, if you add
+ * the scripts to a Faces resource library.
+ * MyFaces itself has a similar mechanism in 4.0.0+ placed
+ * directly in the resource handler code.
+ */
 public class FacesJSMapFileResourceWrapper extends ResourceHandlerWrapper {
     public FacesJSMapFileResourceWrapper(ResourceHandler delegate) {
         super(delegate);

@@ -25,6 +25,20 @@ import java.io.*;
 import java.net.URL;
 import java.util.Map;
 
+/**
+ * This class replicates a certain behavior we have
+ * in myfaces for the internal faces.js (which is based
+ * upon this projects code)
+ * MyFaces has a resource loader
+ * which replaces el constructs with their variable values, in faces.js
+ * We replicate this here in a somewhat hackish manner, atm
+ * only the context path is generated this way, because
+ * for other constructs which we use it we have pure js fallbacks
+ * delivering the same values
+ *
+ * You can use this class if you need or to provide the requestContextPath
+ * on js level (and extend it if you need to provide more)
+ */
 public class DecoratedFacesJS extends Resource {
 
     Resource delegate;

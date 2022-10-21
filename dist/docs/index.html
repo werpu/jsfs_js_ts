@@ -172,6 +172,21 @@ For the time being all client side errors are reported in english.
 I can reintroduce them, if there is real demand.
 But the size and maintainability tradeoff, compared to what they
 bring was not worth it to keep them anymore.</p>
+<ul>
+<li>Mapping file support</li>
+</ul>
+<p>The original implementation had various builds to support easier debugging (split, combined, compressed)</p>
+<p>We now have only two builds prod and development.
+However I have introduced a mapping file support.
+To enable this support you have to reference the FacesJSMappingDecorator unless the mapping file
+is reachable via the normal request (mapping files are bundled).
+This works for normal includes, but if you include the jsf.js in a resource library you have to use
+the decorator provided.</p>
+<p>Usage <em>faces-config.xml</em></p>
+<pre><code class="language-xml"><br/><span class="hl-0">&lt;</span><span class="hl-1">application</span><span class="hl-0">&gt;</span><br/><span class="hl-2">    </span><span class="hl-0">&lt;</span><span class="hl-1">resource-handler</span><span class="hl-0">&gt;</span><span class="hl-2">com.example.jsfs_js_ts.FacesJSMapFileResourceWrapper</span><span class="hl-0">&lt;/</span><span class="hl-1">resource-handler</span><span class="hl-0">&gt;</span><br/><span class="hl-0">&lt;/</span><span class="hl-1">application</span><span class="hl-0">&gt;</span>
+</code></pre>
+<p>This resource decorator detects automatically a faces*.js file coming from a resource library
+and adjusts the references in the resource accordingly to the request patterns</p>
 </div></div>
 <div class="col-4 col-menu menu-sticky-wrap menu-highlight">
 <div class="tsd-navigation settings">

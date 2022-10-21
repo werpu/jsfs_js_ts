@@ -1,4 +1,4 @@
-/* Licensed to the Apache Software Foundation (ASF) under one or more
+/*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to you under the Apache License, Version 2.0
@@ -17,28 +17,17 @@
 /**
  * Basic internal types used
  *
- * This file is only to eliminate various any calls into
- * window, jsf and myfaces and make also the calls into
- * the apis from a an extended window context in a type safe
- * way
- *
- * We use this trick to map the types into the modules
- * which we need to produce proper jsdoc files
+ * This file is only there to allow global calls into window, faces and ajax
+ * in a typesafe manner, hence eliminating <b>any</b> casts.
  */
 declare global {
 
-    type Producer<T> = () => T;
     type Consumer<T> = (s?: T) => void;
-    type Runnable = () => any;
-    type Transformable<S, T> = (s: S) => T;
-
     type AssocArr<T> = { [key: string]: T };
-
     type EvalFuncs = Array<Function | string>;
     type Options = { [key: string]: string | Function | { [key: string]: string | Function } };
     type Context = AssocArr<any>;
     type ElemDef = Element | string;
-
 
     /**
      *  * <ul>
@@ -58,7 +47,6 @@ declare global {
         serverErrorName: string;
         serverErrorMessage: string;
         source: any;
-
         responseCode: string;
         responseText: string;
         responseXML: string;
@@ -74,29 +62,8 @@ declare global {
         source: any;
     }
 
-    /*! Licensed to the Apache Software Foundation (ASF) under one or more
-     * contributor license agreements.  See the NOTICE file distributed with
-     * this work for additional information regarding copyright ownership.
-     * The ASF licenses this file to you under the Apache License, Version 2.0
-     * (the "License"); you may not use this file except in compliance with
-     * the License.  You may obtain a copy of the License at
-     *
-     *      http://www.apache.org/licenses/LICENSE-2.0
-     *
-     * Unless required by applicable law or agreed to in writing, software
-     * distributed under the License is distributed on an "AS IS" BASIS,
-     * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-     * See the License for the specific language governing permissions and
-     * limitations under the License.
-     */
-
-    /**
-     * interface definitions to make the code more compiler typesafe
-     */
-
     interface Ajax {
         request(element: Element, event?: Event, options?: Context): void;
-
         response(request: XMLHttpRequest, context?: Context): void;
     }
 
@@ -113,12 +80,9 @@ declare global {
              onclose: Function,
              behaviorScripts: any,
              autoconnect: boolean): void;
-
         open(socketClientId: string);
-
         close(socketClientId: string): void;
     }
-
 
     interface FacesAPI {
         contextpath: string;
@@ -155,10 +119,18 @@ declare global {
         };
     }
 
+    /*
+     * Global namespaces type definitions
+     */
     let myfaces: MyFacesAPI;
     let jsf: FacesAPI;
     let faces: FacesAPI;
-    // special trick, the typscript compiler treats window as Window
+
+    // special "magic", Typescript merges whatever we have
+    // to window. This is a language "hack", but documented.
+    // see https://www.typescriptlang.org/docs/handbook/declaration-files/templates/global-modifying-module-d-ts.html
+    // lib.dom.d.ts declares the type Window as being type for window.
+    // noinspection JSUnusedGlobalSymbols
     interface Window {
         myfaces: MyFacesAPI,
         faces: FacesAPI,
@@ -167,7 +139,9 @@ declare global {
         called: { [key: string]: any }
     }
 }
+
 // this is needed to tell the compiler that we have an ambient
 // module, otherwise the global overload would produce an error
+// https://www.typescriptlang.org/docs/handbook/declaration-files/templates/global-modifying-module-d-ts.html
 // noinspection JSUnusedGlobalSymbols
 export var __my_faces_ambient_module_glob_;

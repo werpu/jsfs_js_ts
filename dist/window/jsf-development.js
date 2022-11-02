@@ -44,6 +44,7 @@ var trim = Lang_1.Lang.trim;
 var objToArray = Lang_1.Lang.objToArray;
 var isString = Lang_1.Lang.isString;
 var equalsIgnoreCase = Lang_1.Lang.equalsIgnoreCase;
+const Global_1 = __webpack_require__(/*! ./Global */ "./node_modules/mona-dish/src/main/typescript/Global.ts");
 /**
  *
  *        // - submit checkboxes and radio inputs only if checked
@@ -108,7 +109,7 @@ function waitUntilDom(root, condition, options = { attributes: true, childList: 
                     success(new DomQuery(found || root));
                 }
             };
-            observer = new window.MutationObserver(callback);
+            observer = new MutationObserver(callback);
             // browsers might ignore it, but we cannot break the api in the case
             // hence no timeout is passed
             let observableOpts = Object.assign({}, options);
@@ -262,6 +263,9 @@ class DomQuery {
     }
     get values() {
         return this.allElems();
+    }
+    get global() {
+        return Global_1._global$;
     }
     /**
      * returns the id of the first element
@@ -492,6 +496,9 @@ class DomQuery {
     }
     static globalEval(code, nonce) {
         return new DomQuery(document).globalEval(code, nonce);
+    }
+    static globalEvalSticky(code, nonce) {
+        return new DomQuery(document).globalEvalSticky(code, nonce);
     }
     /**
      * builds the ie nodes properly in a placeholder
@@ -816,7 +823,7 @@ class DomQuery {
             prot.oMatchesSelector ||
             prot.webkitMatchesSelector ||
             function (s) {
-                let matches = (document || window.ownerDocument).querySelectorAll(s), i = matches.length;
+                let matches = (document || ownerDocument).querySelectorAll(s), i = matches.length;
                 while (--i >= 0 && matches.item(i) !== toMatch) {
                 }
                 return i > -1;
@@ -962,6 +969,28 @@ class DomQuery {
         return this;
     }
     /**
+     * global eval head appendix method
+     * no other methods are supported anymore
+     * @param code the code to be evaled
+     * @param  nonce optional  nonce key for higher security
+     */
+    globalEvalSticky(code, nonce) {
+        let head = document.getElementsByTagName("head")[0] || document.documentElement;
+        let script = document.createElement("script");
+        if (nonce) {
+            if ('undefined' != typeof (script === null || script === void 0 ? void 0 : script.nonce)) {
+                script.nonce = nonce;
+            }
+            else {
+                script.setAttribute("nonce", nonce);
+            }
+        }
+        script.type = "text/javascript";
+        script.innerHTML = code;
+        head.appendChild(script);
+        return this;
+    }
+    /**
      * detaches a set of nodes from their parent elements
      * in a browser independend manner
      * @return {Array} an array of nodes with the detached dom nodes
@@ -1019,6 +1048,42 @@ class DomQuery {
                 //but since it is not in use yet, it is ok
                 setTimeout(() => {
                     this.globalEval(xhr.responseText + "\r\n//@ sourceURL=" + src, nonce);
+                }, defer);
+            }
+        };
+        xhr.onerror = (data) => {
+            throw Error(data);
+        };
+        //since we are synchronous we do it after not with onReadyStateChange
+        xhr.send(null);
+        return this;
+    }
+    /**
+     * loads and evals a script from a source uri
+     *
+     * @param src the source to be loaded and evaled
+     * @param defer in miliseconds execution default (0 == no defer)
+     * @param charSet
+     */
+    loadScriptEvalSticky(src, defer = 0, charSet = "utf-8", nonce) {
+        let xhr = new XMLHttpRequest();
+        xhr.open("GET", src, false);
+        if (charSet) {
+            xhr.setRequestHeader("Content-Type", "application/x-javascript; charset:" + charSet);
+        }
+        xhr.onload = () => {
+            //defer also means we have to process after the ajax response
+            //has been processed
+            //we can achieve that with a small timeout, the timeout
+            //triggers after the processing is done!
+            if (!defer) {
+                this.globalEvalSticky(xhr.responseText.replace(/\n/g, "\r\n") + "\r\n//@ sourceURL=" + src, nonce);
+            }
+            else {
+                //TODO not ideal we maybe ought to move to something else here
+                //but since it is not in use yet, it is ok
+                setTimeout(() => {
+                    this.globalEvalSticky(xhr.responseText + "\r\n//@ sourceURL=" + src, nonce);
                 }, defer);
             }
         };
@@ -1189,10 +1254,11 @@ class DomQuery {
     }
     /**
      * Run through the given nodes in the DomQuery execute the inline scripts
+     * @param sticky if set to true the evaled elements will stick to the head, default false
      * @param whilteListed: optional whitelist function which can filter out script tags which are not processed
      * defaults to the standard jsf.js exclusion (we use this code for myfaces)
      */
-    runScripts(whilteListed = DEFAULT_WHITELIST) {
+    runScripts(sticky = false, whilteListed = DEFAULT_WHITELIST) {
         const evalCollectedScripts = (scriptsToProcess) => {
             if (scriptsToProcess.length) {
                 //script source means we have to eval the existing
@@ -1208,11 +1274,14 @@ class DomQuery {
                             this.globalEval(joinedScripts.join("\n"));
                             joinedScripts.length = 0;
                         }
-                        this.globalEval(item.evalText, item.nonce);
+                        (!sticky) ?
+                            this.globalEval(item.evalText, item.nonce) :
+                            this.globalEvalSticky(item.evalText, item.nonce);
                     }
                 });
                 if (joinedScripts.length) {
-                    this.globalEval(joinedScripts.join("\n"));
+                    (!sticky) ? this.globalEval(joinedScripts.join("\n")) :
+                        this.globalEvalSticky(joinedScripts.join("\n"));
                     joinedScripts.length = 0;
                 }
                 scriptsToProcess = [];
@@ -1239,9 +1308,16 @@ class DomQuery {
                     if (whilteListed(src)) {
                         //we run the collected scripts before running, the include
                         finalScripts = evalCollectedScripts(finalScripts);
-                        (!!nonce) ? this.loadScriptEval(src, 0, "UTF-8", nonce) :
-                            //if no nonce is set we do not pass any once
-                            this.loadScriptEval(src, 0, "UTF-8");
+                        if (!sticky) {
+                            (!!nonce) ? this.loadScriptEval(src, 0, "UTF-8", nonce) :
+                                //if no nonce is set we do not pass any once
+                                this.loadScriptEval(src, 0, "UTF-8");
+                        }
+                        else {
+                            (!!nonce) ? this.loadScriptEvalSticky(src, 0, "UTF-8", nonce) :
+                                //if no nonce is set we do not pass any once
+                                this.loadScriptEvalSticky(src, 0, "UTF-8");
+                        }
                     }
                 }
                 else {
@@ -1709,6 +1785,10 @@ class DomQuery {
 exports.DomQuery = DomQuery;
 DomQuery.absent = new DomQuery();
 /**
+ * reference to the environmental global object
+ */
+DomQuery.global = Global_1._global$;
+/**
  * Various collectors
  * which can be used in conjunction with Streams
  */
@@ -1738,6 +1818,53 @@ exports.DQ = DomQuery;
  * replacement for the jquery $
  */
 exports.DQ$ = DomQuery.querySelectorAll;
+
+
+/***/ }),
+
+/***/ "./node_modules/mona-dish/src/main/typescript/Global.ts":
+/*!**************************************************************!*\
+  !*** ./node_modules/mona-dish/src/main/typescript/Global.ts ***!
+  \**************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports._global$ = void 0;
+/*!
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/**
+ * various environments handle the global variable different
+ * we have to deal with this.
+ */
+function _global$() {
+    var _a;
+    let _global$ = ('undefined' != typeof globalThis && globalThis.window) ? globalThis.window :
+        ('undefined' != typeof window) ? window :
+            ('undefined' != typeof globalThis) ? globalThis :
+                ('undefined' != typeof __webpack_require__.g && (__webpack_require__.g === null || __webpack_require__.g === void 0 ? void 0 : __webpack_require__.g.window)) ? __webpack_require__.g.window :
+                    ('undefined' != typeof __webpack_require__.g) ? __webpack_require__.g : null;
+    //under test systems we often have a lazy init of the window object under global.window, but we
+    //want the window object
+    return (_a = _global$ === null || _global$ === void 0 ? void 0 : _global$.window) !== null && _a !== void 0 ? _a : _global$;
+}
+exports._global$ = _global$;
 
 
 /***/ }),
@@ -3392,6 +3519,7 @@ exports.XQ = exports.XMLQuery = void 0;
 const Lang_1 = __webpack_require__(/*! ./Lang */ "./node_modules/mona-dish/src/main/typescript/Lang.ts");
 const DomQuery_1 = __webpack_require__(/*! ./DomQuery */ "./node_modules/mona-dish/src/main/typescript/DomQuery.ts");
 var isString = Lang_1.Lang.isString;
+const Global_1 = __webpack_require__(/*! ./Global */ "./node_modules/mona-dish/src/main/typescript/Global.ts");
 /**
  * xml query as specialized case for DomQuery
  */
@@ -3413,7 +3541,7 @@ class XMLQuery extends DomQuery_1.DomQuery {
             if (xml == null) {
                 return null;
             }
-            let domParser = Lang_1.Lang.saveResolveLazy(() => new window.DOMParser(), () => createIe11DomQueryShim()).value;
+            let domParser = Lang_1.Lang.saveResolveLazy(() => new ((0, Global_1._global$)()).DOMParser(), () => createIe11DomQueryShim()).value;
             return domParser.parseFromString(xml, docType);
         };
         if (isString(rootNode)) {
@@ -3429,8 +3557,8 @@ class XMLQuery extends DomQuery_1.DomQuery {
     toString() {
         let ret = [];
         this.eachElem((node) => {
-            var _a, _b, _c;
-            let serialized = (_c = (_b = (_a = window === null || window === void 0 ? void 0 : window.XMLSerializer) === null || _a === void 0 ? void 0 : _a.constructor()) === null || _b === void 0 ? void 0 : _b.serializeToString(node)) !== null && _c !== void 0 ? _c : node === null || node === void 0 ? void 0 : node.xml;
+            var _a, _b, _c, _d;
+            let serialized = (_d = (_c = (_b = (_a = ((0, Global_1._global$)())) === null || _a === void 0 ? void 0 : _a.XMLSerializer) === null || _b === void 0 ? void 0 : _b.constructor()) === null || _c === void 0 ? void 0 : _c.serializeToString(node)) !== null && _d !== void 0 ? _d : node === null || node === void 0 ? void 0 : node.xml;
             if (!!serialized) {
                 ret.push(serialized);
             }
@@ -4673,9 +4801,9 @@ var PushImpl;
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.CTX_PARAM_TIMEOUT = exports.CTX_PARAM_DELAY = exports.CTX_PARAM_PASS_THR = exports.CTX_PARAM_TR_TYPE = exports.CTX_PARAM_SRC_CTL_ID = exports.CTX_PARAM_SRC_FRM_ID = exports.CTX_PARAM_MF_INTERNAL = exports.TIMEOUT_EVENT = exports.CLIENT_ERROR = exports.SERVER_ERROR = exports.MALFORMEDXML = exports.EMPTY_RESPONSE = exports.HTTPERROR = exports.RESPONSE_XML = exports.RESPONSE_TEXT = exports.ERROR_MESSAGE = exports.ERROR_NAME = exports.STATUS = exports.SOURCE = exports.SUCCESS = exports.COMPLETE = exports.BEGIN = exports.ON_EVENT = exports.ON_ERROR = exports.EVENT = exports.ERROR = exports.WINDOW_ID = exports.CTX_PARAM_RENDER = exports.P_BEHAVIOR_EVENT = exports.P_WINDOW_ID = exports.P_RESET_VALUES = exports.P_CLIENT_WINDOW = exports.P_EVT = exports.P_RENDER = exports.P_EXECUTE = exports.P_AJAX = exports.IDENT_FORM = exports.IDENT_THIS = exports.IDENT_NONE = exports.IDENT_ALL = exports.HTML_VIEWSTATE = exports.EMPTY_MAP = exports.EMPTY_STR = exports.EMPTY_FUNC = exports.P_VIEWBODY = exports.P_VIEWHEAD = exports.P_VIEWROOT = exports.P_VIEWSTATE = exports.PARTIAL_ID = exports.P_PARTIAL_SOURCE = void 0;
-exports.APPLIED_CLIENT_WINDOW = exports.APPLIED_VST = exports.REASON_EXPIRED = exports.MF_NONE = exports.SEL_SCRIPTS_STYLES = exports.MYFACES = exports.UPDATE_ELEMS = exports.UPDATE_FORMS = exports.CMD_REDIRECT = exports.CMD_EXTENSION = exports.CMD_ATTRIBUTES = exports.CMD_ERROR = exports.CMD_EVAL = exports.CMD_INSERT = exports.CMD_DELETE = exports.CMD_UPDATE = exports.CMD_CHANGES = exports.RESP_PARTIAL = exports.ATTR_ID = exports.ATTR_VALUE = exports.ATTR_NAME = exports.ATTR_URL = exports.ERR_NO_PARTIAL_RESPONSE = exports.PHASE_PROCESS_RESPONSE = exports.SEL_RESPONSE_XML = exports.SEL_CLIENT_WINDOW_ELEM = exports.SEL_VIEWSTATE_ELEM = exports.TAG_ATTR = exports.TAG_AFTER = exports.TAG_BEFORE = exports.TAG_BODY = exports.TAG_FORM = exports.TAG_HEAD = exports.STD_ACCEPT = exports.NO_TIMEOUT = exports.MULTIPART = exports.URL_ENCODED = exports.STATE_EVT_COMPLETE = exports.STATE_EVT_TIMEOUT = exports.STATE_EVT_BEGIN = exports.REQ_TYPE_POST = exports.REQ_TYPE_GET = exports.ENCODED_URL = exports.VAL_AJAX = exports.REQ_ACCEPT = exports.HEAD_FACES_REQ = exports.CONTENT_TYPE = exports.STAGE_DEVELOPMENT = exports.CTX_PARAM_EXECUTE = exports.CTX_PARAM_RST = void 0;
-exports.$nsp = exports.UNKNOWN = exports.MAX_RECONNECT_ATTEMPTS = exports.RECONNECT_INTERVAL = void 0;
+exports.CTX_PARAM_DELAY = exports.CTX_PARAM_PASS_THR = exports.CTX_PARAM_TR_TYPE = exports.CTX_PARAM_SRC_CTL_ID = exports.CTX_PARAM_SRC_FRM_ID = exports.CTX_PARAM_MF_INTERNAL = exports.TIMEOUT_EVENT = exports.CLIENT_ERROR = exports.SERVER_ERROR = exports.MALFORMEDXML = exports.EMPTY_RESPONSE = exports.HTTPERROR = exports.RESPONSE_XML = exports.RESPONSE_TEXT = exports.ERROR_MESSAGE = exports.ERROR_NAME = exports.STATUS = exports.SOURCE = exports.SUCCESS = exports.COMPLETE = exports.BEGIN = exports.ON_EVENT = exports.ON_ERROR = exports.EVENT = exports.ERROR = exports.WINDOW_ID = exports.CTX_PARAM_RENDER = exports.P_BEHAVIOR_EVENT = exports.P_WINDOW_ID = exports.P_RESET_VALUES = exports.P_CLIENT_WINDOW = exports.P_EVT = exports.P_RENDER = exports.P_EXECUTE = exports.P_AJAX = exports.IDENT_FORM = exports.IDENT_THIS = exports.IDENT_NONE = exports.IDENT_ALL = exports.HTML_VIEWSTATE = exports.EMPTY_MAP = exports.EMPTY_STR = exports.EMPTY_FUNC = exports.P_RESOURCE = exports.P_VIEWBODY = exports.P_VIEWHEAD = exports.P_VIEWROOT = exports.P_VIEWSTATE = exports.PARTIAL_ID = exports.P_PARTIAL_SOURCE = void 0;
+exports.REASON_EXPIRED = exports.MF_NONE = exports.SEL_SCRIPTS_STYLES = exports.MYFACES = exports.DEFERRED_HEAD_INSERTS = exports.UPDATE_ELEMS = exports.UPDATE_FORMS = exports.CMD_REDIRECT = exports.CMD_EXTENSION = exports.CMD_ATTRIBUTES = exports.CMD_ERROR = exports.CMD_EVAL = exports.CMD_INSERT = exports.CMD_DELETE = exports.CMD_UPDATE = exports.CMD_CHANGES = exports.RESP_PARTIAL = exports.ATTR_ID = exports.ATTR_VALUE = exports.ATTR_NAME = exports.ATTR_URL = exports.ERR_NO_PARTIAL_RESPONSE = exports.PHASE_PROCESS_RESPONSE = exports.SEL_RESPONSE_XML = exports.SEL_CLIENT_WINDOW_ELEM = exports.SEL_VIEWSTATE_ELEM = exports.TAG_ATTR = exports.TAG_AFTER = exports.TAG_BEFORE = exports.TAG_BODY = exports.TAG_FORM = exports.TAG_HEAD = exports.STD_ACCEPT = exports.NO_TIMEOUT = exports.MULTIPART = exports.URL_ENCODED = exports.STATE_EVT_COMPLETE = exports.STATE_EVT_TIMEOUT = exports.STATE_EVT_BEGIN = exports.REQ_TYPE_POST = exports.REQ_TYPE_GET = exports.ENCODED_URL = exports.VAL_AJAX = exports.REQ_ACCEPT = exports.HEAD_FACES_REQ = exports.CONTENT_TYPE = exports.STAGE_DEVELOPMENT = exports.CTX_PARAM_EXECUTE = exports.CTX_PARAM_RST = exports.CTX_PARAM_TIMEOUT = void 0;
+exports.$nsp = exports.UNKNOWN = exports.MAX_RECONNECT_ATTEMPTS = exports.RECONNECT_INTERVAL = exports.APPLIED_CLIENT_WINDOW = exports.APPLIED_VST = void 0;
 /*
  * [export const] constants
  */
@@ -4685,6 +4813,7 @@ exports.P_VIEWSTATE = "jakarta.faces.ViewState";
 exports.P_VIEWROOT = "jakarta.faces.ViewRoot";
 exports.P_VIEWHEAD = "jakarta.faces.ViewHead";
 exports.P_VIEWBODY = "jakarta.faces.ViewBody";
+exports.P_RESOURCE = "jakarta.faces.Resource";
 /*some useful definitions*/
 exports.EMPTY_FUNC = Object.freeze(() => {
 });
@@ -4782,6 +4911,9 @@ exports.CMD_REDIRECT = "redirect";
 /*other constants*/
 exports.UPDATE_FORMS = "_updateForms";
 exports.UPDATE_ELEMS = "_updateElems";
+//we want the head elements to be processed before we process the body
+//but after the inner html is done
+exports.DEFERRED_HEAD_INSERTS = "_headElems";
 exports.MYFACES = "myfaces";
 exports.SEL_SCRIPTS_STYLES = "script, style, link";
 exports.MF_NONE = "__mf_none__";
@@ -5352,17 +5484,20 @@ class ExtDomquery extends mona_dish_1.DQ {
     globalEval(code, nonce) {
         return new ExtDomquery(super.globalEval(code, nonce !== null && nonce !== void 0 ? nonce : this.nonce));
     }
+    globalEvalSticky(code, nonce) {
+        return new ExtDomquery(super.globalEvalSticky(code, nonce !== null && nonce !== void 0 ? nonce : this.nonce));
+    }
     /**
      * decorated run scripts which takes our jsf extensions into consideration
      * (standard DomQuery will let you pass anything)
      * @param whilteListed
      */
-    runScripts(whilteListed) {
+    runScripts(sticky = false, whilteListed) {
         const whitelistFunc = (src) => {
             var _a;
             return ((_a = whilteListed === null || whilteListed === void 0 ? void 0 : whilteListed(src)) !== null && _a !== void 0 ? _a : true) && !IS_FACES_SOURCE(src) && !IS_INTERNAL_SOURCE(src);
         };
-        return super.runScripts(whitelistFunc);
+        return super.runScripts(false, whitelistFunc);
     }
     /**
      * byId producer
@@ -6021,6 +6156,7 @@ function resolveContexts(context) {
     /**
      * prepare storage for some deferred operations
      */
+    internalContext.assign(Const_1.DEFERRED_HEAD_INSERTS).value = [];
     internalContext.assign(Const_1.UPDATE_FORMS).value = [];
     internalContext.assign(Const_1.UPDATE_ELEMS).value = [];
     return { externalContext, internalContext };
@@ -6231,6 +6367,9 @@ var Response;
             case (0, Const_1.$nsp)(Const_1.P_VIEWBODY):
                 responseProcessor.replaceBody(mona_dish_1.DQ.fromMarkup(cdataBlock));
                 break;
+            case (0, Const_1.$nsp)(Const_1.P_RESOURCE):
+                responseProcessor.addToHead(mona_dish_1.DQ.fromMarkup(cdataBlock));
+                break;
             default: //htmlItem replacement
                 responseProcessor.update(node, cdataBlock);
                 break;
@@ -6303,13 +6442,19 @@ class ResponseProcessor {
         if (!shadowHead.isPresent()) {
             return;
         }
-        let oldHead = mona_dish_1.DQ.querySelectorAll(Const_1.TAG_HEAD);
+        let oldHead = ExtDomQuery_1.ExtDomquery.querySelectorAll(Const_1.TAG_HEAD);
         //delete all to avoid script and style overlays
         oldHead.querySelectorAll(Const_1.SEL_SCRIPTS_STYLES).delete();
         // we cannot replace new elements in the head, but we can eval the elements
         // eval means the scripts will get attached (eval script attach method)
         // but this is done by DomQuery not in this code
         this.storeForEval(shadowHead);
+        //incoming either the outer head tag or its childs
+        //shadowHead = (shadowHead.tagName.value === "HEAD") ? shadowHead.childNodes : shadowHead;
+        //this.addToHead(shadowHead);
+    }
+    addToHead(newElements) {
+        this.internalContext.assign(Const_1.DEFERRED_HEAD_INSERTS).value.push(newElements);
     }
     /**
      * replaces the body in the expected manner
@@ -6325,7 +6470,7 @@ class ResponseProcessor {
             return;
         }
         let shadowInnerHTML = shadowBody.html().value;
-        let resultingBody = mona_dish_1.DQ.querySelectorAll(Const_1.TAG_BODY).html(shadowInnerHTML);
+        let resultingBody = ExtDomQuery_1.ExtDomquery.querySelectorAll(Const_1.TAG_BODY).html(shadowInnerHTML);
         let updateForms = resultingBody.querySelectorAll(Const_1.TAG_FORM);
         // main difference, we cannot replace the body itself, but only its content
         // we need a separate step for post processing the incoming attributes, like classes, styles etc...
@@ -6338,7 +6483,7 @@ class ResponseProcessor {
      * @param node the node to eval
      */
     eval(node) {
-        mona_dish_1.DQ.globalEval(node.cDATAAsString);
+        ExtDomQuery_1.ExtDomquery.globalEval(node.cDATAAsString);
     }
     /**
      * processes an incoming error from the response
@@ -6486,8 +6631,13 @@ class ResponseProcessor {
      * generic global eval which runs the embedded css and scripts
      */
     globalEval() {
+        //  phase one, if we have head inserts, we build up those before going into the script eval phase
+        let insertHeadElems = new ExtDomQuery_1.ExtDomquery(...this.internalContext.getIf(Const_1.DEFERRED_HEAD_INSERTS).value);
+        this.runHeadInserts(insertHeadElems);
+        // phase 2 we run a script eval on all updated elements in the body
         let updateElems = new ExtDomQuery_1.ExtDomquery(...this.internalContext.getIf(Const_1.UPDATE_ELEMS).value);
         updateElems.runCss();
+        // phase 3, we do the same for the css
         updateElems.runScripts();
     }
     /**
@@ -6600,6 +6750,10 @@ class ResponseProcessor {
     storeForEval(toBeEvaled) {
         this.internalContext.assign(Const_1.UPDATE_ELEMS).value.push(toBeEvaled);
     }
+    // head eval is always sticky
+    storeForHeadEval(toBeEvaled, sticky) {
+        this.internalContext.assign(Const_1.DEFERRED_HEAD_INSERTS).value.push(toBeEvaled);
+    }
     /**
      * check whether a given XMLQuery node is an explicit viewstate node
      *
@@ -6628,6 +6782,28 @@ class ResponseProcessor {
     }
     triggerOnError(errorData) {
         this.externalContext.getIf(Const_1.ON_ERROR).orElse(this.internalContext.getIf(Const_1.ON_ERROR).value).orElse(Const_1.EMPTY_FUNC).value(errorData);
+    }
+    /**
+     * adds new elements to the head as per spec, we use it in a deferred way
+     * to have the html buildup first then the head inserts which run the head evals
+     * and then the body and css evals from the markup
+     *
+     * This is only performed upon a head replacement or resource insert
+     *
+     * @param newElements the elements which need addition
+     */
+    runHeadInserts(newElements) {
+        let head = ExtDomQuery_1.ExtDomquery.byId(document.head);
+        //automated nonce handling
+        newElements.each(element => {
+            if (element.tagName.value != "SCRIPT" || element.attr("src").isPresent()) {
+                head.append(element);
+                return;
+            }
+            // special corner case
+            // embedded script code,
+            element.globalEvalSticky(element.innerHTML);
+        });
     }
 }
 exports.ResponseProcessor = ResponseProcessor;
@@ -7345,6 +7521,19 @@ var oam;
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
+/******/ 	
+/************************************************************************/
+/******/ 	/* webpack/runtime/global */
+/******/ 	(() => {
+/******/ 		__webpack_require__.g = (function() {
+/******/ 			if (typeof globalThis === 'object') return globalThis;
+/******/ 			try {
+/******/ 				return this || new Function('return this')();
+/******/ 			} catch (e) {
+/******/ 				if (typeof window === 'object') return window;
+/******/ 			}
+/******/ 		})();
+/******/ 	})();
 /******/ 	
 /************************************************************************/
 var __webpack_exports__ = {};

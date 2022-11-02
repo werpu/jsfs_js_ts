@@ -171,9 +171,13 @@ export class XmlResponses {
 `;
 
     static SIMPLE_RESOURCE_RESPONSE = `
-<partial-response id="j_id__v_0"><changes><update id="jakarta.faces.Resource">
+<partial-response>
+<changes>
+<update id="jakarta.faces.Resource">
     <![CDATA[<script src="/test-faces23-ajax-4466/jakarta.faces.resource/addedViaHead.js.xhtml?ln=spec1423"></script>]]>
 </update>
+</changes>
+</partial-response>
 `;
     static MULTIPLE_RESOURCE_RESPONSE = `
 <partial-response id="j_id__v_0"><changes><update id="jakarta.faces.Resource">
@@ -182,6 +186,20 @@ export class XmlResponses {
     <style type="text/css" rel="/test-faces23-ajax-4466/jakarta.faces.resource/addedViaHead.css.xhtml?ln=spec1423"></style>
     ]]>
 </update>
+</changes>
+</partial-response>
+`
+
+    static EMBEDDED_SCRIPTS_RESOURCE_RESPONSE = `
+<partial-response id="j_id__v_0"><changes><update id="jakarta.faces.Resource">
+    <![CDATA[
+    <script src="/test-faces23-ajax-4466/jakarta.faces.resource/addedViaHead.js.xhtml?ln=spec1423"></script>
+    <style type="text/css" rel="/test-faces23-ajax-4466/jakarta.faces.resource/addedViaHead.css.xhtml?ln=spec1423"></style>
+    <script type="text/javascript">document.body.innerHTML = 'booga'</script>
+    ]]>
+</update>
+</changes>
+</partial-response>
 `
 
     static ILLEGAL_RESP = `>>>> xxxx >YYYY-!->>>`;

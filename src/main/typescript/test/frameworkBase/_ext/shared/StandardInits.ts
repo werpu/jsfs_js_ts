@@ -199,7 +199,7 @@ export module StandardInits {
                onclick="emitPPR(this, ('undefined' == typeof event)? null: event, 'simpleresource');"/>
 
         <input type="button" id="cmd_complex_resource" value="complex resource"
-               onclick="emitPPR(this, ('undefined' == typeof event)? null: event, 'cmd_complex_resource');"/>
+               onclick="emitPPR(this, ('undefined' == typeof event)? null: event, 'complex_resource');"/>
                
         <input type="button" id="cmd_update_insert2" value="update insert second protocol path"
                onclick="emitPPR(this, ('undefined' == typeof event)? null: event, 'updateinsert2');"/>

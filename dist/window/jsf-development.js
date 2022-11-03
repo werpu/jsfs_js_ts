@@ -69,7 +69,13 @@ var Submittables;
  * @param condition the condition lambda to be fulfilled
  * @param options options for the search
  */
-function waitUntilDom(root, condition, options = { attributes: true, childList: true, subtree: true, timeout: 500, interval: 100 }) {
+function waitUntilDom(root, condition, options = {
+    attributes: true,
+    childList: true,
+    subtree: true,
+    timeout: 500,
+    interval: 100
+}) {
     return new Promise((success, error) => {
         let observer = null;
         const MUT_ERROR = new Error("Mutation observer timeout");
@@ -1030,32 +1036,18 @@ class DomQuery {
      * @param charSet
      */
     loadScriptEval(src, defer = 0, charSet = "utf-8", nonce) {
-        let xhr = new XMLHttpRequest();
-        xhr.open("GET", src, false);
-        if (charSet) {
-            xhr.setRequestHeader("Content-Type", "application/x-javascript; charset:" + charSet);
+        let srcNode = this.createSourceNode(src, nonce);
+        let head = document.head;
+        if (!defer) {
+            head.appendChild(srcNode);
+            head.removeChild(srcNode);
         }
-        xhr.onload = () => {
-            //defer also means we have to process after the ajax response
-            //has been processed
-            //we can achieve that with a small timeout, the timeout
-            //triggers after the processing is done!
-            if (!defer) {
-                this.globalEval(xhr.responseText.replace(/\n/g, "\r\n") + "\r\n//@ sourceURL=" + src, nonce);
-            }
-            else {
-                //TODO not ideal we maybe ought to move to something else here
-                //but since it is not in use yet, it is ok
-                setTimeout(() => {
-                    this.globalEval(xhr.responseText + "\r\n//@ sourceURL=" + src, nonce);
-                }, defer);
-            }
-        };
-        xhr.onerror = (data) => {
-            throw Error(data);
-        };
-        //since we are synchronous we do it after not with onReadyStateChange
-        xhr.send(null);
+        else {
+            setTimeout(() => {
+                head.appendChild(srcNode);
+                head.removeChild(srcNode);
+            }, defer);
+        }
         return this;
     }
     /**
@@ -1066,32 +1058,15 @@ class DomQuery {
      * @param charSet
      */
     loadScriptEvalSticky(src, defer = 0, charSet = "utf-8", nonce) {
-        let xhr = new XMLHttpRequest();
-        xhr.open("GET", src, false);
-        if (charSet) {
-            xhr.setRequestHeader("Content-Type", "application/x-javascript; charset:" + charSet);
+        let srcNode = this.createSourceNode(src, nonce);
+        if (!defer) {
+            document.head.appendChild(srcNode);
         }
-        xhr.onload = () => {
-            //defer also means we have to process after the ajax response
-            //has been processed
-            //we can achieve that with a small timeout, the timeout
-            //triggers after the processing is done!
-            if (!defer) {
-                this.globalEvalSticky(xhr.responseText.replace(/\n/g, "\r\n") + "\r\n//@ sourceURL=" + src, nonce);
-            }
-            else {
-                //TODO not ideal we maybe ought to move to something else here
-                //but since it is not in use yet, it is ok
-                setTimeout(() => {
-                    this.globalEvalSticky(xhr.responseText + "\r\n//@ sourceURL=" + src, nonce);
-                }, defer);
-            }
-        };
-        xhr.onerror = (data) => {
-            throw Error(data);
-        };
-        //since we are synchronous we do it after not with onReadyStateChange
-        xhr.send(null);
+        else {
+            setTimeout(() => {
+                document.head.appendChild(srcNode);
+            }, defer);
+        }
         return this;
     }
     insertAfter(...toInsertParams) {
@@ -1665,7 +1640,13 @@ class DomQuery {
      * @param condition
      * @param options
      */
-    waitUntilDom(condition, options = { attributes: true, childList: true, subtree: true, timeout: 500, interval: 100 }) {
+    waitUntilDom(condition, options = {
+        attributes: true,
+        childList: true,
+        subtree: true,
+        timeout: 500,
+        interval: 100
+    }) {
         return __awaiter(this, void 0, void 0, function* () {
             return waitUntilDom(this, condition, options);
         });
@@ -1780,6 +1761,49 @@ class DomQuery {
             item.prepend(...elem.allElems());
         });
         return this;
+    }
+    /*[observable](): Observable<DomQuery> {
+        return this.observable;
+    }
+
+    get observable(): Observable<DomQuery> {
+        let observerFunc = (observer:Subscriber<DomQuery>) => {
+            try {
+                this.each(dqNode => {
+                    observer.next(dqNode);
+                });
+            } catch (e) {
+                observer.error(e);
+            }
+        };
+        return new Observable(observerFunc);
+    }
+
+    get observableElem(): Observable<Element> {
+        let observerFunc = (observer:Subscriber<Element>) => {
+            try {
+                this.eachElem(node => {
+                    observer.next(node);
+                });
+            } catch (e) {
+                observer.error(e);
+            }
+        };
+        return new Observable(observerFunc);
+    }*/
+    createSourceNode(src, nonce) {
+        let srcNode = document.createElement("script");
+        srcNode.type = "text/javascript";
+        if (!!nonce) {
+            if ('undefined' != typeof (srcNode === null || srcNode === void 0 ? void 0 : srcNode.nonce)) {
+                srcNode.nonce = nonce;
+            }
+            else {
+                srcNode.setAttribute("nonce", nonce);
+            }
+        }
+        srcNode.src = src;
+        return srcNode;
     }
 }
 exports.DomQuery = DomQuery;
@@ -5497,7 +5521,51 @@ class ExtDomquery extends mona_dish_1.DQ {
             var _a;
             return ((_a = whilteListed === null || whilteListed === void 0 ? void 0 : whilteListed(src)) !== null && _a !== void 0 ? _a : true) && !IS_FACES_SOURCE(src) && !IS_INTERNAL_SOURCE(src);
         };
-        return super.runScripts(false, whitelistFunc);
+        return super.runScripts(sticky, whitelistFunc);
+    }
+    /**
+     * adds the elements in this ExtDomQuery to the head
+     *
+     * @param newElements the elements which need addition
+     */
+    runHeadInserts(suppressDoubleIncludes = true) {
+        let head = ExtDomquery.byId(document.head);
+        //automated nonce handling
+        let processedScripts = [];
+        // the idea is only to run head inserts on resources
+        // which do not exist already, that way
+        // we can avoid double includes on subsequent resource
+        // requests.
+        function resourceIsNew(element) {
+            if (!suppressDoubleIncludes) {
+                return true;
+            }
+            const tagName = element.tagName.value;
+            if (!tagName) {
+                // textnode
+                return true;
+            }
+            let href = element.attr("href").orElse(element.attr("src").value);
+            if (!href.isPresent()) {
+                return true;
+            }
+            return !head.querySelectorAll(`${tagName}[href='${href.value}']`).length &&
+                !head.querySelectorAll(`${tagName}[src='${href.value}']`).length;
+        }
+        this
+            .filter(resourceIsNew)
+            .each(element => {
+            if (element.tagName.value != "SCRIPT") {
+                //we need to run runScripts properly to deal with the rest
+                new ExtDomquery(...processedScripts).runScripts(true);
+                processedScripts = [];
+                head.append(element);
+            }
+            else {
+                processedScripts.push(element);
+            }
+        });
+        new ExtDomquery(...processedScripts).runScripts(true);
     }
     /**
      * byId producer
@@ -6633,7 +6701,7 @@ class ResponseProcessor {
     globalEval() {
         //  phase one, if we have head inserts, we build up those before going into the script eval phase
         let insertHeadElems = new ExtDomQuery_1.ExtDomquery(...this.internalContext.getIf(Const_1.DEFERRED_HEAD_INSERTS).value);
-        this.runHeadInserts(insertHeadElems);
+        insertHeadElems.runHeadInserts(true);
         // phase 2 we run a script eval on all updated elements in the body
         let updateElems = new ExtDomQuery_1.ExtDomquery(...this.internalContext.getIf(Const_1.UPDATE_ELEMS).value);
         updateElems.runCss();
@@ -6782,28 +6850,6 @@ class ResponseProcessor {
     }
     triggerOnError(errorData) {
         this.externalContext.getIf(Const_1.ON_ERROR).orElse(this.internalContext.getIf(Const_1.ON_ERROR).value).orElse(Const_1.EMPTY_FUNC).value(errorData);
-    }
-    /**
-     * adds new elements to the head as per spec, we use it in a deferred way
-     * to have the html buildup first then the head inserts which run the head evals
-     * and then the body and css evals from the markup
-     *
-     * This is only performed upon a head replacement or resource insert
-     *
-     * @param newElements the elements which need addition
-     */
-    runHeadInserts(newElements) {
-        let head = ExtDomQuery_1.ExtDomquery.byId(document.head);
-        //automated nonce handling
-        newElements.each(element => {
-            if (element.tagName.value != "SCRIPT" || element.attr("src").isPresent()) {
-                head.append(element);
-                return;
-            }
-            // special corner case
-            // embedded script code,
-            element.globalEvalSticky(element.innerHTML);
-        });
     }
 }
 exports.ResponseProcessor = ResponseProcessor;

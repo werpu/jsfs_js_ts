@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Config, IValueHolder, Optional, DomQuery, DQ, Stream, ArrayCollector} from "mona-dish";
+import {Config, IValueHolder, Optional, DomQuery, DQ, Stream, ArrayCollector, Lang} from "mona-dish";
 import {$nsp, P_WINDOW_ID} from "../core/Const";
+import equalsIgnoreCase = Lang.equalsIgnoreCase;
+import trim = Lang.trim;
 
 
 
@@ -175,9 +177,55 @@ export class ExtDomquery extends DQ {
         const whitelistFunc = (src: string): boolean => {
             return (whilteListed?.(src) ?? true) && !IS_FACES_SOURCE(src) && !IS_INTERNAL_SOURCE(src);
         };
-        return super.runScripts(false, whitelistFunc);
+        return super.runScripts(sticky, whitelistFunc);
     }
 
+    /**
+     * adds the elements in this ExtDomQuery to the head
+     *
+     * @param newElements the elements which need addition
+     */
+    runHeadInserts(suppressDoubleIncludes = true): void {
+        let head = ExtDomquery.byId(document.head);
+        //automated nonce handling
+        let processedScripts = [];
+
+        // the idea is only to run head inserts on resources
+        // which do not exist already, that way
+        // we can avoid double includes on subsequent resource
+        // requests.
+        function resourceIsNew(element: DomQuery) {
+            if(!suppressDoubleIncludes) {
+                return true;
+            }
+            const tagName = element.tagName.value;
+            if(!tagName) {
+                // textnode
+                return true;
+            }
+            let href = element.attr("href").orElse(element.attr("src").value);
+
+            if (!href.isPresent()) {
+                return true;
+            }
+            return !head.querySelectorAll(`${tagName}[href='${href.value}']`).length &&
+                !head.querySelectorAll(`${tagName}[src='${href.value}']`).length;
+        }
+
+        this
+            .filter(resourceIsNew)
+            .each(element => {
+                if(element.tagName.value != "SCRIPT") {
+                    //we need to run runScripts properly to deal with the rest
+                    new ExtDomquery(...processedScripts).runScripts(true);
+                    processedScripts = [];
+                    head.append(element);
+                } else {
+                    processedScripts.push(element);
+                }
+            });
+        new ExtDomquery(...processedScripts).runScripts(true);
+    }
 
 
     /**
@@ -191,6 +239,7 @@ export class ExtDomquery extends DQ {
         const ret = DomQuery.byId(selector, deep);
         return new ExtDomquery(ret);
     }
+
 
 }
 

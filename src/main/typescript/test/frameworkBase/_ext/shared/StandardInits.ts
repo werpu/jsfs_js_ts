@@ -179,7 +179,9 @@ export module StandardInits {
         
         <div id="attributeChange">attributes changes area</div>
     
-    
+        <div id="resource_area_1"></div>
+        <div id="resource_area_2"></div>
+        <div id="resource_area_3"></div>
     
     </div>
 
@@ -200,6 +202,9 @@ export module StandardInits {
 
         <input type="button" id="cmd_complex_resource" value="complex resource"
                onclick="emitPPR(this, ('undefined' == typeof event)? null: event, 'complex_resource');"/>
+               
+        <input type="button" id="cmd_complex_resource2" value="complex resource2"
+               onclick="emitPPR(this, ('undefined' == typeof event)? null: event, 'complex_resource2');"/>       
                
         <input type="button" id="cmd_update_insert2" value="update insert second protocol path"
                onclick="emitPPR(this, ('undefined' == typeof event)? null: event, 'updateinsert2');"/>
@@ -350,7 +355,9 @@ export module StandardInits {
         return import('jsdom-global').then((domIt) => {
             let params = {
                 contentType: "text/html",
-                runScripts: "dangerously"
+                runScripts: "dangerously",
+                resources: "usable",
+                url: `file://${__dirname}/index.html`
             };
             //we have two different apis depending whether we allow module interop with sinon or not
             return (domIt?.default ?? domIt)?.(template, params) ;

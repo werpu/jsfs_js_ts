@@ -1,0 +1,1 @@
+document.getElementById('resource_area_1').innerHTML = 'true';

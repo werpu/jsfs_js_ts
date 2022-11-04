@@ -371,6 +371,24 @@ describe('Tests of the various aspects of the response protocol functionality', 
             .then(() => done())
             .catch(done);
     })
+
+
+    it("only single resources are allowed", function(done) {
+        // we need to fake the response as well to see whether the server has loaded the addedViewHead code and has interpreted it
+        //(window as any)["test"] = "booga";
+        for(let cnt = 0; cnt < 10; cnt++) {
+            DQ.byId("cmd_simple_resource").click();
+            this.respond(XmlResponses.MULTIPLE_RESOURCE_RESPONSE);
+        }
+
+        expect(document.head.innerHTML.indexOf("../../../xhrCore/fixtures/addedViewHead2.js") != -1).to.be.true;
+        let addedScriptsCnt = DomQuery.byId(document.head).querySelectorAll("script[src='../../../xhrCore/fixtures/addedViewHead2.js']").length;
+        expect(addedScriptsCnt).to.eq(1);
+        addedScriptsCnt = DomQuery.byId(document.head).querySelectorAll("style[rel='../../../xhrCore/fixtures/addedViewHead2.css']").length;
+        expect(addedScriptsCnt).to.eq(1);
+        done();
+    })
+
     //TODO implement secondary response mockup
     it("must handle complex resource responses properly", function(done) {
         DQ.byId("cmd_complex_resource").click();

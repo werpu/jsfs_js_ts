@@ -5567,12 +5567,15 @@ class ExtDomquery extends mona_dish_1.DQ {
                 // textnode
                 return true;
             }
-            let href = element.attr("href").orElse(element.attr("src").value);
-            if (!href.isPresent()) {
+            let reference = element.attr("href")
+                .orElse(element.attr("src").value)
+                .orElse(element.attr("rel").value);
+            if (!reference.isPresent()) {
                 return true;
             }
-            return !head.querySelectorAll(`${tagName}[href='${href.value}']`).length &&
-                !head.querySelectorAll(`${tagName}[src='${href.value}']`).length;
+            return !head.querySelectorAll(`${tagName}[href='${reference.value}']`).length &&
+                !head.querySelectorAll(`${tagName}[src='${reference.value}']`).length &&
+                !head.querySelectorAll(`${tagName}[rel='${reference.value}']`).length;
         }
         this
             .filter(resourceIsNew)

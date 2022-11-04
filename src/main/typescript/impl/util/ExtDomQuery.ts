@@ -13,12 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Config, IValueHolder, Optional, DomQuery, DQ, Stream, ArrayCollector, Lang} from "mona-dish";
+import {Config, IValueHolder, Optional, DomQuery, DQ, Stream, ArrayCollector} from "mona-dish";
 import {$nsp, P_WINDOW_ID} from "../core/Const";
-import equalsIgnoreCase = Lang.equalsIgnoreCase;
-import trim = Lang.trim;
-
-
 
 
 /**
@@ -44,7 +40,7 @@ const IS_FACES_SOURCE = (source?: string): boolean => {
 
 /**
  * namespace myfaces.testscripts can be used as extension point for internal
- * tests, those will be handled similarly to faces.js regarding
+ * tests, those will be handled similarly to faces.js - regarding
  * reload blocking on ajax requests
  *
  * @param source the source to check
@@ -171,6 +167,7 @@ export class ExtDomquery extends DQ {
     /**
      * decorated run scripts which takes our jsf extensions into consideration
      * (standard DomQuery will let you pass anything)
+     * @param sticky if set to true the internally generated element for the script is left in the dom
      * @param whilteListed
      */
     runScripts(sticky = false, whilteListed?: (src: string) => boolean): DomQuery {
@@ -183,7 +180,7 @@ export class ExtDomquery extends DQ {
     /**
      * adds the elements in this ExtDomQuery to the head
      *
-     * @param newElements the elements which need addition
+     * @param suppressDoubleIncludes checks for existing elements in the head before running the insert
      */
     runHeadInserts(suppressDoubleIncludes = true): void {
         let head = ExtDomquery.byId(document.head);
@@ -319,5 +316,6 @@ export class ExtConfig extends  Config {
     private remap(accessPath: any[]) {
         return Stream.of(...accessPath).map(key => $nsp(key)).collect(new ArrayCollector());
     }
+
 
 }

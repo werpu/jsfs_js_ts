@@ -21,8 +21,9 @@ import * as sinon from "sinon";
 
 import {XmlResponses} from "../frameworkBase/_ext/shared/XmlResponses";
 import {expect} from "chai";
-import {DQ} from "mona-dish";
+import {DomQuery, DQ} from "mona-dish";
 import protocolPage = StandardInits.protocolPage;
+import exp from "constants";
 
 declare var faces: any;
 declare var Implementation: any;
@@ -385,7 +386,7 @@ describe('Tests of the various aspects of the response protocol functionality', 
     })
 
     it("embedded scripts must be evaled", function(done) {
-        (window as any)["test"] = "booga";
+
         DQ.byId("cmd_complex_resource2").click();
         this.respond(XmlResponses.EMBEDDED_SCRIPTS_RESOURCE_RESPONSE);
        // this.respond("debugger; document.getElementById('resource_area_1').innerHTML = 'true3'",  {'Content-Type': 'text/javascript'});
@@ -396,9 +397,9 @@ describe('Tests of the various aspects of the response protocol functionality', 
             let evalAreaHtml = DQ.byId('resource_area_1').innerHTML;
             //last one must be the last item, order must be preserved
             expect(evalAreaHtml).to.eq("booga");
-            (window as any)["test"] = "boogxa";
             done();
         }, 800)
 
     })
+
 });

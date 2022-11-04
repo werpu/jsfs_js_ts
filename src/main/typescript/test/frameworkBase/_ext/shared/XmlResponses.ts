@@ -204,5 +204,11 @@ export class XmlResponses {
 </partial-response>
 `
 
+    static NONCE_REPLY = `
+    <partial-response><changes><update id='nonce_result'>
+    <![CDATA[<script nonce='test12d3' type='text/javascript' src='http://foobaz/nonce_script.js'></script>]]>
+    </update></changes></partial-response>
+    `;
+
     static ILLEGAL_RESP = `>>>> xxxx >YYYY-!->>>`;
 }

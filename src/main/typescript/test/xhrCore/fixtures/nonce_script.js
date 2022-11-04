@@ -13,4 +13,4 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-document.getElementById('resource_area_1').innerHTML = 'true3';
+document.getElementById("nonce_result").innerHTML = "success";

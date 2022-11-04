@@ -182,7 +182,8 @@ export module StandardInits {
         <div id="resource_area_1"></div>
         <div id="resource_area_2"></div>
         <div id="resource_area_3"></div>
-    
+        <div id="nonce_result"></div>
+   
     </div>
 
     <h2>Call actions via normal ppr</h2>

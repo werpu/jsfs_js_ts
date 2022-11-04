@@ -1035,19 +1035,8 @@ class DomQuery {
      * @param defer in miliseconds execution default (0 == no defer)
      * @param charSet
      */
-    loadScriptEval(src, defer = 0, charSet = "utf-8", nonce) {
-        let srcNode = this.createSourceNode(src, nonce);
-        let head = document.head;
-        if (!defer) {
-            head.appendChild(srcNode);
-            head.removeChild(srcNode);
-        }
-        else {
-            setTimeout(() => {
-                head.appendChild(srcNode);
-                head.removeChild(srcNode);
-            }, defer);
-        }
+    loadScriptEval(src, defer = 0, nonce) {
+        this._loadScriptEval(false, src, defer, nonce);
         return this;
     }
     /**
@@ -1057,15 +1046,45 @@ class DomQuery {
      * @param defer in miliseconds execution default (0 == no defer)
      * @param charSet
      */
-    loadScriptEvalSticky(src, defer = 0, charSet = "utf-8", nonce) {
+    loadScriptEvalSticky(src, defer = 0, nonce) {
+        this._loadScriptEval(true, src, defer, nonce);
+        return this;
+    }
+    _loadScriptEval(sticky, src, defer = 0, nonce) {
         let srcNode = this.createSourceNode(src, nonce);
-        if (!defer) {
-            document.head.appendChild(srcNode);
+        let nonceCheck = this.createSourceNode(null, nonce);
+        let marker = `nonce_${Date.now()}_${Math.random()}`;
+        nonceCheck.innerHTML = `document.head["${marker}"] = true`; //noop
+        let head = document.head;
+        //  upfront nonce check, needed mostly for testing
+        //  but cannot hurt to block src calls which have invalid nonce on localhost
+        // the reason for doing this up until now we have a similar construct automatically
+        // by loading the scripts via xhr and then embedding them.
+        // this is not needed anymore but the nonce is more relaxed with script src
+        // we now enforce it the old way
+        head.appendChild(nonceCheck);
+        head.removeChild(nonceCheck);
+        if (!head[marker]) {
+            return;
         }
-        else {
-            setTimeout(() => {
-                document.head.appendChild(srcNode);
-            }, defer);
+        try {
+            if (!defer) {
+                head.appendChild(srcNode);
+                if (!sticky) {
+                    head.removeChild(srcNode);
+                }
+            }
+            else {
+                setTimeout(() => {
+                    head.appendChild(srcNode);
+                    if (!sticky) {
+                        head.removeChild(srcNode);
+                    }
+                }, defer);
+            }
+        }
+        finally {
+            delete head[marker];
         }
         return this;
     }
@@ -1284,14 +1303,14 @@ class DomQuery {
                         //we run the collected scripts before running, the include
                         finalScripts = evalCollectedScripts(finalScripts);
                         if (!sticky) {
-                            (!!nonce) ? this.loadScriptEval(src, 0, "UTF-8", nonce) :
+                            (!!nonce) ? this.loadScriptEval(src, 0, nonce) :
                                 //if no nonce is set we do not pass any once
-                                this.loadScriptEval(src, 0, "UTF-8");
+                                this.loadScriptEval(src, 0);
                         }
                         else {
-                            (!!nonce) ? this.loadScriptEvalSticky(src, 0, "UTF-8", nonce) :
+                            (!!nonce) ? this.loadScriptEvalSticky(src, 0, nonce) :
                                 //if no nonce is set we do not pass any once
-                                this.loadScriptEvalSticky(src, 0, "UTF-8");
+                                this.loadScriptEvalSticky(src, 0);
                         }
                     }
                 }
@@ -1802,7 +1821,9 @@ class DomQuery {
                 srcNode.setAttribute("nonce", nonce);
             }
         }
-        srcNode.src = src;
+        if (!!src) {
+            srcNode.src = src;
+        }
         return srcNode;
     }
 }
@@ -5404,7 +5425,7 @@ const IS_FACES_SOURCE = (source) => {
 };
 /**
  * namespace myfaces.testscripts can be used as extension point for internal
- * tests, those will be handled similarly to faces.js regarding
+ * tests, those will be handled similarly to faces.js - regarding
  * reload blocking on ajax requests
  *
  * @param source the source to check
@@ -5514,6 +5535,7 @@ class ExtDomquery extends mona_dish_1.DQ {
     /**
      * decorated run scripts which takes our jsf extensions into consideration
      * (standard DomQuery will let you pass anything)
+     * @param sticky if set to true the internally generated element for the script is left in the dom
      * @param whilteListed
      */
     runScripts(sticky = false, whilteListed) {
@@ -5526,7 +5548,7 @@ class ExtDomquery extends mona_dish_1.DQ {
     /**
      * adds the elements in this ExtDomQuery to the head
      *
-     * @param newElements the elements which need addition
+     * @param suppressDoubleIncludes checks for existing elements in the head before running the insert
      */
     runHeadInserts(suppressDoubleIncludes = true) {
         let head = ExtDomquery.byId(document.head);

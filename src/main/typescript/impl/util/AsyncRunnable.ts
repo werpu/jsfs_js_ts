@@ -42,7 +42,7 @@ export interface AsyncRunnable<T> {
      * triggered when the async run is complete
      *
      * the async runnable must register the passed function
-     * and then triggers all the registered thens
+     * and then triggers all the registered then functions
      * when it is complete
      *
      * @param func
@@ -51,10 +51,10 @@ export interface AsyncRunnable<T> {
 
     /**
      * callback for catch functionality
-     * triggered when the asynch run is complete
+     * triggered when the async run is complete
      *
      * the async runnable must register the passed function
-     * and then triggers all the registered catchs
+     * and then triggers all the registered catch handlers
      * when an error has occurred
      *
      * @param func

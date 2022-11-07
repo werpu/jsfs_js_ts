@@ -21,7 +21,7 @@ import {AsynchronousQueue} from "./util/AsyncQueue";
 import {AssocArrayCollector, Config, DQ, Lang, LazyStream, Optional, Stream} from "mona-dish";
 import {Assertions} from "./util/Assertions";
 import {XhrFormData} from "./xhrCore/XhrFormData";
-import {ExtDomquery} from "./util/ExtDomQuery";
+import {ExtDomQuery} from "./util/ExtDomQuery";
 import {ErrorData} from "./xhrCore/ErrorData";
 import {EventData} from "./xhrCore/EventData";
 import {ExtLang} from "./util/Lang";
@@ -163,7 +163,7 @@ export module Implementation {
     export function getSeparatorChar(): string {
         return resolveGlobalConfig()?.separator ??
             this?.separator ??
-            (separator = ExtDomquery.searchJsfJsFor(/separator=([^&;]*)/).orElse(":").value);
+            (separator = ExtDomQuery.searchJsfJsFor(/separator=([^&;]*)/).orElse(":").value);
     }
 
     /**
@@ -196,7 +196,7 @@ export module Implementation {
     export function resolveProjectStateFromURL(): string | null {
 
         /* run through all script tags and try to find the one that includes faces.js */
-        const foundStage = ExtDomquery.searchJsfJsFor(/stage=([^&;]*)/).value as string;
+        const foundStage = ExtDomQuery.searchJsfJsFor(/stage=([^&;]*)/).value as string;
         return (foundStage in ProjectStages) ? foundStage : null;
     }
 
@@ -447,7 +447,7 @@ export module Implementation {
         /*
          * lazy helper to fetch the window id from the window url
          */
-        let fetchWindowIdFromUrl = () => ExtDomquery.searchJsfJsFor(/jfwid=([^&;]*)/).orElse(null).value;
+        let fetchWindowIdFromUrl = () => ExtDomQuery.searchJsfJsFor(/jfwid=([^&;]*)/).orElse(null).value;
 
         /*
          * functional double check based on stream reduction

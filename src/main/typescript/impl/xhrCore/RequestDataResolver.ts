@@ -27,7 +27,7 @@ import {
 } from "../core/Const";
 import {XhrFormData} from "./XhrFormData";
 import {ExtLang} from "../util/Lang";
-import {ExtConfig, ExtDomquery} from "../util/ExtDomQuery";
+import {ExtConfig, ExtDomQuery} from "../util/ExtDomQuery";
 
 /**
  * Resolver functions for various aspects of the request data
@@ -100,7 +100,7 @@ export function resolveDelay(options: Config): number {
  * @param options
  */
 export function resolveWindowId(options: Config) {
-    return options?.value?.windowId ?? ExtDomquery.windowId;
+    return options?.value?.windowId ?? ExtDomQuery.windowId;
 }
 
 /**

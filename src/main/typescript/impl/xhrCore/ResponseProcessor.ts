@@ -55,7 +55,7 @@ import {
     DEFERRED_HEAD_INSERTS
 } from "../core/Const";
 import trim = Lang.trim;
-import {ExtConfig, ExtDomquery} from "../util/ExtDomQuery";
+import {ExtConfig, ExtDomQuery} from "../util/ExtDomQuery";
 
 
 /**
@@ -87,7 +87,7 @@ export class ResponseProcessor implements IResponseProcessor {
             return;
         }
 
-        let oldHead = ExtDomquery.querySelectorAll(TAG_HEAD);
+        let oldHead = ExtDomQuery.querySelectorAll(TAG_HEAD);
 
         //delete all to avoid script and style overlays
         oldHead.querySelectorAll(SEL_SCRIPTS_STYLES).delete();
@@ -124,7 +124,7 @@ export class ResponseProcessor implements IResponseProcessor {
 
         let shadowInnerHTML: string = <string>shadowBody.html().value;
 
-        let resultingBody = <DQ>ExtDomquery.querySelectorAll(TAG_BODY).html(shadowInnerHTML);
+        let resultingBody = <DQ>ExtDomQuery.querySelectorAll(TAG_BODY).html(shadowInnerHTML);
         let updateForms = resultingBody.querySelectorAll(TAG_FORM);
 
         // main difference, we cannot replace the body itself, but only its content
@@ -141,7 +141,7 @@ export class ResponseProcessor implements IResponseProcessor {
      * @param node the node to eval
      */
     eval(node: XMLQuery) {
-        ExtDomquery.globalEval(node.cDATAAsString);
+        ExtDomQuery.globalEval(node.cDATAAsString);
     }
 
     /**
@@ -199,7 +199,7 @@ export class ResponseProcessor implements IResponseProcessor {
      * @param cdataBlock the cdata block with the new html code
      */
     update(node: XMLQuery, cdataBlock: string) {
-        let result = ExtDomquery.byId(node.id.value, true).outerHTML(cdataBlock, false, false);
+        let result = ExtDomQuery.byId(node.id.value, true).outerHTML(cdataBlock, false, false);
         let sourceForm = result?.parents(TAG_FORM).orElseLazy(() => result.byTagName(TAG_FORM, true));
         if (sourceForm) {
             this.storeForPostProcessing(sourceForm, result);
@@ -315,11 +315,11 @@ export class ResponseProcessor implements IResponseProcessor {
      */
     globalEval() {
         //  phase one, if we have head inserts, we build up those before going into the script eval phase
-        let insertHeadElems = new ExtDomquery(...this.internalContext.getIf(DEFERRED_HEAD_INSERTS).value);
+        let insertHeadElems = new ExtDomQuery(...this.internalContext.getIf(DEFERRED_HEAD_INSERTS).value);
         insertHeadElems.runHeadInserts(true);
 
         // phase 2 we run a script eval on all updated elements in the body
-        let updateElems = new ExtDomquery(...this.internalContext.getIf(UPDATE_ELEMS).value);
+        let updateElems = new ExtDomQuery(...this.internalContext.getIf(UPDATE_ELEMS).value);
         updateElems.runCss();
         // phase 3, we do the same for the css
         updateElems.runScripts();

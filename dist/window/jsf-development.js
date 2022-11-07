@@ -4108,7 +4108,7 @@ var Implementation;
      */
     function getSeparatorChar() {
         var _a, _b, _c;
-        return (_c = (_b = (_a = resolveGlobalConfig()) === null || _a === void 0 ? void 0 : _a.separator) !== null && _b !== void 0 ? _b : this === null || this === void 0 ? void 0 : this.separator) !== null && _c !== void 0 ? _c : (separator = ExtDomQuery_1.ExtDomquery.searchJsfJsFor(/separator=([^&;]*)/).orElse(":").value);
+        return (_c = (_b = (_a = resolveGlobalConfig()) === null || _a === void 0 ? void 0 : _a.separator) !== null && _b !== void 0 ? _b : this === null || this === void 0 ? void 0 : this.separator) !== null && _c !== void 0 ? _c : (separator = ExtDomQuery_1.ExtDomQuery.searchJsfJsFor(/separator=([^&;]*)/).orElse(":").value);
     }
     Implementation.getSeparatorChar = getSeparatorChar;
     /**
@@ -4139,7 +4139,7 @@ var Implementation;
      */
     function resolveProjectStateFromURL() {
         /* run through all script tags and try to find the one that includes faces.js */
-        const foundStage = ExtDomQuery_1.ExtDomquery.searchJsfJsFor(/stage=([^&;]*)/).value;
+        const foundStage = ExtDomQuery_1.ExtDomQuery.searchJsfJsFor(/stage=([^&;]*)/).value;
         return (foundStage in ProjectStages) ? foundStage : null;
     }
     Implementation.resolveProjectStateFromURL = resolveProjectStateFromURL;
@@ -4361,7 +4361,7 @@ var Implementation;
         /*
          * lazy helper to fetch the window id from the window url
          */
-        let fetchWindowIdFromUrl = () => ExtDomQuery_1.ExtDomquery.searchJsfJsFor(/jfwid=([^&;]*)/).orElse(null).value;
+        let fetchWindowIdFromUrl = () => ExtDomQuery_1.ExtDomQuery.searchJsfJsFor(/jfwid=([^&;]*)/).orElse(null).value;
         /*
          * functional double check based on stream reduction
          * the values should be identical or on INIT value which is a premise to
@@ -5395,7 +5395,7 @@ exports.AsynchronousQueue = AsynchronousQueue;
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ExtConfig = exports.ExtDQ = exports.ExtDomquery = void 0;
+exports.ExtConfig = exports.ExtDQ = exports.ExtDomQuery = void 0;
 /*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -5433,9 +5433,12 @@ const IS_FACES_SOURCE = (source) => {
         (source === null || source === void 0 ? void 0 : source.search(/\/jsf[^.]*\.js.*ln=javax.faces.*/gi)) != -1);
 };
 /**
- * namespace myfaces.testscripts can be used as extension point for internal
- * tests, those will be handled similarly to faces.js - regarding
- * reload blocking on ajax requests
+ * namespace myfaces\.testscripts can be used as extension point for internal
+ * tests, those will be handled similarly to faces.js, in regard
+ * to reload blocking on ajax requests
+ *
+ * Note: atm not used, used to be used in the old implementation
+ * but still is reserved for now
  *
  * @param source the source to check
  * @constructor
@@ -5446,19 +5449,19 @@ const IS_INTERNAL_SOURCE = (source) => {
 const ATTR_SRC = 'src';
 /**
  * Extension which adds implementation specific
- * meta data to our dom query
+ * meta-data to our dom query
  *
  * Usage
  * el = new ExtDQ(oldReference)
  * nonce = el.nonce
  * windowId = el.getWindowId
  */
-class ExtDomquery extends mona_dish_1.DQ {
+class ExtDomQuery extends mona_dish_1.DQ {
     static get windowId() {
-        return new ExtDomquery(document.body).windowId;
+        return new ExtDomQuery(document.body).windowId;
     }
     static get nonce() {
-        return new ExtDomquery(document.body).nonce;
+        return new ExtDomQuery(document.body).nonce;
     }
     get windowId() {
         const fetchWindowIdFromURL = function () {
@@ -5497,7 +5500,7 @@ class ExtDomquery extends mona_dish_1.DQ {
         let curScript = new mona_dish_1.DQ(document.currentScript);
         //since our baseline atm is ie11 we cannot use document.currentScript globally
         if (!!this.extractNonce(curScript)) {
-            // fastpath for modern browsers
+            // fast-path for modern browsers
             return this.extractNonce(curScript);
         }
         // fallback if the currentScript method fails, we just search the jsf tags for nonce, this is
@@ -5514,30 +5517,30 @@ class ExtDomquery extends mona_dish_1.DQ {
         return null;
     }
     static searchJsfJsFor(item) {
-        return new ExtDomquery(document).searchJsfJsFor(item);
+        return new ExtDomQuery(document).searchJsfJsFor(item);
     }
     /**
-     * searches the embedded faces.js for items like separator char etc..
+     * searches the embedded faces.js for items like separator char etc.
      * expects a match as variable under position 1 in the result match
-     * @param rexp
+     * @param regExp
      */
-    searchJsfJsFor(rexp) {
+    searchJsfJsFor(regExp) {
         //perfect application for lazy stream
         return mona_dish_1.DQ.querySelectorAll("script[src], link[src]").lazyStream
             .filter(item => IS_FACES_SOURCE(item.attr(ATTR_SRC).value))
-            .map(item => item.attr(ATTR_SRC).value.match(rexp))
+            .map(item => item.attr(ATTR_SRC).value.match(regExp))
             .filter(item => item != null && item.length > 1)
             .map((result) => {
             return decodeURIComponent(result[1]);
         }).first();
     }
     globalEval(code, nonce) {
-        return new ExtDomquery(super.globalEval(code, nonce !== null && nonce !== void 0 ? nonce : this.nonce));
+        return new ExtDomQuery(super.globalEval(code, nonce !== null && nonce !== void 0 ? nonce : this.nonce));
     }
     // called from base class runScripts, do not delete
     // noinspection JSUnusedGlobalSymbols
     globalEvalSticky(code, nonce) {
-        return new ExtDomquery(super.globalEvalSticky(code, nonce !== null && nonce !== void 0 ? nonce : this.nonce));
+        return new ExtDomQuery(super.globalEvalSticky(code, nonce !== null && nonce !== void 0 ? nonce : this.nonce));
     }
     /**
      * decorated run scripts which takes our jsf extensions into consideration
@@ -5558,7 +5561,7 @@ class ExtDomquery extends mona_dish_1.DQ {
      * @param suppressDoubleIncludes checks for existing elements in the head before running the insert
      */
     runHeadInserts(suppressDoubleIncludes = true) {
-        let head = ExtDomquery.byId(document.head);
+        let head = ExtDomQuery.byId(document.head);
         //automated nonce handling
         let processedScripts = [];
         // the idea is only to run head inserts on resources
@@ -5571,7 +5574,8 @@ class ExtDomquery extends mona_dish_1.DQ {
             }
             const tagName = element.tagName.value;
             if (!tagName) {
-                // textnode
+                // text node they do not have tag names, so we can process them as they are without
+                // any further ado
                 return true;
             }
             let reference = element.attr("href")
@@ -5589,7 +5593,7 @@ class ExtDomquery extends mona_dish_1.DQ {
             .each(element => {
             if (element.tagName.value != "SCRIPT") {
                 //we need to run runScripts properly to deal with the rest
-                new ExtDomquery(...processedScripts).runScripts(true);
+                new ExtDomQuery(...processedScripts).runScripts(true);
                 processedScripts = [];
                 head.append(element);
             }
@@ -5597,7 +5601,7 @@ class ExtDomquery extends mona_dish_1.DQ {
                 processedScripts.push(element);
             }
         });
-        new ExtDomquery(...processedScripts).runScripts(true);
+        new ExtDomQuery(...processedScripts).runScripts(true);
     }
     /**
      * byId producer
@@ -5608,15 +5612,15 @@ class ExtDomquery extends mona_dish_1.DQ {
      */
     static byId(selector, deep = false) {
         const ret = mona_dish_1.DomQuery.byId(selector, deep);
-        return new ExtDomquery(ret);
+        return new ExtDomQuery(ret);
     }
     extractNonce(curScript) {
         var _a, _b;
         return (_b = (_a = curScript.getAsElem(0).value) === null || _a === void 0 ? void 0 : _a.nonce) !== null && _b !== void 0 ? _b : curScript.attr("nonce").value;
     }
 }
-exports.ExtDomquery = ExtDomquery;
-exports.ExtDQ = ExtDomquery;
+exports.ExtDomQuery = ExtDomQuery;
+exports.ExtDQ = ExtDomQuery;
 /**
  * in order to reduce the number of interception points for the fallbacks we add
  * the namespace remapping straight to our config accessors
@@ -5626,23 +5630,23 @@ class ExtConfig extends mona_dish_1.Config {
         super(root);
     }
     assignIf(condition, ...accessPath) {
-        const acessPathMapped = this.remap(accessPath);
-        return super.assignIf(condition, ...acessPathMapped);
+        const accessPathMapped = this.remap(accessPath);
+        return super.assignIf(condition, ...accessPathMapped);
     }
     assign(...accessPath) {
-        const acessPathMapped = this.remap(accessPath);
-        return super.assign(...acessPathMapped);
+        const accessPathMapped = this.remap(accessPath);
+        return super.assign(...accessPathMapped);
     }
     append(...accessPath) {
         return super.append(...accessPath);
     }
     appendIf(condition, ...accessPath) {
-        const acessPathMapped = this.remap(accessPath);
-        return super.appendIf(condition, ...acessPathMapped);
+        const accessPathMapped = this.remap(accessPath);
+        return super.appendIf(condition, ...accessPathMapped);
     }
     getIf(...accessPath) {
-        const acessPathMapped = this.remap(accessPath);
-        return super.getIf(...acessPathMapped);
+        const accessPathMapped = this.remap(accessPath);
+        return super.getIf(...accessPathMapped);
     }
     get(defaultVal) {
         return super.get((0, Const_1.$nsp)(defaultVal));
@@ -5676,7 +5680,7 @@ class ExtConfig extends mona_dish_1.Config {
     }
     /**
      * helper to remap the namespaces of an array of access paths
-     * @param accessPath the access paths to be rempalled
+     * @param accessPath the access paths to be remapped
      * @private returns an array of access paths with version remapped namespaces
      */
     remap(accessPath) {
@@ -6082,7 +6086,7 @@ const ExtDomQuery_1 = __webpack_require__(/*! ../util/ExtDomQuery */ "./src/main
  * parts of the response classes
  */
 /**
- * resolves the event handlers lazly
+ * resolves the event handlers lazily
  * so that if some decoration happens in between we can deal with it
  *
  * @param requestContext
@@ -6141,13 +6145,13 @@ function resolveDelay(options) {
 }
 exports.resolveDelay = resolveDelay;
 /**
- * resolves the window Id from various sources
+ * resolves the window-id from various sources
  *
  * @param options
  */
 function resolveWindowId(options) {
     var _a, _b;
-    return (_b = (_a = options === null || options === void 0 ? void 0 : options.value) === null || _a === void 0 ? void 0 : _a.windowId) !== null && _b !== void 0 ? _b : ExtDomQuery_1.ExtDomquery.windowId;
+    return (_b = (_a = options === null || options === void 0 ? void 0 : options.value) === null || _a === void 0 ? void 0 : _a.windowId) !== null && _b !== void 0 ? _b : ExtDomQuery_1.ExtDomQuery.windowId;
 }
 exports.resolveWindowId = resolveWindowId;
 /**
@@ -6155,20 +6159,21 @@ exports.resolveWindowId = resolveWindowId;
  * browser save event resolution
  * @param evt the event object
  * (with a fallback for ie events if none is present)
+ * @deprecated soon will be removed
  */
 function getEventTarget(evt) {
     var _a, _b;
-    //ie6 and 7 fallback
+    // ie6 and 7 fallback
     let finalEvent = evt;
-    /**
+    /*
      * evt source is defined in the jsf events
-     * seems like some component authors use our code
+     * seems like some component authors use our code,
      * so we add it here see also
      * https://issues.apache.org/jira/browse/MYFACES-2458
      * not entirely a bug but makes sense to add this
-     * behavior. I dont use it that way but nevertheless it
+     * behavior. I don´t use it that way but nevertheless it
      * does not break anything so why not
-     * */
+     */
     let t = (_b = (_a = finalEvent === null || finalEvent === void 0 ? void 0 : finalEvent.srcElement) !== null && _a !== void 0 ? _a : finalEvent === null || finalEvent === void 0 ? void 0 : finalEvent.target) !== null && _b !== void 0 ? _b : finalEvent === null || finalEvent === void 0 ? void 0 : finalEvent.source;
     while ((t) && (t.nodeType != 1)) {
         t = t.parentNode;
@@ -6237,7 +6242,7 @@ const ExtDomQuery_1 = __webpack_require__(/*! ../util/ExtDomQuery */ "./src/main
  *
  * @param request the request hosting the responseXML
  *
- * Throws an error in case of non existent or wrong xml data
+ * Throws an error in case of non-existent or wrong xml data
  *
  */
 function resolveResponseXML(request) {
@@ -6247,8 +6252,8 @@ function resolveResponseXML(request) {
 }
 exports.resolveResponseXML = resolveResponseXML;
 /**
- * Splits the incoming passthrough context apart
- * in an internal and an external nomalized context
+ * Splits the incoming pass-through context apart
+ * in an internal and an external normalized context
  * the internal one is just for our internal processing
  *
  * @param context the root context as associative array
@@ -6273,10 +6278,10 @@ function resolveContexts(context) {
 }
 exports.resolveContexts = resolveContexts;
 /**
- * fetches the source element out of our conexts
+ * fetches the source element out of our contexts
  *
- * @param context the external context which shpuld host the source id
- * @param internalContext internal passthrough fall back
+ * @param context the external context which should host the source id
+ * @param internalContext internal pass-through fall back
  *
  */
 function resolveSourceElement(context, internalContext) {
@@ -6552,7 +6557,7 @@ class ResponseProcessor {
         if (!shadowHead.isPresent()) {
             return;
         }
-        let oldHead = ExtDomQuery_1.ExtDomquery.querySelectorAll(Const_1.TAG_HEAD);
+        let oldHead = ExtDomQuery_1.ExtDomQuery.querySelectorAll(Const_1.TAG_HEAD);
         //delete all to avoid script and style overlays
         oldHead.querySelectorAll(Const_1.SEL_SCRIPTS_STYLES).delete();
         // we cannot replace new elements in the head, but we can eval the elements
@@ -6580,7 +6585,7 @@ class ResponseProcessor {
             return;
         }
         let shadowInnerHTML = shadowBody.html().value;
-        let resultingBody = ExtDomQuery_1.ExtDomquery.querySelectorAll(Const_1.TAG_BODY).html(shadowInnerHTML);
+        let resultingBody = ExtDomQuery_1.ExtDomQuery.querySelectorAll(Const_1.TAG_BODY).html(shadowInnerHTML);
         let updateForms = resultingBody.querySelectorAll(Const_1.TAG_FORM);
         // main difference, we cannot replace the body itself, but only its content
         // we need a separate step for post-processing the incoming
@@ -6594,7 +6599,7 @@ class ResponseProcessor {
      * @param node the node to eval
      */
     eval(node) {
-        ExtDomQuery_1.ExtDomquery.globalEval(node.cDATAAsString);
+        ExtDomQuery_1.ExtDomQuery.globalEval(node.cDATAAsString);
     }
     /**
      * processes an incoming error from the response
@@ -6642,7 +6647,7 @@ class ResponseProcessor {
      * @param cdataBlock the cdata block with the new html code
      */
     update(node, cdataBlock) {
-        let result = ExtDomQuery_1.ExtDomquery.byId(node.id.value, true).outerHTML(cdataBlock, false, false);
+        let result = ExtDomQuery_1.ExtDomQuery.byId(node.id.value, true).outerHTML(cdataBlock, false, false);
         let sourceForm = result === null || result === void 0 ? void 0 : result.parents(Const_1.TAG_FORM).orElseLazy(() => result.byTagName(Const_1.TAG_FORM, true));
         if (sourceForm) {
             this.storeForPostProcessing(sourceForm, result);
@@ -6743,10 +6748,10 @@ class ResponseProcessor {
      */
     globalEval() {
         //  phase one, if we have head inserts, we build up those before going into the script eval phase
-        let insertHeadElems = new ExtDomQuery_1.ExtDomquery(...this.internalContext.getIf(Const_1.DEFERRED_HEAD_INSERTS).value);
+        let insertHeadElems = new ExtDomQuery_1.ExtDomQuery(...this.internalContext.getIf(Const_1.DEFERRED_HEAD_INSERTS).value);
         insertHeadElems.runHeadInserts(true);
         // phase 2 we run a script eval on all updated elements in the body
-        let updateElems = new ExtDomQuery_1.ExtDomquery(...this.internalContext.getIf(Const_1.UPDATE_ELEMS).value);
+        let updateElems = new ExtDomQuery_1.ExtDomQuery(...this.internalContext.getIf(Const_1.UPDATE_ELEMS).value);
         updateElems.runCss();
         // phase 3, we do the same for the css
         updateElems.runScripts();
@@ -6941,7 +6946,7 @@ class XhrFormData extends mona_dish_1.Config {
      * data collector from a given form
      *
      * @param dataSource either a form as DomQuery object or an encoded url string
-     * @param viewState the form view state or an external viewstate coming in as string
+     * @param viewState the form view state or an external viewState coming in as string
      * @param executes the executes id list for the elements to being processed
      * @param partialIds partial ids to collect, to reduce the data sent down
      */
@@ -6974,8 +6979,9 @@ class XhrFormData extends mona_dish_1.Config {
         }
     }
     /**
-     * generic post init code, for now, this peforms some post assign data post processing
-     * @param executes
+     * generic post init code, for now, this performs some post assign data post-processing
+     * @param executes the executable dom nodes which need to be processed into the form data, which we can send
+     * in our ajax request
      */
     postInit(...executes) {
         let fetchInput = (id) => {
@@ -7176,7 +7182,7 @@ const RequestDataResolver_1 = __webpack_require__(/*! ./RequestDataResolver */ "
 var failSaveExecute = Lang_1.ExtLang.failSaveExecute;
 /**
  * Faces XHR Request Wrapper
- * as Asyncrunnable for our Asynchronous queue
+ * as AsyncRunnable for our Asynchronous queue
  *
  * The idea is that we basically just enqueue
  * a single ajax request into our queue
@@ -7185,11 +7191,11 @@ var failSaveExecute = Lang_1.ExtLang.failSaveExecute;
  */
 class XhrRequest {
     /**
-     * Reqired Parameters
+     * Required Parameters
      *
      * @param source the issuing element
      * @param sourceForm the form which is related to the issuing element
-     * @param requestContext the request context with allö pass through values
+     * @param requestContext the request context with all pass through values
      *
      * Optional Parameters
      *
@@ -7198,7 +7204,7 @@ class XhrRequest {
      * @param timeout optional xhr timeout
      * @param ajaxType optional request type, default "POST"
      * @param contentType optional content type, default "application/x-www-form-urlencoded"
-     * @param xhrObject optional xhr object which must fullfill the XMLHTTPRequest api, default XMLHttpRequest
+     * @param xhrObject optional xhr object which must fulfill the XMLHTTPRequest api, default XMLHttpRequest
      */
     constructor(source, sourceForm, requestContext, internalContext, partialIdsArray = [], timeout = Const_1.NO_TIMEOUT, ajaxType = Const_1.REQ_TYPE_POST, contentType = Const_1.URL_ENCODED, xhrObject = new XMLHttpRequest()) {
         this.source = source;
@@ -7214,12 +7220,11 @@ class XhrRequest {
         /**
          * helper support so that we do not have to drag in Promise shims
          */
-        this.catchFuncs = [];
-        this.thenFunc = [];
-        /*
-        * we omit promises here
-        * some browsers do not support it and we do not need shim code
-        */
+        this.catchFunctions = [];
+        this.thenFunctions = [];
+        // we omit promises here because we have to deal with cancel functionality,
+        // and promises to not provide that (yet) instead we have our async queue
+        // which uses an api internally, which is very close to promises
         this.registerXhrCallbacks((data) => {
             this.resolve(data);
         }, (data) => {
@@ -7236,18 +7241,18 @@ class XhrRequest {
         try {
             let formElement = this.sourceForm.getAsElem(0).value;
             let viewState = ((_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : window === null || window === void 0 ? void 0 : window.jsf).getViewState(formElement);
-            //encoded we need to decode
-            //We generated a base representation of the current form
-            //in case someone has overloaded the viewstate with addtional decorators we merge
-            //that in, there is no way around it, the spec allows it and getViewState
-            //must be called, so whatever getViewState delivers has higher priority then
-            //whatever the formData object delivers
-            //the partialIdsArray arr is almost deprecated legacy code where we allowed to send a separate list of partial
-            //ids for reduced load and server processing, this will be removed soon, we can handle the same via execute
-            //anyway TODO remove the partial ids array
+            // encoded we need to decode
+            // We generated a base representation of the current form
+            // in case someone has overloaded the viewState with additional decorators we merge
+            // that in, there is no way around it, the spec allows it and getViewState
+            // must be called, so whatever getViewState delivers has higher priority then
+            // whatever the formData object delivers
+            // the partialIdsArray arr is almost deprecated legacy code where we allowed to send a separate list of partial
+            // ids for reduced load and server processing, this will be removed soon, we can handle the same via execute
+            // anyway TODO remove the partial ids array
             let formData = new XhrFormData_1.XhrFormData(this.sourceForm, viewState, executesArr(), this.partialIdsArray);
             this.contentType = formData.isMultipartRequest ? "undefined" : this.contentType;
-            //next step the pass through parameters are merged in for post params
+            // next step the pass through parameters are merged in for post params
             let requestContext = this.requestContext;
             let passThroughParams = requestContext.getIf(Const_1.CTX_PARAM_PASS_THR);
             // this is an extension where we allow pass through parameters to be sent down additionally
@@ -7255,31 +7260,31 @@ class XhrRequest {
             // information
             formData.shallowMerge(passThroughParams, true, true);
             this.responseContext = passThroughParams.deepCopy;
-            //we have to shift the internal passthroughs around to build up our response context
+            // we have to shift the internal passthroughs around to build up our response context
             let responseContext = this.responseContext;
             responseContext.assign(Const_1.CTX_PARAM_MF_INTERNAL).value = this.internalContext.value;
-            //per spec the onevent and onerrors must be passed through to the response
+            // per spec the onevent and onerror handlers must be passed through to the response
             responseContext.assign(Const_1.ON_EVENT).value = requestContext.getIf(Const_1.ON_EVENT).value;
             responseContext.assign(Const_1.ON_ERROR).value = requestContext.getIf(Const_1.ON_ERROR).value;
             xhrObject.open(this.ajaxType, (0, RequestDataResolver_1.resolveFinalUrl)(this.sourceForm, formData, this.ajaxType), true);
-            //adding timeout
+            // adding timeout
             this.timeout ? xhrObject.timeout = this.timeout : null;
-            //a bug in the xhr stub library prevents the setRequestHeader to be properly executed on fake xhr objects
-            //normal browsers should resolve this
-            //tests can quietly fail on this one
+            // a bug in the xhr stub library prevents the setRequestHeader to be properly executed on fake xhr objects
+            // normal browsers should resolve this
+            // tests can quietly fail on this one
             if (this.contentType != "undefined") {
                 ignoreErr(() => xhrObject.setRequestHeader(Const_1.CONTENT_TYPE, `${this.contentType}; charset=utf-8`));
             }
             ignoreErr(() => xhrObject.setRequestHeader(Const_1.HEAD_FACES_REQ, Const_1.VAL_AJAX));
-            //probably not needed anymore, will test this
-            //some webkit based mobile browsers do not follow the w3c spec of
+            // probably not needed anymore, will test this
+            // some webkit based mobile browsers do not follow the w3c spec of
             // setting, they accept headers automatically
             ignoreErr(() => xhrObject.setRequestHeader(Const_1.REQ_ACCEPT, Const_1.STD_ACCEPT));
             this.sendEvent(Const_1.BEGIN);
             this.sendRequest(formData);
         }
         catch (e) {
-            //_onError//_onError
+            // _onError
             this.handleError(e);
         }
         return this;
@@ -7293,28 +7298,27 @@ class XhrRequest {
         }
     }
     resolve(data) {
-        mona_dish_1.Stream.of(...this.thenFunc).reduce((inputVal, thenFunc) => {
+        mona_dish_1.Stream.of(...this.thenFunctions).reduce((inputVal, thenFunc) => {
             return thenFunc(inputVal);
         }, data);
     }
     reject(data) {
-        mona_dish_1.Stream.of(...this.catchFuncs).reduce((inputVal, catchFunc) => {
+        mona_dish_1.Stream.of(...this.catchFunctions).reduce((inputVal, catchFunc) => {
             return catchFunc(inputVal);
         }, data);
     }
     catch(func) {
-        this.catchFuncs.push(func);
+        this.catchFunctions.push(func);
         return this;
     }
     finally(func) {
-        //no ie11 support we probably are going to revert to shims for that one
-        this.catchFuncs.push(func);
-        this.thenFunc.push(func);
+        // no ie11 support we probably are going to revert to shims for that one
+        this.catchFunctions.push(func);
+        this.thenFunctions.push(func);
         return this;
     }
     then(func) {
-        //this.$promise.then(func);
-        this.thenFunc.push(func);
+        this.thenFunctions.push(func);
         return this;
     }
     /**
@@ -7354,7 +7358,7 @@ class XhrRequest {
         };
     }
     isCancelledResponse(currentTarget) {
-        return (currentTarget === null || currentTarget === void 0 ? void 0 : currentTarget.status) === 0 && //cancelled by browser
+        return (currentTarget === null || currentTarget === void 0 ? void 0 : currentTarget.status) === 0 && // cancelled by browser
             (currentTarget === null || currentTarget === void 0 ? void 0 : currentTarget.readyState) === 4 &&
             (currentTarget === null || currentTarget === void 0 ? void 0 : currentTarget.responseText) === '' &&
             (currentTarget === null || currentTarget === void 0 ? void 0 : currentTarget.responseXML) === null;
@@ -7375,7 +7379,8 @@ class XhrRequest {
     onSuccess(resolve) {
         var _a, _b, _c;
         this.sendEvent(Const_1.COMPLETE);
-        //malforms always result in empty response xml
+        // malformed responses always result in empty response xml
+        // per spec a valid response cannot be empty
         if (!((_a = this === null || this === void 0 ? void 0 : this.xhrObject) === null || _a === void 0 ? void 0 : _a.responseXML)) {
             this.handleMalFormedXML(resolve);
             return;
@@ -7402,7 +7407,7 @@ class XhrRequest {
             // reject would clean up the queue
             resolve(errorData);
         }
-        //non blocking non clearing
+        // non blocking non clearing
     }
     onDone(data, resolve) {
         // if stop progress a special handling including resolve is already performed
@@ -7418,11 +7423,11 @@ class XhrRequest {
     sendRequest(formData) {
         let isPost = this.ajaxType != Const_1.REQ_TYPE_GET;
         if (formData.isMultipartRequest) {
-            //in case of a multipart request we send in a formData object as body
+            // in case of a multipart request we send in a formData object as body
             this.xhrObject.send((isPost) ? formData.toFormData() : null);
         }
         else {
-            //in case of a normal request we send it normally
+            // in case of a normal request we send it normally
             this.xhrObject.send((isPost) ? formData.toString() : null);
         }
     }
@@ -7432,10 +7437,10 @@ class XhrRequest {
     sendEvent(evtType) {
         let eventData = EventData_1.EventData.createFromRequest(this.xhrObject, this.requestContext, evtType);
         try {
-            //user code error, we might cover
-            //this in onError but also we cannot swallow it
-            //we need to resolve the local handlers lazily,
-            //because some frameworks might decorate them over the context in the response
+            // User code error, we might cover
+            // this in onError, but also we cannot swallow it.
+            // We need to resolve the local handlers lazily,
+            // because some frameworks might decorate them over the context in the response
             let eventHandler = (0, RequestDataResolver_1.resolveHandlerFunc)(this.requestContext, this.responseContext, Const_1.ON_EVENT);
             AjaxImpl_1.Implementation.sendEvent(eventData, eventHandler);
         }

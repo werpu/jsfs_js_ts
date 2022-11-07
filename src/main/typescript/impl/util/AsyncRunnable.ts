@@ -18,7 +18,7 @@
  * Asynchronous queue member for our asynchronous queue
  * Ever object in the asynchronous queue needs to implement this interface
  *
- * the usage should be similar as a Promise from the outside.
+ * the usage should be similar as Promise. from the outside.
  * but with a dedicated start point. The problem why we cannot use
  * promises here, is mostly related to the needed cancel functionality
  * and that the queue expects a runnable as entry.

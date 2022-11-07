@@ -130,12 +130,6 @@ export class ExtDomquery extends DQ {
         return null;
     }
 
-
-
-    private extractNonce(curScript: DomQuery) {
-        return (curScript.getAsElem(0).value as HTMLElement)?.nonce ?? curScript.attr("nonce").value;
-    }
-
     static searchJsfJsFor(item: RegExp): Optional<String> {
         return new ExtDomquery(document).searchJsfJsFor(item);
     }
@@ -160,6 +154,8 @@ export class ExtDomquery extends DQ {
         return new ExtDomquery(super.globalEval(code, nonce ?? this.nonce));
     }
 
+    // called from base class runScripts, do not delete
+    // noinspection JSUnusedGlobalSymbols
     globalEvalSticky(code: string, nonce ?: string): DQ {
         return new ExtDomquery(super.globalEvalSticky(code, nonce ?? this.nonce));
     }
@@ -168,11 +164,11 @@ export class ExtDomquery extends DQ {
      * decorated run scripts which takes our jsf extensions into consideration
      * (standard DomQuery will let you pass anything)
      * @param sticky if set to true the internally generated element for the script is left in the dom
-     * @param whilteListed
+     * @param whiteListed
      */
-    runScripts(sticky = false, whilteListed?: (src: string) => boolean): DomQuery {
+    runScripts(sticky = false, whiteListed?: (src: string) => boolean): DomQuery {
         const whitelistFunc = (src: string): boolean => {
-            return (whilteListed?.(src) ?? true) && !IS_FACES_SOURCE(src) && !IS_INTERNAL_SOURCE(src);
+            return (whiteListed?.(src) ?? true) && !IS_FACES_SOURCE(src) && !IS_INTERNAL_SOURCE(src);
         };
         return super.runScripts(sticky, whitelistFunc);
     }
@@ -240,6 +236,9 @@ export class ExtDomquery extends DQ {
         return new ExtDomquery(ret);
     }
 
+    private extractNonce(curScript: DomQuery) {
+        return (curScript.getAsElem(0).value as HTMLElement)?.nonce ?? curScript.attr("nonce").value;
+    }
 
 }
 
@@ -315,10 +314,12 @@ export class ExtConfig extends  Config {
         return new ExtConfig(super.deepCopy$());
     }
 
-
+    /**
+     * helper to remap the namespaces of an array of access paths
+     * @param accessPath the access paths to be rempalled
+     * @private returns an array of access paths with version remapped namespaces
+     */
     private remap(accessPath: any[]) {
         return Stream.of(...accessPath).map(key => $nsp(key)).collect(new ArrayCollector());
     }
-
-
 }

@@ -3760,9 +3760,9 @@ var faces;
     faces.implversion = 0;
     /**
      * SeparatorChar as defined by facesContext.getNamingContainerSeparatorChar()
-     * @type {Char}
      */
     faces.separatorchar = getSeparatorChar();
+    // noinspection JSUnusedGlobalSymbols
     /**
      * Context Path as defined externalContext.requestContextPath
      */
@@ -3864,7 +3864,7 @@ var faces;
          *     <li> eventData.responseXML: the requestInternal response xml </li>
          * </ul>
          *
-         * @param {function} errorListener error handler must be of the format <i>function errorListener(&lt;errorData&gt;)</i>
+         * @param errorListener error handler must be of the format <i>function errorListener(&lt;errorData&gt;)</i>
          */
         function addOnError(errorFunc) {
             AjaxImpl_1.Implementation.addOnError(errorFunc);
@@ -3874,7 +3874,7 @@ var faces;
          * Adds a global event listener to the ajax event queue. The event listener must be a function
          * of following format: <i>function eventListener(&lt;eventData&gt;)</i>
          *
-         * @param {function} eventListener event must be of the format <i>function eventListener(&lt;eventData&gt;)</i>
+         * @param eventListener event must be of the format <i>function eventListener(&lt;eventData&gt;)</i>
          */
         function addOnEvent(eventFunc) {
             AjaxImpl_1.Implementation.addOnEvent(eventFunc);
@@ -3902,19 +3902,23 @@ var faces;
     let push;
     (function (push) {
         /**
-         * @param {function} onopen The function to be invoked when the web socket is opened.
-         * @param {function} onmessage The function to be invoked when a message is received.
-         * @param {function} onclose The function to be invoked when the web socket is closed.
-         * @param {boolean} autoconnect Whether or not to immediately open the socket. Defaults to <code>false</code>.
+         * @param socketClientId the sockets client identifier
+         * @param url the uri to reach the socket
+         * @param channel the channel name/id
+         * @param onopen The function to be invoked when the web socket is opened.
+         * @param onmessage The function to be invoked when a message is received.
+         * @param onclose The function to be invoked when the web socket is closed.
+         * @param behaviors functions which are invoked whenever a message is received
+         * @param autoConnect Whether or not to automatically open the socket. Defaults to <code>false</code>.
          */
-        function init(socketClientId, uri, channel, onopen, onmessage, onclose, behaviorScripts, autoconnect) {
-            PushImpl_1.PushImpl.init(socketClientId, uri, channel, onopen, onmessage, onclose, behaviorScripts, autoconnect);
+        function init(socketClientId, url, channel, onopen, onmessage, onclose, behaviors, autoConnect) {
+            PushImpl_1.PushImpl.init(socketClientId, url, channel, onopen, onmessage, onclose, behaviors, autoConnect);
         }
         push.init = init;
         /**
          * Open the web socket on the given channel.
-         * @param {string} channel The name of the web socket channel.
-         * @throws {Error} When channel is unknown.
+         * @param  channel The name of the web socket channel.
+         * @throws  Error is thrown, if the channel is unknown.
          */
         function open(socketClientId) {
             PushImpl_1.PushImpl.open(socketClientId);
@@ -3922,8 +3926,8 @@ var faces;
         push.open = open;
         /**
          * Close the web socket on the given channel.
-         * @param {string} channel The name of the web socket channel.
-         * @throws {Error} When channel is unknown.
+         * @param  channel The name of the web socket channel.
+         * @throws  Error is thrown, if the channel is unknown.
          */
         function close(socketClientId) {
             PushImpl_1.PushImpl.close(socketClientId);
@@ -4014,8 +4018,8 @@ var ProjectStages;
     ProjectStages["UnitTest"] = "UnitTest";
 })(ProjectStages || (ProjectStages = {}));
 /*
- *   blockfilter for the passthrough filtering; the attributes given here
- *   will not be transmitted from the options into the passthrough
+ *   Block-filter for the pass-through filtering; the attributes given here
+ *   will not be transmitted from the options into the pass-through
  */
 var BlockFilter;
 (function (BlockFilter) {
@@ -4108,16 +4112,6 @@ var Implementation;
     }
     Implementation.getSeparatorChar = getSeparatorChar;
     /**
-     * fetches the separator char from the given script tags
-     *
-     * @return {string} the separator char for the given script tags
-     */
-    function getContextPath() {
-        var _a, _b, _c;
-        return (_c = (_b = (_a = resolveGlobalConfig()) === null || _a === void 0 ? void 0 : _a.separator) !== null && _b !== void 0 ? _b : this === null || this === void 0 ? void 0 : this.separator) !== null && _c !== void 0 ? _c : (separator = ExtDomQuery_1.ExtDomquery.searchJsfJsFor(/separator=([^&;]*)/).orElse(":").value);
-    }
-    Implementation.getContextPath = getContextPath;
-    /**
      * this is for testing purposes only, since AjaxImpl is a module
      * we need to reset for every unit test its internal states
      */
@@ -4202,7 +4196,7 @@ var Implementation;
         const delay = (0, RequestDataResolver_1.resolveDelay)(options);
         const timeout = (0, RequestDataResolver_1.resolveTimeout)(options);
         requestCtx.assignIf(!!windowId, Const_1.P_WINDOW_ID).value = windowId;
-        requestCtx.assign(Const_1.CTX_PARAM_PASS_THR).value = filterPassthroughValues(options.value);
+        requestCtx.assign(Const_1.CTX_PARAM_PASS_THR).value = filterPassThroughValues(options.value);
         requestCtx.assignIf(!!resolvedEvent, Const_1.CTX_PARAM_PASS_THR, Const_1.P_EVT).value = resolvedEvent === null || resolvedEvent === void 0 ? void 0 : resolvedEvent.type;
         /**
          * ajax pass through context with the source
@@ -4360,15 +4354,15 @@ var Implementation;
     function getClientWindow(node) {
         const ALTERED = "___mf_id_altered__";
         const INIT = "___init____";
-        /**
+        /*
          * the search root for the dom element search
          */
         let searchRoot = new mona_dish_1.DQ(node || document.body).querySelectorAll(`form input [name='${Const_1.P_CLIENT_WINDOW}']`);
-        /**
+        /*
          * lazy helper to fetch the window id from the window url
          */
         let fetchWindowIdFromUrl = () => ExtDomQuery_1.ExtDomquery.searchJsfJsFor(/jfwid=([^&;]*)/).orElse(null).value;
-        /**
+        /*
          * functional double check based on stream reduction
          * the values should be identical or on INIT value which is a premise to
          * skip the first check
@@ -4385,23 +4379,22 @@ var Implementation;
             }
             return value2;
         };
-        /**
+        /*
          * helper for cleaner code, maps the value from an item
          *
          * @param item
          */
         let getValue = (item) => item.attr("value").value;
-        /**
+        /*
          * fetch the window id from the forms
          * window ids must be present in all forms
-         * or non existent. If they exist all of them must be the same
+         * or non-existent. If they exist all of them must be the same
          */
         let formWindowId = searchRoot.stream.map(getValue).reduce(differenceCheck, INIT);
         //if the resulting window id is set on altered then we have an unresolvable problem
         assert(ALTERED != formWindowId.value, "Multiple different windowIds found in document");
-        /**
+        /*
          * return the window id or null
-         * prio, forms under node/document and if not given then from the url
          */
         return formWindowId.value != INIT ? formWindowId.value : fetchWindowIdFromUrl();
     }
@@ -4416,7 +4409,7 @@ var Implementation;
      */
     function getViewState(form) {
         /**
-         *  typecheck assert!, we opt for strong typing here
+         *  type-check assert!, we opt for strong typing here
          *  because it makes it easier to detect bugs
          */
         let element = mona_dish_1.DQ.byId(form, true);
@@ -4434,7 +4427,7 @@ var Implementation;
      */
     Implementation.queueHandler = {
         /**
-         * public to make it shimmable for tests
+         * public to make it accessible for tests
          *
          * adds a new request to our queue for further processing
          */
@@ -4556,12 +4549,12 @@ var Implementation;
         return targetConfig;
     }
     /**
-     * filter the options given with a blacklist so that only
-     * the values required for passthough land in the ajax request
+     * Filter the options given with a blacklist, so that only
+     * the values required for pass-through are processed in the ajax request
      *
      * @param {Context} mappedOpts the options to be filtered
      */
-    function filterPassthroughValues(mappedOpts) {
+    function filterPassThroughValues(mappedOpts) {
         //we now can use the full code reduction given by our stream api
         //to filter
         return mona_dish_1.Stream.ofAssoc(mappedOpts)
@@ -4626,27 +4619,24 @@ var Implementation;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PushImpl = void 0;
 /**
- * Typescript port of the faces.push part in the myfaces implementation
+ * Typescript port of the faces\.push part in the myfaces implementation
  */
-//TODO still work in progress
-//this is a 1:1 port for the time being
 const Const_1 = __webpack_require__(/*! ./core/Const */ "./src/main/typescript/impl/core/Const.ts");
-;
 /**
  * Implementation class for the push functionality
  */
 var PushImpl;
 (function (PushImpl) {
     const URL_PROTOCOL = window.location.protocol.replace("http", "ws") + "//";
-    //we expose the member variables for testing purposes
-    //they are not directly touched outside of tests
+    // we expose the member variables for testing purposes
+    // they are not directly touched outside of tests
     /* socket map by token */
     PushImpl.sockets = {};
     /* component attributes by clientId */
     PushImpl.components = {};
     /* client ids by token (share websocket connection) */
     PushImpl.clientIdsByTokens = {};
-    //needed for testing
+    // needed for testing
     function reset() {
         PushImpl.sockets = {};
         PushImpl.components = {};
@@ -4657,38 +4647,41 @@ var PushImpl;
      * Api implementations, exposed functions
      */
     /**
-     *
-     * @param {function} onopen The function to be invoked when the web socket is opened.
-     * @param {function} onmessage The function to be invoked when a message is received.
-     * @param {function} onclose The function to be invoked when the web socket is closed.
-     * @param {boolean} autoconnect Whether or not to immediately open the socket. Defaults to <code>false</code>.
+     * @param socketClientId the sockets client identifier
+     * @param url the uri to reach the socket
+     * @param channel the channel name/id
+     * @param onopen The function to be invoked when the web socket is opened.
+     * @param onmessage The function to be invoked when a message is received.
+     * @param onclose The function to be invoked when the web socket is closed.
+     * @param behaviors functions which are invoked whenever a message is received
+     * @param autoConnect Whether or not to automatically open the socket. Defaults to <code>false</code>.
      */
-    function init(socketClientId, uri, channel, onopen, onmessage, onclose, behaviorScripts, autoconnect) {
+    function init(socketClientId, url, channel, onopen, onmessage, onclose, behaviors, autoConnect) {
         var _a;
         onclose = resolveFunction(onclose);
         if (!window.WebSocket) { // IE6-9.
             onclose(-1, channel);
             return;
         }
-        let channelToken = uri.substr(uri.indexOf('?') + 1);
+        let channelToken = url.substr(url.indexOf('?') + 1);
         if (!PushImpl.components[socketClientId]) {
             PushImpl.components[socketClientId] = {
                 'channelToken': channelToken,
                 'onopen': resolveFunction(onopen),
                 'onmessage': resolveFunction(onmessage),
                 'onclose': onclose,
-                'behaviors': behaviorScripts,
-                'autoconnect': autoconnect
+                'behaviors': behaviors,
+                'autoconnect': autoConnect
             };
             if (!PushImpl.clientIdsByTokens[channelToken]) {
                 PushImpl.clientIdsByTokens[channelToken] = [];
             }
             PushImpl.clientIdsByTokens[channelToken].push(socketClientId);
             if (!PushImpl.sockets[channelToken]) {
-                PushImpl.sockets[channelToken] = new Socket(channelToken, getBaseURL(uri), channel);
+                PushImpl.sockets[channelToken] = new Socket(channelToken, getBaseURL(url), channel);
             }
         }
-        if (autoconnect) {
+        if (autoConnect) {
             ((_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : window === null || window === void 0 ? void 0 : window.jsf).push.open(socketClientId);
         }
     }
@@ -4727,6 +4720,7 @@ var PushImpl;
             this.socket = new WebSocket(this.url);
             this.bindCallbacks();
         }
+        // noinspection JSUnusedLocalSymbols
         onopen(event) {
             if (!this.reconnectAttempts) {
                 let clientIds = PushImpl.clientIdsByTokens[this.channelToken];
@@ -4766,7 +4760,7 @@ var PushImpl;
                 }
             }
             if (PushImpl.clientIdsByTokens[this.channelToken].length == 0) {
-                //tag dissapeared
+                // tag disappeared
                 this.close();
             }
         }
@@ -4815,9 +4809,9 @@ var PushImpl;
     }
     /**
      * Get socket associated with given channelToken.
-     * @param {string} channelToken The name of the web socket channelToken.
-     * @return {Socket} Socket associated with given channelToken.
-     * @throws {Error} When channelToken is unknown, you may need to initialize
+     * @param channelToken The name of the web socket channelToken.
+     * @return Socket associated with given channelToken.
+     * @throws Error, when the channelToken is unknown, you may need to initialize
      *                 it first via <code>init()</code> function.
      */
     function getSocket(channelToken) {
@@ -5218,7 +5212,7 @@ var Assertions;
     Assertions.assertRequestIntegrity = assertRequestIntegrity;
     function assertUrlExists(node) {
         if (node.attr(Const_1.ATTR_URL).isAbsent()) {
-            throw Assertions.raiseError(new Error(), getMessage("ERR_RED_URL", null, "_Ajaxthis.processRedirect"), "processRedirect");
+            throw Assertions.raiseError(new Error(), getMessage("ERR_RED_URL", null, "processRedirect"), "processRedirect");
         }
     }
     Assertions.assertUrlExists = assertUrlExists;
@@ -5519,10 +5513,6 @@ class ExtDomquery extends mona_dish_1.DQ {
         }
         return null;
     }
-    extractNonce(curScript) {
-        var _a, _b;
-        return (_b = (_a = curScript.getAsElem(0).value) === null || _a === void 0 ? void 0 : _a.nonce) !== null && _b !== void 0 ? _b : curScript.attr("nonce").value;
-    }
     static searchJsfJsFor(item) {
         return new ExtDomquery(document).searchJsfJsFor(item);
     }
@@ -5544,6 +5534,8 @@ class ExtDomquery extends mona_dish_1.DQ {
     globalEval(code, nonce) {
         return new ExtDomquery(super.globalEval(code, nonce !== null && nonce !== void 0 ? nonce : this.nonce));
     }
+    // called from base class runScripts, do not delete
+    // noinspection JSUnusedGlobalSymbols
     globalEvalSticky(code, nonce) {
         return new ExtDomquery(super.globalEvalSticky(code, nonce !== null && nonce !== void 0 ? nonce : this.nonce));
     }
@@ -5551,12 +5543,12 @@ class ExtDomquery extends mona_dish_1.DQ {
      * decorated run scripts which takes our jsf extensions into consideration
      * (standard DomQuery will let you pass anything)
      * @param sticky if set to true the internally generated element for the script is left in the dom
-     * @param whilteListed
+     * @param whiteListed
      */
-    runScripts(sticky = false, whilteListed) {
+    runScripts(sticky = false, whiteListed) {
         const whitelistFunc = (src) => {
             var _a;
-            return ((_a = whilteListed === null || whilteListed === void 0 ? void 0 : whilteListed(src)) !== null && _a !== void 0 ? _a : true) && !IS_FACES_SOURCE(src) && !IS_INTERNAL_SOURCE(src);
+            return ((_a = whiteListed === null || whiteListed === void 0 ? void 0 : whiteListed(src)) !== null && _a !== void 0 ? _a : true) && !IS_FACES_SOURCE(src) && !IS_INTERNAL_SOURCE(src);
         };
         return super.runScripts(sticky, whitelistFunc);
     }
@@ -5618,6 +5610,10 @@ class ExtDomquery extends mona_dish_1.DQ {
         const ret = mona_dish_1.DomQuery.byId(selector, deep);
         return new ExtDomquery(ret);
     }
+    extractNonce(curScript) {
+        var _a, _b;
+        return (_b = (_a = curScript.getAsElem(0).value) === null || _a === void 0 ? void 0 : _a.nonce) !== null && _b !== void 0 ? _b : curScript.attr("nonce").value;
+    }
 }
 exports.ExtDomquery = ExtDomquery;
 exports.ExtDQ = ExtDomquery;
@@ -5678,6 +5674,11 @@ class ExtConfig extends mona_dish_1.Config {
     get deepCopy() {
         return new ExtConfig(super.deepCopy$());
     }
+    /**
+     * helper to remap the namespaces of an array of access paths
+     * @param accessPath the access paths to be rempalled
+     * @private returns an array of access paths with version remapped namespaces
+     */
     remap(accessPath) {
         return mona_dish_1.Stream.of(...accessPath).map(key => (0, Const_1.$nsp)(key)).collect(new mona_dish_1.ArrayCollector());
     }
@@ -5732,11 +5733,11 @@ var ExtLang;
     ExtLang.getLanguage = getLanguage;
     //should be in lang, but for now here to avoid recursive imports, not sure if typescript still has a problem with those
     /**
-     * helper function to savely resolve anything
+     * helper function to safely resolve anything
      * this is not an elvis operator, it resolves
      * a value without exception in a tree and if
      * it is not resolvable then an optional of
-     * a default value is restored or Optional.empty
+     * a default value is restored or Optional\.empty
      * if none is given
      *
      * usage
@@ -5745,7 +5746,7 @@ var ExtLang;
      * </code>
      *
      * @param resolverProducer a lambda which can produce the value
-     * @param defaultValue an optional default value if the producer failes to produce anything
+     * @param defaultValue an optional default value if the producer fails to produce anything
      * @returns an Optional of the produced value
      */
     function failSaveResolve(resolverProducer, defaultValue = null) {
@@ -5769,10 +5770,10 @@ var ExtLang;
      * returns a given localized message upon a given key
      * basic java log like templating functionality is included
      *
-     * @param {String} key the key for the message
-     * @param {String} defaultMessage optional default message if none was found
+     * @param  key the key for the message
+     * @param  defaultMessage optional default message if none was found
      *
-     * Additionally you can pass additional arguments, which are used
+     * Additionally, you can pass additional arguments, which are used
      * in the same way java log templates use the params
      *
      * @param templateParams the param list to be filled in
@@ -5798,15 +5799,15 @@ var ExtLang;
     }
     ExtLang.keyValToStr = keyValToStr;
     /**
-     * creates an exeption with additional internal parameters
+     * creates an exception with additional internal parameters
      * for extra information
      *
      * @param error
-     * @param {String} title the exception title
-     * @param {String} name  the exception name
-     * @param {String} callerCls the caller class
-     * @param {String} callFunc the caller function
-     * @param {String} message the message for the exception
+     * @param  title the exception title
+     * @param  name  the exception name
+     * @param  callerCls the caller class
+     * @param  callFunc the caller function
+     * @param  message the message for the exception
      */
     function makeException(error, title, name, callerCls, callFunc, message) {
         var _a;
@@ -5815,15 +5816,15 @@ var ExtLang;
     ExtLang.makeException = makeException;
     /**
      * fetches a global config entry
-     * @param {String} configName the name of the configuration entry
-     * @param {Object} defaultValue
+     * @param  configName the name of the configuration entry
+     * @param  defaultValue
      *
      * @return either the config entry or if none is given the default value
      */
     function getGlobalConfig(configName, defaultValue) {
         var _a, _b, _c;
         /**
-         * note we could use exists but this is an heavy operation, since the config name usually
+         * note we could use exists but this is a heavy operation, since the config name usually
          * given this function here is called very often
          * is a single entry without . in between we can do the lighter shortcut
          */
@@ -5831,7 +5832,7 @@ var ExtLang;
     }
     ExtLang.getGlobalConfig = getGlobalConfig;
     /**
-     * fetches the form in an fuzzy manner depending
+     * fetches the form in a fuzzy manner depending
      * on an element or event target.
      *
      * The idea is that according to the jsf spec
@@ -5840,7 +5841,7 @@ var ExtLang;
      * This is fine, but since then html5 came into the picture with the form attribute the element
      * can be anywhere referencing its parent form.
      *
-     * Also theoretically you can have the case of an issuing element enclosing a set of forms
+     * Also, theoretically you can have the case of an issuing element enclosing a set of forms
      * (not really often used, but theoretically it could be input button allows to embed html for instance)
      *
      * So the idea is not to limit the issuing form determination to the spec case
@@ -5876,10 +5877,11 @@ var ExtLang;
      * gets the local or global options with local ones having higher priority
      * if no local or global one was found then the default value is given back
      *
-     * @param {String} configName the name of the configuration entry
-     * @param {String} localOptions the local options root for the configuration myfaces as default marker is added implicitely
+     * @param  configName the name of the configuration entry
+     * @param  localOptions the local options root for the configuration myfaces as default marker is added
+     * implicitly
      *
-     * @param {Object} defaultValue
+     * @param  defaultValue
      *
      * @return either the config entry or if none is given the default value
      */
@@ -6356,15 +6358,15 @@ var Response;
         let responseXML = (0, ResonseDataResolver_1.resolveResponseXML)(req);
         let responseProcessor = new ResponseProcessor_1.ResponseProcessor(req, externalContext, internalContext);
         internalContext.assign(Const_1.RESPONSE_XML).value = responseXML;
-        //we now process the partial tags, or in none given raise an error
+        // we now process the partial tags, or in none given raise an error
         responseXML.querySelectorAll(Const_1.RESP_PARTIAL)
             .each(item => processPartialTag(item, responseProcessor, internalContext));
-        //we now process the viewstates, client windows and the evals deferred
-        //the reason for this is that often it is better
-        //to wait until the document has caught up before
-        //doing any evals even on embedded scripts
-        //usually this does not matter, the client window comes in almost last always anyway
-        //we maybe drop this deferred assignment in the future, but myfaces did it until now
+        // We now process the viewStates, client windows and the elements to be evaluated are delayed.
+        // The reason for this is that often it is better
+        // to wait until the document has caught up before
+        // doing any evaluations even on embedded scripts.
+        // Usually this does not matter, the client window comes in almost last always anyway
+        // we maybe drop this deferred assignment in the future, but myfaces did it until now.
         responseProcessor.fixViewStates();
         responseProcessor.fixClientWindow();
         responseProcessor.globalEval();
@@ -6377,7 +6379,7 @@ var Response;
     function processPartialTag(node, responseProcessor, internalContext) {
         internalContext.assign(Const_1.PARTIAL_ID).value = node.id;
         const SEL_SUB_TAGS = [Const_1.CMD_ERROR, Const_1.CMD_REDIRECT, Const_1.CMD_CHANGES].join(",");
-        //now we can process the main operations
+        // now we can process the main operations
         node.querySelectorAll(SEL_SUB_TAGS).each((node) => {
             switch (node.tagName.value) {
                 case Const_1.CMD_ERROR:
@@ -6393,11 +6395,11 @@ var Response;
         });
     }
     let processInsert = function (responseProcessor, node) {
-        //path1 insert after as child tags
+        // path1 insert after as child tags
         if (node.querySelectorAll([Const_1.TAG_BEFORE, Const_1.TAG_AFTER].join(",")).length) {
-            responseProcessor.insertWithSubtags(node);
+            responseProcessor.insertWithSubTags(node);
         }
-        else { //insert before after with id
+        else { // insert before after with id
             responseProcessor.insert(node);
         }
     };
@@ -6445,14 +6447,14 @@ var Response;
     }
     /**
      * branch tag update. drill further down into the updates
-     * special case viewstate in that case it is a leaf
-     * and the viewstate must be processed
+     * special case viewState in that case it is a leaf
+     * and the viewState must be processed
      *
      * @param node
      * @param responseProcessor
      */
     function processUpdateTag(node, responseProcessor) {
-        //early state storing, if no state we perform a normal update cycle
+        // early state storing, if no state we perform a normal update cycle
         if (!storeState(responseProcessor, node)) {
             handleElementUpdate(node, responseProcessor);
         }
@@ -6478,7 +6480,7 @@ var Response;
             case (0, Const_1.$nsp)(Const_1.P_RESOURCE):
                 responseProcessor.addToHead(mona_dish_1.DQ.fromMarkup(cdataBlock));
                 break;
-            default: //htmlItem replacement
+            default: // htmlItem replacement
                 responseProcessor.update(node, cdataBlock);
                 break;
         }
@@ -6557,7 +6559,7 @@ class ResponseProcessor {
         // eval means the scripts will get attached (eval script attach method)
         // but this is done by DomQuery not in this code
         this.storeForEval(shadowHead);
-        //incoming either the outer head tag or its childs
+        //incoming either the outer head tag or its children
         //shadowHead = (shadowHead.tagName.value === "HEAD") ? shadowHead.childNodes : shadowHead;
         //this.addToHead(shadowHead);
     }
@@ -6581,12 +6583,13 @@ class ResponseProcessor {
         let resultingBody = ExtDomQuery_1.ExtDomquery.querySelectorAll(Const_1.TAG_BODY).html(shadowInnerHTML);
         let updateForms = resultingBody.querySelectorAll(Const_1.TAG_FORM);
         // main difference, we cannot replace the body itself, but only its content
-        // we need a separate step for post processing the incoming attributes, like classes, styles etc...
+        // we need a separate step for post-processing the incoming
+        // attributes, like classes, styles etc...
         resultingBody.copyAttrs(shadowBody);
         this.storeForPostProcessing(updateForms, resultingBody);
     }
     /**
-     * Leaf Tag eval... process whatever is in the evals cdata block
+     * Leaf Tag eval... process whatever is in the eval cdata block
      *
      * @param node the node to eval
      */
@@ -6613,11 +6616,11 @@ class ResponseProcessor {
         let hasResponseXML = this.internalContext.get(Const_1.RESPONSE_XML).isPresent();
         //we now store the response xml also in the error data for further details
         mergedErrorData.assignIf(hasResponseXML, Const_1.RESPONSE_XML).value = this.internalContext.getIf(Const_1.RESPONSE_XML).value.get(0).value;
-        // error post processing and enrichment (standard messages from keys)
+        // error post-processing and enrichment (standard messages from keys)
         let errorData = ErrorData_1.ErrorData.fromServerError(mergedErrorData);
-        // we now trigger an internally stored onError function which might be a attached to the context
-        // either we haven an internal on error, or an on error has been bassed via params from the outside
-        // in both cases they are attached to our contexts
+        // we now trigger an internally stored onError function which might be an attached to the context
+        // either we do not have an internal on error, or an on error has been based via params from the outside.
+        // In both cases they are attached to our contexts
         this.triggerOnError(errorData);
         AjaxImpl_1.Implementation.sendError(errorData);
     }
@@ -6646,7 +6649,7 @@ class ResponseProcessor {
         }
     }
     /**
-     * Delete handler, simply deleetes the node referenced by the xml data
+     * Delete handler, simply deletes the node referenced by the xml data
      * @param node
      */
     delete(node) {
@@ -6695,7 +6698,7 @@ class ResponseProcessor {
      *
      * @param node the node hosting the insert data
      */
-    insertWithSubtags(node) {
+    insertWithSubTags(node) {
         let before = node.querySelectorAll(Const_1.TAG_BEFORE);
         let after = node.querySelectorAll(Const_1.TAG_AFTER);
         before.each(item => {
@@ -6717,7 +6720,7 @@ class ResponseProcessor {
     }
     /**
      * Process the viewState update, update the affected
-     * forms with their respective new viewstate values
+     * forms with their respective new viewState values
      *
      */
     processViewState(node) {
@@ -6788,19 +6791,19 @@ class ResponseProcessor {
         AjaxImpl_1.Implementation.sendEvent(eventData, eventHandler);
     }
     /**
-     * proper viewstate -> form assignment
+     * proper viewState -> form assignment
      *
-     * @param forms the forms to append the viewstate to
-     * @param viewState the final viewstate
+     * @param forms the forms to append the viewState to
+     * @param viewState the final viewState
      */
     appendViewStateToForms(forms, viewState) {
         this.assignState(forms, (0, Const_1.$nsp)(Const_1.SEL_VIEWSTATE_ELEM), viewState);
     }
     /**
-     * proper clientwindow -> form assignment
+     * proper clientWindow -> form assignment
      *
-     * @param forms the forms to append the viewstate to
-     * @param clientWindow the final viewstate
+     * @param forms the forms to append the viewState to
+     * @param clientWindow the final viewState
      */
     appendClientWindowToForms(forms, clientWindow) {
         this.assignState(forms, (0, Const_1.$nsp)(Const_1.SEL_CLIENT_WINDOW_ELEM), clientWindow);
@@ -6824,7 +6827,7 @@ class ResponseProcessor {
     /**
      * Helper to Create a new JSF ViewState Element
      *
-     * @param parent, the parent node to attach the viewstate element to
+     * @param parent, the parent node to attach the viewState element to
      * (usually a form node)
      */
     static newViewStateElement(parent) {
@@ -6833,17 +6836,17 @@ class ResponseProcessor {
         return newViewState;
     }
     /**
-     * Stores certain aspects of the dom for later post processing
+     * Stores certain aspects of the dom for later post-processing
      *
      * @param updateForms the update forms which should receive standardized internal jsf data
-     * @param toBeEvaled the resulting elements which should be evaled
+     * @param toBeEvaluated the resulting elements which should be evaluated
      */
-    storeForPostProcessing(updateForms, toBeEvaled) {
+    storeForPostProcessing(updateForms, toBeEvaluated) {
         this.storeForUpdate(updateForms);
-        this.storeForEval(toBeEvaled);
+        this.storeForEval(toBeEvaluated);
     }
     /**
-     * helper to store a given form for the update post processing (viewstate)
+     * helper to store a given form for the update post-processing (viewState)
      *
      * @param updateForms the dom query object pointing to the forms which need to be updated
      */
@@ -6853,20 +6856,16 @@ class ResponseProcessor {
     /**
      * same for eval (js and css)
      *
-     * @param toBeEvaled
+     * @param toBeEvaluated
      */
-    storeForEval(toBeEvaled) {
-        this.internalContext.assign(Const_1.UPDATE_ELEMS).value.push(toBeEvaled);
-    }
-    // head eval is always sticky
-    storeForHeadEval(toBeEvaled, sticky) {
-        this.internalContext.assign(Const_1.DEFERRED_HEAD_INSERTS).value.push(toBeEvaled);
+    storeForEval(toBeEvaluated) {
+        this.internalContext.assign(Const_1.UPDATE_ELEMS).value.push(toBeEvaluated);
     }
     /**
-     * check whether a given XMLQuery node is an explicit viewstate node
+     * check whether a given XMLQuery node is an explicit viewState node
      *
      * @param node the node to check
-     * @returns true of it ii
+     * @returns if it is a viewState node
      */
     static isViewStateNode(node) {
         var _a, _b, _c, _d, _e, _f, _g;

@@ -6965,12 +6965,17 @@ class XhrFormData extends mona_dish_1.Config {
         //a call to getViewState before must pass the encoded line
         //a call from getViewState passes the form element as datasource,
         //so we have two call points
+        // atm we basically encode twice, to keep the code leaner
+        // this will be later optmized, practically elements
+        // which are already covered by an external viewstate do not need
+        // the encoding a second time, because they are overwritten by the viewstate again
         if (isString(dataSource)) {
             this.assignEncodedString(this.dataSource);
         }
         else {
             this.applyFormDataToConfig();
         }
+        //now assign the external viewstate overrides
         if ('undefined' != typeof viewState) {
             this.assignEncodedString(viewState);
         }
@@ -6984,23 +6989,26 @@ class XhrFormData extends mona_dish_1.Config {
      * in our ajax request
      */
     postInit(...executes) {
-        let fetchInput = (id) => {
+        let fetchFileInputs = (id) => {
+            const INPUT_FILE = "input[type='file']";
             if (id == Const_1.IDENT_ALL) {
-                return mona_dish_1.DQ.querySelectorAllDeep("input[type='file']");
+                return mona_dish_1.DQ.querySelectorAllDeep(INPUT_FILE);
             }
             else if (id == Const_1.IDENT_FORM) {
-                return this.dataSource.querySelectorAllDeep("input[type='file']");
+                return this.dataSource.matchesSelector(INPUT_FILE) ?
+                    this.dataSource :
+                    this.dataSource.querySelectorAllDeep(INPUT_FILE);
             }
             else {
                 let element = mona_dish_1.DQ.byId(id, true);
-                return this.getFileInputs(element);
+                return element.matchesSelector(INPUT_FILE) ? element : this.getFileInputs(element);
             }
         };
         let inputExists = (item) => {
             return item.isPresent();
         };
         this.isMultipartRequest = mona_dish_1.LazyStream.of(...executes)
-            .map(fetchInput)
+            .map(fetchFileInputs)
             .filter(inputExists)
             .first().isPresent();
     }
@@ -7038,8 +7046,8 @@ class XhrFormData extends mona_dish_1.Config {
             var _a, _b;
             return keyVal.length < 3 ? [(_a = keyVal === null || keyVal === void 0 ? void 0 : keyVal[0]) !== null && _a !== void 0 ? _a : [], (_b = keyVal === null || keyVal === void 0 ? void 0 : keyVal[1]) !== null && _b !== void 0 ? _b : []] : keyVal;
         }
+        //TODO fix files...
         mona_dish_1.Stream.of(...keyValueEntries)
-            //split only the first =
             .map(line => splitToKeyVal(line))
             //special case of having keys without values
             .map(keyVal => fixKeyWithoutVal(keyVal))
@@ -7075,7 +7083,10 @@ class XhrFormData extends mona_dish_1.Config {
         }
         let entries = mona_dish_1.LazyStream.of(...Object.keys(this.value))
             .filter(key => this.value.hasOwnProperty(key))
-            .flatMap(key => mona_dish_1.Stream.of(...this.value[key]).map(val => [key, val]).collect(new mona_dish_1.ArrayCollector()))
+            .flatMap(key => mona_dish_1.Stream.of(...this.value[key]).map(val => [key, val])
+            //we cannot encode file elements that is handled by multipart requests anyway
+            .filter(([, value]) => !(value instanceof ExtDomQuery_1.ExtDomQuery.global().File))
+            .collect(new mona_dish_1.ArrayCollector()))
             .map(keyVal => {
             return `${encodeURIComponent(keyVal[0])}=${encodeURIComponent(keyVal[1])}`;
         })

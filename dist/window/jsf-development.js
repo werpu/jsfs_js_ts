@@ -3907,12 +3907,13 @@ var faces;
          * @param channel the channel name/id
          * @param onopen The function to be invoked when the web socket is opened.
          * @param onmessage The function to be invoked when a message is received.
+         * @param onerror The function to be invoked when an error occurs.
          * @param onclose The function to be invoked when the web socket is closed.
          * @param behaviors functions which are invoked whenever a message is received
          * @param autoConnect Whether or not to automatically open the socket. Defaults to <code>false</code>.
          */
-        function init(socketClientId, url, channel, onopen, onmessage, onclose, behaviors, autoConnect) {
-            PushImpl_1.PushImpl.init(socketClientId, url, channel, onopen, onmessage, onclose, behaviors, autoConnect);
+        function init(socketClientId, url, channel, onopen, onmessage, onerror, onclose, behaviors, autoConnect) {
+            PushImpl_1.PushImpl.init(socketClientId, url, channel, onopen, onmessage, onerror, onclose, behaviors, autoConnect);
         }
         push.init = init;
         /**
@@ -4622,12 +4623,13 @@ exports.PushImpl = void 0;
  * Typescript port of the faces\.push part in the myfaces implementation
  */
 const Const_1 = __webpack_require__(/*! ./core/Const */ "./src/main/typescript/impl/core/Const.ts");
+const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 /**
  * Implementation class for the push functionality
  */
 var PushImpl;
 (function (PushImpl) {
-    const URL_PROTOCOL = window.location.protocol.replace("http", "ws") + "//";
+    const URL_PROTOCOL = mona_dish_1.DQ.global().location.protocol.replace("http", "ws") + "//";
     // we expose the member variables for testing purposes
     // they are not directly touched outside of tests
     /* socket map by token */
@@ -4652,14 +4654,15 @@ var PushImpl;
      * @param channel the channel name/id
      * @param onopen The function to be invoked when the web socket is opened.
      * @param onmessage The function to be invoked when a message is received.
+     * @param onerror The function to be invoked when an error occurs.
      * @param onclose The function to be invoked when the web socket is closed.
      * @param behaviors functions which are invoked whenever a message is received
      * @param autoConnect Whether or not to automatically open the socket. Defaults to <code>false</code>.
      */
-    function init(socketClientId, url, channel, onopen, onmessage, onclose, behaviors, autoConnect) {
-        var _a;
+    function init(socketClientId, url, channel, onopen, onmessage, onerror, onclose, behaviors, autoConnect) {
+        var _a, _b, _c;
         onclose = resolveFunction(onclose);
-        if (!window.WebSocket) { // IE6-9.
+        if (!mona_dish_1.DQ.global().WebSocket) { // IE6-9.
             onclose(-1, channel);
             return;
         }
@@ -4669,6 +4672,7 @@ var PushImpl;
                 'channelToken': channelToken,
                 'onopen': resolveFunction(onopen),
                 'onmessage': resolveFunction(onmessage),
+                'onerror': resolveFunction(onerror),
                 'onclose': onclose,
                 'behaviors': behaviors,
                 'autoconnect': autoConnect
@@ -4682,17 +4686,17 @@ var PushImpl;
             }
         }
         if (autoConnect) {
-            ((_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : window === null || window === void 0 ? void 0 : window.jsf).push.open(socketClientId);
+            ((_b = (_a = mona_dish_1.DQ.global()) === null || _a === void 0 ? void 0 : _a.faces) !== null && _b !== void 0 ? _b : (_c = mona_dish_1.DQ.global()) === null || _c === void 0 ? void 0 : _c.jsf).push.open(socketClientId);
         }
     }
     PushImpl.init = init;
     function open(socketClientId) {
         var _a;
-        getSocket((_a = PushImpl.components === null || PushImpl.components === void 0 ? void 0 : PushImpl.components[socketClientId]) === null || _a === void 0 ? void 0 : _a.channelToken).open();
+        getSocket((_a = PushImpl.components[socketClientId]) === null || _a === void 0 ? void 0 : _a.channelToken).open();
     }
     PushImpl.open = open;
     function close(socketClientId) {
-        getSocket(PushImpl.components === null || PushImpl.components === void 0 ? void 0 : PushImpl.components[socketClientId].channelToken).close();
+        getSocket(PushImpl.components[socketClientId].channelToken).close();
     }
     PushImpl.close = close;
     // Private helper classes
@@ -4722,28 +4726,53 @@ var PushImpl;
         }
         // noinspection JSUnusedLocalSymbols
         onopen(event) {
+            var _a, _b;
             if (!this.reconnectAttempts) {
                 let clientIds = PushImpl.clientIdsByTokens[this.channelToken];
                 for (let i = clientIds.length - 1; i >= 0; i--) {
                     let socketClientId = clientIds[i];
-                    PushImpl.components[socketClientId]['onopen'](this.channel);
+                    (_b = (_a = PushImpl.components[socketClientId]) === null || _a === void 0 ? void 0 : _a['onopen']) === null || _b === void 0 ? void 0 : _b.call(_a, this.channel);
                 }
             }
             this.reconnectAttempts = 0;
         }
+        onerror(event) {
+            var _a, _b;
+            let message = JSON.parse(event.data);
+            //TODO replace this with a more readable Stream code
+            for (let i = PushImpl.clientIdsByTokens[this.channelToken].length - 1; i >= 0; i--) {
+                let socketClientId = PushImpl.clientIdsByTokens[this.channelToken][i];
+                if (document.getElementById(socketClientId)) {
+                    try {
+                        (_b = (_a = PushImpl.components[socketClientId]) === null || _a === void 0 ? void 0 : _a['onerror']) === null || _b === void 0 ? void 0 : _b.call(_a, message, this.channel, event);
+                    }
+                    catch (e) {
+                        //Ignore
+                    }
+                }
+                else {
+                    PushImpl.clientIdsByTokens[this.channelToken].splice(i, 1);
+                }
+            }
+            if (PushImpl.clientIdsByTokens[this.channelToken].length == 0) {
+                // tag disappeared
+                this.close();
+            }
+        }
         onmmessage(event) {
+            var _a, _b, _c;
             let message = JSON.parse(event.data);
             for (let i = PushImpl.clientIdsByTokens[this.channelToken].length - 1; i >= 0; i--) {
                 let socketClientId = PushImpl.clientIdsByTokens[this.channelToken][i];
                 if (document.getElementById(socketClientId)) {
                     try {
-                        PushImpl.components[socketClientId]['onmessage'](message, this.channel, event);
+                        (_b = (_a = PushImpl.components[socketClientId]) === null || _a === void 0 ? void 0 : _a['onmessage']) === null || _b === void 0 ? void 0 : _b.call(_a, message, this.channel, event);
                     }
                     catch (e) {
                         //Ignore
                     }
-                    let behaviors = PushImpl.components[socketClientId]['behaviors'];
-                    let functions = behaviors[message];
+                    let behaviors = (_c = PushImpl.components === null || PushImpl.components === void 0 ? void 0 : PushImpl.components[socketClientId]) === null || _c === void 0 ? void 0 : _c['behaviors'];
+                    let functions = behaviors === null || behaviors === void 0 ? void 0 : behaviors[message];
                     if (functions && functions.length) {
                         for (let j = 0; j < functions.length; j++) {
                             try {
@@ -4765,6 +4794,7 @@ var PushImpl;
             }
         }
         onclose(event) {
+            var _a, _b;
             if (!this.socket
                 || (event.code == 1000 && event.reason == Const_1.REASON_EXPIRED)
                 || (event.code == 1008)
@@ -4773,7 +4803,7 @@ var PushImpl;
                 let clientIds = PushImpl.clientIdsByTokens[this.channelToken];
                 for (let i = clientIds.length - 1; i >= 0; i--) {
                     let socketClientId = clientIds[i];
-                    PushImpl.components[socketClientId]['onclose'](event === null || event === void 0 ? void 0 : event.code, this === null || this === void 0 ? void 0 : this.channel, event);
+                    (_b = (_a = PushImpl.components === null || PushImpl.components === void 0 ? void 0 : PushImpl.components[socketClientId]) === null || _a === void 0 ? void 0 : _a['onclose']) === null || _b === void 0 ? void 0 : _b.call(_a, event === null || event === void 0 ? void 0 : event.code, this === null || this === void 0 ? void 0 : this.channel, event);
                 }
             }
             else {
@@ -4795,12 +4825,13 @@ var PushImpl;
             this.socket.onopen = (event) => this.onopen(event);
             this.socket.onmessage = (event) => this.onmmessage(event);
             this.socket.onclose = (event) => this.onclose(event);
+            this.socket.onerror = (event) => this.onerror(event);
         }
     }
     // Private static functions ---------------------------------------------------------------------------------------
     function getBaseURL(url) {
         if (url.indexOf("://") < 0) {
-            let base = window.location.hostname + ":" + window.location.port;
+            let base = mona_dish_1.DQ.global().location.hostname + ":" + mona_dish_1.DQ.global().location.port;
             return URL_PROTOCOL + base + url;
         }
         else {
@@ -4825,7 +4856,7 @@ var PushImpl;
     }
     function resolveFunction(fn = () => {
     }) {
-        return ((typeof fn !== "function") && (fn = window[fn]), fn);
+        return ((typeof fn !== "function") && (fn = mona_dish_1.DQ.global()[fn]), fn);
     }
 })(PushImpl = exports.PushImpl || (exports.PushImpl = {}));
 
@@ -7674,6 +7705,17 @@ if (!(window === null || window === void 0 ? void 0 : window.jsf)) {
     window['jsf'] = (_a = window === null || window === void 0 ? void 0 : window.jsf) !== null && _a !== void 0 ? _a : faces;
     window.jsf.specversion = 230000;
     delete window.jsf.contextpath;
+    let faces4Init = faces.push.init;
+    /*
+     * we shim back the breaking api change from 3.0 to 4.0
+     * onerror is gone
+     */
+    faces.push.init = (socketClientId, url, channel, onopen, onmessage, 
+    // no on error api change for 4.0
+    //onerror: Function,
+    onclose, behaviors, autoConnect) => {
+        faces4Init(socketClientId, url, channel, onopen, onmessage, null, onclose, behaviors, autoConnect);
+    };
 }
 if (!((_b = window === null || window === void 0 ? void 0 : window.myfaces) === null || _b === void 0 ? void 0 : _b.ab)) {
     const myfaces = (__webpack_require__(/*! ./_api */ "./src/main/typescript/api/_api.ts").myfaces);

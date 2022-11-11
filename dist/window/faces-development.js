@@ -25,6 +25,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -34,16 +60,52 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __generator = (this && this.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (_) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DQ$ = exports.DQ = exports.DomQueryCollector = exports.DomQuery = exports.Style = exports.ElementAttribute = void 0;
-const Monad_1 = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
-const Stream_1 = __webpack_require__(/*! ./Stream */ "./node_modules/mona-dish/src/main/typescript/Stream.ts");
-const SourcesCollectors_1 = __webpack_require__(/*! ./SourcesCollectors */ "./node_modules/mona-dish/src/main/typescript/SourcesCollectors.ts");
-const Lang_1 = __webpack_require__(/*! ./Lang */ "./node_modules/mona-dish/src/main/typescript/Lang.ts");
+var Monad_1 = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
+var Stream_1 = __webpack_require__(/*! ./Stream */ "./node_modules/mona-dish/src/main/typescript/Stream.ts");
+var SourcesCollectors_1 = __webpack_require__(/*! ./SourcesCollectors */ "./node_modules/mona-dish/src/main/typescript/SourcesCollectors.ts");
+var Lang_1 = __webpack_require__(/*! ./Lang */ "./node_modules/mona-dish/src/main/typescript/Lang.ts");
 var trim = Lang_1.Lang.trim;
 var isString = Lang_1.Lang.isString;
 var eIgnoreC = Lang_1.Lang.equalsIgnoreCase;
-const Global_1 = __webpack_require__(/*! ./Global */ "./node_modules/mona-dish/src/main/typescript/Global.ts");
+var Global_1 = __webpack_require__(/*! ./Global */ "./node_modules/mona-dish/src/main/typescript/Global.ts");
 var objToArray = Lang_1.Lang.objToArray;
 /**
  *
@@ -69,48 +131,49 @@ var ALLOWED_SUBMITTABLE_ELEMENTS;
  * @param condition the condition lambda to be fulfilled
  * @param options options for the search
  */
-function waitUntilDom(root, condition, options = {
-    attributes: true,
-    childList: true,
-    subtree: true,
-    timeout: 500,
-    interval: 100
-}) {
-    return new Promise((success, error) => {
-        let observer = null;
-        const MUT_ERROR = new Error("Mutation observer timeout");
+function waitUntilDom(root, condition, options) {
+    if (options === void 0) { options = {
+        attributes: true,
+        childList: true,
+        subtree: true,
+        timeout: 500,
+        interval: 100
+    }; }
+    return new Promise(function (success, error) {
+        var observer = null;
+        var MUT_ERROR = new Error("Mutation observer timeout");
         // we do the same but for now ignore the options on the dom query
         // we cannot use absent here, because the condition might search for an absent element
         function findElement(root, condition) {
-            let found = null;
+            var found = null;
             if (!!condition(root)) {
                 return root;
             }
             if (options.childList) {
-                found = (condition(root)) ? root : root.childNodes.filter(item => condition(item)).first().value.value;
+                found = (condition(root)) ? root : root.childNodes.filter(function (item) { return condition(item); }).first().value.value;
             }
             else if (options.subtree) {
-                found = (condition(root)) ? root : root.querySelectorAll(" * ").filter(item => condition(item)).first().value.value;
+                found = (condition(root)) ? root : root.querySelectorAll(" * ").filter(function (item) { return condition(item); }).first().value.value;
             }
             else {
                 found = (condition(root)) ? root : null;
             }
             return found;
         }
-        let foundElement = root;
+        var foundElement = root;
         if (!!(foundElement = findElement(foundElement, condition))) {
             success(new DomQuery(foundElement));
             return;
         }
         if ('undefined' != typeof MutationObserver) {
-            const mutTimeout = setTimeout(() => {
+            var mutTimeout_1 = setTimeout(function () {
                 observer.disconnect();
                 return error(MUT_ERROR);
             }, options.timeout);
-            const callback = (mutationList) => {
-                const found = new DomQuery(mutationList.map((mut) => mut.target)).filter(item => condition(item)).first();
+            var callback = function (mutationList) {
+                var found = new DomQuery(mutationList.map(function (mut) { return mut.target; })).filter(function (item) { return condition(item); }).first();
                 if (found.isPresent()) {
-                    clearTimeout(mutTimeout);
+                    clearTimeout(mutTimeout_1);
                     observer.disconnect();
                     success(new DomQuery(found || root));
                 }
@@ -118,95 +181,115 @@ function waitUntilDom(root, condition, options = {
             observer = new MutationObserver(callback);
             // browsers might ignore it, but we cannot break the api in the case
             // hence no timeout is passed
-            let observableOpts = Object.assign({}, options);
-            delete observableOpts.timeout;
-            root.eachElem(item => {
-                observer.observe(item, observableOpts);
+            var observableOpts_1 = __assign({}, options);
+            delete observableOpts_1.timeout;
+            root.eachElem(function (item) {
+                observer.observe(item, observableOpts_1);
             });
         }
         else { // fallback for legacy browsers without mutation observer
-            let interval = setInterval(() => {
-                let found = findElement(root, condition);
+            var interval_1 = setInterval(function () {
+                var found = findElement(root, condition);
                 if (!!found) {
-                    if (timeout) {
-                        clearTimeout(timeout);
-                        clearInterval(interval);
-                        interval = null;
+                    if (timeout_1) {
+                        clearTimeout(timeout_1);
+                        clearInterval(interval_1);
+                        interval_1 = null;
                     }
                     success(new DomQuery(found || root));
                 }
             }, options.interval);
-            let timeout = setTimeout(() => {
-                if (interval) {
-                    clearInterval(interval);
+            var timeout_1 = setTimeout(function () {
+                if (interval_1) {
+                    clearInterval(interval_1);
                     error(MUT_ERROR);
                 }
             }, options.timeout);
         }
     });
 }
-class ElementAttribute extends Monad_1.ValueEmbedder {
-    constructor(element, name, defaultVal = null) {
-        super(element, name);
-        this.element = element;
-        this.name = name;
-        this.defaultVal = defaultVal;
+var ElementAttribute = /** @class */ (function (_super) {
+    __extends(ElementAttribute, _super);
+    function ElementAttribute(element, name, defaultVal) {
+        if (defaultVal === void 0) { defaultVal = null; }
+        var _this = _super.call(this, element, name) || this;
+        _this.element = element;
+        _this.name = name;
+        _this.defaultVal = defaultVal;
+        return _this;
     }
-    get value() {
-        let val = this.element.get(0).orElse(...[]).values;
-        if (!val.length) {
-            return this.defaultVal;
-        }
-        return val[0].getAttribute(this.name);
-    }
-    set value(value) {
-        let val = this.element.get(0).orElse(...[]).values;
-        for (let cnt = 0; cnt < val.length; cnt++) {
-            val[cnt].setAttribute(this.name, value);
-        }
-        val[0].setAttribute(this.name, value);
-    }
-    getClass() {
+    Object.defineProperty(ElementAttribute.prototype, "value", {
+        get: function () {
+            var _a;
+            var val = (_a = this.element.get(0)).orElse.apply(_a, []).values;
+            if (!val.length) {
+                return this.defaultVal;
+            }
+            return val[0].getAttribute(this.name);
+        },
+        set: function (value) {
+            var _a;
+            var val = (_a = this.element.get(0)).orElse.apply(_a, []).values;
+            for (var cnt = 0; cnt < val.length; cnt++) {
+                val[cnt].setAttribute(this.name, value);
+            }
+            val[0].setAttribute(this.name, value);
+        },
+        enumerable: false,
+        configurable: true
+    });
+    ElementAttribute.prototype.getClass = function () {
         return ElementAttribute;
-    }
-    static fromNullable(value, valueKey = "value") {
+    };
+    ElementAttribute.fromNullable = function (value, valueKey) {
+        if (valueKey === void 0) { valueKey = "value"; }
         return new ElementAttribute(value, valueKey);
-    }
-}
+    };
+    return ElementAttribute;
+}(Monad_1.ValueEmbedder));
 exports.ElementAttribute = ElementAttribute;
-class Style extends Monad_1.ValueEmbedder {
-    constructor(element, name, defaultVal = null) {
-        super(element, name);
-        this.element = element;
-        this.name = name;
-        this.defaultVal = defaultVal;
+var Style = /** @class */ (function (_super) {
+    __extends(Style, _super);
+    function Style(element, name, defaultVal) {
+        if (defaultVal === void 0) { defaultVal = null; }
+        var _this = _super.call(this, element, name) || this;
+        _this.element = element;
+        _this.name = name;
+        _this.defaultVal = defaultVal;
+        return _this;
     }
-    get value() {
-        let val = this.element.values;
-        if (!val.length) {
-            return this.defaultVal;
-        }
-        return val[0].style[this.name];
-    }
-    set value(value) {
-        let val = this.element.values;
-        for (let cnt = 0; cnt < val.length; cnt++) {
-            val[cnt].style[this.name] = value;
-        }
-    }
-    getClass() {
+    Object.defineProperty(Style.prototype, "value", {
+        get: function () {
+            var val = this.element.values;
+            if (!val.length) {
+                return this.defaultVal;
+            }
+            return val[0].style[this.name];
+        },
+        set: function (value) {
+            var val = this.element.values;
+            for (var cnt = 0; cnt < val.length; cnt++) {
+                val[cnt].style[this.name] = value;
+            }
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Style.prototype.getClass = function () {
         return ElementAttribute;
-    }
-    static fromNullable(value, valueKey = "value") {
+    };
+    Style.fromNullable = function (value, valueKey) {
+        if (valueKey === void 0) { valueKey = "value"; }
         return new ElementAttribute(value, valueKey);
-    }
-}
+    };
+    return Style;
+}(Monad_1.ValueEmbedder));
 exports.Style = Style;
 /**
  * small helper for the specialized jsf case
  * @constructor
  */
-const DEFAULT_WHITELIST = () => {
+var DEFAULT_WHITELIST = function () {
     return true;
 };
 /**
@@ -228,8 +311,13 @@ const DEFAULT_WHITELIST = () => {
  * ago, those parts look a bit ancient and will be replaced over time.
  *
  */
-class DomQuery {
-    constructor(...rootNode) {
+var DomQuery = /** @class */ (function () {
+    function DomQuery() {
+        var _a;
+        var rootNode = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            rootNode[_i] = arguments[_i];
+        }
         this.rootNode = [];
         this.pos = -1;
         // because we can stream from an array stream directly into the dom query
@@ -239,19 +327,19 @@ class DomQuery {
         }
         else {
             // we need to flatten out the arrays
-            for (let cnt = 0; cnt < rootNode.length; cnt++) {
+            for (var cnt = 0; cnt < rootNode.length; cnt++) {
                 if (!rootNode[cnt]) {
                     // we skip possible null entries which can happen in
                     // certain corner conditions due to the constructor re-wrapping single elements into arrays.
                 }
                 else if (isString(rootNode[cnt])) {
-                    let foundElement = DomQuery.querySelectorAll(rootNode[cnt]);
+                    var foundElement = DomQuery.querySelectorAll(rootNode[cnt]);
                     if (!foundElement.isAbsent()) {
-                        rootNode.push(...foundElement.values);
+                        rootNode.push.apply(rootNode, foundElement.values);
                     }
                 }
                 else if (rootNode[cnt] instanceof DomQuery) {
-                    this.rootNode.push(...rootNode[cnt].values);
+                    (_a = this.rootNode).push.apply(_a, rootNode[cnt].values);
                 }
                 else {
                     this.rootNode.push(rootNode[cnt]);
@@ -259,216 +347,308 @@ class DomQuery {
             }
         }
     }
-    /**
-     * returns the first element
-     */
-    get value() {
-        return this.getAsElem(0);
-    }
-    get values() {
-        return this.allElems();
-    }
-    get global() {
-        return Global_1._global$;
-    }
-    /**
-     * returns the id of the first element
-     */
-    get id() {
-        return new ElementAttribute(this.get(0), "id");
-    }
-    /**
-     * length of the entire query set
-     */
-    get length() {
-        return this.rootNode.length;
-    }
-    /**
-     * convenience method for tagName
-     */
-    get tagName() {
-        return this.getAsElem(0).getIf("tagName");
-    }
-    /**
-     * convenience method for nodeName
-     */
-    get nodeName() {
-        return this.getAsElem(0).getIf("nodeName");
-    }
-    isTag(tagName) {
+    Object.defineProperty(DomQuery.prototype, "value", {
+        /**
+         * returns the first element
+         */
+        get: function () {
+            return this.getAsElem(0);
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "values", {
+        get: function () {
+            return this.allElems();
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "global", {
+        get: function () {
+            return Global_1._global$;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "id", {
+        /**
+         * returns the id of the first element
+         */
+        get: function () {
+            return new ElementAttribute(this.get(0), "id");
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "length", {
+        /**
+         * length of the entire query set
+         */
+        get: function () {
+            return this.rootNode.length;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "tagName", {
+        /**
+         * convenience method for tagName
+         */
+        get: function () {
+            return this.getAsElem(0).getIf("tagName");
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "nodeName", {
+        /**
+         * convenience method for nodeName
+         */
+        get: function () {
+            return this.getAsElem(0).getIf("nodeName");
+        },
+        enumerable: false,
+        configurable: true
+    });
+    DomQuery.prototype.isTag = function (tagName) {
         return !this.isAbsent()
             && (this.nodeName.orElse("__none___")
                 .value.toLowerCase() == tagName.toLowerCase()
                 || this.tagName.orElse("__none___")
                     .value.toLowerCase() == tagName.toLowerCase());
-    }
-    /**
-     * convenience property for type
-     *
-     * returns null in case of no type existing otherwise
-     * the type of the first element
-     */
-    get type() {
-        return this.getAsElem(0).getIf("type");
-    }
-    /**
-     * convenience property for name
-     *
-     * returns null in case of no type existing otherwise
-     * the name of the first element
-     */
-    get name() {
-        return new Monad_1.ValueEmbedder(this.getAsElem(0).value, "name");
-    }
-    /**
-     * convenience property for value
-     *
-     * returns null in case of no type existing otherwise
-     * the value of the first element
-     */
-    get inputValue() {
-        if (this.getAsElem(0).getIf("value").isPresent()) {
-            return new Monad_1.ValueEmbedder(this.getAsElem(0).value);
-        }
-        else {
-            return Monad_1.ValueEmbedder.absent;
-        }
-    }
-    get val() {
-        return this.inputValue.value;
-    }
-    set val(value) {
-        this.inputValue.value = value;
-    }
-    get checked() {
-        return Stream_1.Stream.of(...this.values).allMatch(el => !!el.checked);
-    }
-    set checked(newChecked) {
-        this.eachElem(el => el.checked = newChecked);
-    }
-    get elements() {
-        // a simple querySelectorAll should suffice
-        return this.querySelectorAll("input, checkbox, select, textarea, fieldset");
-    }
-    get deepElements() {
-        let elemStr = "input, select, textarea, checkbox, fieldset";
-        return this.querySelectorAllDeep(elemStr);
-    }
+    };
+    Object.defineProperty(DomQuery.prototype, "type", {
+        /**
+         * convenience property for type
+         *
+         * returns null in case of no type existing otherwise
+         * the type of the first element
+         */
+        get: function () {
+            return this.getAsElem(0).getIf("type");
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "name", {
+        /**
+         * convenience property for name
+         *
+         * returns null in case of no type existing otherwise
+         * the name of the first element
+         */
+        get: function () {
+            return new Monad_1.ValueEmbedder(this.getAsElem(0).value, "name");
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "inputValue", {
+        /**
+         * convenience property for value
+         *
+         * returns null in case of no type existing otherwise
+         * the value of the first element
+         */
+        get: function () {
+            if (this.getAsElem(0).getIf("value").isPresent()) {
+                return new Monad_1.ValueEmbedder(this.getAsElem(0).value);
+            }
+            else {
+                return Monad_1.ValueEmbedder.absent;
+            }
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "val", {
+        get: function () {
+            return this.inputValue.value;
+        },
+        set: function (value) {
+            this.inputValue.value = value;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "checked", {
+        get: function () {
+            return Stream_1.Stream.of.apply(Stream_1.Stream, this.values).allMatch(function (el) { return !!el.checked; });
+        },
+        set: function (newChecked) {
+            this.eachElem(function (el) { return el.checked = newChecked; });
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "elements", {
+        get: function () {
+            // a simple querySelectorAll should suffice
+            return this.querySelectorAll("input, checkbox, select, textarea, fieldset");
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "deepElements", {
+        get: function () {
+            var elemStr = "input, select, textarea, checkbox, fieldset";
+            return this.querySelectorAllDeep(elemStr);
+        },
+        enumerable: false,
+        configurable: true
+    });
     /**
      * a deep search which treats the single isolated shadow dom areas
      * separately and runs the query on each shadow dom
      * @param queryStr
      */
-    querySelectorAllDeep(queryStr) {
-        let found = [];
-        let queryRes = this.querySelectorAll(queryStr);
+    DomQuery.prototype.querySelectorAllDeep = function (queryStr) {
+        var found = [];
+        var queryRes = this.querySelectorAll(queryStr);
         if (queryRes.length) {
             found.push(queryRes);
         }
-        let shadowRoots = this.querySelectorAll("*").shadowRoot;
+        var shadowRoots = this.querySelectorAll("*").shadowRoot;
         if (shadowRoots.length) {
-            let shadowRes = shadowRoots.querySelectorAllDeep(queryStr);
+            var shadowRes = shadowRoots.querySelectorAllDeep(queryStr);
             if (shadowRes.length) {
                 found.push(shadowRes);
             }
         }
-        return new DomQuery(...found);
-    }
-    /**
-     * disabled flag
-     */
-    get disabled() {
-        return this.attr("disabled").isPresent();
-    }
-    set disabled(disabled) {
-        // this.attr("disabled").value = disabled + "";
-        if (!disabled) {
-            this.removeAttribute("disabled");
-        }
-        else {
-            this.attr("disabled").value = "disabled";
-        }
-    }
-    removeAttribute(name) {
-        this.eachElem(item => item.removeAttribute(name));
-    }
-    get childNodes() {
-        let childNodeArr = [];
-        this.eachElem((item) => {
-            childNodeArr = childNodeArr.concat(objToArray(item.childNodes));
-        });
-        return new DomQuery(...childNodeArr);
-    }
-    /**
-     * binding into stream
-     */
-    get stream() {
-        return new Stream_1.Stream(...this.asArray);
-    }
-    /**
-     * fetches a lazy stream representation
-     * lazy should be applied if you have some filters etc.
-     * in between, this can reduce the number of post filter operations
-     * and ram usage
-     * significantly because the operations are done lazily and stop
-     * once they hit a dead end.
-     */
-    get lazyStream() {
-        return Stream_1.LazyStream.of(...this.asArray);
-    }
-    get asArray() {
-        // filter not supported by IE11
-        return [].concat(Stream_1.LazyStream.of(...this.rootNode).filter(item => {
-            return item != null;
-        })
-            .map(item => {
-            return DomQuery.byId(item);
-        }).collect(new SourcesCollectors_1.ArrayCollector()));
-    }
-    get offsetWidth() {
-        return Stream_1.LazyStream.of(...this.rootNode)
-            .filter(item => item != null)
-            .map(elem => elem.offsetWidth)
-            .reduce((accumulate, incoming) => accumulate + incoming, 0).value;
-    }
-    get offsetHeight() {
-        return Stream_1.LazyStream.of(...this.rootNode)
-            .filter(item => item != null)
-            .map(elem => elem.offsetHeight)
-            .reduce((accumulate, incoming) => accumulate + incoming, 0).value;
-    }
-    get offsetLeft() {
-        return Stream_1.LazyStream.of(...this.rootNode)
-            .filter(item => item != null)
-            .map(elem => elem.offsetLeft)
-            .reduce((accumulate, incoming) => accumulate + incoming, 0).value;
-    }
-    get offsetTop() {
-        return Stream_1.LazyStream.of(...this.rootNode)
-            .filter(item => item != null)
-            .map(elem => elem.offsetTop)
-            .reduce((accumulate, incoming) => accumulate + incoming, 0).value;
-    }
-    get asNodeArray() {
-        return [].concat(Stream_1.Stream.of(this.rootNode).filter(item => item != null).collect(new SourcesCollectors_1.ArrayCollector()));
-    }
-    static querySelectorAllDeep(selector) {
+        return new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], found, false)))();
+    };
+    Object.defineProperty(DomQuery.prototype, "disabled", {
+        /**
+         * disabled flag
+         */
+        get: function () {
+            return this.attr("disabled").isPresent();
+        },
+        set: function (disabled) {
+            // this.attr("disabled").value = disabled + "";
+            if (!disabled) {
+                this.removeAttribute("disabled");
+            }
+            else {
+                this.attr("disabled").value = "disabled";
+            }
+        },
+        enumerable: false,
+        configurable: true
+    });
+    DomQuery.prototype.removeAttribute = function (name) {
+        this.eachElem(function (item) { return item.removeAttribute(name); });
+    };
+    Object.defineProperty(DomQuery.prototype, "childNodes", {
+        get: function () {
+            var childNodeArr = [];
+            this.eachElem(function (item) {
+                childNodeArr = childNodeArr.concat(objToArray(item.childNodes));
+            });
+            return new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], childNodeArr, false)))();
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "stream", {
+        /**
+         * binding into stream
+         */
+        get: function () {
+            return new (Stream_1.Stream.bind.apply(Stream_1.Stream, __spreadArray([void 0], this.asArray, false)))();
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "lazyStream", {
+        /**
+         * fetches a lazy stream representation
+         * lazy should be applied if you have some filters etc.
+         * in between, this can reduce the number of post filter operations
+         * and ram usage
+         * significantly because the operations are done lazily and stop
+         * once they hit a dead end.
+         */
+        get: function () {
+            return Stream_1.LazyStream.of.apply(Stream_1.LazyStream, this.asArray);
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "asArray", {
+        get: function () {
+            // filter not supported by IE11
+            return [].concat(Stream_1.LazyStream.of.apply(Stream_1.LazyStream, this.rootNode).filter(function (item) {
+                return item != null;
+            })
+                .map(function (item) {
+                return DomQuery.byId(item);
+            }).collect(new SourcesCollectors_1.ArrayCollector()));
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "offsetWidth", {
+        get: function () {
+            return Stream_1.LazyStream.of.apply(Stream_1.LazyStream, this.rootNode).filter(function (item) { return item != null; })
+                .map(function (elem) { return elem.offsetWidth; })
+                .reduce(function (accumulate, incoming) { return accumulate + incoming; }, 0).value;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "offsetHeight", {
+        get: function () {
+            return Stream_1.LazyStream.of.apply(Stream_1.LazyStream, this.rootNode).filter(function (item) { return item != null; })
+                .map(function (elem) { return elem.offsetHeight; })
+                .reduce(function (accumulate, incoming) { return accumulate + incoming; }, 0).value;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "offsetLeft", {
+        get: function () {
+            return Stream_1.LazyStream.of.apply(Stream_1.LazyStream, this.rootNode).filter(function (item) { return item != null; })
+                .map(function (elem) { return elem.offsetLeft; })
+                .reduce(function (accumulate, incoming) { return accumulate + incoming; }, 0).value;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "offsetTop", {
+        get: function () {
+            return Stream_1.LazyStream.of.apply(Stream_1.LazyStream, this.rootNode).filter(function (item) { return item != null; })
+                .map(function (elem) { return elem.offsetTop; })
+                .reduce(function (accumulate, incoming) { return accumulate + incoming; }, 0).value;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "asNodeArray", {
+        get: function () {
+            return [].concat(Stream_1.Stream.of(this.rootNode).filter(function (item) { return item != null; }).collect(new SourcesCollectors_1.ArrayCollector()));
+        },
+        enumerable: false,
+        configurable: true
+    });
+    DomQuery.querySelectorAllDeep = function (selector) {
         return new DomQuery(document).querySelectorAllDeep(selector);
-    }
+    };
     /**
      * easy query selector all producer
      *
      * @param selector the selector
      * @returns a results dom query object
      */
-    static querySelectorAll(selector) {
+    DomQuery.querySelectorAll = function (selector) {
         if (selector.indexOf("/shadow/") != -1) {
             return new DomQuery(document)._querySelectorAllDeep(selector);
         }
         else {
             return new DomQuery(document)._querySelectorAll(selector);
         }
-    }
+    };
     /**
      * byId producer
      *
@@ -476,44 +656,45 @@ class DomQuery {
      * @param deep true if you want to go into shadow areas
      * @return a DomQuery containing the found elements
      */
-    static byId(selector, deep = false) {
+    DomQuery.byId = function (selector, deep) {
+        if (deep === void 0) { deep = false; }
         if (isString(selector)) {
             return (!deep) ? new DomQuery(document).byId(selector) : new DomQuery(document).byIdDeep(selector);
         }
         else {
             return new DomQuery(selector);
         }
-    }
+    };
     /**
      * byTagName producer
      *
      * @param selector name
      * @return a DomQuery containing the found elements
      */
-    static byTagName(selector) {
+    DomQuery.byTagName = function (selector) {
         if (isString(selector)) {
             return new DomQuery(document).byTagName(selector);
         }
         else {
             return new DomQuery(selector);
         }
-    }
-    static globalEval(code, nonce) {
+    };
+    DomQuery.globalEval = function (code, nonce) {
         return new DomQuery(document).globalEval(code, nonce);
-    }
-    static globalEvalSticky(code, nonce) {
+    };
+    DomQuery.globalEvalSticky = function (code, nonce) {
         return new DomQuery(document).globalEvalSticky(code, nonce);
-    }
+    };
     /**
      * builds the ie nodes properly in a placeholder
      * and bypasses a non script insert bug that way
      * @param markup the markup code to be executed from
      */
-    static fromMarkup(markup) {
+    DomQuery.fromMarkup = function (markup) {
         // https:// developer.mozilla.org/de/docs/Web/API/DOMParser license creative commons
-        const doc = document.implementation.createHTMLDocument("");
+        var doc = document.implementation.createHTMLDocument("");
         markup = trim(markup);
-        let lowerMarkup = markup.toLowerCase();
+        var lowerMarkup = markup.toLowerCase();
         if (lowerMarkup.indexOf('<!doctype') != -1 ||
             lowerMarkup.indexOf('<html') != -1 ||
             lowerMarkup.indexOf('<head') != -1 ||
@@ -522,33 +703,33 @@ class DomQuery {
             return new DomQuery(doc.documentElement);
         }
         else {
-            let startsWithTag = function (str, tagName) {
-                let tag1 = ["<", tagName, ">"].join("");
-                let tag2 = ["<", tagName, " "].join("");
+            var startsWithTag = function (str, tagName) {
+                var tag1 = ["<", tagName, ">"].join("");
+                var tag2 = ["<", tagName, " "].join("");
                 return (str.indexOf(tag1) == 0) || (str.indexOf(tag2) == 0);
             };
-            let dummyPlaceHolder = new DomQuery(document.createElement("div"));
+            var dummyPlaceHolder = new DomQuery(document.createElement("div"));
             // table needs special treatment due to the browsers auto creation
             if (startsWithTag(lowerMarkup, "thead") || startsWithTag(lowerMarkup, "tbody")) {
-                dummyPlaceHolder.html(`<table>${markup}</table>`);
+                dummyPlaceHolder.html("<table>".concat(markup, "</table>"));
                 return dummyPlaceHolder.querySelectorAll("table").get(0).childNodes.detach();
             }
             else if (startsWithTag(lowerMarkup, "tfoot")) {
-                dummyPlaceHolder.html(`<table><thead></thead><tbody><tbody${markup}</table>`);
+                dummyPlaceHolder.html("<table><thead></thead><tbody><tbody".concat(markup, "</table>"));
                 return dummyPlaceHolder.querySelectorAll("table").get(2).childNodes.detach();
             }
             else if (startsWithTag(lowerMarkup, "tr")) {
-                dummyPlaceHolder.html(`<table><tbody>${markup}</tbody></table>`);
+                dummyPlaceHolder.html("<table><tbody>".concat(markup, "</tbody></table>"));
                 return dummyPlaceHolder.querySelectorAll("tbody").get(0).childNodes.detach();
             }
             else if (startsWithTag(lowerMarkup, "td")) {
-                dummyPlaceHolder.html(`<table><tbody><tr>${markup}</tr></tbody></table>`);
+                dummyPlaceHolder.html("<table><tbody><tr>".concat(markup, "</tr></tbody></table>"));
                 return dummyPlaceHolder.querySelectorAll("tr").get(0).childNodes.detach();
             }
             dummyPlaceHolder.html(markup);
             return dummyPlaceHolder.childNodes.detach();
         }
-    }
+    };
     /**
      * returns the nth element as DomQuery
      * from the internal elements
@@ -557,49 +738,50 @@ class DomQuery {
      *
      * @param index the nth index
      */
-    get(index) {
+    DomQuery.prototype.get = function (index) {
         return (index < this.rootNode.length) ? new DomQuery(this.rootNode[index]) : DomQuery.absent;
-    }
+    };
     /**
      * returns the nth element as optional of an Element object
      * @param index the number from the index
      * @param defaults the default value if the index is overrun default Optional\.absent
      */
-    getAsElem(index, defaults = Monad_1.Optional.absent) {
+    DomQuery.prototype.getAsElem = function (index, defaults) {
+        if (defaults === void 0) { defaults = Monad_1.Optional.absent; }
         return (index < this.rootNode.length) ? Monad_1.Optional.fromNullable(this.rootNode[index]) : defaults;
-    }
+    };
     /**
      * returns the files from a given element
      * @param index
      */
-    filesFromElem(index) {
+    DomQuery.prototype.filesFromElem = function (index) {
         var _a;
         return (index < this.rootNode.length) ? ((_a = this.rootNode[index]) === null || _a === void 0 ? void 0 : _a.files) ? this.rootNode[index].files : [] : [];
-    }
+    };
     /**
      * returns the value array< of all elements
      */
-    allElems() {
+    DomQuery.prototype.allElems = function () {
         return this.rootNode;
-    }
+    };
     /**
      * absent no values reached?
      */
-    isAbsent() {
+    DomQuery.prototype.isAbsent = function () {
         return this.length == 0;
-    }
+    };
     /**
      * should make the code clearer
      * note if you pass a function
      * this refers to the active DomQuery object
      */
-    isPresent(presentRunnable) {
-        let absent = this.isAbsent();
+    DomQuery.prototype.isPresent = function (presentRunnable) {
+        var absent = this.isAbsent();
         if (!absent && presentRunnable) {
             presentRunnable.call(this, this);
         }
         return !absent;
-    }
+    };
     /**
      * should make the code clearer
      * note if you pass a function
@@ -608,22 +790,23 @@ class DomQuery {
      *
      * @param presentRunnable
      */
-    ifPresentLazy(presentRunnable = function () {
-    }) {
+    DomQuery.prototype.ifPresentLazy = function (presentRunnable) {
+        if (presentRunnable === void 0) { presentRunnable = function () {
+        }; }
         this.isPresent.call(this, presentRunnable);
         return this;
-    }
+    };
     /**
      * remove all affected nodes from this query object from the dom tree
      */
-    delete() {
-        this.eachElem((node) => {
+    DomQuery.prototype.delete = function () {
+        this.eachElem(function (node) {
             if (node.parentNode) {
                 node.parentNode.removeChild(node);
             }
         });
-    }
-    querySelectorAll(selector) {
+    };
+    DomQuery.prototype.querySelectorAll = function (selector) {
         // We could merge both methods, but for now this is more readable
         if (selector.indexOf("/shadow/") != -1) {
             return this._querySelectorAllDeep(selector);
@@ -631,113 +814,113 @@ class DomQuery {
         else {
             return this._querySelectorAll(selector);
         }
-    }
+    };
     /**
      * core byId method
      * @param id the id to search for
      * @param includeRoot also match the root element?
      */
-    byId(id, includeRoot) {
-        let res = [];
+    DomQuery.prototype.byId = function (id, includeRoot) {
+        var res = [];
         if (includeRoot) {
-            res = res.concat(Stream_1.LazyStream.of(...((this === null || this === void 0 ? void 0 : this.rootNode) || []))
-                .filter(item => id == item.id)
-                .map(item => new DomQuery(item))
+            res = res.concat(Stream_1.LazyStream.of.apply(Stream_1.LazyStream, ((this === null || this === void 0 ? void 0 : this.rootNode) || [])).filter(function (item) { return id == item.id; })
+                .map(function (item) { return new DomQuery(item); })
                 .collect(new SourcesCollectors_1.ArrayCollector()));
         }
         // for some strange kind of reason the # selector fails
         // on hidden elements we use the attributes match selector
         // that works
-        res = res.concat(this.querySelectorAll(`[id="${id}"]`));
-        return new DomQuery(...res);
-    }
-    byIdDeep(id, includeRoot) {
-        let res = [];
+        res = res.concat(this.querySelectorAll("[id=\"".concat(id, "\"]")));
+        return new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], res, false)))();
+    };
+    DomQuery.prototype.byIdDeep = function (id, includeRoot) {
+        var res = [];
         if (includeRoot) {
-            res = res.concat(Stream_1.LazyStream.of(...((this === null || this === void 0 ? void 0 : this.rootNode) || []))
-                .filter(item => id == item.id)
-                .map(item => new DomQuery(item))
+            res = res.concat(Stream_1.LazyStream.of.apply(Stream_1.LazyStream, ((this === null || this === void 0 ? void 0 : this.rootNode) || [])).filter(function (item) { return id == item.id; })
+                .map(function (item) { return new DomQuery(item); })
                 .collect(new SourcesCollectors_1.ArrayCollector()));
         }
-        let subItems = this.querySelectorAllDeep(`[id="${id}"]`);
+        var subItems = this.querySelectorAllDeep("[id=\"".concat(id, "\"]"));
         if (subItems.length) {
             res.push(subItems);
         }
-        return new DomQuery(...res);
-    }
+        return new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], res, false)))();
+    };
     /**
      * same as byId just for the tag name
      * @param tagName the tag-name to search for
      * @param includeRoot shall the root element be part of this search
      * @param deep do we also want to go into shadow dom areas
      */
-    byTagName(tagName, includeRoot, deep) {
+    DomQuery.prototype.byTagName = function (tagName, includeRoot, deep) {
         var _a;
-        let res = [];
+        var res = [];
         if (includeRoot) {
-            res = Stream_1.LazyStream.of(...((_a = this === null || this === void 0 ? void 0 : this.rootNode) !== null && _a !== void 0 ? _a : []))
-                .filter(element => (element === null || element === void 0 ? void 0 : element.tagName) == tagName)
-                .reduce((reduction, item) => reduction.concat([item]), res)
+            res = Stream_1.LazyStream.of.apply(Stream_1.LazyStream, ((_a = this === null || this === void 0 ? void 0 : this.rootNode) !== null && _a !== void 0 ? _a : [])).filter(function (element) { return (element === null || element === void 0 ? void 0 : element.tagName) == tagName; })
+                .reduce(function (reduction, item) { return reduction.concat([item]); }, res)
                 .orElse(res).value;
         }
         (deep) ? res.push(this.querySelectorAllDeep(tagName)) : res.push(this.querySelectorAll(tagName));
-        return new DomQuery(...res);
-    }
+        return new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], res, false)))();
+    };
     /**
      * attr accessor, usage myQuery.attr("class").value = "bla"
      * or let value myQuery.attr("class").value
      * @param attr the attribute to set
      * @param defaultValue the default value in case nothing is presented (defaults to null)
      */
-    attr(attr, defaultValue = null) {
+    DomQuery.prototype.attr = function (attr, defaultValue) {
+        if (defaultValue === void 0) { defaultValue = null; }
         return new ElementAttribute(this, attr, defaultValue);
-    }
-    style(cssProperty, defaultValue = null) {
+    };
+    DomQuery.prototype.style = function (cssProperty, defaultValue) {
+        if (defaultValue === void 0) { defaultValue = null; }
         return new Style(this, cssProperty, defaultValue);
-    }
+    };
     /**
      * Checks for an existing class in the class attributes
      *
      * @param clazz the class to search for
      */
-    hasClass(clazz) {
-        let hasIt = false;
-        this.eachElem(node => {
+    DomQuery.prototype.hasClass = function (clazz) {
+        var hasIt = false;
+        this.eachElem(function (node) {
             hasIt = node.classList.contains(clazz);
             if (hasIt) {
                 return false;
             }
         });
         return hasIt;
-    }
+    };
     /**
      * appends a class string if not already in the element(s)
      *
      * @param clazz the style class to append
      */
-    addClass(clazz) {
-        this.eachElem(item => item.classList.add(clazz));
+    DomQuery.prototype.addClass = function (clazz) {
+        this.eachElem(function (item) { return item.classList.add(clazz); });
         return this;
-    }
+    };
     /**
      * remove the style class if in the class definitions
      *
      * @param clazz
      */
-    removeClass(clazz) {
-        this.eachElem(item => item.classList.remove(clazz));
+    DomQuery.prototype.removeClass = function (clazz) {
+        this.eachElem(function (item) { return item.classList.remove(clazz); });
         return this;
-    }
+    };
     /**
      * checks whether we have a multipart element in our children
      * or are one
      */
-    isMultipartCandidate(deep = false) {
-        const FILE_INPUT = "input[type='file']";
+    DomQuery.prototype.isMultipartCandidate = function (deep) {
+        if (deep === void 0) { deep = false; }
+        var FILE_INPUT = "input[type='file']";
         return this.matchesSelector(FILE_INPUT) ||
             ((!deep) ? this.querySelectorAll(FILE_INPUT) :
                 this.querySelectorAllDeep(FILE_INPUT)).first().isPresent();
-    }
+    };
     /**
      * innerHtml
      * equivalent to jQueries html
@@ -747,76 +930,86 @@ class DomQuery {
      *
      * @param newInnerHTML the inner html to be inserted
      */
-    html(newInnerHTML) {
+    DomQuery.prototype.html = function (newInnerHTML) {
         if (Monad_1.Optional.fromNullable(newInnerHTML).isAbsent()) {
             return this.isPresent() ? Monad_1.Optional.fromNullable(this.innerHTML) : Monad_1.Optional.absent;
         }
         this.innerHTML = newInnerHTML;
         return this;
-    }
+    };
     /**
      * Standard dispatch event method, delegated from node
      */
-    dispatchEvent(evt) {
-        this.eachElem(elem => elem.dispatchEvent(evt));
+    DomQuery.prototype.dispatchEvent = function (evt) {
+        this.eachElem(function (elem) { return elem.dispatchEvent(evt); });
         return this;
-    }
-    /**
-     * abbreviation property to use innerHTML directly like on the dom tree
-     * @param newInnerHTML  the new inner html which should be attached to "this" domQuery
-     */
-    set innerHTML(newInnerHTML) {
-        this.eachElem(elem => elem.innerHTML = newInnerHTML);
-    }
-    /**
-     * getter abbreviation to use innerHTML directly
-     */
-    get innerHTML() {
-        let retArr = [];
-        this.eachElem(elem => retArr.push(elem.innerHTML));
-        return retArr.join("");
-    }
-    /**
-     * since the dom allows both innerHTML and innerHtml we also have to implement both
-     * @param newInnerHtml see above
-     */
-    set innerHtml(newInnerHtml) {
-        this.innerHTML = newInnerHtml;
-    }
-    /**
-     * same here, getter for allowing innerHtml directly
-     */
-    get innerHtml() {
-        return this.innerHTML;
-    }
+    };
+    Object.defineProperty(DomQuery.prototype, "innerHTML", {
+        /**
+         * getter abbreviation to use innerHTML directly
+         */
+        get: function () {
+            var retArr = [];
+            this.eachElem(function (elem) { return retArr.push(elem.innerHTML); });
+            return retArr.join("");
+        },
+        /**
+         * abbreviation property to use innerHTML directly like on the dom tree
+         * @param newInnerHTML  the new inner html which should be attached to "this" domQuery
+         */
+        set: function (newInnerHTML) {
+            this.eachElem(function (elem) { return elem.innerHTML = newInnerHTML; });
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "innerHtml", {
+        /**
+         * same here, getter for allowing innerHtml directly
+         */
+        get: function () {
+            return this.innerHTML;
+        },
+        /**
+         * since the dom allows both innerHTML and innerHtml we also have to implement both
+         * @param newInnerHtml see above
+         */
+        set: function (newInnerHtml) {
+            this.innerHTML = newInnerHtml;
+        },
+        enumerable: false,
+        configurable: true
+    });
     /**
      * filters the current dom query elements
      * upon a given selector
      *
      * @param selector
      */
-    filterSelector(selector) {
-        let matched = [];
-        this.eachElem(item => {
-            if (this._mozMatchesSelector(item, selector)) {
+    DomQuery.prototype.filterSelector = function (selector) {
+        var _this = this;
+        var matched = [];
+        this.eachElem(function (item) {
+            if (_this._mozMatchesSelector(item, selector)) {
                 matched.push(item);
             }
         });
-        return new DomQuery(...matched);
-    }
+        return new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], matched, false)))();
+    };
     /**
      * checks whether any item in this domQuery level matches the selector
      * if there is one element only attached, as root the match is only
      * performed on this element.
      * @param selector
      */
-    matchesSelector(selector) {
-        const ret = this.lazyStream
-            .map(item => this._mozMatchesSelector(item.getAsElem(0).value, selector))
-            .filter(match => match)
+    DomQuery.prototype.matchesSelector = function (selector) {
+        var _this = this;
+        var ret = this.lazyStream
+            .map(function (item) { return _this._mozMatchesSelector(item.getAsElem(0).value, selector); })
+            .filter(function (match) { return match; })
             .first();
         return ret.isPresent();
-    }
+    };
     /**
      * easy node traversal, you can pass
      * a set of node selectors which are joined as direct children
@@ -825,39 +1018,44 @@ class DomQuery {
      *
      * @param nodeSelector
      */
-    getIf(...nodeSelector) {
-        let selectorStage = this.childNodes;
-        for (let cnt = 0; cnt < nodeSelector.length; cnt++) {
+    DomQuery.prototype.getIf = function () {
+        var nodeSelector = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            nodeSelector[_i] = arguments[_i];
+        }
+        var selectorStage = this.childNodes;
+        for (var cnt = 0; cnt < nodeSelector.length; cnt++) {
             selectorStage = selectorStage.filterSelector(nodeSelector[cnt]);
             if (selectorStage.isAbsent()) {
                 return selectorStage;
             }
         }
         return selectorStage;
-    }
-    eachElem(func) {
-        for (let cnt = 0, len = this.rootNode.length; cnt < len; cnt++) {
+    };
+    DomQuery.prototype.eachElem = function (func) {
+        for (var cnt = 0, len = this.rootNode.length; cnt < len; cnt++) {
             if (func(this.rootNode[cnt], cnt) === false) {
                 break;
             }
         }
         return this;
-    }
-    firstElem(func = item => item) {
+    };
+    DomQuery.prototype.firstElem = function (func) {
+        if (func === void 0) { func = function (item) { return item; }; }
         if (this.rootNode.length > 1) {
             func(this.rootNode[0], 0);
         }
         return this;
-    }
-    lastElem(func = item => item) {
+    };
+    DomQuery.prototype.lastElem = function (func) {
+        if (func === void 0) { func = function (item) { return item; }; }
         if (this.rootNode.length > 1) {
             func(this.rootNode[this.rootNode.length - 1], 0);
         }
         return this;
-    }
-    each(func) {
-        Stream_1.Stream.of(...this.rootNode)
-            .each((item, cnt) => {
+    };
+    DomQuery.prototype.each = function (func) {
+        Stream_1.Stream.of.apply(Stream_1.Stream, this.rootNode).each(function (item, cnt) {
             // we could use a filter, but for the best performance we don´t
             if (item == null) {
                 return;
@@ -865,54 +1063,56 @@ class DomQuery {
             return func(DomQuery.byId(item), cnt);
         });
         return this;
-    }
+    };
     /**
      * returns a new dom query containing only the first element max
      *
      * @param func a an optional callback function to perform an operation on the first element
      */
-    first(func = (item) => item) {
+    DomQuery.prototype.first = function (func) {
+        if (func === void 0) { func = function (item) { return item; }; }
         if (this.rootNode.length >= 1) {
             func(this.get(0), 0);
             return this.get(0);
         }
         return this;
-    }
+    };
     /**
      * returns a new dom query containing only the first element max
      *
      * @param func a an optional callback function to perform an operation on the first element
      */
-    last(func = (item) => item) {
+    DomQuery.prototype.last = function (func) {
+        if (func === void 0) { func = function (item) { return item; }; }
         if (this.rootNode.length >= 1) {
-            let lastNode = this.get(this.rootNode.length - 1);
+            var lastNode = this.get(this.rootNode.length - 1);
             func(lastNode, 0);
             return lastNode;
         }
         return this;
-    }
+    };
     /**
      * filter function which filters a subset
      *
      * @param func
      */
-    filter(func) {
-        let reArr = [];
-        this.each((item) => {
+    DomQuery.prototype.filter = function (func) {
+        var reArr = [];
+        this.each(function (item) {
             func(item) ? reArr.push(item) : null;
         });
-        return new DomQuery(...reArr);
-    }
+        return new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], reArr, false)))();
+    };
     /**
      * global eval head appendix method
      * no other methods are supported anymore
      * @param code the code to be evaluated
      * @param  nonce optional  nonce key for higher security
      */
-    globalEval(code, nonce) {
+    DomQuery.prototype.globalEval = function (code, nonce) {
         var _a, _b, _c;
-        const head = (_b = (_a = document.getElementsByTagName("head")) === null || _a === void 0 ? void 0 : _a[0]) !== null && _b !== void 0 ? _b : (_c = document.documentElement.getElementsByTagName("head")) === null || _c === void 0 ? void 0 : _c[0];
-        const script = document.createElement("script");
+        var head = (_b = (_a = document.getElementsByTagName("head")) === null || _a === void 0 ? void 0 : _a[0]) !== null && _b !== void 0 ? _b : (_c = document.documentElement.getElementsByTagName("head")) === null || _c === void 0 ? void 0 : _c[0];
+        var script = document.createElement("script");
         if (nonce) {
             if ('undefined' != typeof (script === null || script === void 0 ? void 0 : script.nonce)) {
                 script.nonce = nonce;
@@ -923,57 +1123,57 @@ class DomQuery {
         }
         script.type = "text/javascript";
         script.innerHTML = code;
-        let newScriptElement = head.appendChild(script);
+        var newScriptElement = head.appendChild(script);
         head.removeChild(newScriptElement);
         return this;
-    }
+    };
     /**
      * global eval head appendix method
      * no other methods are supported anymore
      * @param code the code to be evaluated
      * @param  nonce optional  nonce key for higher security
      */
-    globalEvalSticky(code, nonce) {
-        let head = document.getElementsByTagName("head")[0] || document.documentElement;
-        let script = document.createElement("script");
+    DomQuery.prototype.globalEvalSticky = function (code, nonce) {
+        var head = document.getElementsByTagName("head")[0] || document.documentElement;
+        var script = document.createElement("script");
         this.applyNonce(nonce, script);
         script.type = "text/javascript";
         script.innerHTML = code;
         head.appendChild(script);
         return this;
-    }
+    };
     /**
      * detaches a set of nodes from their parent elements
      * in a browser independent manner
      * @return {Array} an array of nodes with the detached dom nodes
      */
-    detach() {
-        this.eachElem((item) => {
+    DomQuery.prototype.detach = function () {
+        this.eachElem(function (item) {
             item.parentNode.removeChild(item);
         });
         return this;
-    }
+    };
     /**
      * appends the current set of elements
      * to the element or first element passed via elem
      * @param elem
      */
-    appendTo(elem) {
+    DomQuery.prototype.appendTo = function (elem) {
         if (Lang_1.Lang.isString(elem)) {
             this.appendTo(DomQuery.querySelectorAll(elem));
             return this;
         }
-        this.eachElem((item) => {
-            let value1 = elem.getAsElem(0).orElseLazy(() => {
+        this.eachElem(function (item) {
+            var value1 = elem.getAsElem(0).orElseLazy(function () {
                 return {
-                    appendChild: () => {
+                    appendChild: function () {
                     }
                 };
             }).value;
             value1.appendChild(item);
         });
         return this;
-    }
+    };
     /**
      * loads and evaluates a script from a source uri
      *
@@ -981,10 +1181,11 @@ class DomQuery {
      * @param delay in milliseconds execution default (0 == no delay)
      * @param nonce optional nonce value to allow increased security via nonce crypto token
      */
-    loadScriptEval(src, delay = 0, nonce) {
+    DomQuery.prototype.loadScriptEval = function (src, delay, nonce) {
+        if (delay === void 0) { delay = 0; }
         this._loadScriptEval(false, src, delay, nonce);
         return this;
-    }
+    };
     /**
      * loads and evaluates a script from a source uri
      *
@@ -992,17 +1193,22 @@ class DomQuery {
      * @param delay in milliseconds execution default (0 == no delay)
      * @param nonce optional nonce parameter for increased security via nonce crypto token
      */
-    loadScriptEvalSticky(src, delay = 0, nonce) {
+    DomQuery.prototype.loadScriptEvalSticky = function (src, delay, nonce) {
+        if (delay === void 0) { delay = 0; }
         this._loadScriptEval(true, src, delay, nonce);
         return this;
-    }
-    insertAfter(...toInsertParams) {
-        this.each(existingItem => {
-            let existingElement = existingItem.getAsElem(0).value;
-            let rootNode = existingElement.parentNode;
-            for (let cnt = 0; cnt < toInsertParams.length; cnt++) {
-                let nextSibling = existingElement.nextSibling;
-                toInsertParams[cnt].eachElem(insertElem => {
+    };
+    DomQuery.prototype.insertAfter = function () {
+        var toInsertParams = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            toInsertParams[_i] = arguments[_i];
+        }
+        this.each(function (existingItem) {
+            var existingElement = existingItem.getAsElem(0).value;
+            var rootNode = existingElement.parentNode;
+            var _loop_1 = function (cnt) {
+                var nextSibling = existingElement.nextSibling;
+                toInsertParams[cnt].eachElem(function (insertElem) {
                     if (nextSibling) {
                         rootNode.insertBefore(insertElem, nextSibling);
                         existingElement = nextSibling;
@@ -1011,55 +1217,66 @@ class DomQuery {
                         rootNode.appendChild(insertElem);
                     }
                 });
+            };
+            for (var cnt = 0; cnt < toInsertParams.length; cnt++) {
+                _loop_1(cnt);
             }
         });
-        let res = [];
+        var res = [];
         res.push(this);
         res = res.concat(toInsertParams);
-        return new DomQuery(...res);
-    }
-    insertBefore(...toInsertParams) {
-        this.each(existingItem => {
-            let existingElement = existingItem.getAsElem(0).value;
-            let rootNode = existingElement.parentNode;
-            for (let cnt = 0; cnt < toInsertParams.length; cnt++) {
-                toInsertParams[cnt].eachElem(insertElem => {
+        return new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], res, false)))();
+    };
+    DomQuery.prototype.insertBefore = function () {
+        var toInsertParams = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            toInsertParams[_i] = arguments[_i];
+        }
+        this.each(function (existingItem) {
+            var existingElement = existingItem.getAsElem(0).value;
+            var rootNode = existingElement.parentNode;
+            for (var cnt = 0; cnt < toInsertParams.length; cnt++) {
+                toInsertParams[cnt].eachElem(function (insertElem) {
                     rootNode.insertBefore(insertElem, existingElement);
                 });
             }
         });
-        let res = [];
+        var res = [];
         res.push(this);
         res = res.concat(toInsertParams);
-        return new DomQuery(...res);
-    }
-    orElse(...elseValue) {
+        return new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], res, false)))();
+    };
+    DomQuery.prototype.orElse = function () {
+        var elseValue = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            elseValue[_i] = arguments[_i];
+        }
         if (this.isPresent()) {
             return this;
         }
         else {
-            return new DomQuery(...elseValue);
+            return new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], elseValue, false)))();
         }
-    }
-    orElseLazy(func) {
+    };
+    DomQuery.prototype.orElseLazy = function (func) {
         if (this.isPresent()) {
             return this;
         }
         else {
             return new DomQuery(func());
         }
-    }
-    parents(tagName) {
-        const retSet = new Set();
-        const retArr = [];
-        const lowerTagName = tagName.toLowerCase();
-        let resolveItem = (item) => {
+    };
+    DomQuery.prototype.parents = function (tagName) {
+        var retSet = new Set();
+        var retArr = [];
+        var lowerTagName = tagName.toLowerCase();
+        var resolveItem = function (item) {
             if ((item.tagName || "").toLowerCase() == lowerTagName && !retSet.has(item)) {
                 retSet.add(item);
                 retArr.push(item);
             }
         };
-        this.eachElem((item) => {
+        this.eachElem(function (item) {
             var _a;
             while (item.parentNode || item.host) {
                 item = (_a = item === null || item === void 0 ? void 0 : item.parentNode) !== null && _a !== void 0 ? _a : item === null || item === void 0 ? void 0 : item.host;
@@ -1070,31 +1287,33 @@ class DomQuery {
                 }
             }
         });
-        return new DomQuery(...retArr);
-    }
-    copyAttrs(sourceItem) {
-        sourceItem.eachElem((sourceNode) => {
-            let attrs = objToArray(sourceNode.attributes);
-            for (let item of attrs) {
-                let value = item.value;
-                let name = item.name;
-                switch (name) {
+        return new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], retArr, false)))();
+    };
+    DomQuery.prototype.copyAttrs = function (sourceItem) {
+        var _this = this;
+        sourceItem.eachElem(function (sourceNode) {
+            var attrs = objToArray(sourceNode.attributes);
+            for (var _i = 0, attrs_1 = attrs; _i < attrs_1.length; _i++) {
+                var item = attrs_1[_i];
+                var value = item.value;
+                var name_1 = item.name;
+                switch (name_1) {
                     case "id":
-                        this.id.value = value;
+                        _this.id.value = value;
                         break;
                     case "disabled":
-                        this.resolveAttributeHolder("disabled").disabled = value;
+                        _this.resolveAttributeHolder("disabled").disabled = value;
                         break;
                     case "checked":
-                        this.resolveAttributeHolder("checked").checked = value;
+                        _this.resolveAttributeHolder("checked").checked = value;
                         break;
                     default:
-                        this.attr(name).value = value;
+                        _this.attr(name_1).value = value;
                 }
             }
         });
         return this;
-    }
+    };
     /**
      * outerHTML convenience method
      * browsers only support innerHTML but
@@ -1106,29 +1325,30 @@ class DomQuery {
      * @param runEmbeddedCss if true the embedded css are executed
      * @param deep should this also work for shadow dom (run scripts etc...)
      */
-    outerHTML(markup, runEmbeddedScripts, runEmbeddedCss, deep = false) {
+    DomQuery.prototype.outerHTML = function (markup, runEmbeddedScripts, runEmbeddedCss, deep) {
         var _a;
+        if (deep === void 0) { deep = false; }
         if (this.isAbsent()) {
             return;
         }
-        let focusElementId = (_a = document === null || document === void 0 ? void 0 : document.activeElement) === null || _a === void 0 ? void 0 : _a.id;
-        let caretPosition = (focusElementId) ? DomQuery.getCaretPosition(document.activeElement) : null;
-        let nodes = DomQuery.fromMarkup(markup);
-        let res = [];
-        let toReplace = this.getAsElem(0).value;
-        let firstInsert = nodes.get(0);
-        let parentNode = toReplace.parentNode;
-        let replaced = firstInsert.getAsElem(0).value;
+        var focusElementId = (_a = document === null || document === void 0 ? void 0 : document.activeElement) === null || _a === void 0 ? void 0 : _a.id;
+        var caretPosition = (focusElementId) ? DomQuery.getCaretPosition(document.activeElement) : null;
+        var nodes = DomQuery.fromMarkup(markup);
+        var res = [];
+        var toReplace = this.getAsElem(0).value;
+        var firstInsert = nodes.get(0);
+        var parentNode = toReplace.parentNode;
+        var replaced = firstInsert.getAsElem(0).value;
         parentNode.replaceChild(replaced, toReplace);
         res.push(new DomQuery(replaced));
         // no replacement possible
         if (this.isAbsent()) {
             return this;
         }
-        let insertAdditionalItems = [];
+        var insertAdditionalItems = [];
         if (nodes.length > 1) {
-            insertAdditionalItems = insertAdditionalItems.concat(...nodes.values.slice(1));
-            res.push(DomQuery.byId(replaced).insertAfter(new DomQuery(...insertAdditionalItems)));
+            insertAdditionalItems = insertAdditionalItems.concat.apply(insertAdditionalItems, nodes.values.slice(1));
+            res.push(DomQuery.byId(replaced).insertAfter(new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], insertAdditionalItems, false)))()));
         }
         if (runEmbeddedScripts) {
             this.runScripts();
@@ -1136,61 +1356,64 @@ class DomQuery {
         if (runEmbeddedCss) {
             this.runCss();
         }
-        let focusElement = DomQuery.byId(focusElementId);
+        var focusElement = DomQuery.byId(focusElementId);
         if (focusElementId && focusElement.isPresent() &&
             caretPosition != null && "undefined" != typeof caretPosition) {
-            focusElement.eachElem(item => DomQuery.setCaretPosition(item, caretPosition));
+            focusElement.eachElem(function (item) { return DomQuery.setCaretPosition(item, caretPosition); });
         }
         return nodes;
-    }
+    };
     /**
      * Run through the given nodes in the DomQuery execute the inline scripts
      * @param sticky if set to true the evaluated elements will stick to the head, default false
      * @param whitelisted: optional whitelist function which can filter out script tags which are not processed
      * defaults to the standard jsf.js exclusion (we use this code for myfaces)
      */
-    runScripts(sticky = false, whitelisted = DEFAULT_WHITELIST) {
-        const evalCollectedScripts = (scriptsToProcess) => {
+    DomQuery.prototype.runScripts = function (sticky, whitelisted) {
+        var _this = this;
+        if (sticky === void 0) { sticky = false; }
+        if (whitelisted === void 0) { whitelisted = DEFAULT_WHITELIST; }
+        var evalCollectedScripts = function (scriptsToProcess) {
             if (scriptsToProcess.length) {
                 // script source means we have to eval the existing
                 // scripts before we run the 'include' command
                 // this.globalEval(finalScripts.join("\n"));
-                let joinedScripts = [];
-                Stream_1.Stream.of(...scriptsToProcess).each(item => {
+                var joinedScripts_1 = [];
+                Stream_1.Stream.of.apply(Stream_1.Stream, scriptsToProcess).each(function (item) {
                     if (!item.nonce) {
-                        joinedScripts.push(item.evalText);
+                        joinedScripts_1.push(item.evalText);
                     }
                     else {
-                        if (joinedScripts.length) {
-                            this.globalEval(joinedScripts.join("\n"));
-                            joinedScripts.length = 0;
+                        if (joinedScripts_1.length) {
+                            _this.globalEval(joinedScripts_1.join("\n"));
+                            joinedScripts_1.length = 0;
                         }
                         (!sticky) ?
-                            this.globalEval(item.evalText, item.nonce) :
-                            this.globalEvalSticky(item.evalText, item.nonce);
+                            _this.globalEval(item.evalText, item.nonce) :
+                            _this.globalEvalSticky(item.evalText, item.nonce);
                     }
                 });
-                if (joinedScripts.length) {
-                    (!sticky) ? this.globalEval(joinedScripts.join("\n")) :
-                        this.globalEvalSticky(joinedScripts.join("\n"));
-                    joinedScripts.length = 0;
+                if (joinedScripts_1.length) {
+                    (!sticky) ? _this.globalEval(joinedScripts_1.join("\n")) :
+                        _this.globalEvalSticky(joinedScripts_1.join("\n"));
+                    joinedScripts_1.length = 0;
                 }
                 scriptsToProcess = [];
             }
             return scriptsToProcess;
         };
-        let finalScripts = [], allowedItemTypes = ["", "script", "text/javascript", "text/ecmascript", "ecmascript"], execScript = (item) => {
+        var finalScripts = [], allowedItemTypes = ["", "script", "text/javascript", "text/ecmascript", "ecmascript"], execScript = function (item) {
             var _a, _b, _c, _d;
-            let tagName = item.tagName;
-            let itemType = ((_a = item === null || item === void 0 ? void 0 : item.type) !== null && _a !== void 0 ? _a : '').toLowerCase();
+            var tagName = item.tagName;
+            var itemType = ((_a = item === null || item === void 0 ? void 0 : item.type) !== null && _a !== void 0 ? _a : '').toLowerCase();
             if (tagName &&
                 eIgnoreC(tagName, "script") &&
                 allowedItemTypes.indexOf(itemType) != -1) {
-                let src = item.getAttribute('src');
+                var src = item.getAttribute('src');
                 if ('undefined' != typeof src
                     && null != src
                     && src.length > 0) {
-                    let nonce = (_b = item === null || item === void 0 ? void 0 : item.nonce) !== null && _b !== void 0 ? _b : item.getAttribute('nonce').value;
+                    var nonce = (_b = item === null || item === void 0 ? void 0 : item.nonce) !== null && _b !== void 0 ? _b : item.getAttribute('nonce').value;
                     // we have to move this into an inner if because chrome otherwise chokes
                     // due to changing the and order instead of relying on left to right
                     // if jsf.js is already registered we do not replace it anymore
@@ -1198,22 +1421,22 @@ class DomQuery {
                         // we run the collected scripts, before we run the 'include' command
                         finalScripts = evalCollectedScripts(finalScripts);
                         if (!sticky) {
-                            (!!nonce) ? this.loadScriptEval(src, 0, nonce) :
+                            (!!nonce) ? _this.loadScriptEval(src, 0, nonce) :
                                 // if no nonce is set we do not pass any once
-                                this.loadScriptEval(src, 0);
+                                _this.loadScriptEval(src, 0);
                         }
                         else {
-                            (!!nonce) ? this.loadScriptEvalSticky(src, 0, nonce) :
+                            (!!nonce) ? _this.loadScriptEvalSticky(src, 0, nonce) :
                                 // if no nonce is set we do not pass any once
-                                this.loadScriptEvalSticky(src, 0);
+                                _this.loadScriptEvalSticky(src, 0);
                         }
                     }
                 }
                 else {
                     // embedded script auto eval
                     // probably not needed anymore
-                    let evalText = trim(item.text || item.innerText || item.innerHTML);
-                    let go = true;
+                    var evalText = trim(item.text || item.innerText || item.innerHTML);
+                    var go = true;
                     while (go) {
                         go = false;
                         if (evalText.substring(0, 4) == "<!--") {
@@ -1229,23 +1452,23 @@ class DomQuery {
                             go = true;
                         }
                     }
-                    let nonce = (_d = (_c = item === null || item === void 0 ? void 0 : item.nonce) !== null && _c !== void 0 ? _c : item.getAttribute('nonce').value) !== null && _d !== void 0 ? _d : '';
+                    var nonce = (_d = (_c = item === null || item === void 0 ? void 0 : item.nonce) !== null && _c !== void 0 ? _c : item.getAttribute('nonce').value) !== null && _d !== void 0 ? _d : '';
                     // we have to run the script under a global context
                     // we store the script for fewer calls to eval
                     finalScripts.push({
-                        nonce,
-                        evalText
+                        nonce: nonce,
+                        evalText: evalText
                     });
                 }
             }
         };
         try {
-            let scriptElements = new DomQuery(this.filterSelector("script"), this.querySelectorAll("script"));
+            var scriptElements = new DomQuery(this.filterSelector("script"), this.querySelectorAll("script"));
             // script execution order by relative pos in their dom tree
             scriptElements.stream
-                .flatMap(item => Stream_1.Stream.of(item.values))
-                .sort((node1, node2) => node1.compareDocumentPosition(node2) - 3) // preceding 2, following == 4)
-                .each(item => execScript(item));
+                .flatMap(function (item) { return Stream_1.Stream.of(item.values); })
+                .sort(function (node1, node2) { return node1.compareDocumentPosition(node2) - 3; }) // preceding 2, following == 4)
+                .each(function (item) { return execScript(item); });
             evalCollectedScripts(finalScripts);
         }
         catch (e) {
@@ -1268,13 +1491,13 @@ class DomQuery {
             execScript = null;
         }
         return this;
-    }
-    runCss() {
-        const applyStyle = (item, style) => {
+    };
+    DomQuery.prototype.runCss = function () {
+        var applyStyle = function (item, style) {
             var _a, _b, _c, _d;
-            let newSS = document.createElement("style");
+            var newSS = document.createElement("style");
             document.getElementsByTagName("head")[0].appendChild(newSS);
-            let styleSheet = (_a = newSS.sheet) !== null && _a !== void 0 ? _a : newSS.styleSheet;
+            var styleSheet = (_a = newSS.sheet) !== null && _a !== void 0 ? _a : newSS.styleSheet;
             newSS.setAttribute("rel", (_b = item.getAttribute("rel")) !== null && _b !== void 0 ? _b : "stylesheet");
             newSS.setAttribute("type", (_c = item.getAttribute("type")) !== null && _c !== void 0 ? _c : "text/css");
             if ((_d = styleSheet === null || styleSheet === void 0 ? void 0 : styleSheet.cssText) !== null && _d !== void 0 ? _d : false) {
@@ -1283,57 +1506,59 @@ class DomQuery {
             else {
                 newSS.appendChild(document.createTextNode(style));
             }
-        }, execCss = (item) => {
-            const tagName = item.tagName;
+        }, execCss = function (item) {
+            var tagName = item.tagName;
             if (tagName && eIgnoreC(tagName, "link") && eIgnoreC(item.getAttribute("type"), "text/css")) {
                 applyStyle(item, "@import url('" + item.getAttribute("href") + "');");
             }
             else if (tagName && eIgnoreC(tagName, "style") && eIgnoreC(item.getAttribute("type"), "text/css")) {
-                let innerText = [];
+                var innerText_1 = [];
                 // compliant browsers know child nodes
-                let childNodes = Array.prototype.slice.call(item.childNodes);
+                var childNodes = Array.prototype.slice.call(item.childNodes);
                 if (childNodes) {
-                    childNodes.forEach(child => innerText.push(child.innerHTML || child.data));
+                    childNodes.forEach(function (child) { return innerText_1.push(child.innerHTML || child.data); });
                     // non-compliant elements innerHTML
                 }
                 else if (item.innerHTML) {
-                    innerText.push(item.innerHTML);
+                    innerText_1.push(item.innerHTML);
                 }
-                applyStyle(item, innerText.join(""));
+                applyStyle(item, innerText_1.join(""));
             }
         };
-        const scriptElements = new DomQuery(this.filterSelector("link, style"), this.querySelectorAll("link, style"));
+        var scriptElements = new DomQuery(this.filterSelector("link, style"), this.querySelectorAll("link, style"));
         scriptElements.stream
-            .flatMap(item => Stream_1.Stream.of(item.values))
-            .sort((node1, node2) => node1.compareDocumentPosition(node2) - 3)
-            .each(item => execCss(item));
+            .flatMap(function (item) { return Stream_1.Stream.of(item.values); })
+            .sort(function (node1, node2) { return node1.compareDocumentPosition(node2) - 3; })
+            .each(function (item) { return execCss(item); });
         return this;
-    }
+    };
     /**
      * fires a click event on the underlying dom elements
      */
-    click() {
+    DomQuery.prototype.click = function () {
         this.fireEvent("click");
         return this;
-    }
-    addEventListener(type, listener, options) {
-        this.eachElem((node) => node.addEventListener(type, listener, options));
+    };
+    DomQuery.prototype.addEventListener = function (type, listener, options) {
+        this.eachElem(function (node) { return node.addEventListener(type, listener, options); });
         return this;
-    }
-    removeEventListener(type, listener, options) {
-        this.eachElem((node) => node.removeEventListener(type, listener, options));
+    };
+    DomQuery.prototype.removeEventListener = function (type, listener, options) {
+        this.eachElem(function (node) { return node.removeEventListener(type, listener, options); });
         return this;
-    }
+    };
     /**
      * fires an event
      */
-    fireEvent(eventName, options = {}) {
+    DomQuery.prototype.fireEvent = function (eventName, options) {
+        var _this = this;
+        if (options === void 0) { options = {}; }
         // merge with last one having the highest priority
-        let finalOptions = Stream_1.Stream.ofAssoc({
+        var finalOptions = Stream_1.Stream.ofAssoc({
             bubbles: true, cancelable: true
         }).concat(Stream_1.Stream.ofAssoc(options)).collect(new SourcesCollectors_1.AssocArrayCollector());
-        this.eachElem((node) => {
-            let doc;
+        this.eachElem(function (node) {
+            var doc;
             if (node.ownerDocument) {
                 doc = node.ownerDocument;
             }
@@ -1346,7 +1571,7 @@ class DomQuery {
             }
             if (node.dispatchEvent) {
                 // Gecko-style approach (now the standard) takes more work
-                let EventClass = Event;
+                var EventClass = Event;
                 // Different events have different event classes.
                 // If this switch statement can't map an eventName to an EventClass,
                 // the event firing is going to fail.
@@ -1356,12 +1581,12 @@ class DomQuery {
                     case "mousedown":
                     case "mouseup":
                     case "mousemove":
-                        EventClass = this.global().MouseEvent;
+                        EventClass = _this.global().MouseEvent;
                         break;
                     case "keyup":
                     case "keydown":
                     case "keypress":
-                        EventClass = this.global().KeyboardEvent;
+                        EventClass = _this.global().KeyboardEvent;
                         break;
                     case "focus":
                     case "change":
@@ -1371,48 +1596,51 @@ class DomQuery {
                     default:
                         throw "fireEvent: Couldn't find an event class for event '" + eventName + "'.";
                 }
-                let event = new EventClass(eventName, finalOptions);
+                var event_1 = new EventClass(eventName, finalOptions);
                 // this is added as an extra to allow internally the detection of synthetic events
                 // not used atm, but it does not hurt to have the extra info
-                event.synthetic = true; // allow detection of synthetic events
+                event_1.synthetic = true; // allow detection of synthetic events
                 // The second parameter says go ahead with the default action
-                node.dispatchEvent(event);
+                node.dispatchEvent(event_1);
             }
             else if (node.fireEvent) {
                 // IE-old school style, you can drop this if you don't need to support IE8 and lower
-                let event = doc.createEventObject();
-                event.synthetic = true; // allow detection of synthetic events
-                Stream_1.Stream.ofAssoc(finalOptions).each(([key, value]) => {
-                    event[key] = value;
+                var event_2 = doc.createEventObject();
+                event_2.synthetic = true; // allow detection of synthetic events
+                Stream_1.Stream.ofAssoc(finalOptions).each(function (_a) {
+                    var key = _a[0], value = _a[1];
+                    event_2[key] = value;
                 });
-                node.fireEvent("on" + eventName, event);
+                node.fireEvent("on" + eventName, event_2);
             }
         });
-    }
-    textContent(joinString = "") {
+    };
+    DomQuery.prototype.textContent = function (joinString) {
+        if (joinString === void 0) { joinString = ""; }
         return this.stream
-            .map((value) => {
-            let item = value.getAsElem(0).orElseLazy(() => {
+            .map(function (value) {
+            var item = value.getAsElem(0).orElseLazy(function () {
                 return {
                     textContent: ""
                 };
             }).value;
             return item.textContent || "";
         })
-            .reduce((text1, text2) => [text1, joinString, text2].join(""), "").value;
-    }
-    innerText(joinString = "") {
+            .reduce(function (text1, text2) { return [text1, joinString, text2].join(""); }, "").value;
+    };
+    DomQuery.prototype.innerText = function (joinString) {
+        if (joinString === void 0) { joinString = ""; }
         return this.stream
-            .map((value) => {
-            let item = value.getAsElem(0).orElseLazy(() => {
+            .map(function (value) {
+            var item = value.getAsElem(0).orElseLazy(function () {
                 return {
                     innerText: ""
                 };
             }).value;
             return item.innerText || "";
         })
-            .reduce((text1, text2) => [text1, text2].join(joinString), "").value;
-    }
+            .reduce(function (text1, text2) { return [text1, text2].join(joinString); }, "").value;
+    };
     /**
      * encodes all input elements properly into respective
      * config entries, this can be used
@@ -1422,22 +1650,23 @@ class DomQuery {
      * @param toMerge optional config which can be merged in
      * @return a copy pf
      */
-    encodeFormElement(toMerge = new Monad_1.Config({})) {
+    DomQuery.prototype.encodeFormElement = function (toMerge) {
+        if (toMerge === void 0) { toMerge = new Monad_1.Config({}); }
         // browser behavior no element name no encoding (normal submit fails in that case)
         // https:// issues.apache.org/jira/browse/MYFACES-2847
         if (this.name.isAbsent()) {
             return;
         }
         // let´s keep it side-effects free
-        let target = toMerge.shallowCopy;
-        this.each((element) => {
+        var target = toMerge.shallowCopy;
+        this.each(function (element) {
             var _a, _b;
             if (element.name.isAbsent()) { // no name, no encoding
                 return;
             }
-            let name = element.name.value;
-            let tagName = element.tagName.orElse("__none__").value.toLowerCase();
-            let elemType = element.type.orElse("__none__").value.toLowerCase();
+            var name = element.name.value;
+            var tagName = element.tagName.orElse("__none__").value.toLowerCase();
+            var elemType = element.type.orElse("__none__").value.toLowerCase();
             elemType = elemType.toLowerCase();
             // routine for all elements
             // rules:
@@ -1456,14 +1685,14 @@ class DomQuery {
                 // - if select and selectedIndex=-1 don't submit
                 if (tagName == "select") {
                     // selectedIndex must be >= 0 to be submitted
-                    let selectElem = element.getAsElem(0).value;
+                    var selectElem = element.getAsElem(0).value;
                     if (selectElem.selectedIndex >= 0) {
-                        let uLen = selectElem.options.length;
-                        for (let u = 0; u < uLen; u++) {
+                        var uLen = selectElem.options.length;
+                        for (var u = 0; u < uLen; u++) {
                             // find all selected options
                             // let subBuf = [];
                             if (selectElem.options[u].selected) {
-                                let elementOption = selectElem.options[u];
+                                var elementOption = selectElem.options[u];
                                 target.append(name).value = (elementOption.getAttribute("value") != null) ?
                                     elementOption.value : elementOption.text;
                             }
@@ -1480,7 +1709,7 @@ class DomQuery {
                     elemType != ALLOWED_SUBMITTABLE_ELEMENTS.SUBMIT &&
                     elemType != ALLOWED_SUBMITTABLE_ELEMENTS.IMAGE) && ((elemType != ALLOWED_SUBMITTABLE_ELEMENTS.CHECKBOX && elemType != ALLOWED_SUBMITTABLE_ELEMENTS.RADIO) ||
                     element.checked)) {
-                    let files = (_b = (_a = element.value.value) === null || _a === void 0 ? void 0 : _a.files) !== null && _b !== void 0 ? _b : [];
+                    var files = (_b = (_a = element.value.value) === null || _a === void 0 ? void 0 : _a.files) !== null && _b !== void 0 ? _b : [];
                     if (files === null || files === void 0 ? void 0 : files.length) {
                         // xhr level2
                         target.append(name).value = files[0];
@@ -1492,65 +1721,71 @@ class DomQuery {
             }
         });
         return target;
-    }
-    get cDATAAsString() {
-        let TYPE_CDATA_BLOCK = 4;
-        let res = this.lazyStream.flatMap(item => {
-            return item.childNodes.stream;
-        }).filter(item => {
-            var _a, _b;
-            return ((_b = (_a = item === null || item === void 0 ? void 0 : item.value) === null || _a === void 0 ? void 0 : _a.value) === null || _b === void 0 ? void 0 : _b.nodeType) == TYPE_CDATA_BLOCK;
-        }).reduce((reduced, item) => {
-            var _a, _b, _c;
-            reduced.push((_c = (_b = (_a = item === null || item === void 0 ? void 0 : item.value) === null || _a === void 0 ? void 0 : _a.value) === null || _b === void 0 ? void 0 : _b.data) !== null && _c !== void 0 ? _c : "");
-            return reduced;
-        }, []).value;
-        // response may contain several blocks
-        return res.join("");
-    }
-    subNodes(from, to) {
+    };
+    Object.defineProperty(DomQuery.prototype, "cDATAAsString", {
+        get: function () {
+            var TYPE_CDATA_BLOCK = 4;
+            var res = this.lazyStream.flatMap(function (item) {
+                return item.childNodes.stream;
+            }).filter(function (item) {
+                var _a, _b;
+                return ((_b = (_a = item === null || item === void 0 ? void 0 : item.value) === null || _a === void 0 ? void 0 : _a.value) === null || _b === void 0 ? void 0 : _b.nodeType) == TYPE_CDATA_BLOCK;
+            }).reduce(function (reduced, item) {
+                var _a, _b, _c;
+                reduced.push((_c = (_b = (_a = item === null || item === void 0 ? void 0 : item.value) === null || _a === void 0 ? void 0 : _a.value) === null || _b === void 0 ? void 0 : _b.data) !== null && _c !== void 0 ? _c : "");
+                return reduced;
+            }, []).value;
+            // response may contain several blocks
+            return res.join("");
+        },
+        enumerable: false,
+        configurable: true
+    });
+    DomQuery.prototype.subNodes = function (from, to) {
         if (Monad_1.Optional.fromNullable(to).isAbsent()) {
             to = this.length;
         }
-        return new DomQuery(...this.rootNode.slice(from, Math.min(to, this.length)));
-    }
-    limits(end) {
+        return new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], this.rootNode.slice(from, Math.min(to, this.length)), false)))();
+    };
+    DomQuery.prototype.limits = function (end) {
         this._limits = end;
         return this;
-    }
+    };
     //-- internally exposed methods needed for the interconnectivity
-    hasNext() {
-        let isLimitsReached = this._limits != -1 && this.pos >= this._limits - 1;
-        let isEndOfArray = this.pos >= this.values.length - 1;
+    DomQuery.prototype.hasNext = function () {
+        var isLimitsReached = this._limits != -1 && this.pos >= this._limits - 1;
+        var isEndOfArray = this.pos >= this.values.length - 1;
         return !(isLimitsReached ||
             isEndOfArray);
-    }
-    next() {
+    };
+    DomQuery.prototype.next = function () {
         if (!this.hasNext()) {
             return null;
         }
         this.pos++;
         return new DomQuery(this.values[this.pos]);
-    }
-    lookAhead(cnt = 1) {
+    };
+    DomQuery.prototype.lookAhead = function (cnt) {
+        if (cnt === void 0) { cnt = 1; }
         if ((this.values.length - 1) < (this.pos + cnt)) {
             return SourcesCollectors_1.ITERATION_STATUS.EO_STRM;
         }
         return new DomQuery(this.values[this.pos + cnt]);
-    }
-    current() {
+    };
+    DomQuery.prototype.current = function () {
         if (this.pos == -1) {
             return SourcesCollectors_1.ITERATION_STATUS.BEF_STRM;
         }
         return new DomQuery(this.values[this.pos]);
-    }
-    reset() {
+    };
+    DomQuery.prototype.reset = function () {
         this.pos = -1;
-    }
-    attachShadow(params = { mode: "open" }) {
-        let shadowRoots = [];
-        this.eachElem((item) => {
-            let shadowElement;
+    };
+    DomQuery.prototype.attachShadow = function (params) {
+        if (params === void 0) { params = { mode: "open" }; }
+        var shadowRoots = [];
+        this.eachElem(function (item) {
+            var shadowElement;
             if (item === null || item === void 0 ? void 0 : item.attachShadow) {
                 shadowElement = DomQuery.byId(item.attachShadow(params));
                 shadowRoots.push(shadowElement);
@@ -1559,59 +1794,74 @@ class DomQuery {
                 throw new Error("Shadow dom creation not supported by the browser, please use a shim, to gain this functionality");
             }
         });
-        return new DomQuery(...shadowRoots);
-    }
+        return new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], shadowRoots, false)))();
+    };
     /**
      * helper to fix a common dom problem
      * we have to wait until a certain condition is met, in most of the cases we just want to know whether an element is present in the sub dom-tree before being able to proceed
      * @param condition
      * @param options
      */
-    waitUntilDom(condition, options = {
-        attributes: true,
-        childList: true,
-        subtree: true,
-        timeout: 500,
-        interval: 100
-    }) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return waitUntilDom(this, condition, options);
+    DomQuery.prototype.waitUntilDom = function (condition, options) {
+        if (options === void 0) { options = {
+            attributes: true,
+            childList: true,
+            subtree: true,
+            timeout: 500,
+            interval: 100
+        }; }
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                return [2 /*return*/, waitUntilDom(this, condition, options)];
+            });
         });
-    }
-    /**
-     * returns the embedded shadow elements
-     */
-    get shadowElements() {
-        let shadowElements = this.querySelectorAll("*")
-            .filter(item => item.hasShadow);
-        let mapped = (shadowElements.allElems() || []).map(element => element.shadowRoot);
-        return new DomQuery(...mapped);
-    }
-    get shadowRoot() {
-        let shadowRoots = [];
-        for (let cnt = 0; cnt < this.rootNode.length; cnt++) {
-            if (this.rootNode[cnt].shadowRoot) {
-                shadowRoots.push(this.rootNode[cnt].shadowRoot);
+    };
+    Object.defineProperty(DomQuery.prototype, "shadowElements", {
+        /**
+         * returns the embedded shadow elements
+         */
+        get: function () {
+            var shadowElements = this.querySelectorAll("*")
+                .filter(function (item) { return item.hasShadow; });
+            var mapped = (shadowElements.allElems() || []).map(function (element) { return element.shadowRoot; });
+            return new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], mapped, false)))();
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "shadowRoot", {
+        get: function () {
+            var shadowRoots = [];
+            for (var cnt = 0; cnt < this.rootNode.length; cnt++) {
+                if (this.rootNode[cnt].shadowRoot) {
+                    shadowRoots.push(this.rootNode[cnt].shadowRoot);
+                }
             }
-        }
-        return new DomQuery(...shadowRoots);
-    }
-    get hasShadow() {
-        for (let cnt = 0; cnt < this.rootNode.length; cnt++) {
-            if (this.rootNode[cnt].shadowRoot) {
-                return true;
+            return new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], shadowRoots, false)))();
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(DomQuery.prototype, "hasShadow", {
+        get: function () {
+            for (var cnt = 0; cnt < this.rootNode.length; cnt++) {
+                if (this.rootNode[cnt].shadowRoot) {
+                    return true;
+                }
             }
-        }
-        return false;
-    }
+            return false;
+        },
+        enumerable: false,
+        configurable: true
+    });
     // from
     // http:// blog.vishalon.net/index.php/javascript-getting-and-setting-caret-position-in-textarea/
-    static getCaretPosition(ctrl) {
-        let caretPos = 0;
+    DomQuery.getCaretPosition = function (ctrl) {
+        var caretPos = 0;
         try {
             if (document === null || document === void 0 ? void 0 : document.selection) {
                 ctrl.focus();
-                let selection = document.selection.createRange();
+                var selection = document.selection.createRange();
                 // the selection now is start zero
                 selection.moveStart('character', -ctrl.value.length);
                 // the caret-position is the selection start
@@ -1623,7 +1873,7 @@ class DomQuery {
             // just in case someone dumps this code onto unsupported browsers
         }
         return caretPos;
-    }
+    };
     /**
      * sets the caret position
      *
@@ -1634,102 +1884,105 @@ class DomQuery {
      * calling this method does nothing (silent fail)
      *
      */
-    static setCaretPosition(ctrl, pos) {
+    DomQuery.setCaretPosition = function (ctrl, pos) {
         (ctrl === null || ctrl === void 0 ? void 0 : ctrl.focus) ? ctrl === null || ctrl === void 0 ? void 0 : ctrl.focus() : null;
         // the selection range is our caret position
         (ctrl === null || ctrl === void 0 ? void 0 : ctrl.setSelectiongRange) ? ctrl === null || ctrl === void 0 ? void 0 : ctrl.setSelectiongRange(pos, pos) : null;
-    }
+    };
     /**
      * Implementation of an iterator
      * to allow loops over dom query collections
      */
-    [Symbol.iterator]() {
+    DomQuery.prototype[Symbol.iterator] = function () {
+        var _this = this;
         return {
-            next: () => {
-                let done = !this.hasNext();
-                let val = this.next();
+            next: function () {
+                var done = !_this.hasNext();
+                var val = _this.next();
                 return {
                     done: done,
                     value: val
                 };
             }
         };
-    }
+    };
     /**
      * Concatenates the elements of two Dom Queries into a single one
      * @param toAttach the elements to attach
      * @param filterDoubles filter out possible double elements (aka same markup)
      */
-    concat(toAttach, filterDoubles = true) {
-        const ret = this.lazyStream.concat(toAttach.lazyStream).collect(new DomQueryCollector());
+    DomQuery.prototype.concat = function (toAttach, filterDoubles) {
+        if (filterDoubles === void 0) { filterDoubles = true; }
+        var ret = this.lazyStream.concat(toAttach.lazyStream).collect(new DomQueryCollector());
         // we now filter the doubles out
         if (!filterDoubles) {
             return ret;
         }
-        let idx = {}; // ie11 does not support sets, we have to fake it
-        return ret.lazyStream.filter(node => {
-            const notFound = !(idx === null || idx === void 0 ? void 0 : idx[node.value.value.outerHTML]);
+        var idx = {}; // ie11 does not support sets, we have to fake it
+        return ret.lazyStream.filter(function (node) {
+            var notFound = !(idx === null || idx === void 0 ? void 0 : idx[node.value.value.outerHTML]);
             idx[node.value.value.outerHTML] = true;
             return notFound;
         }).collect(new DomQueryCollector());
-    }
-    append(elem) {
-        this.each(item => elem.appendTo(item));
+    };
+    DomQuery.prototype.append = function (elem) {
+        this.each(function (item) { return elem.appendTo(item); });
         return this;
-    }
-    prependTo(elem) {
-        elem.eachElem(item => {
-            item.prepend(...this.allElems());
+    };
+    DomQuery.prototype.prependTo = function (elem) {
+        var _this = this;
+        elem.eachElem(function (item) {
+            item.prepend.apply(item, _this.allElems());
         });
         return this;
-    }
-    prepend(elem) {
-        this.eachElem(item => {
-            item.prepend(...elem.allElems());
+    };
+    DomQuery.prototype.prepend = function (elem) {
+        this.eachElem(function (item) {
+            item.prepend.apply(item, elem.allElems());
         });
         return this;
-    }
+    };
     /**
      * query selector all on the existing dom queryX object
      *
      * @param selector the standard selector
      * @return a DomQuery with the results
      */
-    _querySelectorAll(selector) {
+    DomQuery.prototype._querySelectorAll = function (selector) {
         var _a, _b;
         if (!((_a = this === null || this === void 0 ? void 0 : this.rootNode) === null || _a === void 0 ? void 0 : _a.length)) {
             return this;
         }
-        let nodes = [];
-        for (let cnt = 0; cnt < this.rootNode.length; cnt++) {
+        var nodes = [];
+        for (var cnt = 0; cnt < this.rootNode.length; cnt++) {
             if (!((_b = this.rootNode[cnt]) === null || _b === void 0 ? void 0 : _b.querySelectorAll)) {
                 continue;
             }
-            let res = this.rootNode[cnt].querySelectorAll(selector);
+            var res = this.rootNode[cnt].querySelectorAll(selector);
             nodes = nodes.concat(objToArray(res));
         }
-        return new DomQuery(...nodes);
-    }
+        return new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], nodes, false)))();
+    };
     /*deep with a selector and a pseudo /shadow/ marker to break into the next level*/
-    _querySelectorAllDeep(selector) {
+    DomQuery.prototype._querySelectorAllDeep = function (selector) {
         var _a;
         if (!((_a = this === null || this === void 0 ? void 0 : this.rootNode) === null || _a === void 0 ? void 0 : _a.length)) {
             return this;
         }
-        let foundNodes = new DomQuery(...this.rootNode);
-        let selectors = selector.split(/\/shadow\//);
-        for (let cnt2 = 0; cnt2 < selectors.length; cnt2++) {
+        var foundNodes = new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], this.rootNode, false)))();
+        var selectors = selector.split(/\/shadow\//);
+        for (var cnt2 = 0; cnt2 < selectors.length; cnt2++) {
             if (selectors[cnt2] == "") {
                 continue;
             }
-            let levelSelector = selectors[cnt2];
+            var levelSelector = selectors[cnt2];
             foundNodes = foundNodes.querySelectorAll(levelSelector);
             if (cnt2 < selectors.length - 1) {
                 foundNodes = foundNodes.shadowRoot;
             }
         }
         return foundNodes;
-    }
+    };
     // source: https:// developer.mozilla.org/en-US/docs/Web/API/Element/matches
     // code snippet license: https:// creativecommons.org/licenses/by-sa/2.5/
     /**
@@ -1739,22 +1992,22 @@ class DomQuery {
      * @param selector
      * @private
      */
-    _mozMatchesSelector(toMatch, selector) {
-        let prototypeOwner = toMatch;
-        let matchesSelector = prototypeOwner.matches ||
+    DomQuery.prototype._mozMatchesSelector = function (toMatch, selector) {
+        var prototypeOwner = toMatch;
+        var matchesSelector = prototypeOwner.matches ||
             prototypeOwner.matchesSelector ||
             prototypeOwner.mozMatchesSelector ||
             prototypeOwner.msMatchesSelector ||
             prototypeOwner.oMatchesSelector ||
             prototypeOwner.webkitMatchesSelector ||
             function (s) {
-                let matches = (document || ownerDocument).querySelectorAll(s), i = matches.length;
+                var matches = (document || ownerDocument).querySelectorAll(s), i = matches.length;
                 while (--i >= 0 && matches.item(i) !== toMatch) {
                 }
                 return i > -1;
             };
         return matchesSelector.call(toMatch, selector);
-    }
+    };
     /**
      * sticky non-sticky unified code of the load script eval
      * implementation if programmatic &gt;script src="... loading
@@ -1766,12 +2019,13 @@ class DomQuery {
      * @param nonce optional nonce token to be passed into the script tag
      * @private
      */
-    _loadScriptEval(sticky, src, delay = 0, nonce) {
-        let srcNode = this.createSourceNode(src, nonce);
-        let nonceCheck = this.createSourceNode(null, nonce);
-        let marker = `nonce_${Date.now()}_${Math.random()}`;
-        nonceCheck.innerHTML = `document.head["${marker}"] = true`; // noop
-        let head = document.head;
+    DomQuery.prototype._loadScriptEval = function (sticky, src, delay, nonce) {
+        if (delay === void 0) { delay = 0; }
+        var srcNode = this.createSourceNode(src, nonce);
+        var nonceCheck = this.createSourceNode(null, nonce);
+        var marker = "nonce_".concat(Date.now(), "_").concat(Math.random());
+        nonceCheck.innerHTML = "document.head[\"".concat(marker, "\"] = true"); // noop
+        var head = document.head;
         //  upfront nonce check, needed mostly for testing
         //  but cannot hurt to block src calls which have invalid nonce on localhost
         // the reason for doing this up until now we have a similar construct automatically
@@ -1791,7 +2045,7 @@ class DomQuery {
                 }
             }
             else {
-                setTimeout(() => {
+                setTimeout(function () {
                     head.appendChild(srcNode);
                     if (!sticky) {
                         head.removeChild(srcNode);
@@ -1803,20 +2057,21 @@ class DomQuery {
             delete head[marker];
         }
         return this;
-    }
+    };
     /**
      * resolves an attribute holder compared
      * @param attrName the attribute name
      */
-    resolveAttributeHolder(attrName = "value") {
-        let ret = [];
+    DomQuery.prototype.resolveAttributeHolder = function (attrName) {
+        if (attrName === void 0) { attrName = "value"; }
+        var ret = [];
         ret[attrName] = null;
         return (attrName in this.getAsElem(0).value) ?
             this.getAsElem(0).value :
             ret;
-    }
-    createSourceNode(src, nonce) {
-        let srcNode = document.createElement("script");
+    };
+    DomQuery.prototype.createSourceNode = function (src, nonce) {
+        var srcNode = document.createElement("script");
         srcNode.type = "text/javascript";
         if (!!nonce) {
             if ('undefined' != typeof (srcNode === null || srcNode === void 0 ? void 0 : srcNode.nonce)) {
@@ -1830,8 +2085,8 @@ class DomQuery {
             srcNode.src = src;
         }
         return srcNode;
-    }
-    applyNonce(nonce, script) {
+    };
+    DomQuery.prototype.applyNonce = function (nonce, script) {
         if (nonce) {
             if ('undefined' != typeof (script === null || script === void 0 ? void 0 : script.nonce)) {
                 script.nonce = nonce;
@@ -1840,14 +2095,15 @@ class DomQuery {
                 script.setAttribute("nonce", nonce);
             }
         }
-    }
-}
+    };
+    DomQuery.absent = new DomQuery();
+    /**
+     * reference to the environmental global object
+     */
+    DomQuery.global = Global_1._global$;
+    return DomQuery;
+}());
 exports.DomQuery = DomQuery;
-DomQuery.absent = new DomQuery();
-/**
- * reference to the environmental global object
- */
-DomQuery.global = Global_1._global$;
 /**
  * Various collectors
  * which can be used in conjunction with Streams
@@ -1857,17 +2113,22 @@ DomQuery.global = Global_1._global$;
  *
  * This connects basically our stream back into DomQuery
  */
-class DomQueryCollector {
-    constructor() {
+var DomQueryCollector = /** @class */ (function () {
+    function DomQueryCollector() {
         this.data = [];
     }
-    collect(element) {
+    DomQueryCollector.prototype.collect = function (element) {
         this.data.push(element);
-    }
-    get finalValue() {
-        return new DomQuery(...this.data);
-    }
-}
+    };
+    Object.defineProperty(DomQueryCollector.prototype, "finalValue", {
+        get: function () {
+            return new (DomQuery.bind.apply(DomQuery, __spreadArray([void 0], this.data, false)))();
+        },
+        enumerable: false,
+        configurable: true
+    });
+    return DomQueryCollector;
+}());
 exports.DomQueryCollector = DomQueryCollector;
 /**
  * abbreviation for DomQuery
@@ -1915,7 +2176,7 @@ exports._global$ = void 0;
  */
 function _global$() {
     var _a;
-    let _global$ = ('undefined' != typeof globalThis && globalThis.window) ? globalThis.window :
+    var _global$ = ('undefined' != typeof globalThis && globalThis.window) ? globalThis.window :
         ('undefined' != typeof window) ? window :
             ('undefined' != typeof globalThis) ? globalThis :
                 ('undefined' != typeof __webpack_require__.g && (__webpack_require__.g === null || __webpack_require__.g === void 0 ? void 0 : __webpack_require__.g.window)) ? __webpack_require__.g.window :
@@ -1954,7 +2215,7 @@ exports._global$ = _global$;
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Lang = void 0;
-const Monad_1 = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
+var Monad_1 = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
 /**
  * Lang helpers crossported from the apache myfaces project
  */
@@ -1978,9 +2239,10 @@ var Lang;
      * @param defaultValue an optional default value if the producer failes to produce anything
      * @returns an Optional of the produced value
      */
-    function saveResolve(resolverProducer, defaultValue = null) {
+    function saveResolve(resolverProducer, defaultValue) {
+        if (defaultValue === void 0) { defaultValue = null; }
         try {
-            let result = resolverProducer();
+            var result = resolverProducer();
             return Monad_1.Optional.fromNullable(result !== null && result !== void 0 ? result : defaultValue);
         }
         catch (e) {
@@ -1988,9 +2250,10 @@ var Lang;
         }
     }
     Lang.saveResolve = saveResolve;
-    function saveResolveLazy(resolverProducer, defaultValue = null) {
+    function saveResolveLazy(resolverProducer, defaultValue) {
+        if (defaultValue === void 0) { defaultValue = null; }
         try {
-            let result = resolverProducer();
+            var result = resolverProducer();
             return Monad_1.Optional.fromNullable(result !== null && result !== void 0 ? result : defaultValue());
         }
         catch (e) {
@@ -2004,9 +2267,10 @@ var Lang;
      * @param {RegExp} splitter our splitter reglar expression
      * @return a trimmed array of the splitted string
      */
-    function strToArray(it, splitter = /\./gi) {
-        let ret = [];
-        it.split(splitter).forEach((element => {
+    function strToArray(it, splitter) {
+        if (splitter === void 0) { splitter = /\./gi; }
+        var ret = [];
+        it.split(splitter).forEach((function (element) {
             ret.push(trim(element));
         }));
         return ret;
@@ -2019,7 +2283,7 @@ var Lang;
      */
     function trim(str) {
         str = str.replace(/^\s\s*/, '');
-        let ws = /\s/, i = str.length;
+        var ws = /\s/, i = str.length;
         while (ws.test(str.charAt(--i))) {
             //do nothing
         }
@@ -2034,7 +2298,9 @@ var Lang;
      * @param pack
      * @returns an array converted from the object
      */
-    function objToArray(obj, offset = 0, pack = []) {
+    function objToArray(obj, offset, pack) {
+        if (offset === void 0) { offset = 0; }
+        if (pack === void 0) { pack = []; }
         if ((obj !== null && obj !== void 0 ? obj : "__undefined__") == "__undefined__") {
             return pack !== null && pack !== void 0 ? pack : null;
         }
@@ -2052,8 +2318,8 @@ var Lang;
      * @param destination
      */
     function equalsIgnoreCase(source, destination) {
-        let finalSource = source !== null && source !== void 0 ? source : "___no_value__";
-        let finalDest = destination !== null && destination !== void 0 ? destination : "___no_value__";
+        var finalSource = source !== null && source !== void 0 ? source : "___no_value__";
+        var finalDest = destination !== null && destination !== void 0 ? destination : "___no_value__";
         //in any other case we do a strong string comparison
         return finalSource.toLowerCase() === finalDest.toLowerCase();
     }
@@ -2087,20 +2353,24 @@ var Lang;
     Lang.isFunc = isFunc;
     // code from https://developer.mozilla.org/de/docs/Web/JavaScript/Reference/Global_Objects/Object/assign
     // license https://creativecommons.org/licenses/by-sa/2.5/
-    function objAssign(target, ...theArgs) {
+    function objAssign(target) {
+        var theArgs = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            theArgs[_i - 1] = arguments[_i];
+        }
         if (target == null) { // TypeError if undefined or null
             throw new TypeError('Cannot convert undefined or null to object');
         }
-        let to = Object(target);
+        var to = Object(target);
         if (Object.assign) {
-            theArgs.forEach(item => Object.assign(to, item));
+            theArgs.forEach(function (item) { return Object.assign(to, item); });
             return to;
         }
-        theArgs.filter(item => item != null).forEach(item => {
-            let nextSource = item;
+        theArgs.filter(function (item) { return item != null; }).forEach(function (item) {
+            var nextSource = item;
             Object.keys(nextSource)
-                .filter(nextKey => Object.prototype.hasOwnProperty.call(nextSource, nextKey))
-                .forEach(nextKey => to[nextKey] = nextSource[nextKey]);
+                .filter(function (nextKey) { return Object.prototype.hasOwnProperty.call(nextSource, nextKey); })
+                .forEach(function (nextKey) { return to[nextKey] = nextSource[nextKey]; });
         });
         return to;
     }
@@ -2114,7 +2384,7 @@ var Lang;
 /*!*************************************************************!*\
   !*** ./node_modules/mona-dish/src/main/typescript/Monad.ts ***!
   \*************************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
 /*!
@@ -2133,6 +2403,21 @@ var Lang;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Config = exports.ValueEmbedder = exports.Optional = exports.Monad = void 0;
 /**
@@ -2140,76 +2425,87 @@ exports.Config = exports.ValueEmbedder = exports.Optional = exports.Monad = void
  * Useful if you need the functions in another library to keep its dependencies down
  */
 /*IMonad definitions*/
-const Lang_1 = __webpack_require__(/*! ./Lang */ "./node_modules/mona-dish/src/main/typescript/Lang.ts");
-const SourcesCollectors_1 = __webpack_require__(/*! ./SourcesCollectors */ "./node_modules/mona-dish/src/main/typescript/SourcesCollectors.ts");
-const Stream_1 = __webpack_require__(/*! ./Stream */ "./node_modules/mona-dish/src/main/typescript/Stream.ts");
+var Lang_1 = __webpack_require__(/*! ./Lang */ "./node_modules/mona-dish/src/main/typescript/Lang.ts");
+var SourcesCollectors_1 = __webpack_require__(/*! ./SourcesCollectors */ "./node_modules/mona-dish/src/main/typescript/SourcesCollectors.ts");
+var Stream_1 = __webpack_require__(/*! ./Stream */ "./node_modules/mona-dish/src/main/typescript/Stream.ts");
 var objAssign = Lang_1.Lang.objAssign;
 /**
  * Implementation of a monad
  * (Sideffect free), no write allowed directly on the monads
  * value state
  */
-class Monad {
-    constructor(value) {
+var Monad = /** @class */ (function () {
+    function Monad(value) {
         this._value = value;
     }
-    get value() {
-        return this._value;
-    }
-    map(fn) {
+    Object.defineProperty(Monad.prototype, "value", {
+        get: function () {
+            return this._value;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Monad.prototype.map = function (fn) {
         if (!fn) {
-            fn = (inval) => inval;
+            fn = function (inval) { return inval; };
         }
-        let result = fn(this.value);
+        var result = fn(this.value);
         return new Monad(result);
-    }
-    flatMap(fn) {
-        let mapped = this.map(fn);
+    };
+    Monad.prototype.flatMap = function (fn) {
+        var mapped = this.map(fn);
         while ((mapped === null || mapped === void 0 ? void 0 : mapped.value) instanceof Monad) {
             mapped = mapped.value;
         }
         return mapped;
-    }
-}
+    };
+    return Monad;
+}());
 exports.Monad = Monad;
 /**
  * optional implementation, an optional is basically an implementation of a Monad with additional syntactic
  * sugar on top
  * (Sideeffect free, since value assignment is not allowed)
  * */
-class Optional extends Monad {
-    constructor(value) {
-        super(value);
+var Optional = /** @class */ (function (_super) {
+    __extends(Optional, _super);
+    function Optional(value) {
+        return _super.call(this, value) || this;
     }
-    get value() {
-        if (this._value instanceof Monad) {
-            return this._value.flatMap().value;
-        }
-        return this._value;
-    }
-    static fromNullable(value) {
+    Object.defineProperty(Optional.prototype, "value", {
+        get: function () {
+            if (this._value instanceof Monad) {
+                return this._value.flatMap().value;
+            }
+            return this._value;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Optional.fromNullable = function (value) {
         return new Optional(value);
-    }
+    };
     /*syntactic sugar for absent and present checks*/
-    isAbsent() {
+    Optional.prototype.isAbsent = function () {
         return "undefined" == typeof this.value || null == this.value;
-    }
+    };
     /**
      * any value present
      */
-    isPresent(presentRunnable) {
-        let absent = this.isAbsent();
+    Optional.prototype.isPresent = function (presentRunnable) {
+        var absent = this.isAbsent();
         if (!absent && presentRunnable) {
             presentRunnable.call(this, this);
         }
         return !absent;
-    }
-    ifPresentLazy(presentRunnable = () => {
-    }) {
+    };
+    Optional.prototype.ifPresentLazy = function (presentRunnable) {
+        if (presentRunnable === void 0) { presentRunnable = function () {
+        }; }
         this.isPresent.call(this, presentRunnable);
         return this;
-    }
-    orElse(elseValue) {
+    };
+    Optional.prototype.orElse = function (elseValue) {
         if (this.isPresent()) {
             return this;
         }
@@ -2218,42 +2514,46 @@ class Optional extends Monad {
             if (elseValue == null) {
                 return Optional.absent;
             }
-            return this.flatMap(() => elseValue);
+            return this.flatMap(function () { return elseValue; });
         }
-    }
+    };
     /**
      * lazy, passes a function which then is lazily evaluated
      * instead of a direct value
      * @param func
      */
-    orElseLazy(func) {
+    Optional.prototype.orElseLazy = function (func) {
         if (this.isPresent()) {
             return this;
         }
         else {
             return this.flatMap(func);
         }
-    }
+    };
     /*
      * we need to implement it to fullfill the contract, although it is used only internally
      * all values are flattened when accessed anyway, so there is no need to call this methiod
      */
-    flatMap(fn) {
-        let val = super.flatMap(fn);
+    Optional.prototype.flatMap = function (fn) {
+        var val = _super.prototype.flatMap.call(this, fn);
         if (!(val instanceof Optional)) {
             return Optional.fromNullable(val.value);
         }
         return val.flatMap();
-    }
+    };
     /*
      * elvis operation, take care, if you use this you lose typesafety and refactoring
      * capabilites, unfortunately typesceript does not allow to have its own elvis operator
      * this is some syntactic sugar however which is quite useful*/
-    getIf(...key) {
-        let currentPos = this;
-        for (let cnt = 0; cnt < key.length; cnt++) {
-            let currKey = this.keyVal(key[cnt]);
-            let arrPos = this.arrayIndex(key[cnt]);
+    Optional.prototype.getIf = function () {
+        var key = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            key[_i] = arguments[_i];
+        }
+        var currentPos = this;
+        for (var cnt = 0; cnt < key.length; cnt++) {
+            var currKey = this.keyVal(key[cnt]);
+            var arrPos = this.arrayIndex(key[cnt]);
             if (currKey === "" && arrPos >= 0) {
                 currentPos = this.getClass().fromNullable(!(currentPos.value instanceof Array) ? null : (currentPos.value.length < arrPos ? null : currentPos.value[arrPos]));
                 if (currentPos.isAbsent()) {
@@ -2281,9 +2581,9 @@ class Optional extends Monad {
                 currentPos = this.getClass().fromNullable(currentPos.value[arrPos]);
             }
         }
-        let retVal = currentPos;
+        var retVal = currentPos;
         return retVal;
-    }
+    };
     /**
      * simple match, if the first order function call returns
      * true then there is a match, if the value is not present
@@ -2291,12 +2591,12 @@ class Optional extends Monad {
      *
      * @param fn the first order function performing the match
      */
-    match(fn) {
+    Optional.prototype.match = function (fn) {
         if (this.isAbsent()) {
             return false;
         }
         return fn(this.value);
-    }
+    };
     /**
      * convenience function to flatmap the internal value
      * and replace it with a default in case of being absent
@@ -2304,15 +2604,16 @@ class Optional extends Monad {
      * @param defaultVal
      * @returns {Optional<any>}
      */
-    get(defaultVal = Optional.absent) {
+    Optional.prototype.get = function (defaultVal) {
+        if (defaultVal === void 0) { defaultVal = Optional.absent; }
         if (this.isAbsent()) {
             return this.getClass().fromNullable(defaultVal).flatMap();
         }
         return this.getClass().fromNullable(this.value).flatMap();
-    }
-    toJson() {
+    };
+    Optional.prototype.toJson = function () {
         return JSON.stringify(this.value);
-    }
+    };
     /**
      * helper to override several implementations in a more fluent way
      * by having a getClass operation we can avoid direct calls into the constructor or
@@ -2320,41 +2621,41 @@ class Optional extends Monad {
      * of "this"
      * @returns {Monadish.Optional}
      */
-    getClass() {
+    Optional.prototype.getClass = function () {
         return Optional;
-    }
+    };
     /*helper method for getIf with array access aka <name>[<indexPos>]*/
-    arrayIndex(key) {
-        let start = key.indexOf("[");
-        let end = key.indexOf("]");
+    Optional.prototype.arrayIndex = function (key) {
+        var start = key.indexOf("[");
+        var end = key.indexOf("]");
         if (start >= 0 && end > 0 && start < end) {
             return parseInt(key.substring(start + 1, end));
         }
         else {
             return -1;
         }
-    }
+    };
     /*helper method for getIf with array access aka <name>[<indexPos>]*/
-    keyVal(key) {
-        let start = key.indexOf("[");
+    Optional.prototype.keyVal = function (key) {
+        var start = key.indexOf("[");
         if (start >= 0) {
             return key.substring(0, start);
         }
         else {
             return key;
         }
-    }
+    };
     /**
      * additional syntactic sugar which is not part of the usual optional implementation
      * but makes life easier, if you want to sacrifice typesafety and refactoring
      * capabilities in typescript
      */
-    getIfPresent(key) {
+    Optional.prototype.getIfPresent = function (key) {
         if (this.isAbsent()) {
             return this.getClass().absent;
         }
         return this.getClass().fromNullable(this.value[key]).flatMap();
-    }
+    };
     /**
      * elvis like typesafe functional save resolver
      * a typesafe option for getIfPresent
@@ -2367,7 +2668,7 @@ class Optional extends Monad {
      * @param resolver the resolver function, can throw any arbitrary errors, int  the error case
      * the resolution goes towards absent
      */
-    resolve(resolver) {
+    Optional.prototype.resolve = function (resolver) {
         if (this.isAbsent()) {
             return Optional.absent;
         }
@@ -2377,11 +2678,12 @@ class Optional extends Monad {
         catch (e) {
             return Optional.absent;
         }
-    }
-}
+    };
+    /*default value for absent*/
+    Optional.absent = Optional.fromNullable(null);
+    return Optional;
+}(Monad));
 exports.Optional = Optional;
-/*default value for absent*/
-Optional.absent = Optional.fromNullable(null);
 // --------------------- From here onwards we break out the sideffects free limits ------------
 /**
  * ValueEmbedder is the writeable version
@@ -2391,35 +2693,42 @@ Optional.absent = Optional.fromNullable(null);
  *
  * For the readonly version see Optional
  */
-class ValueEmbedder extends Optional {
-    constructor(rootElem, valueKey = "value") {
-        super(rootElem);
-        this.key = valueKey;
+var ValueEmbedder = /** @class */ (function (_super) {
+    __extends(ValueEmbedder, _super);
+    function ValueEmbedder(rootElem, valueKey) {
+        if (valueKey === void 0) { valueKey = "value"; }
+        var _this = _super.call(this, rootElem) || this;
+        _this.key = valueKey;
+        return _this;
     }
-    get value() {
-        return this._value ? this._value[this.key] : null;
-    }
-    set value(newVal) {
-        if (!this._value) {
-            return;
-        }
-        this._value[this.key] = newVal;
-    }
-    orElse(elseValue) {
-        let alternative = {};
+    Object.defineProperty(ValueEmbedder.prototype, "value", {
+        get: function () {
+            return this._value ? this._value[this.key] : null;
+        },
+        set: function (newVal) {
+            if (!this._value) {
+                return;
+            }
+            this._value[this.key] = newVal;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    ValueEmbedder.prototype.orElse = function (elseValue) {
+        var alternative = {};
         alternative[this.key] = elseValue;
         return this.isPresent() ? this : new ValueEmbedder(alternative, this.key);
-    }
-    orElseLazy(func) {
+    };
+    ValueEmbedder.prototype.orElseLazy = function (func) {
         if (this.isPresent()) {
             return this;
         }
         else {
-            let alternative = {};
+            var alternative = {};
             alternative[this.key] = func();
             return new ValueEmbedder(alternative, this.key);
         }
-    }
+    };
     /**
      * helper to override several implementations in a more fluent way
      * by having a getClass operation we can avoid direct calls into the constructor or
@@ -2427,104 +2736,129 @@ class ValueEmbedder extends Optional {
      * of "this"
      * @returns {Monadish.Optional}
      */
-    getClass() {
+    ValueEmbedder.prototype.getClass = function () {
         return ValueEmbedder;
-    }
-    static fromNullable(value, valueKey = "value") {
+    };
+    ValueEmbedder.fromNullable = function (value, valueKey) {
+        if (valueKey === void 0) { valueKey = "value"; }
         return new ValueEmbedder(value, valueKey);
-    }
-}
+    };
+    /*default value for absent*/
+    ValueEmbedder.absent = ValueEmbedder.fromNullable(null);
+    return ValueEmbedder;
+}(Optional));
 exports.ValueEmbedder = ValueEmbedder;
-/*default value for absent*/
-ValueEmbedder.absent = ValueEmbedder.fromNullable(null);
 /**
  * specialized value embedder
  * for our Configuration
  */
-class ConfigEntry extends ValueEmbedder {
-    constructor(rootElem, key, arrPos) {
-        super(rootElem, key);
-        this.arrPos = arrPos !== null && arrPos !== void 0 ? arrPos : -1;
+var ConfigEntry = /** @class */ (function (_super) {
+    __extends(ConfigEntry, _super);
+    function ConfigEntry(rootElem, key, arrPos) {
+        var _this = _super.call(this, rootElem, key) || this;
+        _this.arrPos = arrPos !== null && arrPos !== void 0 ? arrPos : -1;
+        return _this;
     }
-    get value() {
-        if (this.key == "" && this.arrPos >= 0) {
-            return this._value[this.arrPos];
-        }
-        else if (this.key && this.arrPos >= 0) {
-            return this._value[this.key][this.arrPos];
-        }
-        return this._value[this.key];
-    }
-    set value(val) {
-        if (this.key == "" && this.arrPos >= 0) {
-            this._value[this.arrPos] = val;
-            return;
-        }
-        else if (this.key && this.arrPos >= 0) {
-            this._value[this.key][this.arrPos] = val;
-            return;
-        }
-        this._value[this.key] = val;
-    }
-}
-/*default value for absent*/
-ConfigEntry.absent = ConfigEntry.fromNullable(null);
+    Object.defineProperty(ConfigEntry.prototype, "value", {
+        get: function () {
+            if (this.key == "" && this.arrPos >= 0) {
+                return this._value[this.arrPos];
+            }
+            else if (this.key && this.arrPos >= 0) {
+                return this._value[this.key][this.arrPos];
+            }
+            return this._value[this.key];
+        },
+        set: function (val) {
+            if (this.key == "" && this.arrPos >= 0) {
+                this._value[this.arrPos] = val;
+                return;
+            }
+            else if (this.key && this.arrPos >= 0) {
+                this._value[this.key][this.arrPos] = val;
+                return;
+            }
+            this._value[this.key] = val;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    /*default value for absent*/
+    ConfigEntry.absent = ConfigEntry.fromNullable(null);
+    return ConfigEntry;
+}(ValueEmbedder));
 /**
  * Config, basically an optional wrapper for a json structure
  * (not sideeffect free, since we can alter the internal config state
  * without generating a new config), not sure if we should make it sideffect free
  * since this would swallow a lot of performane and ram
  */
-class Config extends Optional {
-    constructor(root) {
-        super(root);
+var Config = /** @class */ (function (_super) {
+    __extends(Config, _super);
+    function Config(root) {
+        return _super.call(this, root) || this;
     }
-    /**
-     * shallow copy getter, copies only the first level, references the deeper nodes
-     * in a shared manner
-     */
-    get shallowCopy() {
-        return this.shallowCopy$();
-    }
-    shallowCopy$() {
+    Object.defineProperty(Config.prototype, "shallowCopy", {
+        /**
+         * shallow copy getter, copies only the first level, references the deeper nodes
+         * in a shared manner
+         */
+        get: function () {
+            return this.shallowCopy$();
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Config.prototype.shallowCopy$ = function () {
         return new Config(Stream_1.Stream.ofAssoc(this.value).collect(new SourcesCollectors_1.AssocArrayCollector()));
-    }
-    /**
-     * deep copy, copies all config nodes
-     */
-    get deepCopy() {
-        return this.deepCopy$();
-    }
-    deepCopy$() {
+    };
+    Object.defineProperty(Config.prototype, "deepCopy", {
+        /**
+         * deep copy, copies all config nodes
+         */
+        get: function () {
+            return this.deepCopy$();
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Config.prototype.deepCopy$ = function () {
         return new Config(objAssign({}, this.value));
-    }
+    };
     /**
      * creates a config from an initial value or null
      * @param value
      */
-    static fromNullable(value) {
+    Config.fromNullable = function (value) {
         return new Config(value);
-    }
+    };
     /**
      * simple merge for the root configs
      */
-    shallowMerge(other, overwrite = true, withAppend = false) {
-        for (let key in other.value) {
-            if (overwrite || !(key in this.value)) {
+    Config.prototype.shallowMerge = function (other, overwrite, withAppend) {
+        var _this = this;
+        if (overwrite === void 0) { overwrite = true; }
+        if (withAppend === void 0) { withAppend = false; }
+        var _loop_1 = function (key) {
+            if (overwrite || !(key in this_1.value)) {
                 if (!withAppend) {
-                    this.assign(key).value = other.getIf(key).value;
+                    this_1.assign(key).value = other.getIf(key).value;
                 }
                 else {
                     if (Array.isArray(other.getIf(key).value)) {
-                        Stream_1.Stream.of(...other.getIf(key).value).each(item => this.append(key).value = item);
+                        Stream_1.Stream.of.apply(Stream_1.Stream, other.getIf(key).value).each(function (item) { return _this.append(key).value = item; });
                     }
                     else {
-                        this.append(key).value = other.getIf(key).value;
+                        this_1.append(key).value = other.getIf(key).value;
                     }
                 }
             }
+        };
+        var this_1 = this;
+        for (var key in other.value) {
+            _loop_1(key);
         }
-    }
+    };
     /**
      * assigns a single value as array, or appends it
      * to an existing value mapping a single value to array
@@ -2537,118 +2871,138 @@ class Config extends Optional {
      *
      * @param {string[]} accessPath
      */
-    append(...accessPath) {
-        let noKeys = accessPath.length < 1;
+    Config.prototype.append = function () {
+        var accessPath = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            accessPath[_i] = arguments[_i];
+        }
+        var noKeys = accessPath.length < 1;
         if (noKeys) {
             return;
         }
-        let lastKey = accessPath[accessPath.length - 1];
-        let currKey, finalKey = this.keyVal(lastKey);
-        let pathExists = this.getIf(...accessPath).isPresent();
+        var lastKey = accessPath[accessPath.length - 1];
+        var currKey, finalKey = this.keyVal(lastKey);
+        var pathExists = this.getIf.apply(this, accessPath).isPresent();
         this.buildPath(accessPath);
-        let finalKeyArrPos = this.arrayIndex(lastKey);
+        var finalKeyArrPos = this.arrayIndex(lastKey);
         if (finalKeyArrPos > -1) {
             throw Error("Append only possible on non array properties, use assign on indexed data");
         }
-        let value = this.getIf(...accessPath).value;
+        var value = this.getIf.apply(this, accessPath).value;
         if (!Array.isArray(value)) {
-            value = this.assign(...accessPath).value = [value];
+            value = this.assign.apply(this, accessPath).value = [value];
         }
         if (pathExists) {
             value.push({});
         }
         finalKeyArrPos = value.length - 1;
-        let retVal = new ConfigEntry(accessPath.length == 1 ? this.value : this.getIf.apply(this, accessPath.slice(0, accessPath.length - 1)).value, lastKey, finalKeyArrPos);
+        var retVal = new ConfigEntry(accessPath.length == 1 ? this.value : this.getIf.apply(this, accessPath.slice(0, accessPath.length - 1)).value, lastKey, finalKeyArrPos);
         return retVal;
-    }
+    };
     /**
      * appends to an existing entry (or extends into an array and appends)
      * if the condition is met
      * @param {boolean} condition
      * @param {string[]} accessPath
      */
-    appendIf(condition, ...accessPath) {
+    Config.prototype.appendIf = function (condition) {
+        var accessPath = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            accessPath[_i - 1] = arguments[_i];
+        }
         if (!condition) {
             return { value: null };
         }
-        return this.append(...accessPath);
-    }
+        return this.append.apply(this, accessPath);
+    };
     /**
      * assings an new value on the given access path
      * @param accessPath
      */
-    assign(...accessPath) {
+    Config.prototype.assign = function () {
+        var accessPath = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            accessPath[_i] = arguments[_i];
+        }
         if (accessPath.length < 1) {
             return;
         }
         this.buildPath(accessPath);
-        let currKey = this.keyVal(accessPath[accessPath.length - 1]);
-        let arrPos = this.arrayIndex(accessPath[accessPath.length - 1]);
-        let retVal = new ConfigEntry(accessPath.length == 1 ? this.value : this.getIf.apply(this, accessPath.slice(0, accessPath.length - 1)).value, currKey, arrPos);
+        var currKey = this.keyVal(accessPath[accessPath.length - 1]);
+        var arrPos = this.arrayIndex(accessPath[accessPath.length - 1]);
+        var retVal = new ConfigEntry(accessPath.length == 1 ? this.value : this.getIf.apply(this, accessPath.slice(0, accessPath.length - 1)).value, currKey, arrPos);
         return retVal;
-    }
+    };
     /**
      * assign a value if the condition is set to true, otherwise skip it
      *
      * @param condition the condition, the access accessPath into the config
      * @param accessPath
      */
-    assignIf(condition, ...accessPath) {
-        return condition ? this.assign(...accessPath) : { value: null };
-    }
+    Config.prototype.assignIf = function (condition) {
+        var accessPath = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            accessPath[_i - 1] = arguments[_i];
+        }
+        return condition ? this.assign.apply(this, accessPath) : { value: null };
+    };
     /**
      * get if the access path is present (get is reserved as getter with a default, on the current path)
      * TODO will be renamed to something more meaningful and deprecated, the name is ambigous
      * @param accessPath the access path
      */
-    getIf(...accessPath) {
-        return this.getClass().fromNullable(super.getIf.apply(this, accessPath).value);
-    }
+    Config.prototype.getIf = function () {
+        var accessPath = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            accessPath[_i] = arguments[_i];
+        }
+        return this.getClass().fromNullable(_super.prototype.getIf.apply(this, accessPath).value);
+    };
     /**
      * gets the current node and if none is present returns a config with a default value
      * @param defaultVal
      */
-    get(defaultVal) {
-        return this.getClass().fromNullable(super.get(defaultVal).value);
-    }
+    Config.prototype.get = function (defaultVal) {
+        return this.getClass().fromNullable(_super.prototype.get.call(this, defaultVal).value);
+    };
     //empties the current config entry
-    delete(key) {
+    Config.prototype.delete = function (key) {
         if (key in this.value) {
             delete this.value[key];
         }
         return this;
-    }
+    };
     /**
      * converts the entire config into a json object
      */
-    toJson() {
+    Config.prototype.toJson = function () {
         return JSON.stringify(this.value);
-    }
-    getClass() {
+    };
+    Config.prototype.getClass = function () {
         return Config;
-    }
-    setVal(val) {
+    };
+    Config.prototype.setVal = function (val) {
         this._value = val;
-    }
+    };
     /**
      * builds the config path
      *
      * @param accessPath a sequential array of accessPath containing either a key name or an array reference name[<index>]
      */
-    buildPath(accessPath) {
-        let val = this;
-        let parentVal = this.getClass().fromNullable(null);
-        let parentPos = -1;
-        let alloc = function (arr, length) {
-            let length1 = arr.length;
-            let length2 = length1 + length;
-            for (let cnt = length1; cnt < length2; cnt++) {
+    Config.prototype.buildPath = function (accessPath) {
+        var val = this;
+        var parentVal = this.getClass().fromNullable(null);
+        var parentPos = -1;
+        var alloc = function (arr, length) {
+            var length1 = arr.length;
+            var length2 = length1 + length;
+            for (var cnt = length1; cnt < length2; cnt++) {
                 arr.push({});
             }
         };
-        for (let cnt = 0; cnt < accessPath.length; cnt++) {
-            let currKey = this.keyVal(accessPath[cnt]);
-            let arrPos = this.arrayIndex(accessPath[cnt]);
+        for (var cnt = 0; cnt < accessPath.length; cnt++) {
+            var currKey = this.keyVal(accessPath[cnt]);
+            var arrPos = this.arrayIndex(accessPath[cnt]);
             if (currKey === "" && arrPos >= 0) {
                 val.setVal((val.value instanceof Array) ? val.value : []);
                 alloc(val.value, arrPos + 1);
@@ -2660,7 +3014,7 @@ class Config extends Optional {
                 val = this.getClass().fromNullable(val.value[arrPos]);
                 continue;
             }
-            let tempVal = val.getIf(currKey);
+            var tempVal = val.getIf(currKey);
             if (arrPos == -1) {
                 if (tempVal.isAbsent()) {
                     tempVal = this.getClass().fromNullable(val.value[currKey] = {});
@@ -2670,7 +3024,7 @@ class Config extends Optional {
                 }
             }
             else {
-                let arr = (tempVal.value instanceof Array) ? tempVal.value : [];
+                var arr = (tempVal.value instanceof Array) ? tempVal.value : [];
                 alloc(arr, arrPos + 1);
                 val.value[currKey] = arr;
                 tempVal = this.getClass().fromNullable(arr[arrPos]);
@@ -2680,8 +3034,9 @@ class Config extends Optional {
             val = tempVal;
         }
         return this;
-    }
-}
+    };
+    return Config;
+}(Optional));
 exports.Config = Config;
 
 
@@ -2691,7 +3046,7 @@ exports.Config = Config;
 /*!*************************************************************************!*\
   !*** ./node_modules/mona-dish/src/main/typescript/SourcesCollectors.ts ***!
   \*************************************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
 /*!
@@ -2710,9 +3065,18 @@ exports.Config = Config;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.QueryFormStringCollector = exports.QueryFormDataCollector = exports.FormDataCollector = exports.AssocArrayCollector = exports.Run = exports.ArrayAssocArrayCollector = exports.ArrayCollector = exports.FlatMapStreamDataSource = exports.MappedStreamDataSource = exports.FilteredStreamDatasource = exports.ArrayStreamDataSource = exports.SequenceDataSource = exports.ITERATION_STATUS = void 0;
-const Stream_1 = __webpack_require__(/*! ./Stream */ "./node_modules/mona-dish/src/main/typescript/Stream.ts");
+var Stream_1 = __webpack_require__(/*! ./Stream */ "./node_modules/mona-dish/src/main/typescript/Stream.ts");
 /**
  * special status of the datasource location pointer
  * if an access, outside of the possible data boundaries is happening
@@ -2732,65 +3096,73 @@ var ITERATION_STATUS;
 /**
  * defines a sequence of numbers for our stream input
  */
-class SequenceDataSource {
-    constructor(start, total) {
+var SequenceDataSource = /** @class */ (function () {
+    function SequenceDataSource(start, total) {
         this.total = total;
         this.start = start;
         this.value = start - 1;
     }
-    hasNext() {
+    SequenceDataSource.prototype.hasNext = function () {
         return this.value < (this.total - 1);
-    }
-    next() {
+    };
+    SequenceDataSource.prototype.next = function () {
         this.value++;
         return this.value <= (this.total - 1) ? this.value : ITERATION_STATUS.EO_STRM;
-    }
-    lookAhead(cnt = 1) {
+    };
+    SequenceDataSource.prototype.lookAhead = function (cnt) {
+        if (cnt === void 0) { cnt = 1; }
         if ((this.value + cnt) > this.total - 1) {
             return ITERATION_STATUS.EO_STRM;
         }
         else {
             return this.value + cnt;
         }
-    }
-    reset() {
+    };
+    SequenceDataSource.prototype.reset = function () {
         this.value = this.start - 1;
-    }
-    current() {
+    };
+    SequenceDataSource.prototype.current = function () {
         //first condition current without initial call for next
         return (this.start - 1) ? ITERATION_STATUS.BEF_STRM : this.value;
-    }
-}
+    };
+    return SequenceDataSource;
+}());
 exports.SequenceDataSource = SequenceDataSource;
 /**
  * implementation of iteratable on top of array
  */
-class ArrayStreamDataSource {
-    constructor(...value) {
+var ArrayStreamDataSource = /** @class */ (function () {
+    function ArrayStreamDataSource() {
+        var value = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            value[_i] = arguments[_i];
+        }
         this.dataPos = -1;
         this.value = value;
     }
-    lookAhead(cnt = 1) {
+    ArrayStreamDataSource.prototype.lookAhead = function (cnt) {
+        if (cnt === void 0) { cnt = 1; }
         if ((this.dataPos + cnt) > this.value.length - 1) {
             return ITERATION_STATUS.EO_STRM;
         }
         return this.value[this.dataPos + cnt];
-    }
-    hasNext() {
+    };
+    ArrayStreamDataSource.prototype.hasNext = function () {
         return this.value.length - 1 > this.dataPos;
-    }
-    next() {
+    };
+    ArrayStreamDataSource.prototype.next = function () {
         var _a;
         this.dataPos++;
         return (_a = this === null || this === void 0 ? void 0 : this.value[this.dataPos]) !== null && _a !== void 0 ? _a : ITERATION_STATUS.EO_STRM;
-    }
-    reset() {
+    };
+    ArrayStreamDataSource.prototype.reset = function () {
         this.dataPos = -1;
-    }
-    current() {
+    };
+    ArrayStreamDataSource.prototype.current = function () {
         return this.value[Math.max(0, this.dataPos)];
-    }
-}
+    };
+    return ArrayStreamDataSource;
+}());
 exports.ArrayStreamDataSource = ArrayStreamDataSource;
 /**
  * an intermediate data source which prefilters
@@ -2798,8 +3170,8 @@ exports.ArrayStreamDataSource = ArrayStreamDataSource;
  * and lets only the data out which
  * passes the filter function check
  */
-class FilteredStreamDatasource {
-    constructor(filterFunc, parent) {
+var FilteredStreamDatasource = /** @class */ (function () {
+    function FilteredStreamDatasource(filterFunc, parent) {
         this._current = ITERATION_STATUS.BEF_STRM;
         // we have to add a filter idx because the external filter values might change over time, so
         // we cannot reset the state properly unless we do it from a snapshot
@@ -2814,10 +3186,10 @@ class FilteredStreamDatasource {
      * hence we prefetch the element and then
      * serve it via next
      */
-    hasNext() {
-        let steps = 1;
-        let found = false;
-        let next;
+    FilteredStreamDatasource.prototype.hasNext = function () {
+        var steps = 1;
+        var found = false;
+        var next;
         while (!found && (next = this.inputDataSource.lookAhead(steps)) != ITERATION_STATUS.EO_STRM) {
             if (this.filterFunc(next)) {
                 this._filterIdx[this._unfilteredPos + steps] = true;
@@ -2828,16 +3200,16 @@ class FilteredStreamDatasource {
             }
         }
         return found;
-    }
+    };
     /**
      * serve the next element
      */
-    next() {
+    FilteredStreamDatasource.prototype.next = function () {
         var _a, _b;
-        let found = ITERATION_STATUS.EO_STRM;
+        var found = ITERATION_STATUS.EO_STRM;
         while (this.inputDataSource.hasNext()) {
             this._unfilteredPos++;
-            let next = this.inputDataSource.next();
+            var next = this.inputDataSource.next();
             //again here we cannot call the filter function twice, because its state might change, so if indexed, we have a decent snapshot, either has next or next can trigger
             //the snapshot
             if (next != ITERATION_STATUS.EO_STRM &&
@@ -2849,79 +3221,84 @@ class FilteredStreamDatasource {
         }
         this._current = found;
         return found;
-    }
-    lookAhead(cnt = 1) {
+    };
+    FilteredStreamDatasource.prototype.lookAhead = function (cnt) {
         var _a;
-        let lookupVal;
-        for (let loop = 1; cnt > 0 && (lookupVal = this.inputDataSource.lookAhead(loop)) != ITERATION_STATUS.EO_STRM; loop++) {
-            let inCache = (_a = this._filterIdx) === null || _a === void 0 ? void 0 : _a[this._unfilteredPos + loop];
+        if (cnt === void 0) { cnt = 1; }
+        var lookupVal;
+        for (var loop = 1; cnt > 0 && (lookupVal = this.inputDataSource.lookAhead(loop)) != ITERATION_STATUS.EO_STRM; loop++) {
+            var inCache = (_a = this._filterIdx) === null || _a === void 0 ? void 0 : _a[this._unfilteredPos + loop];
             if (inCache || this.filterFunc(lookupVal)) {
                 cnt--;
                 this._filterIdx[this._unfilteredPos + loop] = true;
             }
         }
         return lookupVal;
-    }
-    current() {
+    };
+    FilteredStreamDatasource.prototype.current = function () {
         return this._current;
-    }
-    reset() {
+    };
+    FilteredStreamDatasource.prototype.reset = function () {
         this._current = ITERATION_STATUS.BEF_STRM;
         this._filterIdx = {};
         this._unfilteredPos = 0;
         this.inputDataSource.reset();
-    }
-}
+    };
+    return FilteredStreamDatasource;
+}());
 exports.FilteredStreamDatasource = FilteredStreamDatasource;
 /**
  * an intermediate datasource which maps the items from
  * one into another
  */
-class MappedStreamDataSource {
-    constructor(mapFunc, parent) {
+var MappedStreamDataSource = /** @class */ (function () {
+    function MappedStreamDataSource(mapFunc, parent) {
         this.mapFunc = mapFunc;
         this.inputDataSource = parent;
     }
-    hasNext() {
+    MappedStreamDataSource.prototype.hasNext = function () {
         return this.inputDataSource.hasNext();
-    }
-    next() {
+    };
+    MappedStreamDataSource.prototype.next = function () {
         return this.mapFunc(this.inputDataSource.next());
-    }
-    reset() {
+    };
+    MappedStreamDataSource.prototype.reset = function () {
         this.inputDataSource.reset();
-    }
-    current() {
+    };
+    MappedStreamDataSource.prototype.current = function () {
         return this.mapFunc(this.inputDataSource.current());
-    }
-    lookAhead(cnt = 1) {
-        const lookAheadVal = this.inputDataSource.lookAhead(cnt);
+    };
+    MappedStreamDataSource.prototype.lookAhead = function (cnt) {
+        if (cnt === void 0) { cnt = 1; }
+        var lookAheadVal = this.inputDataSource.lookAhead(cnt);
         return (lookAheadVal == ITERATION_STATUS.EO_STRM) ? lookAheadVal : this.mapFunc(lookAheadVal);
-    }
-}
+    };
+    return MappedStreamDataSource;
+}());
 exports.MappedStreamDataSource = MappedStreamDataSource;
 /**
  * Same for flatmap to deal with element -> stream mappings
  */
-class FlatMapStreamDataSource {
-    constructor(func, parent) {
+var FlatMapStreamDataSource = /** @class */ (function () {
+    function FlatMapStreamDataSource(func, parent) {
         this.walkedDataSources = [];
         this._currPos = 0;
         this.mapFunc = func;
         this.inputDataSource = parent;
     }
-    hasNext() {
+    FlatMapStreamDataSource.prototype.hasNext = function () {
         return this.resolveActiveHasNext() || this.resolveNextHasNext();
-    }
-    resolveActiveHasNext() {
-        let next = false;
+    };
+    FlatMapStreamDataSource.prototype.resolveActiveHasNext = function () {
+        var next = false;
         if (this.activeDataSource) {
             next = this.activeDataSource.hasNext();
         }
         return next;
-    }
-    lookAhead(cnt = 1) {
+    };
+    FlatMapStreamDataSource.prototype.lookAhead = function (cnt) {
         var _a;
+        if (cnt === void 0) { cnt = 1; }
         //easy access trial
         if ((this === null || this === void 0 ? void 0 : this.activeDataSource) && ((_a = this === null || this === void 0 ? void 0 : this.activeDataSource) === null || _a === void 0 ? void 0 : _a.lookAhead(cnt)) != ITERATION_STATUS.EO_STRM) {
             //this should coverr 95% of all accesses
@@ -2933,14 +3310,14 @@ class FlatMapStreamDataSource {
          * @param datasource
          */
         function howManyElems(datasource) {
-            let cnt = 1;
+            var cnt = 1;
             while (datasource.lookAhead(cnt) !== ITERATION_STATUS.EO_STRM) {
                 cnt++;
             }
             return cnt - 1;
         }
         function readjustSkip(dataSource) {
-            let skippedElems = (dataSource) ? howManyElems(dataSource) : 0;
+            var skippedElems = (dataSource) ? howManyElems(dataSource) : 0;
             cnt = cnt - skippedElems;
         }
         if (this.activeDataSource) {
@@ -2950,162 +3327,183 @@ class FlatMapStreamDataSource {
         //after each stream we have to take into consideration that the skipCnt is
         //reduced by the number of datasets we already have looked into in the previous stream/datasource
         //unfortunately for now we have to loop into them so we introduce a small o2 here
-        for (let dsLoop = 1; true; dsLoop++) {
-            let currDatasource = this.inputDataSource.lookAhead(dsLoop);
+        for (var dsLoop = 1; true; dsLoop++) {
+            var currDatasource = this.inputDataSource.lookAhead(dsLoop);
             //we have looped out
             if (currDatasource === ITERATION_STATUS.EO_STRM) {
                 return ITERATION_STATUS.EO_STRM;
             }
-            let mapped = this.mapFunc(currDatasource);
+            var mapped = this.mapFunc(currDatasource);
             //it either comes in as datasource or as array
-            let currentDataSource = this.toDatasource(mapped);
-            let ret = currentDataSource.lookAhead(cnt);
+            var currentDataSource = this.toDatasource(mapped);
+            var ret = currentDataSource.lookAhead(cnt);
             if (ret != ITERATION_STATUS.EO_STRM) {
                 return ret;
             }
             readjustSkip(currDatasource);
         }
-    }
-    toDatasource(mapped) {
-        let ds = Array.isArray(mapped) ? new ArrayStreamDataSource(...mapped) : mapped;
+    };
+    FlatMapStreamDataSource.prototype.toDatasource = function (mapped) {
+        var ds = Array.isArray(mapped) ? new (ArrayStreamDataSource.bind.apply(ArrayStreamDataSource, __spreadArray([void 0], mapped, false)))() : mapped;
         this.walkedDataSources.push(ds);
         return ds;
-    }
-    resolveNextHasNext() {
-        let next = false;
+    };
+    FlatMapStreamDataSource.prototype.resolveNextHasNext = function () {
+        var next = false;
         while (!next && this.inputDataSource.hasNext()) {
-            let mapped = this.mapFunc(this.inputDataSource.next());
+            var mapped = this.mapFunc(this.inputDataSource.next());
             this.activeDataSource = this.toDatasource(mapped);
             ;
             next = this.activeDataSource.hasNext();
         }
         return next;
-    }
-    next() {
+    };
+    FlatMapStreamDataSource.prototype.next = function () {
         if (this.hasNext()) {
             this._currPos++;
             return this.activeDataSource.next();
         }
-    }
-    reset() {
+    };
+    FlatMapStreamDataSource.prototype.reset = function () {
         this.inputDataSource.reset();
-        this.walkedDataSources.forEach(ds => ds.reset());
+        this.walkedDataSources.forEach(function (ds) { return ds.reset(); });
         this.walkedDataSources = [];
         this._currPos = 0;
         this.activeDataSource = null;
-    }
-    current() {
+    };
+    FlatMapStreamDataSource.prototype.current = function () {
         if (!this.activeDataSource) {
             this.hasNext();
         }
         return this.activeDataSource.current();
-    }
-}
+    };
+    return FlatMapStreamDataSource;
+}());
 exports.FlatMapStreamDataSource = FlatMapStreamDataSource;
 /**
  * For the time being we only need one collector
  * a collector which collects a stream back into arrays
  */
-class ArrayCollector {
-    constructor() {
+var ArrayCollector = /** @class */ (function () {
+    function ArrayCollector() {
         this.data = [];
     }
-    collect(element) {
+    ArrayCollector.prototype.collect = function (element) {
         this.data.push(element);
-    }
-    get finalValue() {
-        return this.data;
-    }
-}
+    };
+    Object.defineProperty(ArrayCollector.prototype, "finalValue", {
+        get: function () {
+            return this.data;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    return ArrayCollector;
+}());
 exports.ArrayCollector = ArrayCollector;
 /**
  * collects an tuple array stream into an assoc array with elements being collected into arrays
  *
  */
-class ArrayAssocArrayCollector {
-    constructor() {
+var ArrayAssocArrayCollector = /** @class */ (function () {
+    function ArrayAssocArrayCollector() {
         this.finalValue = {};
     }
-    collect(element) {
+    ArrayAssocArrayCollector.prototype.collect = function (element) {
         var _a, _b, _c, _d;
-        let key = (_a = element === null || element === void 0 ? void 0 : element[0]) !== null && _a !== void 0 ? _a : element;
+        var key = (_a = element === null || element === void 0 ? void 0 : element[0]) !== null && _a !== void 0 ? _a : element;
         this.finalValue[key] = (_c = (_b = this.finalValue) === null || _b === void 0 ? void 0 : _b[key]) !== null && _c !== void 0 ? _c : [];
         this.finalValue[key].push((_d = element === null || element === void 0 ? void 0 : element[1]) !== null && _d !== void 0 ? _d : true);
-    }
-}
+    };
+    return ArrayAssocArrayCollector;
+}());
 exports.ArrayAssocArrayCollector = ArrayAssocArrayCollector;
 /**
  * dummy collector which just triggers a run
  * on lazy streams without collecting anything
  */
-class Run {
-    collect(element) {
+var Run = /** @class */ (function () {
+    function Run() {
     }
-    get finalValue() {
-        return null;
-    }
-}
+    Run.prototype.collect = function (element) {
+    };
+    Object.defineProperty(Run.prototype, "finalValue", {
+        get: function () {
+            return null;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    return Run;
+}());
 exports.Run = Run;
 /**
  * collects an assoc stream back to an assoc array
  */
-class AssocArrayCollector {
-    constructor() {
+var AssocArrayCollector = /** @class */ (function () {
+    function AssocArrayCollector() {
         this.finalValue = {};
     }
-    collect(element) {
+    AssocArrayCollector.prototype.collect = function (element) {
         var _a, _b;
         this.finalValue[(_a = element[0]) !== null && _a !== void 0 ? _a : element] = (_b = element[1]) !== null && _b !== void 0 ? _b : true;
-    }
-}
+    };
+    return AssocArrayCollector;
+}());
 exports.AssocArrayCollector = AssocArrayCollector;
 /**
  * Form data collector for key value pair streams
  */
-class FormDataCollector {
-    constructor() {
+var FormDataCollector = /** @class */ (function () {
+    function FormDataCollector() {
         this.finalValue = new FormData();
     }
-    collect(element) {
+    FormDataCollector.prototype.collect = function (element) {
         this.finalValue.append(element.key, element.value);
-    }
-}
+    };
+    return FormDataCollector;
+}());
 exports.FormDataCollector = FormDataCollector;
 /**
  * Form data collector for DomQuery streams
  */
-class QueryFormDataCollector {
-    constructor() {
+var QueryFormDataCollector = /** @class */ (function () {
+    function QueryFormDataCollector() {
         this.finalValue = new FormData();
     }
-    collect(element) {
-        let toMerge = element.encodeFormElement();
+    QueryFormDataCollector.prototype.collect = function (element) {
+        var toMerge = element.encodeFormElement();
         if (toMerge.isPresent()) {
             this.finalValue.append(element.name.value, toMerge.get(element.name).value);
         }
-    }
-}
+    };
+    return QueryFormDataCollector;
+}());
 exports.QueryFormDataCollector = QueryFormDataCollector;
 /**
  * Encoded String collector from dom query streams
  */
-class QueryFormStringCollector {
-    constructor() {
+var QueryFormStringCollector = /** @class */ (function () {
+    function QueryFormStringCollector() {
         this.formData = [];
     }
-    collect(element) {
-        let toMerge = element.encodeFormElement();
+    QueryFormStringCollector.prototype.collect = function (element) {
+        var toMerge = element.encodeFormElement();
         if (toMerge.isPresent()) {
             this.formData.push([element.name.value, toMerge.get(element.name).value]);
         }
-    }
-    get finalValue() {
-        return Stream_1.Stream.of(...this.formData)
-            .map(keyVal => keyVal.join("="))
-            .reduce((item1, item2) => [item1, item2].join("&"))
-            .orElse("").value;
-    }
-}
+    };
+    Object.defineProperty(QueryFormStringCollector.prototype, "finalValue", {
+        get: function () {
+            return Stream_1.Stream.of.apply(Stream_1.Stream, this.formData).map(function (keyVal) { return keyVal.join("="); })
+                .reduce(function (item1, item2) { return [item1, item2].join("&"); })
+                .orElse("").value;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    return QueryFormStringCollector;
+}());
 exports.QueryFormStringCollector = QueryFormStringCollector;
 
 
@@ -3115,7 +3513,7 @@ exports.QueryFormStringCollector = QueryFormStringCollector;
 /*!**************************************************************!*\
   !*** ./node_modules/mona-dish/src/main/typescript/Stream.ts ***!
   \**************************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
 /*!
@@ -3134,13 +3532,22 @@ exports.QueryFormStringCollector = QueryFormStringCollector;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LazyStream = exports.Stream = void 0;
 /*
  * A small stream implementation
  */
-const Monad_1 = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
-const SourcesCollectors_1 = __webpack_require__(/*! ./SourcesCollectors */ "./node_modules/mona-dish/src/main/typescript/SourcesCollectors.ts");
+var Monad_1 = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
+var SourcesCollectors_1 = __webpack_require__(/*! ./SourcesCollectors */ "./node_modules/mona-dish/src/main/typescript/SourcesCollectors.ts");
 /**
  * A simple typescript based reimplementation of streams
  *
@@ -3150,179 +3557,195 @@ const SourcesCollectors_1 = __webpack_require__(/*! ./SourcesCollectors */ "./no
  * to provide infinite data sources and generic data providers, the downside
  * is, it might be a tad slower in some situations
  */
-class Stream {
-    constructor(...value) {
+var Stream = /** @class */ (function () {
+    function Stream() {
+        var value = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            value[_i] = arguments[_i];
+        }
         this._limits = -1;
         this.pos = -1;
         this.value = value;
     }
-    static of(...data) {
-        return new Stream(...data);
-    }
-    static ofAssoc(data) {
-        return this.of(...Object.keys(data)).map(key => [key, data[key]]);
-    }
-    static ofDataSource(dataSource) {
-        let value = [];
+    Stream.of = function () {
+        var data = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            data[_i] = arguments[_i];
+        }
+        return new (Stream.bind.apply(Stream, __spreadArray([void 0], data, false)))();
+    };
+    Stream.ofAssoc = function (data) {
+        return this.of.apply(this, Object.keys(data)).map(function (key) { return [key, data[key]]; });
+    };
+    Stream.ofDataSource = function (dataSource) {
+        var value = [];
         while (dataSource.hasNext()) {
             value.push(dataSource.next());
         }
-        return new Stream(...value);
-    }
-    limits(end) {
+        return new (Stream.bind.apply(Stream, __spreadArray([void 0], value, false)))();
+    };
+    Stream.prototype.limits = function (end) {
         this._limits = end;
         return this;
-    }
+    };
     /**
      * concat for streams, so that you can concat two streams together
      * @param toAppend
      */
-    concat(...toAppend) {
+    Stream.prototype.concat = function () {
         //let dataSource = new MultiStreamDatasource<T>(this, ...toAppend);
         //return Stream.ofDataSource<T>(dataSource);
-        return Stream.of(this, ...toAppend).flatMap(item => item);
-    }
-    onElem(fn) {
-        for (let cnt = 0; cnt < this.value.length && (this._limits == -1 || cnt < this._limits); cnt++) {
+        var toAppend = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            toAppend[_i] = arguments[_i];
+        }
+        return Stream.of.apply(Stream, __spreadArray([this], toAppend, false)).flatMap(function (item) { return item; });
+    };
+    Stream.prototype.onElem = function (fn) {
+        for (var cnt = 0; cnt < this.value.length && (this._limits == -1 || cnt < this._limits); cnt++) {
             if (fn(this.value[cnt], cnt) === false) {
                 break;
             }
         }
         return this;
-    }
-    each(fn) {
+    };
+    Stream.prototype.each = function (fn) {
         this.onElem(fn);
         this.reset();
-    }
-    map(fn) {
+    };
+    Stream.prototype.map = function (fn) {
         if (!fn) {
-            fn = (inval) => inval;
+            fn = function (inval) { return inval; };
         }
-        let res = [];
-        this.each((item) => {
+        var res = [];
+        this.each(function (item) {
             res.push(fn(item));
         });
-        return new Stream(...res);
-    }
+        return new (Stream.bind.apply(Stream, __spreadArray([void 0], res, false)))();
+    };
     /*
      * we need to implement it to fullfill the contract, although it is used only internally
      * all values are flattened when accessed anyway, so there is no need to call this methiod
      */
-    flatMap(fn) {
-        let ret = [];
-        this.each(item => {
-            let strmR = fn(item);
-            ret = Array.isArray(strmR) ? ret.concat(strmR) : ret.concat(...strmR.value);
+    Stream.prototype.flatMap = function (fn) {
+        var ret = [];
+        this.each(function (item) {
+            var strmR = fn(item);
+            ret = Array.isArray(strmR) ? ret.concat(strmR) : ret.concat.apply(ret, strmR.value);
         });
-        return Stream.of(...ret);
-    }
-    filter(fn) {
-        let res = [];
-        this.each((data) => {
+        return Stream.of.apply(Stream, ret);
+    };
+    Stream.prototype.filter = function (fn) {
+        var res = [];
+        this.each(function (data) {
             if (fn(data)) {
                 res.push(data);
             }
         });
-        return new Stream(...res);
-    }
-    reduce(fn, startVal = null) {
-        let offset = startVal != null ? 0 : 1;
-        let val1 = startVal != null ? startVal : this.value.length ? this.value[0] : null;
-        for (let cnt = offset; cnt < this.value.length && (this._limits == -1 || cnt < this._limits); cnt++) {
+        return new (Stream.bind.apply(Stream, __spreadArray([void 0], res, false)))();
+    };
+    Stream.prototype.reduce = function (fn, startVal) {
+        if (startVal === void 0) { startVal = null; }
+        var offset = startVal != null ? 0 : 1;
+        var val1 = startVal != null ? startVal : this.value.length ? this.value[0] : null;
+        for (var cnt = offset; cnt < this.value.length && (this._limits == -1 || cnt < this._limits); cnt++) {
             val1 = fn(val1, this.value[cnt]);
         }
         this.reset();
         return Monad_1.Optional.fromNullable(val1);
-    }
-    first() {
+    };
+    Stream.prototype.first = function () {
         this.reset();
         return this.value && this.value.length ? Monad_1.Optional.fromNullable(this.value[0]) : Monad_1.Optional.absent;
-    }
-    last() {
+    };
+    Stream.prototype.last = function () {
         //could be done via reduce, but is faster this way
-        let length = this._limits > 0 ? Math.min(this._limits, this.value.length) : this.value.length;
+        var length = this._limits > 0 ? Math.min(this._limits, this.value.length) : this.value.length;
         this.reset();
         return Monad_1.Optional.fromNullable(length ? this.value[length - 1] : null);
-    }
-    anyMatch(fn) {
-        for (let cnt = 0; cnt < this.value.length && (this._limits == -1 || cnt < this._limits); cnt++) {
+    };
+    Stream.prototype.anyMatch = function (fn) {
+        for (var cnt = 0; cnt < this.value.length && (this._limits == -1 || cnt < this._limits); cnt++) {
             if (fn(this.value[cnt])) {
                 return true;
             }
         }
         this.reset();
         return false;
-    }
-    allMatch(fn) {
+    };
+    Stream.prototype.allMatch = function (fn) {
         if (!this.value.length) {
             return false;
         }
-        let matches = 0;
-        for (let cnt = 0; cnt < this.value.length; cnt++) {
+        var matches = 0;
+        for (var cnt = 0; cnt < this.value.length; cnt++) {
             if (fn(this.value[cnt])) {
                 matches++;
             }
         }
         this.reset();
         return matches == this.value.length;
-    }
-    noneMatch(fn) {
-        let matches = 0;
-        for (let cnt = 0; cnt < this.value.length; cnt++) {
+    };
+    Stream.prototype.noneMatch = function (fn) {
+        var matches = 0;
+        for (var cnt = 0; cnt < this.value.length; cnt++) {
             if (!fn(this.value[cnt])) {
                 matches++;
             }
         }
         this.reset();
         return matches == this.value.length;
-    }
-    sort(comparator) {
-        let newArr = this.value.slice().sort(comparator);
-        return Stream.of(...newArr);
-    }
-    collect(collector) {
-        this.each(data => collector.collect(data));
+    };
+    Stream.prototype.sort = function (comparator) {
+        var newArr = this.value.slice().sort(comparator);
+        return Stream.of.apply(Stream, newArr);
+    };
+    Stream.prototype.collect = function (collector) {
+        this.each(function (data) { return collector.collect(data); });
         this.reset();
         return collector.finalValue;
-    }
+    };
     //-- internally exposed methods needed for the interconnectivity
-    hasNext() {
-        let isLimitsReached = this._limits != -1 && this.pos >= this._limits - 1;
-        let isEndOfArray = this.pos >= this.value.length - 1;
+    Stream.prototype.hasNext = function () {
+        var isLimitsReached = this._limits != -1 && this.pos >= this._limits - 1;
+        var isEndOfArray = this.pos >= this.value.length - 1;
         return !(isLimitsReached || isEndOfArray);
-    }
-    next() {
+    };
+    Stream.prototype.next = function () {
         if (!this.hasNext()) {
             return null;
         }
         this.pos++;
         return this.value[this.pos];
-    }
-    lookAhead(cnt = 1) {
+    };
+    Stream.prototype.lookAhead = function (cnt) {
+        if (cnt === void 0) { cnt = 1; }
         if ((this.pos + cnt) >= this.value.length) {
             return SourcesCollectors_1.ITERATION_STATUS.EO_STRM;
         }
         return this.value[this.pos + cnt];
-    }
-    [Symbol.iterator]() {
+    };
+    Stream.prototype[Symbol.iterator] = function () {
+        var _this = this;
         return {
-            next: () => {
-                let done = !this.hasNext();
-                let val = this.next();
+            next: function () {
+                var done = !_this.hasNext();
+                var val = _this.next();
                 return {
                     done: done,
                     value: val
                 };
             }
         };
-    }
+    };
     /*get observable(): Observable<T> {
         return from(this);
     }*/
-    reset() {
+    Stream.prototype.reset = function () {
         this.pos = -1;
-    }
-}
+    };
+    return Stream;
+}());
 exports.Stream = Stream;
 /**
  * Lazy implementation of a Stream
@@ -3352,8 +3775,8 @@ exports.Stream = Stream;
  * or an internal limit is hit.
  *
  */
-class LazyStream {
-    constructor(parent) {
+var LazyStream = /** @class */ (function () {
+    function LazyStream(parent) {
         this._limits = -1;
         /*
          * needed to have the limits check working
@@ -3363,102 +3786,113 @@ class LazyStream {
         this.pos = -1;
         this.dataSource = parent;
     }
-    static of(...values) {
-        return new LazyStream(new SourcesCollectors_1.ArrayStreamDataSource(...values));
-    }
-    static ofAssoc(data) {
-        return this.of(...Object.keys(data)).map(key => [key, data[key]]);
-    }
-    static ofStreamDataSource(value) {
+    LazyStream.of = function () {
+        var values = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            values[_i] = arguments[_i];
+        }
+        return new LazyStream(new (SourcesCollectors_1.ArrayStreamDataSource.bind.apply(SourcesCollectors_1.ArrayStreamDataSource, __spreadArray([void 0], values, false)))());
+    };
+    LazyStream.ofAssoc = function (data) {
+        return this.of.apply(this, Object.keys(data)).map(function (key) { return [key, data[key]]; });
+    };
+    LazyStream.ofStreamDataSource = function (value) {
         return new LazyStream(value);
-    }
-    hasNext() {
+    };
+    LazyStream.prototype.hasNext = function () {
         if (this.isOverLimits()) {
             return false;
         }
         return this.dataSource.hasNext();
-    }
-    next() {
-        let next = this.dataSource.next();
+    };
+    LazyStream.prototype.next = function () {
+        var next = this.dataSource.next();
         // @ts-ignore
         this.pos++;
         return next;
-    }
-    lookAhead(cnt = 1) {
+    };
+    LazyStream.prototype.lookAhead = function (cnt) {
+        if (cnt === void 0) { cnt = 1; }
         return this.dataSource.lookAhead(cnt);
-    }
-    current() {
+    };
+    LazyStream.prototype.current = function () {
         return this.dataSource.current();
-    }
-    reset() {
+    };
+    LazyStream.prototype.reset = function () {
         this.dataSource.reset();
         this.pos = -1;
         this._limits = -1;
-    }
+    };
     /**
      * concat for streams, so that you can concat two streams together
      * @param toAppend
      */
-    concat(...toAppend) {
+    LazyStream.prototype.concat = function () {
+        var toAppend = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            toAppend[_i] = arguments[_i];
+        }
         //this.dataSource =  new MultiStreamDatasource<T>(this, ... toAppend);
         //return this;
-        return LazyStream.of(this, ...toAppend).flatMap(item => item);
-    }
-    nextFilter(fn) {
+        return LazyStream.of.apply(LazyStream, __spreadArray([this], toAppend, false)).flatMap(function (item) { return item; });
+    };
+    LazyStream.prototype.nextFilter = function (fn) {
         if (this.hasNext()) {
-            let newVal = this.next();
+            var newVal = this.next();
             if (!fn(newVal)) {
                 return this.nextFilter(fn);
             }
             return newVal;
         }
         return null;
-    }
-    limits(max) {
+    };
+    LazyStream.prototype.limits = function (max) {
         this._limits = max;
         return this;
-    }
+    };
     //main stream methods
-    collect(collector) {
+    LazyStream.prototype.collect = function (collector) {
         while (this.hasNext()) {
-            let t = this.next();
+            var t = this.next();
             collector.collect(t);
         }
         this.reset();
         return collector.finalValue;
-    }
-    onElem(fn) {
-        return new LazyStream(new SourcesCollectors_1.MappedStreamDataSource((el) => {
-            if (fn(el, this.pos) === false) {
-                this.stop();
+    };
+    LazyStream.prototype.onElem = function (fn) {
+        var _this = this;
+        return new LazyStream(new SourcesCollectors_1.MappedStreamDataSource(function (el) {
+            if (fn(el, _this.pos) === false) {
+                _this.stop();
             }
             return el;
         }, this));
-    }
-    filter(fn) {
+    };
+    LazyStream.prototype.filter = function (fn) {
         return new LazyStream(new SourcesCollectors_1.FilteredStreamDatasource(fn, this));
-    }
-    map(fn) {
+    };
+    LazyStream.prototype.map = function (fn) {
         return new LazyStream(new SourcesCollectors_1.MappedStreamDataSource(fn, this));
-    }
-    flatMap(fn) {
+    };
+    LazyStream.prototype.flatMap = function (fn) {
         return new LazyStream(new SourcesCollectors_1.FlatMapStreamDataSource(fn, this));
-    }
+    };
     //endpoint
-    each(fn) {
+    LazyStream.prototype.each = function (fn) {
         while (this.hasNext()) {
             if (fn(this.next()) === false) {
                 this.stop();
             }
         }
         this.reset();
-    }
-    reduce(fn, startVal = null) {
+    };
+    LazyStream.prototype.reduce = function (fn, startVal) {
+        if (startVal === void 0) { startVal = null; }
         if (!this.hasNext()) {
             return Monad_1.Optional.absent;
         }
-        let value1;
-        let value2 = null;
+        var value1;
+        var value2 = null;
         if (startVal != null) {
             value1 = startVal;
             value2 = this.next();
@@ -3477,75 +3911,81 @@ class LazyStream {
         }
         this.reset();
         return Monad_1.Optional.fromNullable(value1);
-    }
-    last() {
+    };
+    LazyStream.prototype.last = function () {
         if (!this.hasNext()) {
             return Monad_1.Optional.absent;
         }
-        return this.reduce((el1, el2) => el2);
-    }
-    first() {
+        return this.reduce(function (el1, el2) { return el2; });
+    };
+    LazyStream.prototype.first = function () {
         this.reset();
         if (!this.hasNext()) {
             return Monad_1.Optional.absent;
         }
         return Monad_1.Optional.fromNullable(this.next());
-    }
-    anyMatch(fn) {
+    };
+    LazyStream.prototype.anyMatch = function (fn) {
         while (this.hasNext()) {
             if (fn(this.next())) {
                 return true;
             }
         }
         return false;
-    }
-    allMatch(fn) {
+    };
+    LazyStream.prototype.allMatch = function (fn) {
         while (this.hasNext()) {
             if (!fn(this.next())) {
                 return false;
             }
         }
         return true;
-    }
-    noneMatch(fn) {
+    };
+    LazyStream.prototype.noneMatch = function (fn) {
         while (this.hasNext()) {
             if (fn(this.next())) {
                 return false;
             }
         }
         return true;
-    }
-    sort(comparator) {
-        let arr = this.collect(new SourcesCollectors_1.ArrayCollector());
+    };
+    LazyStream.prototype.sort = function (comparator) {
+        var arr = this.collect(new SourcesCollectors_1.ArrayCollector());
         arr = arr.sort(comparator);
-        return LazyStream.of(...arr);
-    }
-    get value() {
-        return this.collect(new SourcesCollectors_1.ArrayCollector());
-    }
-    [Symbol.iterator]() {
+        return LazyStream.of.apply(LazyStream, arr);
+    };
+    Object.defineProperty(LazyStream.prototype, "value", {
+        get: function () {
+            return this.collect(new SourcesCollectors_1.ArrayCollector());
+        },
+        enumerable: false,
+        configurable: true
+    });
+    LazyStream.prototype[Symbol.iterator] = function () {
+        var _this = this;
         return {
-            next: () => {
-                let done = !this.hasNext();
-                let val = this.next();
+            next: function () {
+                var done = !_this.hasNext();
+                var val = _this.next();
                 return {
                     done: done,
                     value: val
                 };
             }
         };
-    }
+    };
     /*get observable(): Observable<T> {
         return from(this);
     }*/
-    stop() {
+    LazyStream.prototype.stop = function () {
         this.pos = this._limits + 1000000000;
         this._limits = 0;
-    }
-    isOverLimits() {
+    };
+    LazyStream.prototype.isOverLimits = function () {
         return this._limits != -1 && this.pos >= this._limits - 1;
-    }
-}
+    };
+    return LazyStream;
+}());
 exports.LazyStream = LazyStream;
 
 
@@ -3555,7 +3995,7 @@ exports.LazyStream = LazyStream;
 /*!****************************************************************!*\
   !*** ./node_modules/mona-dish/src/main/typescript/XmlQuery.ts ***!
   \****************************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
 /*!
@@ -3574,70 +4014,91 @@ exports.LazyStream = LazyStream;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.XQ = exports.XMLQuery = void 0;
-const Lang_1 = __webpack_require__(/*! ./Lang */ "./node_modules/mona-dish/src/main/typescript/Lang.ts");
-const DomQuery_1 = __webpack_require__(/*! ./DomQuery */ "./node_modules/mona-dish/src/main/typescript/DomQuery.ts");
+var Lang_1 = __webpack_require__(/*! ./Lang */ "./node_modules/mona-dish/src/main/typescript/Lang.ts");
+var DomQuery_1 = __webpack_require__(/*! ./DomQuery */ "./node_modules/mona-dish/src/main/typescript/DomQuery.ts");
 var isString = Lang_1.Lang.isString;
-const Global_1 = __webpack_require__(/*! ./Global */ "./node_modules/mona-dish/src/main/typescript/Global.ts");
+var Global_1 = __webpack_require__(/*! ./Global */ "./node_modules/mona-dish/src/main/typescript/Global.ts");
 /**
  * xml query as specialized case for DomQuery
  */
-class XMLQuery extends DomQuery_1.DomQuery {
-    constructor(rootNode, docType = "text/xml") {
-        let createIe11DomQueryShim = () => {
+var XMLQuery = /** @class */ (function (_super) {
+    __extends(XMLQuery, _super);
+    function XMLQuery(rootNode, docType) {
+        if (docType === void 0) { docType = "text/xml"; }
+        var _this = this;
+        var createIe11DomQueryShim = function () {
             //at the time if wroting ie11 is the only relevant browser
             //left withut any DomQuery support
-            let parser = new ActiveXObject("Microsoft.XMLDOM");
+            var parser = new ActiveXObject("Microsoft.XMLDOM");
             parser.async = false;
             //we shim th dom parser from ie in
             return {
-                parseFromString: (text, contentType) => {
+                parseFromString: function (text, contentType) {
                     return parser.loadXML(text);
                 }
             };
         };
-        let parseXML = (xml) => {
+        var parseXML = function (xml) {
             if (xml == null) {
                 return null;
             }
-            let domParser = Lang_1.Lang.saveResolveLazy(() => new ((0, Global_1._global$)()).DOMParser(), () => createIe11DomQueryShim()).value;
+            var domParser = Lang_1.Lang.saveResolveLazy(function () { return new ((0, Global_1._global$)()).DOMParser(); }, function () { return createIe11DomQueryShim(); }).value;
             return domParser.parseFromString(xml, docType);
         };
         if (isString(rootNode)) {
-            super(parseXML(rootNode));
+            _this = _super.call(this, parseXML(rootNode)) || this;
         }
         else {
-            super(rootNode);
+            _this = _super.call(this, rootNode) || this;
         }
+        return _this;
     }
-    isXMLParserError() {
+    XMLQuery.prototype.isXMLParserError = function () {
         return this.querySelectorAll("parsererror").isPresent();
-    }
-    toString() {
-        let ret = [];
-        this.eachElem((node) => {
+    };
+    XMLQuery.prototype.toString = function () {
+        var ret = [];
+        this.eachElem(function (node) {
             var _a, _b, _c, _d;
-            let serialized = (_d = (_c = (_b = (_a = ((0, Global_1._global$)())) === null || _a === void 0 ? void 0 : _a.XMLSerializer) === null || _b === void 0 ? void 0 : _b.constructor()) === null || _c === void 0 ? void 0 : _c.serializeToString(node)) !== null && _d !== void 0 ? _d : node === null || node === void 0 ? void 0 : node.xml;
+            var serialized = (_d = (_c = (_b = (_a = ((0, Global_1._global$)())) === null || _a === void 0 ? void 0 : _a.XMLSerializer) === null || _b === void 0 ? void 0 : _b.constructor()) === null || _c === void 0 ? void 0 : _c.serializeToString(node)) !== null && _d !== void 0 ? _d : node === null || node === void 0 ? void 0 : node.xml;
             if (!!serialized) {
                 ret.push(serialized);
             }
         });
         return ret.join("");
-    }
-    parserErrorText(joinstr) {
+    };
+    XMLQuery.prototype.parserErrorText = function (joinstr) {
         return this.querySelectorAll("parsererror").textContent(joinstr);
-    }
-    static parseXML(txt) {
+    };
+    XMLQuery.parseXML = function (txt) {
         return new XMLQuery(txt);
-    }
-    static parseHTML(txt) {
+    };
+    XMLQuery.parseHTML = function (txt) {
         return new XMLQuery(txt, "text/html");
-    }
-    static fromString(txt, parseType = "text/xml") {
+    };
+    XMLQuery.fromString = function (txt, parseType) {
+        if (parseType === void 0) { parseType = "text/xml"; }
         return new XMLQuery(txt, parseType);
-    }
-}
+    };
+    return XMLQuery;
+}(DomQuery_1.DomQuery));
 exports.XMLQuery = XMLQuery;
 exports.XQ = XMLQuery;
 
@@ -3709,9 +4170,18 @@ Object.defineProperty(exports, "QueryFormDataCollector", ({ enumerable: true, ge
 /*!*****************************************!*\
   !*** ./src/main/typescript/api/_api.ts ***!
   \*****************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.myfaces = exports.faces = void 0;
 /*! Licensed to the Apache Software Foundation (ASF) under one or more
@@ -3729,10 +4199,10 @@ exports.myfaces = exports.faces = void 0;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const AjaxImpl_1 = __webpack_require__(/*! ../impl/AjaxImpl */ "./src/main/typescript/impl/AjaxImpl.ts");
-const PushImpl_1 = __webpack_require__(/*! ../impl/PushImpl */ "./src/main/typescript/impl/PushImpl.ts");
-const OamSubmit_1 = __webpack_require__(/*! ../myfaces/OamSubmit */ "./src/main/typescript/myfaces/OamSubmit.ts");
-const Const_1 = __webpack_require__(/*! ../impl/core/Const */ "./src/main/typescript/impl/core/Const.ts");
+var AjaxImpl_1 = __webpack_require__(/*! ../impl/AjaxImpl */ "./src/main/typescript/impl/AjaxImpl.ts");
+var PushImpl_1 = __webpack_require__(/*! ../impl/PushImpl */ "./src/main/typescript/impl/PushImpl.ts");
+var OamSubmit_1 = __webpack_require__(/*! ../myfaces/OamSubmit */ "./src/main/typescript/myfaces/OamSubmit.ts");
+var Const_1 = __webpack_require__(/*! ../impl/core/Const */ "./src/main/typescript/impl/core/Const.ts");
 //we use modules to get a proper jsdoc and static/map structure in the calls
 //as per spec requirement
 var faces;
@@ -3810,13 +4280,13 @@ var faces;
     faces.getClientWindow = getClientWindow;
     //private helper functions
     function getSeparatorChar() {
-        const sep = '#{facesContext.namingContainerSeparatorChar}';
+        var sep = '#{facesContext.namingContainerSeparatorChar}';
         //We now enable standalone mode, the separator char was not mapped we make a fallback to 2.3 behavior
         //the idea is that the separator char is provided from the underlying container, but if not then we
         //will perform a fallback (aka 2.3 has the url fallback behavior)
         return (sep.match(/\#\{facesContext.namingContainerSeparatorChar\}/gi)) ? AjaxImpl_1.Implementation.getSeparatorChar() : sep;
     }
-    let ajax;
+    var ajax;
     (function (ajax) {
         "use strict";
         /**
@@ -3881,7 +4351,7 @@ var faces;
         }
         ajax.addOnEvent = addOnEvent;
     })(ajax = faces.ajax || (faces.ajax = {}));
-    let util;
+    var util;
     (function (util) {
         /**
          * varargs function which executes a chain of code (functions or any other code)
@@ -3894,12 +4364,16 @@ var faces;
          * @param funcs ... arbitrary array of functions or strings
          * @returns true if the chain has succeeded false otherwise
          */
-        function chain(source, event, ...funcs) {
-            return AjaxImpl_1.Implementation.chain(source, event, ...funcs);
+        function chain(source, event) {
+            var funcs = [];
+            for (var _i = 2; _i < arguments.length; _i++) {
+                funcs[_i - 2] = arguments[_i];
+            }
+            return AjaxImpl_1.Implementation.chain.apply(AjaxImpl_1.Implementation, __spreadArray([source, event], funcs, false));
         }
         util.chain = chain;
     })(util = faces.util || (faces.util = {}));
-    let push;
+    var push;
     (function (push) {
         /**
          * @param socketClientId the sockets client identifier
@@ -3950,8 +4424,9 @@ var myfaces;
      * @param render
      * @param options
      */
-    function ab(source, event, eventName, execute, render, options = {}) {
+    function ab(source, event, eventName, execute, render, options) {
         var _a;
+        if (options === void 0) { options = {}; }
         if (eventName) {
             options[(0, Const_1.$nsp)(Const_1.P_BEHAVIOR_EVENT)] = eventName;
         }
@@ -3997,17 +4472,17 @@ var myfaces;
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Implementation = void 0;
-const Response_1 = __webpack_require__(/*! ./xhrCore/Response */ "./src/main/typescript/impl/xhrCore/Response.ts");
-const XhrRequest_1 = __webpack_require__(/*! ./xhrCore/XhrRequest */ "./src/main/typescript/impl/xhrCore/XhrRequest.ts");
-const AsyncQueue_1 = __webpack_require__(/*! ./util/AsyncQueue */ "./src/main/typescript/impl/util/AsyncQueue.ts");
-const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
-const Assertions_1 = __webpack_require__(/*! ./util/Assertions */ "./src/main/typescript/impl/util/Assertions.ts");
-const XhrFormData_1 = __webpack_require__(/*! ./xhrCore/XhrFormData */ "./src/main/typescript/impl/xhrCore/XhrFormData.ts");
-const ExtDomQuery_1 = __webpack_require__(/*! ./util/ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
-const ErrorData_1 = __webpack_require__(/*! ./xhrCore/ErrorData */ "./src/main/typescript/impl/xhrCore/ErrorData.ts");
-const Lang_1 = __webpack_require__(/*! ./util/Lang */ "./src/main/typescript/impl/util/Lang.ts");
-const Const_1 = __webpack_require__(/*! ./core/Const */ "./src/main/typescript/impl/core/Const.ts");
-const RequestDataResolver_1 = __webpack_require__(/*! ./xhrCore/RequestDataResolver */ "./src/main/typescript/impl/xhrCore/RequestDataResolver.ts");
+var Response_1 = __webpack_require__(/*! ./xhrCore/Response */ "./src/main/typescript/impl/xhrCore/Response.ts");
+var XhrRequest_1 = __webpack_require__(/*! ./xhrCore/XhrRequest */ "./src/main/typescript/impl/xhrCore/XhrRequest.ts");
+var AsyncQueue_1 = __webpack_require__(/*! ./util/AsyncQueue */ "./src/main/typescript/impl/util/AsyncQueue.ts");
+var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
+var Assertions_1 = __webpack_require__(/*! ./util/Assertions */ "./src/main/typescript/impl/util/Assertions.ts");
+var XhrFormData_1 = __webpack_require__(/*! ./xhrCore/XhrFormData */ "./src/main/typescript/impl/xhrCore/XhrFormData.ts");
+var ExtDomQuery_1 = __webpack_require__(/*! ./util/ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
+var ErrorData_1 = __webpack_require__(/*! ./xhrCore/ErrorData */ "./src/main/typescript/impl/xhrCore/ErrorData.ts");
+var Lang_1 = __webpack_require__(/*! ./util/Lang */ "./src/main/typescript/impl/util/Lang.ts");
+var Const_1 = __webpack_require__(/*! ./core/Const */ "./src/main/typescript/impl/core/Const.ts");
+var RequestDataResolver_1 = __webpack_require__(/*! ./xhrCore/RequestDataResolver */ "./src/main/typescript/impl/xhrCore/RequestDataResolver.ts");
 /*
  * allowed project stages
  */
@@ -4031,7 +4506,9 @@ var BlockFilter;
     BlockFilter["myfaces"] = "myfaces";
     BlockFilter["delay"] = "delay";
     BlockFilter["timeout"] = "timeout";
+    BlockFilter["resetValues"] = "resetValues";
     BlockFilter["windowId"] = "windowId";
+    BlockFilter["params"] = "params";
 })(BlockFilter || (BlockFilter = {}));
 /**
  * Core Implementation
@@ -4095,13 +4572,13 @@ var Implementation;
     var getMessage = Lang_1.ExtLang.getMessage;
     var getGlobalConfig = Lang_1.ExtLang.getGlobalConfig;
     var assert = Assertions_1.Assertions.assert;
-    let projectStage = null;
-    let separator = null;
-    let eventQueue = [];
-    let errorQueue = [];
+    var projectStage = null;
+    var separator = null;
+    var eventQueue = [];
+    var errorQueue = [];
     Implementation.requestQueue = null;
     /*error reporting threshold*/
-    let threshold = "ERROR";
+    var threshold = "ERROR";
     /**
      * fetches the separator char from the given script tags
      *
@@ -4140,7 +4617,7 @@ var Implementation;
      */
     function resolveProjectStateFromURL() {
         /* run through all script tags and try to find the one that includes faces.js */
-        const foundStage = ExtDomQuery_1.ExtDomQuery.searchJsfJsFor(/stage=([^&;]*)/).value;
+        var foundStage = ExtDomQuery_1.ExtDomQuery.searchJsfJsFor(/stage=([^&;]*)/).value;
         return (foundStage in ProjectStages) ? foundStage : null;
     }
     Implementation.resolveProjectStateFromURL = resolveProjectStateFromURL;
@@ -4151,14 +4628,17 @@ var Implementation;
      * @param event
      * @param funcs
      */
-    function chain(source, event, ...funcs) {
+    function chain(source, event) {
         // we can use our lazy stream each functionality to run our chain here..
         // by passing a boolean as return value into the onElem call
         // we can stop early at the first false, just like the spec requests
-        return mona_dish_1.LazyStream.of(...funcs)
-            .map(func => resolveAndExecute(source, event, func))
+        var funcs = [];
+        for (var _i = 2; _i < arguments.length; _i++) {
+            funcs[_i - 2] = arguments[_i];
+        }
+        return mona_dish_1.LazyStream.of.apply(mona_dish_1.LazyStream, funcs).map(function (func) { return resolveAndExecute(source, event, func); })
             // we use the return false == stop as an early stop, onElem stops at the first false
-            .onElem((opResult) => opResult)
+            .onElem(function (opResult) { return opResult; })
             //last ensures we run until the first false is returned
             .last().value;
     }
@@ -4183,7 +4663,7 @@ var Implementation;
      */
     function request(el, event, opts) {
         var _a, _b, _c;
-        const { resolvedEvent, options, elem, elementId, requestCtx, internalCtx, windowId, isResetValues } = (0, RequestDataResolver_1.resolveDefaults)(event, opts, el);
+        var _d = (0, RequestDataResolver_1.resolveDefaults)(event, opts, el), resolvedEvent = _d.resolvedEvent, options = _d.options, elem = _d.elem, elementId = _d.elementId, requestCtx = _d.requestCtx, internalCtx = _d.internalCtx, windowId = _d.windowId, isResetValues = _d.isResetValues;
         Assertions_1.Assertions.assertRequestIntegrity(options, elem);
         /**
          * fetch the parent form
@@ -4192,12 +4672,16 @@ var Implementation;
          * so that people can use dummy forms and work
          * with detached objects
          */
-        const form = (0, RequestDataResolver_1.resolveForm)(requestCtx, elem, resolvedEvent);
-        const formId = form.id.value;
-        const delay = (0, RequestDataResolver_1.resolveDelay)(options);
-        const timeout = (0, RequestDataResolver_1.resolveTimeout)(options);
+        var form = (0, RequestDataResolver_1.resolveForm)(requestCtx, elem, resolvedEvent);
+        var formId = form.id.value;
+        var delay = (0, RequestDataResolver_1.resolveDelay)(options);
+        var timeout = (0, RequestDataResolver_1.resolveTimeout)(options);
         requestCtx.assignIf(!!windowId, Const_1.P_WINDOW_ID).value = windowId;
+        // old non spec behavior will be removed after it is clear whether the removal breaks any code
         requestCtx.assign(Const_1.CTX_PARAM_PASS_THR).value = filterPassThroughValues(options.value);
+        // spec conform behavior, all passthrough params must be under "passthrough
+        var params = remapArrayToAssocArr(options.getIf(Const_1.CTX_PARAM_SPEC_PARAMS).orElse({}).value);
+        requestCtx.getIf(Const_1.CTX_PARAM_PASS_THR).shallowMerge(new mona_dish_1.Config(params), true);
         requestCtx.assignIf(!!resolvedEvent, Const_1.CTX_PARAM_PASS_THR, Const_1.P_EVT).value = resolvedEvent === null || resolvedEvent === void 0 ? void 0 : resolvedEvent.type;
         /**
          * ajax pass through context with the source
@@ -4285,11 +4769,12 @@ var Implementation;
      * @param data the event data object hosting the event data according to the spec @see EventData for what is reachable
      * @param localHandler an optional event handler, which is processed before the event handler chain
      */
-    function sendEvent(data, localHandler = function (data) {
-    }) {
+    function sendEvent(data, localHandler) {
+        if (localHandler === void 0) { localHandler = function (data) {
+        }; }
         /*now we serve the queue as well*/
         localHandler(data);
-        eventQueue.forEach(fn => fn(data));
+        eventQueue.forEach(function (fn) { return fn(data); });
     }
     Implementation.sendEvent = sendEvent;
     /**
@@ -4304,14 +4789,15 @@ var Implementation;
      * @param exception the exception being thrown
      * @param clearRequestQueue if set to true, clears the request queue of all pending requests
      */
-    function stdErrorHandler(request, context, exception, clearRequestQueue = false) {
+    function stdErrorHandler(request, context, exception, clearRequestQueue) {
+        if (clearRequestQueue === void 0) { clearRequestQueue = false; }
         //newer browsers do not allow to hold additional values on native objects like exceptions
         //we hence capsule it into the request, which is gced automatically
         //on ie as well, since the stdErrorHandler usually is called between requests
         //this is a valid approach
         try {
             if (threshold == "ERROR") {
-                let errorData = ErrorData_1.ErrorData.fromClient(exception);
+                var errorData = ErrorData_1.ErrorData.fromClient(exception);
                 sendError(errorData);
             }
         }
@@ -4338,13 +4824,14 @@ var Implementation;
      * @param errorData the error data to be displayed
      * @param localHandler an optional local error handler which has to be processed before the error handler queue
      */
-    function sendError(errorData, localHandler = function (data) {
-    }) {
+    function sendError(errorData, localHandler) {
+        if (localHandler === void 0) { localHandler = function (data) {
+        }; }
         localHandler(errorData);
-        errorQueue.forEach((errorCallback) => {
+        errorQueue.forEach(function (errorCallback) {
             errorCallback(errorData);
         });
-        let displayError = getGlobalConfig("defaultErrorOutput", (console ? console.error : alert));
+        var displayError = getGlobalConfig("defaultErrorOutput", (console ? console.error : alert));
         displayError(errorData);
     }
     Implementation.sendError = sendError;
@@ -4353,16 +4840,16 @@ var Implementation;
      * @return the client window id of the current window, if one is given if none is found, null is returned
      */
     function getClientWindow(node) {
-        const ALTERED = "___mf_id_altered__";
-        const INIT = "___init____";
+        var ALTERED = "___mf_id_altered__";
+        var INIT = "___init____";
         /*
          * the search root for the dom element search
          */
-        let searchRoot = new mona_dish_1.DQ(node || document.body).querySelectorAll(`form input [name='${Const_1.P_CLIENT_WINDOW}']`);
+        var searchRoot = new mona_dish_1.DQ(node || document.body).querySelectorAll("form input [name='".concat(Const_1.P_CLIENT_WINDOW, "']"));
         /*
          * lazy helper to fetch the window id from the window url
          */
-        let fetchWindowIdFromUrl = () => ExtDomQuery_1.ExtDomQuery.searchJsfJsFor(/jfwid=([^&;]*)/).orElse(null).value;
+        var fetchWindowIdFromUrl = function () { return ExtDomQuery_1.ExtDomQuery.searchJsfJsFor(/jfwid=([^&;]*)/).orElse(null).value; };
         /*
          * functional double check based on stream reduction
          * the values should be identical or on INIT value which is a premise to
@@ -4371,7 +4858,7 @@ var Implementation;
          * @param value1
          * @param value2
          */
-        let differenceCheck = (value1, value2) => {
+        var differenceCheck = function (value1, value2) {
             if (value1 == INIT) {
                 return value2;
             }
@@ -4385,13 +4872,13 @@ var Implementation;
          *
          * @param item
          */
-        let getValue = (item) => item.attr("value").value;
+        var getValue = function (item) { return item.attr("value").value; };
         /*
          * fetch the window id from the forms
          * window ids must be present in all forms
          * or non-existent. If they exist all of them must be the same
          */
-        let formWindowId = searchRoot.stream.map(getValue).reduce(differenceCheck, INIT);
+        var formWindowId = searchRoot.stream.map(getValue).reduce(differenceCheck, INIT);
         //if the resulting window id is set on altered then we have an unresolvable problem
         assert(ALTERED != formWindowId.value, "Multiple different windowIds found in document");
         /*
@@ -4413,11 +4900,11 @@ var Implementation;
          *  type-check assert!, we opt for strong typing here
          *  because it makes it easier to detect bugs
          */
-        let element = mona_dish_1.DQ.byId(form, true);
+        var element = mona_dish_1.DQ.byId(form, true);
         if (!element.isTag(Const_1.TAG_FORM)) {
             throw new Error(getMessage("ERR_VIEWSTATE"));
         }
-        let formData = new XhrFormData_1.XhrFormData(element);
+        var formData = new XhrFormData_1.XhrFormData(element);
         return formData.toString();
     }
     Implementation.getViewState = getViewState;
@@ -4432,7 +4919,9 @@ var Implementation;
          *
          * adds a new request to our queue for further processing
          */
-        addRequestToQueue: function (elem, form, reqCtx, respPassThr, delay = 0, timeout = 0) {
+        addRequestToQueue: function (elem, form, reqCtx, respPassThr, delay, timeout) {
+            if (delay === void 0) { delay = 0; }
+            if (timeout === void 0) { timeout = 0; }
             Implementation.requestQueue = Implementation.requestQueue !== null && Implementation.requestQueue !== void 0 ? Implementation.requestQueue : new AsyncQueue_1.AsynchronousQueue();
             Implementation.requestQueue.enqueue(new XhrRequest_1.XhrRequest(elem, form, reqCtx, respPassThr, [], timeout), delay);
         }
@@ -4488,7 +4977,7 @@ var Implementation;
      */
     function assignClientWindowId(form, targetContext) {
         var _a;
-        let clientWindow = ((_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : window === null || window === void 0 ? void 0 : window.jsf).getClientWindow(form.getAsElem(0).value);
+        var clientWindow = ((_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : window === null || window === void 0 ? void 0 : window.jsf).getClientWindow(form.getAsElem(0).value);
         if (clientWindow) {
             targetContext.assign(Const_1.CTX_PARAM_PASS_THR, Const_1.P_CLIENT_WINDOW).value = clientWindow;
         }
@@ -4510,12 +4999,12 @@ var Implementation;
      */
     function remapDefaultConstants(targetConfig, targetKey, userValues, issuingForm, issuingElementId) {
         //a cleaner implementation of the transform list method
-        let iterValues = (userValues) ? trim(userValues).split(/\s+/gi) : [];
-        let ret = [];
-        let processed = {};
+        var iterValues = (userValues) ? trim(userValues).split(/\s+/gi) : [];
+        var ret = [];
+        var processed = {};
         // in this case we do not use lazy stream because it wont bring any code reduction
         // or speedup
-        for (let cnt = 0; cnt < iterValues.length; cnt++) {
+        for (var cnt = 0; cnt < iterValues.length; cnt++) {
             //avoid doubles
             if (iterValues[cnt] in processed) {
                 continue;
@@ -4553,14 +5042,26 @@ var Implementation;
      * Filter the options given with a blacklist, so that only
      * the values required for pass-through are processed in the ajax request
      *
+     * Note this is a bug carried over from the old implementation
+     * the spec conform behavior is to use params for passthrough values
+     * this will be removed soon, after it is cleared up wheter removing
+     * it breaks any legacy code
+     *
      * @param {Context} mappedOpts the options to be filtered
+     * @deprecated
      */
     function filterPassThroughValues(mappedOpts) {
         //we now can use the full code reduction given by our stream api
         //to filter
         return mona_dish_1.Stream.ofAssoc(mappedOpts)
-            .filter(item => !(item[0] in BlockFilter))
+            .filter(function (item) { return !(item[0] in BlockFilter); })
             .collect(new mona_dish_1.AssocArrayCollector());
+    }
+    function remapArrayToAssocArr(arrayedParams) {
+        if (Array.isArray(arrayedParams)) {
+            return mona_dish_1.Stream.of.apply(mona_dish_1.Stream, arrayedParams).collect(new mona_dish_1.AssocArrayCollector());
+        }
+        return arrayedParams;
     }
     function resolveGlobalConfig() {
         var _a, _b;
@@ -4583,9 +5084,9 @@ var Implementation;
         else {
             //either a function or a string can be passed in case of a string we have to wrap it into another function
             //it is not a plain executable code but a definition
-            let sourceCode = trim(func);
+            var sourceCode = trim(func);
             if (sourceCode.indexOf("function ") == 0) {
-                sourceCode = `return ${sourceCode} (event)`;
+                sourceCode = "return ".concat(sourceCode, " (event)");
             }
             return new Function("event", sourceCode).call(source, event) !== false;
         }
@@ -4622,14 +5123,14 @@ exports.PushImpl = void 0;
 /**
  * Typescript port of the faces\.push part in the myfaces implementation
  */
-const Const_1 = __webpack_require__(/*! ./core/Const */ "./src/main/typescript/impl/core/Const.ts");
-const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
+var Const_1 = __webpack_require__(/*! ./core/Const */ "./src/main/typescript/impl/core/Const.ts");
+var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 /**
  * Implementation class for the push functionality
  */
 var PushImpl;
 (function (PushImpl) {
-    const URL_PROTOCOL = mona_dish_1.DQ.global().location.protocol.replace("http", "ws") + "//";
+    var URL_PROTOCOL = mona_dish_1.DQ.global().location.protocol.replace("http", "ws") + "//";
     // we expose the member variables for testing purposes
     // they are not directly touched outside of tests
     /* socket map by token */
@@ -4666,7 +5167,7 @@ var PushImpl;
             onclose(-1, channel);
             return;
         }
-        let channelToken = url.substr(url.indexOf('?') + 1);
+        var channelToken = url.substr(url.indexOf('?') + 1);
         if (!PushImpl.components[socketClientId]) {
             PushImpl.components[socketClientId] = {
                 'channelToken': channelToken,
@@ -4710,38 +5211,38 @@ var PushImpl;
      * @param {string} url The URL of the web socket
      * @param {string} channel The name of the web socket channel.
      */
-    class Socket {
-        constructor(channelToken, url, channel) {
+    var Socket = /** @class */ (function () {
+        function Socket(channelToken, url, channel) {
             this.channelToken = channelToken;
             this.url = url;
             this.channel = channel;
             this.reconnectAttempts = 0;
         }
-        open() {
+        Socket.prototype.open = function () {
             if (this.socket && this.socket.readyState == 1) {
                 return;
             }
             this.socket = new WebSocket(this.url);
             this.bindCallbacks();
-        }
+        };
         // noinspection JSUnusedLocalSymbols
-        onopen(event) {
+        Socket.prototype.onopen = function (event) {
             var _a, _b;
             if (!this.reconnectAttempts) {
-                let clientIds = PushImpl.clientIdsByTokens[this.channelToken];
-                for (let i = clientIds.length - 1; i >= 0; i--) {
-                    let socketClientId = clientIds[i];
+                var clientIds = PushImpl.clientIdsByTokens[this.channelToken];
+                for (var i = clientIds.length - 1; i >= 0; i--) {
+                    var socketClientId = clientIds[i];
                     (_b = (_a = PushImpl.components[socketClientId]) === null || _a === void 0 ? void 0 : _a['onopen']) === null || _b === void 0 ? void 0 : _b.call(_a, this.channel);
                 }
             }
             this.reconnectAttempts = 0;
-        }
-        onerror(event) {
+        };
+        Socket.prototype.onerror = function (event) {
             var _a, _b;
-            let message = JSON.parse(event.data);
+            var message = JSON.parse(event.data);
             //TODO replace this with a more readable Stream code
-            for (let i = PushImpl.clientIdsByTokens[this.channelToken].length - 1; i >= 0; i--) {
-                let socketClientId = PushImpl.clientIdsByTokens[this.channelToken][i];
+            for (var i = PushImpl.clientIdsByTokens[this.channelToken].length - 1; i >= 0; i--) {
+                var socketClientId = PushImpl.clientIdsByTokens[this.channelToken][i];
                 if (document.getElementById(socketClientId)) {
                     try {
                         (_b = (_a = PushImpl.components[socketClientId]) === null || _a === void 0 ? void 0 : _a['onerror']) === null || _b === void 0 ? void 0 : _b.call(_a, message, this.channel, event);
@@ -4758,12 +5259,12 @@ var PushImpl;
                 // tag disappeared
                 this.close();
             }
-        }
-        onmmessage(event) {
+        };
+        Socket.prototype.onmmessage = function (event) {
             var _a, _b, _c;
-            let message = JSON.parse(event.data);
-            for (let i = PushImpl.clientIdsByTokens[this.channelToken].length - 1; i >= 0; i--) {
-                let socketClientId = PushImpl.clientIdsByTokens[this.channelToken][i];
+            var message = JSON.parse(event.data);
+            for (var i = PushImpl.clientIdsByTokens[this.channelToken].length - 1; i >= 0; i--) {
+                var socketClientId = PushImpl.clientIdsByTokens[this.channelToken][i];
                 if (document.getElementById(socketClientId)) {
                     try {
                         (_b = (_a = PushImpl.components[socketClientId]) === null || _a === void 0 ? void 0 : _a['onmessage']) === null || _b === void 0 ? void 0 : _b.call(_a, message, this.channel, event);
@@ -4771,10 +5272,10 @@ var PushImpl;
                     catch (e) {
                         //Ignore
                     }
-                    let behaviors = (_c = PushImpl.components === null || PushImpl.components === void 0 ? void 0 : PushImpl.components[socketClientId]) === null || _c === void 0 ? void 0 : _c['behaviors'];
-                    let functions = behaviors === null || behaviors === void 0 ? void 0 : behaviors[message];
+                    var behaviors = (_c = PushImpl.components === null || PushImpl.components === void 0 ? void 0 : PushImpl.components[socketClientId]) === null || _c === void 0 ? void 0 : _c['behaviors'];
+                    var functions = behaviors === null || behaviors === void 0 ? void 0 : behaviors[message];
                     if (functions && functions.length) {
-                        for (let j = 0; j < functions.length; j++) {
+                        for (var j = 0; j < functions.length; j++) {
                             try {
                                 functions[j](null);
                             }
@@ -4792,46 +5293,48 @@ var PushImpl;
                 // tag disappeared
                 this.close();
             }
-        }
-        onclose(event) {
+        };
+        Socket.prototype.onclose = function (event) {
             var _a, _b;
             if (!this.socket
                 || (event.code == 1000 && event.reason == Const_1.REASON_EXPIRED)
                 || (event.code == 1008)
                 || (!this.reconnectAttempts)
                 || (this.reconnectAttempts >= Const_1.MAX_RECONNECT_ATTEMPTS)) {
-                let clientIds = PushImpl.clientIdsByTokens[this.channelToken];
-                for (let i = clientIds.length - 1; i >= 0; i--) {
-                    let socketClientId = clientIds[i];
+                var clientIds = PushImpl.clientIdsByTokens[this.channelToken];
+                for (var i = clientIds.length - 1; i >= 0; i--) {
+                    var socketClientId = clientIds[i];
                     (_b = (_a = PushImpl.components === null || PushImpl.components === void 0 ? void 0 : PushImpl.components[socketClientId]) === null || _a === void 0 ? void 0 : _a['onclose']) === null || _b === void 0 ? void 0 : _b.call(_a, event === null || event === void 0 ? void 0 : event.code, this === null || this === void 0 ? void 0 : this.channel, event);
                 }
             }
             else {
                 setTimeout(this.open, Const_1.RECONNECT_INTERVAL * this.reconnectAttempts++);
             }
-        }
+        };
         ;
-        close() {
+        Socket.prototype.close = function () {
             if (this.socket) {
-                let s = this.socket;
+                var s = this.socket;
                 this.socket = null;
                 s.close();
             }
-        }
+        };
         /**
          * bind the callbacks to the socket callbacks
          */
-        bindCallbacks() {
-            this.socket.onopen = (event) => this.onopen(event);
-            this.socket.onmessage = (event) => this.onmmessage(event);
-            this.socket.onclose = (event) => this.onclose(event);
-            this.socket.onerror = (event) => this.onerror(event);
-        }
-    }
+        Socket.prototype.bindCallbacks = function () {
+            var _this = this;
+            this.socket.onopen = function (event) { return _this.onopen(event); };
+            this.socket.onmessage = function (event) { return _this.onmmessage(event); };
+            this.socket.onclose = function (event) { return _this.onclose(event); };
+            this.socket.onerror = function (event) { return _this.onerror(event); };
+        };
+        return Socket;
+    }());
     // Private static functions ---------------------------------------------------------------------------------------
     function getBaseURL(url) {
         if (url.indexOf("://") < 0) {
-            let base = mona_dish_1.DQ.global().location.hostname + ":" + mona_dish_1.DQ.global().location.port;
+            var base = mona_dish_1.DQ.global().location.hostname + ":" + mona_dish_1.DQ.global().location.port;
             return URL_PROTOCOL + base + url;
         }
         else {
@@ -4846,7 +5349,7 @@ var PushImpl;
      *                 it first via <code>init()</code> function.
      */
     function getSocket(channelToken) {
-        let socket = PushImpl.sockets[channelToken];
+        var socket = PushImpl.sockets[channelToken];
         if (socket) {
             return socket;
         }
@@ -4854,8 +5357,9 @@ var PushImpl;
             throw new Error("Unknown channelToken: " + channelToken);
         }
     }
-    function resolveFunction(fn = () => {
-    }) {
+    function resolveFunction(fn) {
+        if (fn === void 0) { fn = function () {
+        }; }
         return ((typeof fn !== "function") && (fn = mona_dish_1.DQ.global()[fn]), fn);
     }
 })(PushImpl = exports.PushImpl || (exports.PushImpl = {}));
@@ -4886,9 +5390,9 @@ var PushImpl;
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.CTX_PARAM_DELAY = exports.CTX_PARAM_PASS_THR = exports.CTX_PARAM_TR_TYPE = exports.CTX_PARAM_SRC_CTL_ID = exports.CTX_PARAM_SRC_FRM_ID = exports.CTX_PARAM_MF_INTERNAL = exports.TIMEOUT_EVENT = exports.CLIENT_ERROR = exports.SERVER_ERROR = exports.MALFORMEDXML = exports.EMPTY_RESPONSE = exports.HTTPERROR = exports.RESPONSE_XML = exports.RESPONSE_TEXT = exports.ERROR_MESSAGE = exports.ERROR_NAME = exports.STATUS = exports.SOURCE = exports.SUCCESS = exports.COMPLETE = exports.BEGIN = exports.ON_EVENT = exports.ON_ERROR = exports.EVENT = exports.ERROR = exports.WINDOW_ID = exports.CTX_PARAM_RENDER = exports.P_BEHAVIOR_EVENT = exports.P_WINDOW_ID = exports.P_RESET_VALUES = exports.P_CLIENT_WINDOW = exports.P_EVT = exports.P_RENDER = exports.P_EXECUTE = exports.P_AJAX = exports.IDENT_FORM = exports.IDENT_THIS = exports.IDENT_NONE = exports.IDENT_ALL = exports.HTML_VIEWSTATE = exports.EMPTY_MAP = exports.EMPTY_STR = exports.EMPTY_FUNC = exports.P_RESOURCE = exports.P_VIEWBODY = exports.P_VIEWHEAD = exports.P_VIEWROOT = exports.P_VIEWSTATE = exports.PARTIAL_ID = exports.P_PARTIAL_SOURCE = void 0;
-exports.REASON_EXPIRED = exports.MF_NONE = exports.SEL_SCRIPTS_STYLES = exports.MYFACES = exports.DEFERRED_HEAD_INSERTS = exports.UPDATE_ELEMS = exports.UPDATE_FORMS = exports.CMD_REDIRECT = exports.CMD_EXTENSION = exports.CMD_ATTRIBUTES = exports.CMD_ERROR = exports.CMD_EVAL = exports.CMD_INSERT = exports.CMD_DELETE = exports.CMD_UPDATE = exports.CMD_CHANGES = exports.RESP_PARTIAL = exports.ATTR_ID = exports.ATTR_VALUE = exports.ATTR_NAME = exports.ATTR_URL = exports.ERR_NO_PARTIAL_RESPONSE = exports.PHASE_PROCESS_RESPONSE = exports.SEL_RESPONSE_XML = exports.SEL_CLIENT_WINDOW_ELEM = exports.SEL_VIEWSTATE_ELEM = exports.TAG_ATTR = exports.TAG_AFTER = exports.TAG_BEFORE = exports.TAG_BODY = exports.TAG_FORM = exports.TAG_HEAD = exports.STD_ACCEPT = exports.NO_TIMEOUT = exports.MULTIPART = exports.URL_ENCODED = exports.STATE_EVT_COMPLETE = exports.STATE_EVT_TIMEOUT = exports.STATE_EVT_BEGIN = exports.REQ_TYPE_POST = exports.REQ_TYPE_GET = exports.ENCODED_URL = exports.VAL_AJAX = exports.REQ_ACCEPT = exports.HEAD_FACES_REQ = exports.CONTENT_TYPE = exports.STAGE_DEVELOPMENT = exports.CTX_PARAM_EXECUTE = exports.CTX_PARAM_RST = exports.CTX_PARAM_TIMEOUT = void 0;
-exports.$nsp = exports.UNKNOWN = exports.MAX_RECONNECT_ATTEMPTS = exports.RECONNECT_INTERVAL = exports.APPLIED_CLIENT_WINDOW = exports.APPLIED_VST = void 0;
+exports.CTX_PARAM_SPEC_PARAMS = exports.CTX_PARAM_PASS_THR = exports.CTX_PARAM_TR_TYPE = exports.CTX_PARAM_SRC_CTL_ID = exports.CTX_PARAM_SRC_FRM_ID = exports.CTX_PARAM_MF_INTERNAL = exports.TIMEOUT_EVENT = exports.CLIENT_ERROR = exports.SERVER_ERROR = exports.MALFORMEDXML = exports.EMPTY_RESPONSE = exports.HTTPERROR = exports.RESPONSE_XML = exports.RESPONSE_TEXT = exports.ERROR_MESSAGE = exports.ERROR_NAME = exports.STATUS = exports.SOURCE = exports.SUCCESS = exports.COMPLETE = exports.BEGIN = exports.ON_EVENT = exports.ON_ERROR = exports.EVENT = exports.ERROR = exports.WINDOW_ID = exports.CTX_PARAM_RENDER = exports.P_BEHAVIOR_EVENT = exports.P_WINDOW_ID = exports.P_RESET_VALUES = exports.P_CLIENT_WINDOW = exports.P_EVT = exports.P_RENDER = exports.P_EXECUTE = exports.P_AJAX = exports.IDENT_FORM = exports.IDENT_THIS = exports.IDENT_NONE = exports.IDENT_ALL = exports.HTML_VIEWSTATE = exports.EMPTY_MAP = exports.EMPTY_STR = exports.EMPTY_FUNC = exports.P_RESOURCE = exports.P_VIEWBODY = exports.P_VIEWHEAD = exports.P_VIEWROOT = exports.P_VIEWSTATE = exports.PARTIAL_ID = exports.P_PARTIAL_SOURCE = void 0;
+exports.MF_NONE = exports.SEL_SCRIPTS_STYLES = exports.MYFACES = exports.DEFERRED_HEAD_INSERTS = exports.UPDATE_ELEMS = exports.UPDATE_FORMS = exports.CMD_REDIRECT = exports.CMD_EXTENSION = exports.CMD_ATTRIBUTES = exports.CMD_ERROR = exports.CMD_EVAL = exports.CMD_INSERT = exports.CMD_DELETE = exports.CMD_UPDATE = exports.CMD_CHANGES = exports.RESP_PARTIAL = exports.ATTR_ID = exports.ATTR_VALUE = exports.ATTR_NAME = exports.ATTR_URL = exports.ERR_NO_PARTIAL_RESPONSE = exports.PHASE_PROCESS_RESPONSE = exports.SEL_RESPONSE_XML = exports.SEL_CLIENT_WINDOW_ELEM = exports.SEL_VIEWSTATE_ELEM = exports.TAG_ATTR = exports.TAG_AFTER = exports.TAG_BEFORE = exports.TAG_BODY = exports.TAG_FORM = exports.TAG_HEAD = exports.STD_ACCEPT = exports.NO_TIMEOUT = exports.MULTIPART = exports.URL_ENCODED = exports.STATE_EVT_COMPLETE = exports.STATE_EVT_TIMEOUT = exports.STATE_EVT_BEGIN = exports.REQ_TYPE_POST = exports.REQ_TYPE_GET = exports.ENCODED_URL = exports.VAL_AJAX = exports.REQ_ACCEPT = exports.HEAD_FACES_REQ = exports.CONTENT_TYPE = exports.STAGE_DEVELOPMENT = exports.CTX_PARAM_EXECUTE = exports.CTX_PARAM_RST = exports.CTX_PARAM_TIMEOUT = exports.CTX_PARAM_DELAY = void 0;
+exports.$nsp = exports.UNKNOWN = exports.MAX_RECONNECT_ATTEMPTS = exports.RECONNECT_INTERVAL = exports.APPLIED_CLIENT_WINDOW = exports.APPLIED_VST = exports.REASON_EXPIRED = void 0;
 /*
  * [export const] constants
  */
@@ -4900,7 +5404,7 @@ exports.P_VIEWHEAD = "jakarta.faces.ViewHead";
 exports.P_VIEWBODY = "jakarta.faces.ViewBody";
 exports.P_RESOURCE = "jakarta.faces.Resource";
 /*some useful definitions*/
-exports.EMPTY_FUNC = Object.freeze(() => {
+exports.EMPTY_FUNC = Object.freeze(function () {
 });
 exports.EMPTY_STR = "";
 exports.EMPTY_MAP = Object.freeze({});
@@ -4947,6 +5451,7 @@ exports.CTX_PARAM_SRC_FRM_ID = "_mfSourceFormId";
 exports.CTX_PARAM_SRC_CTL_ID = "_mfSourceControlId";
 exports.CTX_PARAM_TR_TYPE = "_mfTransportType";
 exports.CTX_PARAM_PASS_THR = "passThrgh";
+exports.CTX_PARAM_SPEC_PARAMS = "params";
 exports.CTX_PARAM_DELAY = "delay";
 exports.CTX_PARAM_TIMEOUT = "timeout";
 exports.CTX_PARAM_RST = "resetValues";
@@ -5050,24 +5555,29 @@ exports.StateHolder = void 0;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const Const_1 = __webpack_require__(/*! ./Const */ "./src/main/typescript/impl/core/Const.ts");
+var Const_1 = __webpack_require__(/*! ./Const */ "./src/main/typescript/impl/core/Const.ts");
 /**
  * a helper class to isolate the
  * view state and client window and other
  * future states which follow a similar pattern
  */
-class StateHolder {
-    constructor(id, value) {
+var StateHolder = /** @class */ (function () {
+    function StateHolder(id, value) {
         this.id = id;
         this.value = value;
-        let viewStatePos = id.indexOf(Const_1.P_VIEWSTATE);
+        var viewStatePos = id.indexOf(Const_1.P_VIEWSTATE);
         this.nameSpace = viewStatePos > 0 ? id.substr(0, viewStatePos - 1) : Const_1.EMPTY_STR;
     }
-    get hasNameSpace() {
-        var _a;
-        return !!((_a = this === null || this === void 0 ? void 0 : this.nameSpace) !== null && _a !== void 0 ? _a : Const_1.EMPTY_STR).length;
-    }
-}
+    Object.defineProperty(StateHolder.prototype, "hasNameSpace", {
+        get: function () {
+            var _a;
+            return !!((_a = this === null || this === void 0 ? void 0 : this.nameSpace) !== null && _a !== void 0 ? _a : Const_1.EMPTY_STR).length;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    return StateHolder;
+}());
 exports.StateHolder = StateHolder;
 
 
@@ -5097,8 +5607,8 @@ exports.StateHolder = StateHolder;
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Messages = void 0;
-class Messages {
-    constructor() {
+var Messages = /** @class */ (function () {
+    function Messages() {
         this.MSG_TEST = "Testmessage";
         /*Messages*/
         /** @constant */
@@ -5189,7 +5699,8 @@ class Messages {
         /** @constant */
         this.UNKNOWN = "UNKNOWN";
     }
-}
+    return Messages;
+}());
 exports.Messages = Messages;
 
 
@@ -5219,11 +5730,11 @@ exports.Assertions = void 0;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
-const Lang_1 = __webpack_require__(/*! ./Lang */ "./src/main/typescript/impl/util/Lang.ts");
+var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
+var Lang_1 = __webpack_require__(/*! ./Lang */ "./src/main/typescript/impl/util/Lang.ts");
 var getMessage = Lang_1.ExtLang.getMessage;
 var makeException = Lang_1.ExtLang.makeException;
-const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
+var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 /**
  * a set of internal code assertions
  * which raise an error
@@ -5268,9 +5779,9 @@ var Assertions;
      * @param name the name of the error (optional)
      */
     function raiseError(error, message, caller, title, name) {
-        let finalTitle = title !== null && title !== void 0 ? title : Const_1.MALFORMEDXML;
-        let finalName = name !== null && name !== void 0 ? name : Const_1.MALFORMEDXML;
-        let finalMessage = message !== null && message !== void 0 ? message : Const_1.EMPTY_STR;
+        var finalTitle = title !== null && title !== void 0 ? title : Const_1.MALFORMEDXML;
+        var finalName = name !== null && name !== void 0 ? name : Const_1.MALFORMEDXML;
+        var finalMessage = message !== null && message !== void 0 ? message : Const_1.EMPTY_STR;
         //TODO clean up the messy makeException, this is a perfect case for encapsulation and sane defaults
         return makeException(error, finalTitle, finalName, "Response", caller || ((arguments.caller) ? arguments.caller.toString() : "_raiseError"), finalMessage);
     }
@@ -5279,19 +5790,28 @@ var Assertions;
      * using the new typescript 3.7 compiler assertion functionality to improve compiler hinting
      * we are not fully there yet, but soon
      */
-    function assert(value, msg = Const_1.EMPTY_STR, caller = Const_1.EMPTY_STR, title = "Assertion Error") {
+    function assert(value, msg, caller, title) {
+        if (msg === void 0) { msg = Const_1.EMPTY_STR; }
+        if (caller === void 0) { caller = Const_1.EMPTY_STR; }
+        if (title === void 0) { title = "Assertion Error"; }
         if (!value) {
             throw Assertions.raiseError(new Error(), msg, caller, title);
         }
     }
     Assertions.assert = assert;
-    function assertType(value, theType, msg = Const_1.EMPTY_STR, caller = Const_1.EMPTY_STR, title = "Type Assertion Error") {
+    function assertType(value, theType, msg, caller, title) {
+        if (msg === void 0) { msg = Const_1.EMPTY_STR; }
+        if (caller === void 0) { caller = Const_1.EMPTY_STR; }
+        if (title === void 0) { title = "Type Assertion Error"; }
         if ((!!value) && !mona_dish_1.Lang.assertType(value, theType)) {
             throw Assertions.raiseError(new Error(), msg, caller, title);
         }
     }
     Assertions.assertType = assertType;
-    function assertFunction(value, msg = Const_1.EMPTY_STR, caller = Const_1.EMPTY_STR, title = "Assertion Error") {
+    function assertFunction(value, msg, caller, title) {
+        if (msg === void 0) { msg = Const_1.EMPTY_STR; }
+        if (caller === void 0) { caller = Const_1.EMPTY_STR; }
+        if (title === void 0) { title = "Assertion Error"; }
         assertType(value, "function", msg, caller, title);
     }
     Assertions.assertFunction = assertFunction;
@@ -5320,16 +5840,20 @@ exports.AsynchronousQueue = void 0;
  * This interface can be used as wrapper contract
  * for normal promises if needed.
  */
-class AsynchronousQueue {
-    constructor() {
+var AsynchronousQueue = /** @class */ (function () {
+    function AsynchronousQueue() {
         this.runnableQueue = [];
     }
-    /**
-     * simple is empty accessor, returns true if queue is empty atm
-     */
-    get isEmpty() {
-        return !this.runnableQueue.length;
-    }
+    Object.defineProperty(AsynchronousQueue.prototype, "isEmpty", {
+        /**
+         * simple is empty accessor, returns true if queue is empty atm
+         */
+        get: function () {
+            return !this.runnableQueue.length;
+        },
+        enumerable: false,
+        configurable: true
+    });
     /**
      * enqueues an element and starts the
      * asynchronous work loop if not already running
@@ -5337,38 +5861,40 @@ class AsynchronousQueue {
      * @param element the element to be queued and processed
      * @param delay possible delay after our usual process or drop if something newer is incoming algorithm
      */
-    enqueue(element, delay = 0) {
+    AsynchronousQueue.prototype.enqueue = function (element, delay) {
+        var _this = this;
+        if (delay === void 0) { delay = 0; }
         if (this.delayTimeout) {
             clearTimeout(this.delayTimeout);
             this.delayTimeout = null;
         }
         if (delay) {
-            this.delayTimeout = setTimeout(() => {
-                this.appendElement(element);
+            this.delayTimeout = setTimeout(function () {
+                _this.appendElement(element);
             });
         }
         else {
             this.appendElement(element);
         }
-    }
+    };
     /**
      * fetches the next element from the queue (first in first out order)
      */
-    dequeue() {
+    AsynchronousQueue.prototype.dequeue = function () {
         return this.runnableQueue.shift();
-    }
+    };
     /**
      * clears up all elements from the queue
      */
-    cleanup() {
+    AsynchronousQueue.prototype.cleanup = function () {
         this.currentlyRunning = null;
         this.runnableQueue.length = 0;
-    }
+    };
     /**
      * cancels the currently running element and then cleans up the queue
      * aka cancel the queue entirely
      */
-    cancel() {
+    AsynchronousQueue.prototype.cancel = function () {
         try {
             if (this.currentlyRunning) {
                 this.currentlyRunning.cancel();
@@ -5377,11 +5903,11 @@ class AsynchronousQueue {
         finally {
             this.cleanup();
         }
-    }
-    callForNextElementToProcess() {
+    };
+    AsynchronousQueue.prototype.callForNextElementToProcess = function () {
         this.runEntry();
-    }
-    appendElement(element) {
+    };
+    AsynchronousQueue.prototype.appendElement = function (element) {
         //only if the first element is added we start with a trigger
         //otherwise a process already is running and not finished yet at that
         //time
@@ -5389,18 +5915,19 @@ class AsynchronousQueue {
         if (!this.currentlyRunning) {
             this.runEntry();
         }
-    }
-    runEntry() {
+    };
+    AsynchronousQueue.prototype.runEntry = function () {
+        var _this = this;
         if (this.isEmpty) {
             this.currentlyRunning = null;
             return;
         }
         this.currentlyRunning = this.dequeue();
         this.currentlyRunning
-            .catch((e) => {
+            .catch(function (e) {
             //in case of an error we always clean up the remaining calls
             //to allow a clean recovery of the application
-            this.cleanup();
+            _this.cleanup();
             throw e;
         })
             .then(
@@ -5410,9 +5937,10 @@ class AsynchronousQueue {
         //naturally give we have a DOM, the DOM is the natural event dispatch system
         //which we can use, to decouple the calls from a recursive stack call
         //(the browser engine will take care of that)
-        () => this.callForNextElementToProcess()).start();
-    }
-}
+        function () { return _this.callForNextElementToProcess(); }).start();
+    };
+    return AsynchronousQueue;
+}());
 exports.AsynchronousQueue = AsynchronousQueue;
 
 
@@ -5422,9 +5950,33 @@ exports.AsynchronousQueue = AsynchronousQueue;
 /*!******************************************************!*\
   !*** ./src/main/typescript/impl/util/ExtDomQuery.ts ***!
   \******************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ExtConfig = exports.ExtDQ = exports.ExtDomQuery = void 0;
 /*! Licensed to the Apache Software Foundation (ASF) under one or more
@@ -5442,8 +5994,8 @@ exports.ExtConfig = exports.ExtDQ = exports.ExtDomQuery = void 0;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
-const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
+var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
+var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 /**
  * detects whether a source is a faces.js request
  *
@@ -5451,7 +6003,7 @@ const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/
  * @return true if a faces.js loading pattern is detected
  * @constructor
  */
-const IS_FACES_SOURCE = (source) => {
+var IS_FACES_SOURCE = function (source) {
     //spec version smaller 4 we have to deal with the jsf namespace
     return source && !!((source === null || source === void 0 ? void 0 : source.search(/\/jakarta\.faces\.resource.*\/faces\.js.*/)) != -1 ||
         (source === null || source === void 0 ? void 0 : source.search(/\/faces-development\.js.*/)) != -1 ||
@@ -5474,10 +6026,10 @@ const IS_FACES_SOURCE = (source) => {
  * @param source the source to check
  * @constructor
  */
-const IS_INTERNAL_SOURCE = (source) => {
+var IS_INTERNAL_SOURCE = function (source) {
     return source.search(/\/faces[^.]*\.js.*ln=myfaces.testscripts.*/gi) != -1 || source.search(/\/jsf[^.]*\.js.*ln=myfaces.testscripts.*/gi) != -1;
 };
-const ATTR_SRC = 'src';
+var ATTR_SRC = 'src';
 /**
  * Extension which adds implementation specific
  * meta-data to our dom query
@@ -5487,114 +6039,137 @@ const ATTR_SRC = 'src';
  * nonce = el.nonce
  * windowId = el.getWindowId
  */
-class ExtDomQuery extends mona_dish_1.DQ {
-    static get windowId() {
-        return new ExtDomQuery(document.body).windowId;
+var ExtDomQuery = /** @class */ (function (_super) {
+    __extends(ExtDomQuery, _super);
+    function ExtDomQuery() {
+        return _super !== null && _super.apply(this, arguments) || this;
     }
-    static get nonce() {
-        return new ExtDomQuery(document.body).nonce;
-    }
-    get windowId() {
-        const fetchWindowIdFromURL = function () {
-            let href = window.location.href;
-            let windowId = "windowId";
-            let regex = new RegExp("[\\?&]" + windowId + "=([^&#\\;]*)");
-            let results = regex.exec(href);
-            //initial trial over the url and a regexp
-            if (results != null)
-                return results[1];
-            return null;
-        };
-        //byId ($)
-        if (this.value.isPresent()) {
-            let result = this.querySelectorAll("form input[name='" + Const_1.P_WINDOW_ID + "']");
-            if (result.length > 1) {
-                throw Error("Multiple different windowIds found in document");
+    Object.defineProperty(ExtDomQuery, "windowId", {
+        get: function () {
+            return new ExtDomQuery(document.body).windowId;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(ExtDomQuery, "nonce", {
+        get: function () {
+            return new ExtDomQuery(document.body).nonce;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(ExtDomQuery.prototype, "windowId", {
+        get: function () {
+            var fetchWindowIdFromURL = function () {
+                var href = window.location.href;
+                var windowId = "windowId";
+                var regex = new RegExp("[\\?&]" + windowId + "=([^&#\\;]*)");
+                var results = regex.exec(href);
+                //initial trial over the url and a regexp
+                if (results != null)
+                    return results[1];
+                return null;
+            };
+            //byId ($)
+            if (this.value.isPresent()) {
+                var result = this.querySelectorAll("form input[name='" + Const_1.P_WINDOW_ID + "']");
+                if (result.length > 1) {
+                    throw Error("Multiple different windowIds found in document");
+                }
+                return (result.isPresent()) ? result.getAsElem(0).value.value : fetchWindowIdFromURL();
             }
-            return (result.isPresent()) ? result.getAsElem(0).value.value : fetchWindowIdFromURL();
-        }
-        else {
-            return fetchWindowIdFromURL();
-        }
-    }
-    /*
-    * determines the faces.js nonce and adds them to the namespace
-    * this is done once and only lazily
-    */
-    get nonce() {
-        //already processed
-        let myfacesConfig = new ExtConfig(window.myfaces);
-        let nonce = myfacesConfig.getIf("config", "cspMeta", "nonce");
-        if (nonce.value) {
-            return nonce.value;
-        }
-        let curScript = new mona_dish_1.DQ(document.currentScript);
-        //since our baseline atm is ie11 we cannot use document.currentScript globally
-        if (!!this.extractNonce(curScript)) {
-            // fast-path for modern browsers
-            return this.extractNonce(curScript);
-        }
-        // fallback if the currentScript method fails, we just search the jsf tags for nonce, this is
-        // the last possibility
-        let nonceScript = mona_dish_1.DQ
-            .querySelectorAll("script[src], link[src]")
-            .lazyStream
-            .filter((item) => this.extractNonce(item) && item.attr(ATTR_SRC) != null)
-            .filter(item => IS_FACES_SOURCE(item.attr(ATTR_SRC).value))
-            .first();
-        if (nonceScript.isPresent()) {
-            return this.extractNonce(nonceScript.value);
-        }
-        return null;
-    }
-    static searchJsfJsFor(item) {
+            else {
+                return fetchWindowIdFromURL();
+            }
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(ExtDomQuery.prototype, "nonce", {
+        /*
+        * determines the faces.js nonce and adds them to the namespace
+        * this is done once and only lazily
+        */
+        get: function () {
+            var _this = this;
+            //already processed
+            var myfacesConfig = new ExtConfig(window.myfaces);
+            var nonce = myfacesConfig.getIf("config", "cspMeta", "nonce");
+            if (nonce.value) {
+                return nonce.value;
+            }
+            var curScript = new mona_dish_1.DQ(document.currentScript);
+            //since our baseline atm is ie11 we cannot use document.currentScript globally
+            if (!!this.extractNonce(curScript)) {
+                // fast-path for modern browsers
+                return this.extractNonce(curScript);
+            }
+            // fallback if the currentScript method fails, we just search the jsf tags for nonce, this is
+            // the last possibility
+            var nonceScript = mona_dish_1.DQ
+                .querySelectorAll("script[src], link[src]")
+                .lazyStream
+                .filter(function (item) { return _this.extractNonce(item) && item.attr(ATTR_SRC) != null; })
+                .filter(function (item) { return IS_FACES_SOURCE(item.attr(ATTR_SRC).value); })
+                .first();
+            if (nonceScript.isPresent()) {
+                return this.extractNonce(nonceScript.value);
+            }
+            return null;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    ExtDomQuery.searchJsfJsFor = function (item) {
         return new ExtDomQuery(document).searchJsfJsFor(item);
-    }
+    };
     /**
      * searches the embedded faces.js for items like separator char etc.
      * expects a match as variable under position 1 in the result match
      * @param regExp
      */
-    searchJsfJsFor(regExp) {
+    ExtDomQuery.prototype.searchJsfJsFor = function (regExp) {
         //perfect application for lazy stream
         return mona_dish_1.DQ.querySelectorAll("script[src], link[src]").lazyStream
-            .filter(item => IS_FACES_SOURCE(item.attr(ATTR_SRC).value))
-            .map(item => item.attr(ATTR_SRC).value.match(regExp))
-            .filter(item => item != null && item.length > 1)
-            .map((result) => {
+            .filter(function (item) { return IS_FACES_SOURCE(item.attr(ATTR_SRC).value); })
+            .map(function (item) { return item.attr(ATTR_SRC).value.match(regExp); })
+            .filter(function (item) { return item != null && item.length > 1; })
+            .map(function (result) {
             return decodeURIComponent(result[1]);
         }).first();
-    }
-    globalEval(code, nonce) {
-        return new ExtDomQuery(super.globalEval(code, nonce !== null && nonce !== void 0 ? nonce : this.nonce));
-    }
+    };
+    ExtDomQuery.prototype.globalEval = function (code, nonce) {
+        return new ExtDomQuery(_super.prototype.globalEval.call(this, code, nonce !== null && nonce !== void 0 ? nonce : this.nonce));
+    };
     // called from base class runScripts, do not delete
     // noinspection JSUnusedGlobalSymbols
-    globalEvalSticky(code, nonce) {
-        return new ExtDomQuery(super.globalEvalSticky(code, nonce !== null && nonce !== void 0 ? nonce : this.nonce));
-    }
+    ExtDomQuery.prototype.globalEvalSticky = function (code, nonce) {
+        return new ExtDomQuery(_super.prototype.globalEvalSticky.call(this, code, nonce !== null && nonce !== void 0 ? nonce : this.nonce));
+    };
     /**
      * decorated run scripts which takes our jsf extensions into consideration
      * (standard DomQuery will let you pass anything)
      * @param sticky if set to true the internally generated element for the script is left in the dom
      * @param whiteListed
      */
-    runScripts(sticky = false, whiteListed) {
-        const whitelistFunc = (src) => {
+    ExtDomQuery.prototype.runScripts = function (sticky, whiteListed) {
+        if (sticky === void 0) { sticky = false; }
+        var whitelistFunc = function (src) {
             var _a;
             return ((_a = whiteListed === null || whiteListed === void 0 ? void 0 : whiteListed(src)) !== null && _a !== void 0 ? _a : true) && !IS_FACES_SOURCE(src) && !IS_INTERNAL_SOURCE(src);
         };
-        return super.runScripts(sticky, whitelistFunc);
-    }
+        return _super.prototype.runScripts.call(this, sticky, whitelistFunc);
+    };
     /**
      * adds the elements in this ExtDomQuery to the head
      *
      * @param suppressDoubleIncludes checks for existing elements in the head before running the insert
      */
-    runHeadInserts(suppressDoubleIncludes = true) {
-        let head = ExtDomQuery.byId(document.head);
+    ExtDomQuery.prototype.runHeadInserts = function (suppressDoubleIncludes) {
+        if (suppressDoubleIncludes === void 0) { suppressDoubleIncludes = true; }
+        var head = ExtDomQuery.byId(document.head);
         //automated nonce handling
-        let processedScripts = [];
+        var processedScripts = [];
         // the idea is only to run head inserts on resources
         // which do not exist already, that way
         // we can avoid double includes on subsequent resource
@@ -5603,28 +6178,28 @@ class ExtDomQuery extends mona_dish_1.DQ {
             if (!suppressDoubleIncludes) {
                 return true;
             }
-            const tagName = element.tagName.value;
+            var tagName = element.tagName.value;
             if (!tagName) {
                 // text node they do not have tag names, so we can process them as they are without
                 // any further ado
                 return true;
             }
-            let reference = element.attr("href")
+            var reference = element.attr("href")
                 .orElse(element.attr("src").value)
                 .orElse(element.attr("rel").value);
             if (!reference.isPresent()) {
                 return true;
             }
-            return !head.querySelectorAll(`${tagName}[href='${reference.value}']`).length &&
-                !head.querySelectorAll(`${tagName}[src='${reference.value}']`).length &&
-                !head.querySelectorAll(`${tagName}[rel='${reference.value}']`).length;
+            return !head.querySelectorAll("".concat(tagName, "[href='").concat(reference.value, "']")).length &&
+                !head.querySelectorAll("".concat(tagName, "[src='").concat(reference.value, "']")).length &&
+                !head.querySelectorAll("".concat(tagName, "[rel='").concat(reference.value, "']")).length;
         }
         this
             .filter(resourceIsNew)
-            .each(element => {
+            .each(function (element) {
             if (element.tagName.value != "SCRIPT") {
                 //we need to run runScripts properly to deal with the rest
-                new ExtDomQuery(...processedScripts).runScripts(true);
+                new (ExtDomQuery.bind.apply(ExtDomQuery, __spreadArray([void 0], processedScripts, false)))().runScripts(true);
                 processedScripts = [];
                 head.append(element);
             }
@@ -5632,8 +6207,8 @@ class ExtDomQuery extends mona_dish_1.DQ {
                 processedScripts.push(element);
             }
         });
-        new ExtDomQuery(...processedScripts).runScripts(true);
-    }
+        new (ExtDomQuery.bind.apply(ExtDomQuery, __spreadArray([void 0], processedScripts, false)))().runScripts(true);
+    };
     /**
      * byId producer
      *
@@ -5641,83 +6216,111 @@ class ExtDomQuery extends mona_dish_1.DQ {
      * @param deep whether the search should go into embedded shadow dom elements
      * @return a DomQuery containing the found elements
      */
-    static byId(selector, deep = false) {
-        const ret = mona_dish_1.DomQuery.byId(selector, deep);
+    ExtDomQuery.byId = function (selector, deep) {
+        if (deep === void 0) { deep = false; }
+        var ret = mona_dish_1.DomQuery.byId(selector, deep);
         return new ExtDomQuery(ret);
-    }
-    extractNonce(curScript) {
+    };
+    ExtDomQuery.prototype.extractNonce = function (curScript) {
         var _a, _b;
         return (_b = (_a = curScript.getAsElem(0).value) === null || _a === void 0 ? void 0 : _a.nonce) !== null && _b !== void 0 ? _b : curScript.attr("nonce").value;
-    }
-}
+    };
+    return ExtDomQuery;
+}(mona_dish_1.DQ));
 exports.ExtDomQuery = ExtDomQuery;
 exports.ExtDQ = ExtDomQuery;
 /**
  * in order to reduce the number of interception points for the fallbacks we add
  * the namespace remapping straight to our config accessors
  */
-class ExtConfig extends mona_dish_1.Config {
-    constructor(root) {
-        super(root);
+var ExtConfig = /** @class */ (function (_super) {
+    __extends(ExtConfig, _super);
+    function ExtConfig(root) {
+        return _super.call(this, root) || this;
     }
-    assignIf(condition, ...accessPath) {
-        const accessPathMapped = this.remap(accessPath);
-        return super.assignIf(condition, ...accessPathMapped);
-    }
-    assign(...accessPath) {
-        const accessPathMapped = this.remap(accessPath);
-        return super.assign(...accessPathMapped);
-    }
-    append(...accessPath) {
-        return super.append(...accessPath);
-    }
-    appendIf(condition, ...accessPath) {
-        const accessPathMapped = this.remap(accessPath);
-        return super.appendIf(condition, ...accessPathMapped);
-    }
-    getIf(...accessPath) {
-        const accessPathMapped = this.remap(accessPath);
-        return super.getIf(...accessPathMapped);
-    }
-    get(defaultVal) {
-        return super.get((0, Const_1.$nsp)(defaultVal));
-    }
-    delete(key) {
-        return super.delete((0, Const_1.$nsp)(key));
-    }
+    ExtConfig.prototype.assignIf = function (condition) {
+        var accessPath = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            accessPath[_i - 1] = arguments[_i];
+        }
+        var accessPathMapped = this.remap(accessPath);
+        return _super.prototype.assignIf.apply(this, __spreadArray([condition], accessPathMapped, false));
+    };
+    ExtConfig.prototype.assign = function () {
+        var accessPath = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            accessPath[_i] = arguments[_i];
+        }
+        var accessPathMapped = this.remap(accessPath);
+        return _super.prototype.assign.apply(this, accessPathMapped);
+    };
+    ExtConfig.prototype.append = function () {
+        var accessPath = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            accessPath[_i] = arguments[_i];
+        }
+        return _super.prototype.append.apply(this, accessPath);
+    };
+    ExtConfig.prototype.appendIf = function (condition) {
+        var accessPath = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            accessPath[_i - 1] = arguments[_i];
+        }
+        var accessPathMapped = this.remap(accessPath);
+        return _super.prototype.appendIf.apply(this, __spreadArray([condition], accessPathMapped, false));
+    };
+    ExtConfig.prototype.getIf = function () {
+        var accessPath = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            accessPath[_i] = arguments[_i];
+        }
+        var accessPathMapped = this.remap(accessPath);
+        return _super.prototype.getIf.apply(this, accessPathMapped);
+    };
+    ExtConfig.prototype.get = function (defaultVal) {
+        return _super.prototype.get.call(this, (0, Const_1.$nsp)(defaultVal));
+    };
+    ExtConfig.prototype.delete = function (key) {
+        return _super.prototype.delete.call(this, (0, Const_1.$nsp)(key));
+    };
     /**
      * creates a config from an initial value or null
      * @param value
      */
-    static fromNullable(value) {
+    ExtConfig.fromNullable = function (value) {
         return new ExtConfig(value);
-    }
-    getClass() {
+    };
+    ExtConfig.prototype.getClass = function () {
         return ExtConfig;
-    }
+    };
     /**
      * shallow copy getter, copies only the first level, references the deeper nodes
      * in a shared manner
      */
-    shallowCopy$() {
-        const ret = super.shallowCopy$();
+    ExtConfig.prototype.shallowCopy$ = function () {
+        var ret = _super.prototype.shallowCopy$.call(this);
         return new ExtConfig(ret);
-    }
-    /**
-     * deep copy, copies all config nodes
-     */
-    get deepCopy() {
-        return new ExtConfig(super.deepCopy$());
-    }
+    };
+    Object.defineProperty(ExtConfig.prototype, "deepCopy", {
+        /**
+         * deep copy, copies all config nodes
+         */
+        get: function () {
+            return new ExtConfig(_super.prototype.deepCopy$.call(this));
+        },
+        enumerable: false,
+        configurable: true
+    });
     /**
      * helper to remap the namespaces of an array of access paths
      * @param accessPath the access paths to be remapped
      * @private returns an array of access paths with version remapped namespaces
      */
-    remap(accessPath) {
-        return mona_dish_1.Stream.of(...accessPath).map(key => (0, Const_1.$nsp)(key)).collect(new mona_dish_1.ArrayCollector());
-    }
-}
+    ExtConfig.prototype.remap = function (accessPath) {
+        return mona_dish_1.Stream.of.apply(mona_dish_1.Stream, accessPath).map(function (key) { return (0, Const_1.$nsp)(key); }).collect(new mona_dish_1.ArrayCollector());
+    };
+    return ExtConfig;
+}(mona_dish_1.Config));
 exports.ExtConfig = ExtConfig;
 
 
@@ -5750,18 +6353,18 @@ exports.ExtConfig = ExtConfig;
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ExtLang = void 0;
-const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
-const Messages_1 = __webpack_require__(/*! ../i18n/Messages */ "./src/main/typescript/impl/i18n/Messages.ts");
-const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
-const RequestDataResolver_1 = __webpack_require__(/*! ../xhrCore/RequestDataResolver */ "./src/main/typescript/impl/xhrCore/RequestDataResolver.ts");
+var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
+var Messages_1 = __webpack_require__(/*! ../i18n/Messages */ "./src/main/typescript/impl/i18n/Messages.ts");
+var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
+var RequestDataResolver_1 = __webpack_require__(/*! ../xhrCore/RequestDataResolver */ "./src/main/typescript/impl/xhrCore/RequestDataResolver.ts");
 var ExtLang;
 (function (ExtLang) {
-    let installedLocale;
-    let nameSpace = "impl/util/Lang/";
+    var installedLocale;
+    var nameSpace = "impl/util/Lang/";
     function getLanguage() {
         //TODO global config override
         var _a, _b;
-        let language = (_b = (_a = navigator.languages) === null || _a === void 0 ? void 0 : _a[0]) !== null && _b !== void 0 ? _b : navigator === null || navigator === void 0 ? void 0 : navigator.language;
+        var language = (_b = (_a = navigator.languages) === null || _a === void 0 ? void 0 : _a[0]) !== null && _b !== void 0 ? _b : navigator === null || navigator === void 0 ? void 0 : navigator.language;
         language = language.split("-")[0];
         return language;
     }
@@ -5784,7 +6387,8 @@ var ExtLang;
      * @param defaultValue an optional default value if the producer fails to produce anything
      * @returns an Optional of the produced value
      */
-    function failSaveResolve(resolverProducer, defaultValue = null) {
+    function failSaveResolve(resolverProducer, defaultValue) {
+        if (defaultValue === void 0) { defaultValue = null; }
         return mona_dish_1.Lang.saveResolve(resolverProducer, defaultValue);
     }
     ExtLang.failSaveResolve = failSaveResolve;
@@ -5797,7 +6401,8 @@ var ExtLang;
      * @param resolverProducer a producer function which produces a value in the non error case
      * @param defaultValue the default value in case of a fail of the function
      */
-    function failSaveExecute(resolverProducer, defaultValue = null) {
+    function failSaveExecute(resolverProducer, defaultValue) {
+        if (defaultValue === void 0) { defaultValue = null; }
         mona_dish_1.Lang.saveResolve(resolverProducer, defaultValue);
     }
     ExtLang.failSaveExecute = failSaveExecute;
@@ -5813,11 +6418,15 @@ var ExtLang;
      *
      * @param templateParams the param list to be filled in
      */
-    function getMessage(key, defaultMessage, ...templateParams) {
+    function getMessage(key, defaultMessage) {
         var _a, _b;
+        var templateParams = [];
+        for (var _i = 2; _i < arguments.length; _i++) {
+            templateParams[_i - 2] = arguments[_i];
+        }
         installedLocale = installedLocale !== null && installedLocale !== void 0 ? installedLocale : new Messages_1.Messages();
-        let msg = (_b = (_a = installedLocale[key]) !== null && _a !== void 0 ? _a : defaultMessage) !== null && _b !== void 0 ? _b : key;
-        mona_dish_1.Stream.of(...templateParams).each((param, cnt) => {
+        var msg = (_b = (_a = installedLocale[key]) !== null && _a !== void 0 ? _a : defaultMessage) !== null && _b !== void 0 ? _b : key;
+        mona_dish_1.Stream.of.apply(mona_dish_1.Stream, templateParams).each(function (param, cnt) {
             msg = msg.replace(new RegExp(["\\{", cnt, "\\}"].join(Const_1.EMPTY_STR), "g"), param);
         });
         return msg;
@@ -5829,7 +6438,8 @@ var ExtLang;
      * @param val the value
      * @param delimiter the delimiter
      */
-    function keyValToStr(key, val, delimiter = "\n") {
+    function keyValToStr(key, val, delimiter) {
+        if (delimiter === void 0) { delimiter = "\n"; }
         return [key, val].join(delimiter);
     }
     ExtLang.keyValToStr = keyValToStr;
@@ -5886,23 +6496,23 @@ var ExtLang;
      * @param event
      */
     function getForm(elem, event) {
-        let queryElem = new mona_dish_1.DQ(elem);
-        let eventTarget = new mona_dish_1.DQ((0, RequestDataResolver_1.getEventTarget)(event));
+        var queryElem = new mona_dish_1.DQ(elem);
+        var eventTarget = new mona_dish_1.DQ((0, RequestDataResolver_1.getEventTarget)(event));
         if (queryElem.isTag(Const_1.TAG_FORM)) {
             return queryElem;
         }
         //html 5 for handling
         if (queryElem.attr(Const_1.TAG_FORM).isPresent()) {
-            let formId = queryElem.attr(Const_1.TAG_FORM).value;
-            let foundForm = mona_dish_1.DQ.byId(formId, true);
+            var formId = queryElem.attr(Const_1.TAG_FORM).value;
+            var foundForm = mona_dish_1.DQ.byId(formId, true);
             if (foundForm.isPresent()) {
                 return foundForm;
             }
         }
-        let form = queryElem.parents(Const_1.TAG_FORM)
-            .orElseLazy(() => queryElem.byTagName(Const_1.TAG_FORM, true))
-            .orElseLazy(() => eventTarget.parents(Const_1.TAG_FORM))
-            .orElseLazy(() => eventTarget.byTagName(Const_1.TAG_FORM))
+        var form = queryElem.parents(Const_1.TAG_FORM)
+            .orElseLazy(function () { return queryElem.byTagName(Const_1.TAG_FORM, true); })
+            .orElseLazy(function () { return eventTarget.parents(Const_1.TAG_FORM); })
+            .orElseLazy(function () { return eventTarget.byTagName(Const_1.TAG_FORM); })
             .first();
         assertFormExists(form);
         return form;
@@ -5944,9 +6554,24 @@ var ExtLang;
 /*!*******************************************************!*\
   !*** ./src/main/typescript/impl/xhrCore/ErrorData.ts ***!
   \*******************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ErrorData = exports.ErrorType = void 0;
 /*! Licensed to the Apache Software Foundation (ASF) under one or more
@@ -5964,9 +6589,9 @@ exports.ErrorData = exports.ErrorType = void 0;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
-const EventData_1 = __webpack_require__(/*! ./EventData */ "./src/main/typescript/impl/xhrCore/EventData.ts");
-const Lang_1 = __webpack_require__(/*! ../util/Lang */ "./src/main/typescript/impl/util/Lang.ts");
+var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
+var EventData_1 = __webpack_require__(/*! ./EventData */ "./src/main/typescript/impl/xhrCore/EventData.ts");
+var Lang_1 = __webpack_require__(/*! ../util/Lang */ "./src/main/typescript/impl/util/Lang.ts");
 var getMessage = Lang_1.ExtLang.getMessage;
 var ErrorType;
 (function (ErrorType) {
@@ -5984,47 +6609,57 @@ var ErrorType;
  * everything into the same attributes,
  * I will add deprecated myfaces backwards compatibility attributes as well
  */
-class ErrorData extends EventData_1.EventData {
-    constructor(source, errorName, errorMessage, responseText = null, responseXML = null, responseCode = "200", status = "UNKNOWN", type = ErrorType.CLIENT_ERROR) {
-        super();
-        this.type = "error";
-        this.source = source;
-        this.type = "error";
-        this.errorName = errorName;
-        this.message = this.errorMessage = errorMessage;
-        this.responseCode = responseCode;
-        this.responseText = responseText;
-        this.status = status;
-        this.typeDetails = type;
+var ErrorData = /** @class */ (function (_super) {
+    __extends(ErrorData, _super);
+    function ErrorData(source, errorName, errorMessage, responseText, responseXML, responseCode, status, type) {
+        if (responseText === void 0) { responseText = null; }
+        if (responseXML === void 0) { responseXML = null; }
+        if (responseCode === void 0) { responseCode = "200"; }
+        if (status === void 0) { status = "UNKNOWN"; }
+        if (type === void 0) { type = ErrorType.CLIENT_ERROR; }
+        var _this = _super.call(this) || this;
+        _this.type = "error";
+        _this.source = source;
+        _this.type = "error";
+        _this.errorName = errorName;
+        _this.message = _this.errorMessage = errorMessage;
+        _this.responseCode = responseCode;
+        _this.responseText = responseText;
+        _this.status = status;
+        _this.typeDetails = type;
         if (type == ErrorType.SERVER_ERROR) {
-            this.serverErrorName = this.errorName;
-            this.serverErrorMessage = this.errorMessage;
+            _this.serverErrorName = _this.errorName;
+            _this.serverErrorMessage = _this.errorMessage;
         }
+        return _this;
     }
-    static fromClient(e) {
+    ErrorData.fromClient = function (e) {
         var _a, _b, _c;
         return new ErrorData("client", (_a = e === null || e === void 0 ? void 0 : e.name) !== null && _a !== void 0 ? _a : '', (_b = e === null || e === void 0 ? void 0 : e.message) !== null && _b !== void 0 ? _b : '', (_c = e === null || e === void 0 ? void 0 : e.stack) !== null && _c !== void 0 ? _c : '');
-    }
-    static fromHttpConnection(source, name, message, responseText, responseCode, status = 'UNKNOWN') {
-        return new ErrorData(source, name, message, responseText, responseCode, `${responseCode}`, status, ErrorType.HTTP_ERROR);
-    }
-    static fromGeneric(context, errorCode, errorType = ErrorType.SERVER_ERROR) {
-        let getMsg = this.getMsg;
-        let source = getMsg(context, Const_1.SOURCE);
-        let errorName = getMsg(context, Const_1.ERROR_NAME);
-        let errorMessage = getMsg(context, Const_1.ERROR_MESSAGE);
-        let status = getMsg(context, Const_1.STATUS);
-        let responseText = getMsg(context, Const_1.RESPONSE_TEXT);
-        let responseXML = getMsg(context, Const_1.RESPONSE_XML);
+    };
+    ErrorData.fromHttpConnection = function (source, name, message, responseText, responseCode, status) {
+        if (status === void 0) { status = 'UNKNOWN'; }
+        return new ErrorData(source, name, message, responseText, responseCode, "".concat(responseCode), status, ErrorType.HTTP_ERROR);
+    };
+    ErrorData.fromGeneric = function (context, errorCode, errorType) {
+        if (errorType === void 0) { errorType = ErrorType.SERVER_ERROR; }
+        var getMsg = this.getMsg;
+        var source = getMsg(context, Const_1.SOURCE);
+        var errorName = getMsg(context, Const_1.ERROR_NAME);
+        var errorMessage = getMsg(context, Const_1.ERROR_MESSAGE);
+        var status = getMsg(context, Const_1.STATUS);
+        var responseText = getMsg(context, Const_1.RESPONSE_TEXT);
+        var responseXML = getMsg(context, Const_1.RESPONSE_XML);
         return new ErrorData(source, errorName, errorMessage, responseText, responseXML, errorCode + Const_1.EMPTY_STR, status, errorType);
-    }
-    static getMsg(context, param) {
+    };
+    ErrorData.getMsg = function (context, param) {
         return getMessage(context.getIf(param).orElse(Const_1.UNKNOWN).value);
-    }
-    static fromServerError(context) {
+    };
+    ErrorData.fromServerError = function (context) {
         return this.fromGeneric(context, -1);
-    }
-}
+    };
+    return ErrorData;
+}(EventData_1.EventData));
 exports.ErrorData = ErrorData;
 
 
@@ -6054,17 +6689,19 @@ exports.EventData = void 0;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
-const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
-class EventData {
-    static createFromRequest(request, context, /*event name*/ name) {
+var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
+var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
+var EventData = /** @class */ (function () {
+    function EventData() {
+    }
+    EventData.createFromRequest = function (request, context, /*event name*/ name) {
         var _a;
-        let eventData = new EventData();
+        var eventData = new EventData();
         eventData.type = Const_1.EVENT;
         eventData.status = name;
-        let sourceId = context.getIf(Const_1.SOURCE)
-            .orElseLazy(() => context.getIf(Const_1.P_PARTIAL_SOURCE).value)
-            .orElseLazy(() => context.getIf(Const_1.CTX_PARAM_PASS_THR, Const_1.P_PARTIAL_SOURCE).value)
+        var sourceId = context.getIf(Const_1.SOURCE)
+            .orElseLazy(function () { return context.getIf(Const_1.P_PARTIAL_SOURCE).value; })
+            .orElseLazy(function () { return context.getIf(Const_1.CTX_PARAM_PASS_THR, Const_1.P_PARTIAL_SOURCE).value; })
             .value;
         if (sourceId) {
             eventData.source = mona_dish_1.DQ.byId(sourceId, true).first().value.value;
@@ -6075,8 +6712,9 @@ class EventData {
             eventData.responseXML = request === null || request === void 0 ? void 0 : request.responseXML;
         }
         return eventData;
-    }
-}
+    };
+    return EventData;
+}());
 exports.EventData = EventData;
 
 
@@ -6106,10 +6744,10 @@ exports.EventData = EventData;
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.resolveDefaults = exports.getEventTarget = exports.resolveWindowId = exports.resolveDelay = exports.resolveTimeout = exports.resolveForm = exports.resolveFinalUrl = exports.resolveTargetUrl = exports.resolveHandlerFunc = void 0;
-const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
-const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
-const Lang_1 = __webpack_require__(/*! ../util/Lang */ "./src/main/typescript/impl/util/Lang.ts");
-const ExtDomQuery_1 = __webpack_require__(/*! ../util/ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
+var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
+var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
+var Lang_1 = __webpack_require__(/*! ../util/Lang */ "./src/main/typescript/impl/util/Lang.ts");
+var ExtDomQuery_1 = __webpack_require__(/*! ../util/ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
 /**
  * Resolver functions for various aspects of the request data
  *
@@ -6126,7 +6764,7 @@ const ExtDomQuery_1 = __webpack_require__(/*! ../util/ExtDomQuery */ "./src/main
  */
 function resolveHandlerFunc(requestContext, responseContext, funcName) {
     return responseContext.getIf(funcName)
-        .orElseLazy(() => requestContext.getIf(funcName).value)
+        .orElseLazy(function () { return requestContext.getIf(funcName).value; })
         .orElse(Const_1.EMPTY_FUNC).value;
 }
 exports.resolveHandlerFunc = resolveHandlerFunc;
@@ -6136,8 +6774,9 @@ function resolveTargetUrl(srcFormElement) {
         srcFormElement.elements[Const_1.ENCODED_URL].value;
 }
 exports.resolveTargetUrl = resolveTargetUrl;
-function resolveFinalUrl(sourceForm, formData, ajaxType = Const_1.REQ_TYPE_POST) {
-    let targetUrl = resolveTargetUrl(sourceForm.getAsElem(0).value);
+function resolveFinalUrl(sourceForm, formData, ajaxType) {
+    if (ajaxType === void 0) { ajaxType = Const_1.REQ_TYPE_POST; }
+    var targetUrl = resolveTargetUrl(sourceForm.getAsElem(0).value);
     return targetUrl + (ajaxType == Const_1.REQ_TYPE_GET ? "?" + formData.toString() : Const_1.EMPTY_STR);
 }
 exports.resolveFinalUrl = resolveFinalUrl;
@@ -6152,15 +6791,15 @@ exports.resolveFinalUrl = resolveFinalUrl;
  */
 function resolveForm(requestCtx, elem, event) {
     var _a, _b, _c;
-    const configId = (_c = (_b = (_a = requestCtx.value) === null || _a === void 0 ? void 0 : _a.myfaces) === null || _b === void 0 ? void 0 : _b.form) !== null && _c !== void 0 ? _c : Const_1.MF_NONE;
+    var configId = (_c = (_b = (_a = requestCtx.value) === null || _a === void 0 ? void 0 : _a.myfaces) === null || _b === void 0 ? void 0 : _b.form) !== null && _c !== void 0 ? _c : Const_1.MF_NONE;
     return mona_dish_1.DQ
         .byId(configId, true)
-        .orElseLazy(() => Lang_1.ExtLang.getForm(elem.getAsElem(0).value, event));
+        .orElseLazy(function () { return Lang_1.ExtLang.getForm(elem.getAsElem(0).value, event); });
 }
 exports.resolveForm = resolveForm;
 function resolveTimeout(options) {
     var _a;
-    let getCfg = Lang_1.ExtLang.getLocalOrGlobalConfig;
+    var getCfg = Lang_1.ExtLang.getLocalOrGlobalConfig;
     return (_a = options.getIf(Const_1.CTX_PARAM_TIMEOUT).value) !== null && _a !== void 0 ? _a : getCfg(options.value, Const_1.CTX_PARAM_TIMEOUT, 0);
 }
 exports.resolveTimeout = resolveTimeout;
@@ -6171,7 +6810,7 @@ exports.resolveTimeout = resolveTimeout;
  */
 function resolveDelay(options) {
     var _a;
-    let getCfg = Lang_1.ExtLang.getLocalOrGlobalConfig;
+    var getCfg = Lang_1.ExtLang.getLocalOrGlobalConfig;
     return (_a = options.getIf(Const_1.CTX_PARAM_DELAY).value) !== null && _a !== void 0 ? _a : getCfg(options.value, Const_1.CTX_PARAM_DELAY, 0);
 }
 exports.resolveDelay = resolveDelay;
@@ -6195,7 +6834,7 @@ exports.resolveWindowId = resolveWindowId;
 function getEventTarget(evt) {
     var _a, _b;
     // ie6 and 7 fallback
-    let finalEvent = evt;
+    var finalEvent = evt;
     /*
      * evt source is defined in the jsf events
      * seems like some component authors use our code,
@@ -6205,7 +6844,7 @@ function getEventTarget(evt) {
      * behavior. I don´t use it that way but nevertheless it
      * does not break anything so why not
      */
-    let t = (_b = (_a = finalEvent === null || finalEvent === void 0 ? void 0 : finalEvent.srcElement) !== null && _a !== void 0 ? _a : finalEvent === null || finalEvent === void 0 ? void 0 : finalEvent.target) !== null && _b !== void 0 ? _b : finalEvent === null || finalEvent === void 0 ? void 0 : finalEvent.source;
+    var t = (_b = (_a = finalEvent === null || finalEvent === void 0 ? void 0 : finalEvent.srcElement) !== null && _a !== void 0 ? _a : finalEvent === null || finalEvent === void 0 ? void 0 : finalEvent.target) !== null && _b !== void 0 ? _b : finalEvent === null || finalEvent === void 0 ? void 0 : finalEvent.source;
     while ((t) && (t.nodeType != 1)) {
         t = t.parentNode;
     }
@@ -6221,11 +6860,13 @@ exports.getEventTarget = getEventTarget;
  * @param opts
  * @param el
  */
-function resolveDefaults(event, opts = {}, el = null) {
+function resolveDefaults(event, opts, el) {
     var _a;
+    if (opts === void 0) { opts = {}; }
+    if (el === void 0) { el = null; }
     //deep copy the options, so that further transformations to not backfire into the callers
-    const resolvedEvent = event, options = new ExtDomQuery_1.ExtConfig(opts).deepCopy, elem = mona_dish_1.DQ.byId(el || resolvedEvent.target, true), elementId = elem.id.value, requestCtx = new ExtDomQuery_1.ExtConfig({}), internalCtx = new ExtDomQuery_1.ExtConfig({}), windowId = resolveWindowId(options), isResetValues = true === ((_a = options.value) === null || _a === void 0 ? void 0 : _a.resetValues);
-    return { resolvedEvent, options, elem, elementId, requestCtx, internalCtx, windowId, isResetValues };
+    var resolvedEvent = event, options = new ExtDomQuery_1.ExtConfig(opts).deepCopy, elem = mona_dish_1.DQ.byId(el || resolvedEvent.target, true), elementId = elem.id.value, requestCtx = new ExtDomQuery_1.ExtConfig({}), internalCtx = new ExtDomQuery_1.ExtConfig({}), windowId = resolveWindowId(options), isResetValues = true === ((_a = options.value) === null || _a === void 0 ? void 0 : _a.resetValues);
+    return { resolvedEvent: resolvedEvent, options: options, elem: elem, elementId: elementId, requestCtx: requestCtx, internalCtx: internalCtx, windowId: windowId, isResetValues: isResetValues };
 }
 exports.resolveDefaults = resolveDefaults;
 
@@ -6256,11 +6897,11 @@ exports.resolveDefaults = resolveDefaults;
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.resolveSourceForm = exports.resolveSourceElement = exports.resolveContexts = exports.resolveResponseXML = void 0;
-const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
-const Assertions_1 = __webpack_require__(/*! ../util/Assertions */ "./src/main/typescript/impl/util/Assertions.ts");
-const mona_dish_2 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
-const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
-const ExtDomQuery_1 = __webpack_require__(/*! ../util/ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
+var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
+var Assertions_1 = __webpack_require__(/*! ../util/Assertions */ "./src/main/typescript/impl/util/Assertions.ts");
+var mona_dish_2 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
+var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
+var ExtDomQuery_1 = __webpack_require__(/*! ../util/ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
 /**
  * Resolver functions for various aspects of the response data
  *
@@ -6277,7 +6918,7 @@ const ExtDomQuery_1 = __webpack_require__(/*! ../util/ExtDomQuery */ "./src/main
  *
  */
 function resolveResponseXML(request) {
-    let ret = new mona_dish_1.XMLQuery((0, Const_1.$nsp)(request.getIf(Const_1.SEL_RESPONSE_XML).value));
+    var ret = new mona_dish_1.XMLQuery((0, Const_1.$nsp)(request.getIf(Const_1.SEL_RESPONSE_XML).value));
     Assertions_1.Assertions.assertValidXMLResponse(ret);
     return ret;
 }
@@ -6294,8 +6935,8 @@ function resolveContexts(context) {
      * we split the context apart into the external one and
      * some internal values
      */
-    let externalContext = ExtDomQuery_1.ExtConfig.fromNullable(context);
-    let internalContext = externalContext.getIf(Const_1.CTX_PARAM_MF_INTERNAL);
+    var externalContext = ExtDomQuery_1.ExtConfig.fromNullable(context);
+    var internalContext = externalContext.getIf(Const_1.CTX_PARAM_MF_INTERNAL);
     if (!internalContext.isPresent()) {
         internalContext = ExtDomQuery_1.ExtConfig.fromNullable({});
     }
@@ -6305,7 +6946,7 @@ function resolveContexts(context) {
     internalContext.assign(Const_1.DEFERRED_HEAD_INSERTS).value = [];
     internalContext.assign(Const_1.UPDATE_FORMS).value = [];
     internalContext.assign(Const_1.UPDATE_ELEMS).value = [];
-    return { externalContext, internalContext };
+    return { externalContext: externalContext, internalContext: internalContext };
 }
 exports.resolveContexts = resolveContexts;
 /**
@@ -6316,7 +6957,7 @@ exports.resolveContexts = resolveContexts;
  *
  */
 function resolveSourceElement(context, internalContext) {
-    let elemId = resolveSourceElementId(context, internalContext);
+    var elemId = resolveSourceElementId(context, internalContext);
     return mona_dish_2.DQ.byId(elemId.value, true);
 }
 exports.resolveSourceElement = resolveSourceElement;
@@ -6329,18 +6970,18 @@ exports.resolveSourceElement = resolveSourceElement;
  * @param elem
  */
 function resolveSourceForm(internalContext, elem) {
-    let sourceFormId = internalContext.getIf(Const_1.CTX_PARAM_SRC_FRM_ID);
-    let sourceForm = new mona_dish_2.DQ(sourceFormId.isPresent() ? document.forms[sourceFormId.value] : null);
-    sourceForm = sourceForm.orElseLazy(() => elem.parents(Const_1.TAG_FORM))
-        .orElseLazy(() => elem.querySelectorAll(Const_1.TAG_FORM))
-        .orElseLazy(() => mona_dish_2.DQ.querySelectorAll(Const_1.TAG_FORM));
+    var sourceFormId = internalContext.getIf(Const_1.CTX_PARAM_SRC_FRM_ID);
+    var sourceForm = new mona_dish_2.DQ(sourceFormId.isPresent() ? document.forms[sourceFormId.value] : null);
+    sourceForm = sourceForm.orElseLazy(function () { return elem.parents(Const_1.TAG_FORM); })
+        .orElseLazy(function () { return elem.querySelectorAll(Const_1.TAG_FORM); })
+        .orElseLazy(function () { return mona_dish_2.DQ.querySelectorAll(Const_1.TAG_FORM); });
     return sourceForm;
 }
 exports.resolveSourceForm = resolveSourceForm;
 function resolveSourceElementId(context, internalContext) {
     //?internal context?? used to be external one
     return internalContext.getIf(Const_1.CTX_PARAM_SRC_CTL_ID)
-        .orElseLazy(() => context.getIf(Const_1.SOURCE, "id").value);
+        .orElseLazy(function () { return context.getIf(Const_1.SOURCE, "id").value; });
 }
 
 
@@ -6370,11 +7011,11 @@ function resolveSourceElementId(context, internalContext) {
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Response = void 0;
-const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
-const ResponseProcessor_1 = __webpack_require__(/*! ./ResponseProcessor */ "./src/main/typescript/impl/xhrCore/ResponseProcessor.ts");
-const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
-const ResonseDataResolver_1 = __webpack_require__(/*! ./ResonseDataResolver */ "./src/main/typescript/impl/xhrCore/ResonseDataResolver.ts");
-const ExtDomQuery_1 = __webpack_require__(/*! ../util/ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
+var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
+var ResponseProcessor_1 = __webpack_require__(/*! ./ResponseProcessor */ "./src/main/typescript/impl/xhrCore/ResponseProcessor.ts");
+var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
+var ResonseDataResolver_1 = __webpack_require__(/*! ./ResonseDataResolver */ "./src/main/typescript/impl/xhrCore/ResonseDataResolver.ts");
+var ExtDomQuery_1 = __webpack_require__(/*! ../util/ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
 var Response;
 (function (Response) {
     /**
@@ -6389,14 +7030,14 @@ var Response;
      *
      */
     function processResponse(request, context) {
-        let req = ExtDomQuery_1.ExtConfig.fromNullable(request);
-        let { externalContext, internalContext } = (0, ResonseDataResolver_1.resolveContexts)(context);
-        let responseXML = (0, ResonseDataResolver_1.resolveResponseXML)(req);
-        let responseProcessor = new ResponseProcessor_1.ResponseProcessor(req, externalContext, internalContext);
+        var req = ExtDomQuery_1.ExtConfig.fromNullable(request);
+        var _a = (0, ResonseDataResolver_1.resolveContexts)(context), externalContext = _a.externalContext, internalContext = _a.internalContext;
+        var responseXML = (0, ResonseDataResolver_1.resolveResponseXML)(req);
+        var responseProcessor = new ResponseProcessor_1.ResponseProcessor(req, externalContext, internalContext);
         internalContext.assign(Const_1.RESPONSE_XML).value = responseXML;
         // we now process the partial tags, or in none given raise an error
         responseXML.querySelectorAll(Const_1.RESP_PARTIAL)
-            .each(item => processPartialTag(item, responseProcessor, internalContext));
+            .each(function (item) { return processPartialTag(item, responseProcessor, internalContext); });
         // We now process the viewStates, client windows and the elements to be evaluated are delayed.
         // The reason for this is that often it is better
         // to wait until the document has caught up before
@@ -6414,9 +7055,9 @@ var Response;
      */
     function processPartialTag(node, responseProcessor, internalContext) {
         internalContext.assign(Const_1.PARTIAL_ID).value = node.id;
-        const SEL_SUB_TAGS = [Const_1.CMD_ERROR, Const_1.CMD_REDIRECT, Const_1.CMD_CHANGES].join(",");
+        var SEL_SUB_TAGS = [Const_1.CMD_ERROR, Const_1.CMD_REDIRECT, Const_1.CMD_CHANGES].join(",");
         // now we can process the main operations
-        node.querySelectorAll(SEL_SUB_TAGS).each((node) => {
+        node.querySelectorAll(SEL_SUB_TAGS).each(function (node) {
             switch (node.tagName.value) {
                 case Const_1.CMD_ERROR:
                     responseProcessor.error(node);
@@ -6430,7 +7071,7 @@ var Response;
             }
         });
     }
-    let processInsert = function (responseProcessor, node) {
+    var processInsert = function (responseProcessor, node) {
         // path1 insert after as child tags
         if (node.querySelectorAll([Const_1.TAG_BEFORE, Const_1.TAG_AFTER].join(",")).length) {
             responseProcessor.insertWithSubTags(node);
@@ -6446,8 +7087,8 @@ var Response;
      * @param responseProcessor
      */
     function processChangesTag(node, responseProcessor) {
-        const ALLOWED_TAGS = [Const_1.CMD_UPDATE, Const_1.CMD_EVAL, Const_1.CMD_INSERT, Const_1.CMD_DELETE, Const_1.CMD_ATTRIBUTES, Const_1.CMD_EXTENSION].join(", ");
-        node.querySelectorAll(ALLOWED_TAGS).each((node) => {
+        var ALLOWED_TAGS = [Const_1.CMD_UPDATE, Const_1.CMD_EVAL, Const_1.CMD_INSERT, Const_1.CMD_DELETE, Const_1.CMD_ATTRIBUTES, Const_1.CMD_EXTENSION].join(", ");
+        node.querySelectorAll(ALLOWED_TAGS).each(function (node) {
             switch (node.tagName.value) {
                 case Const_1.CMD_UPDATE:
                     processUpdateTag(node, responseProcessor);
@@ -6502,7 +7143,7 @@ var Response;
      * @param responseProcessor
      */
     function handleElementUpdate(node, responseProcessor) {
-        let cdataBlock = node.cDATAAsString;
+        var cdataBlock = node.cDATAAsString;
         switch (node.id.value) {
             case (0, Const_1.$nsp)(Const_1.P_VIEWROOT):
                 responseProcessor.replaceViewRoot(mona_dish_1.DQ.fromMarkup(cdataBlock.substring(cdataBlock.indexOf("<html"))));
@@ -6530,7 +7171,7 @@ var Response;
 /*!***************************************************************!*\
   !*** ./src/main/typescript/impl/xhrCore/ResponseProcessor.ts ***!
   \***************************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
 /*! Licensed to the Apache Software Foundation (ASF) under one or more
@@ -6548,17 +7189,26 @@ var Response;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ResponseProcessor = void 0;
-const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
-const AjaxImpl_1 = __webpack_require__(/*! ../AjaxImpl */ "./src/main/typescript/impl/AjaxImpl.ts");
-const Assertions_1 = __webpack_require__(/*! ../util/Assertions */ "./src/main/typescript/impl/util/Assertions.ts");
-const ErrorData_1 = __webpack_require__(/*! ./ErrorData */ "./src/main/typescript/impl/xhrCore/ErrorData.ts");
-const ImplTypes_1 = __webpack_require__(/*! ../core/ImplTypes */ "./src/main/typescript/impl/core/ImplTypes.ts");
-const EventData_1 = __webpack_require__(/*! ./EventData */ "./src/main/typescript/impl/xhrCore/EventData.ts");
-const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
+var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
+var AjaxImpl_1 = __webpack_require__(/*! ../AjaxImpl */ "./src/main/typescript/impl/AjaxImpl.ts");
+var Assertions_1 = __webpack_require__(/*! ../util/Assertions */ "./src/main/typescript/impl/util/Assertions.ts");
+var ErrorData_1 = __webpack_require__(/*! ./ErrorData */ "./src/main/typescript/impl/xhrCore/ErrorData.ts");
+var ImplTypes_1 = __webpack_require__(/*! ../core/ImplTypes */ "./src/main/typescript/impl/core/ImplTypes.ts");
+var EventData_1 = __webpack_require__(/*! ./EventData */ "./src/main/typescript/impl/xhrCore/EventData.ts");
+var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 var trim = mona_dish_1.Lang.trim;
-const ExtDomQuery_1 = __webpack_require__(/*! ../util/ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
+var ExtDomQuery_1 = __webpack_require__(/*! ../util/ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
 /**
  * Response processor
  *
@@ -6572,8 +7222,8 @@ const ExtDomQuery_1 = __webpack_require__(/*! ../util/ExtDomQuery */ "./src/main
  * Note the response processor is stateful hence we bundle it in a class
  * to reduce code we keep references tot contexts in place
  */
-class ResponseProcessor {
-    constructor(request, externalContext, internalContext) {
+var ResponseProcessor = /** @class */ (function () {
+    function ResponseProcessor(request, externalContext, internalContext) {
         this.request = request;
         this.externalContext = externalContext;
         this.internalContext = internalContext;
@@ -6583,12 +7233,12 @@ class ResponseProcessor {
      * @param shadowDocument incoming shadow head data (aka cdata as xml reference or dom element)
      * the data incoming must represent the html representation of the head itself one way or the other
      */
-    replaceHead(shadowDocument) {
-        let shadowHead = shadowDocument.querySelectorAll(Const_1.TAG_HEAD);
+    ResponseProcessor.prototype.replaceHead = function (shadowDocument) {
+        var shadowHead = shadowDocument.querySelectorAll(Const_1.TAG_HEAD);
         if (!shadowHead.isPresent()) {
             return;
         }
-        let oldHead = ExtDomQuery_1.ExtDomQuery.querySelectorAll(Const_1.TAG_HEAD);
+        var oldHead = ExtDomQuery_1.ExtDomQuery.querySelectorAll(Const_1.TAG_HEAD);
         //delete all to avoid script and style overlays
         oldHead.querySelectorAll(Const_1.SEL_SCRIPTS_STYLES).delete();
         // we cannot replace new elements in the head, but we can eval the elements
@@ -6598,10 +7248,10 @@ class ResponseProcessor {
         //incoming either the outer head tag or its children
         //shadowHead = (shadowHead.tagName.value === "HEAD") ? shadowHead.childNodes : shadowHead;
         //this.addToHead(shadowHead);
-    }
-    addToHead(newElements) {
+    };
+    ResponseProcessor.prototype.addToHead = function (newElements) {
         this.internalContext.assign(Const_1.DEFERRED_HEAD_INSERTS).value.push(newElements);
-    }
+    };
     /**
      * replaces the body in the expected manner
      * which means the entire body content is refreshed
@@ -6610,240 +7260,244 @@ class ResponseProcessor {
      *
      * @param shadowDocument .. an incoming shadow document hosting the new nodes
      */
-    replaceBody(shadowDocument) {
-        let shadowBody = shadowDocument.querySelectorAll(Const_1.TAG_BODY);
+    ResponseProcessor.prototype.replaceBody = function (shadowDocument) {
+        var shadowBody = shadowDocument.querySelectorAll(Const_1.TAG_BODY);
         if (!shadowBody.isPresent()) {
             return;
         }
-        let shadowInnerHTML = shadowBody.html().value;
-        let resultingBody = ExtDomQuery_1.ExtDomQuery.querySelectorAll(Const_1.TAG_BODY).html(shadowInnerHTML);
-        let updateForms = resultingBody.querySelectorAll(Const_1.TAG_FORM);
+        var shadowInnerHTML = shadowBody.html().value;
+        var resultingBody = ExtDomQuery_1.ExtDomQuery.querySelectorAll(Const_1.TAG_BODY).html(shadowInnerHTML);
+        var updateForms = resultingBody.querySelectorAll(Const_1.TAG_FORM);
         // main difference, we cannot replace the body itself, but only its content
         // we need a separate step for post-processing the incoming
         // attributes, like classes, styles etc...
         resultingBody.copyAttrs(shadowBody);
         this.storeForPostProcessing(updateForms, resultingBody);
-    }
+    };
     /**
      * Leaf Tag eval... process whatever is in the eval cdata block
      *
      * @param node the node to eval
      */
-    eval(node) {
+    ResponseProcessor.prototype.eval = function (node) {
         ExtDomQuery_1.ExtDomQuery.globalEval(node.cDATAAsString);
-    }
+    };
     /**
      * processes an incoming error from the response
      * which is hosted under the &lt;error&gt; tag
      * @param node the node hosting the error in our response xml
      * @param node the node in the xml hosting the error message
      */
-    error(node) {
+    ResponseProcessor.prototype.error = function (node) {
         /**
          * <error>
          *      <error-name>String</error-name>
          *      <error-message><![CDATA[message]]></error-message>
          * <error>
          */
-        let mergedErrorData = new ExtDomQuery_1.ExtConfig({});
+        var mergedErrorData = new ExtDomQuery_1.ExtConfig({});
         mergedErrorData.assign(Const_1.SOURCE).value = this.externalContext.getIf(Const_1.P_PARTIAL_SOURCE).get(0).value;
         mergedErrorData.assign(Const_1.ERROR_NAME).value = node.querySelectorAll(Const_1.ERROR_NAME).textContent(Const_1.EMPTY_STR);
         mergedErrorData.assign(Const_1.ERROR_MESSAGE).value = node.querySelectorAll(Const_1.ERROR_MESSAGE).cDATAAsString;
-        let hasResponseXML = this.internalContext.get(Const_1.RESPONSE_XML).isPresent();
+        var hasResponseXML = this.internalContext.get(Const_1.RESPONSE_XML).isPresent();
         //we now store the response xml also in the error data for further details
         mergedErrorData.assignIf(hasResponseXML, Const_1.RESPONSE_XML).value = this.internalContext.getIf(Const_1.RESPONSE_XML).value.get(0).value;
         // error post-processing and enrichment (standard messages from keys)
-        let errorData = ErrorData_1.ErrorData.fromServerError(mergedErrorData);
+        var errorData = ErrorData_1.ErrorData.fromServerError(mergedErrorData);
         // we now trigger an internally stored onError function which might be an attached to the context
         // either we do not have an internal on error, or an on error has been based via params from the outside.
         // In both cases they are attached to our contexts
         this.triggerOnError(errorData);
         AjaxImpl_1.Implementation.sendError(errorData);
-    }
+    };
     /**
      * process the redirect operation
      *
      * @param node
      */
-    redirect(node) {
+    ResponseProcessor.prototype.redirect = function (node) {
         Assertions_1.Assertions.assertUrlExists(node);
-        let redirectUrl = trim(node.attr(Const_1.ATTR_URL).value);
+        var redirectUrl = trim(node.attr(Const_1.ATTR_URL).value);
         if (redirectUrl != Const_1.EMPTY_STR) {
             window.location.href = redirectUrl;
         }
-    }
+    };
     /**
      * processes the update operation and updates the node with the cdata block
      * @param node the xml response node hosting the update info
      * @param cdataBlock the cdata block with the new html code
      */
-    update(node, cdataBlock) {
-        let result = ExtDomQuery_1.ExtDomQuery.byId(node.id.value, true).outerHTML(cdataBlock, false, false);
-        let sourceForm = result === null || result === void 0 ? void 0 : result.parents(Const_1.TAG_FORM).orElseLazy(() => result.byTagName(Const_1.TAG_FORM, true));
+    ResponseProcessor.prototype.update = function (node, cdataBlock) {
+        var result = ExtDomQuery_1.ExtDomQuery.byId(node.id.value, true).outerHTML(cdataBlock, false, false);
+        var sourceForm = result === null || result === void 0 ? void 0 : result.parents(Const_1.TAG_FORM).orElseLazy(function () { return result.byTagName(Const_1.TAG_FORM, true); });
         if (sourceForm) {
             this.storeForPostProcessing(sourceForm, result);
         }
-    }
+    };
     /**
      * Delete handler, simply deletes the node referenced by the xml data
      * @param node
      */
-    delete(node) {
+    ResponseProcessor.prototype.delete = function (node) {
         mona_dish_1.DQ.byId(node.id.value, true).delete();
-    }
+    };
     /**
      * attributes leaf tag... process the attributes
      *
      * @param node
      */
-    attributes(node) {
-        let elem = mona_dish_1.DQ.byId(node.id.value, true);
-        node.byTagName(Const_1.TAG_ATTR).each((item) => {
+    ResponseProcessor.prototype.attributes = function (node) {
+        var elem = mona_dish_1.DQ.byId(node.id.value, true);
+        node.byTagName(Const_1.TAG_ATTR).each(function (item) {
             elem.attr(item.attr(Const_1.ATTR_NAME).value).value = item.attr(Const_1.ATTR_VALUE).value;
         });
-    }
+    };
     /**
      * @param shadowDocument a shadow document which is needed for further processing
      */
-    replaceViewRoot(shadowDocument) {
+    ResponseProcessor.prototype.replaceViewRoot = function (shadowDocument) {
         this.replaceHead(shadowDocument);
         this.replaceBody(shadowDocument);
-    }
+    };
     /**
      * Insert handling, either before or after
      *
      * @param node
      */
-    insert(node) {
+    ResponseProcessor.prototype.insert = function (node) {
         //let insertId = node.id; //not used atm
-        let before = node.attr(Const_1.TAG_BEFORE);
-        let after = node.attr(Const_1.TAG_AFTER);
-        let insertNodes = mona_dish_1.DQ.fromMarkup(node.cDATAAsString);
+        var before = node.attr(Const_1.TAG_BEFORE);
+        var after = node.attr(Const_1.TAG_AFTER);
+        var insertNodes = mona_dish_1.DQ.fromMarkup(node.cDATAAsString);
         if (before.isPresent()) {
             mona_dish_1.DQ.byId(before.value, true).insertBefore(insertNodes);
             this.internalContext.assign(Const_1.UPDATE_ELEMS).value.push(insertNodes);
         }
         if (after.isPresent()) {
-            let domQuery = mona_dish_1.DQ.byId(after.value, true);
+            var domQuery = mona_dish_1.DQ.byId(after.value, true);
             domQuery.insertAfter(insertNodes);
             this.internalContext.assign(Const_1.UPDATE_ELEMS).value.push(insertNodes);
         }
-    }
+    };
     /**
      * Handler for the case &lt;insert <&lt; before id="...
      *
      * @param node the node hosting the insert data
      */
-    insertWithSubTags(node) {
-        let before = node.querySelectorAll(Const_1.TAG_BEFORE);
-        let after = node.querySelectorAll(Const_1.TAG_AFTER);
-        before.each(item => {
-            let insertId = item.attr(Const_1.ATTR_ID);
-            let insertNodes = mona_dish_1.DQ.fromMarkup(item.cDATAAsString);
+    ResponseProcessor.prototype.insertWithSubTags = function (node) {
+        var _this = this;
+        var before = node.querySelectorAll(Const_1.TAG_BEFORE);
+        var after = node.querySelectorAll(Const_1.TAG_AFTER);
+        before.each(function (item) {
+            var insertId = item.attr(Const_1.ATTR_ID);
+            var insertNodes = mona_dish_1.DQ.fromMarkup(item.cDATAAsString);
             if (insertId.isPresent()) {
                 mona_dish_1.DQ.byId(insertId.value, true).insertBefore(insertNodes);
-                this.internalContext.assign(Const_1.UPDATE_ELEMS).value.push(insertNodes);
+                _this.internalContext.assign(Const_1.UPDATE_ELEMS).value.push(insertNodes);
             }
         });
-        after.each(item => {
-            let insertId = item.attr(Const_1.ATTR_ID);
-            let insertNodes = mona_dish_1.DQ.fromMarkup(item.cDATAAsString);
+        after.each(function (item) {
+            var insertId = item.attr(Const_1.ATTR_ID);
+            var insertNodes = mona_dish_1.DQ.fromMarkup(item.cDATAAsString);
             if (insertId.isPresent()) {
                 mona_dish_1.DQ.byId(insertId.value, true).insertAfter(insertNodes);
-                this.internalContext.assign(Const_1.UPDATE_ELEMS).value.push(insertNodes);
+                _this.internalContext.assign(Const_1.UPDATE_ELEMS).value.push(insertNodes);
             }
         });
-    }
+    };
     /**
      * Process the viewState update, update the affected
      * forms with their respective new viewState values
      *
      */
-    processViewState(node) {
+    ResponseProcessor.prototype.processViewState = function (node) {
         if (ResponseProcessor.isViewStateNode(node)) {
-            let state = node.cDATAAsString;
+            var state = node.cDATAAsString;
             this.internalContext.assign(Const_1.APPLIED_VST, node.id.value).value = new ImplTypes_1.StateHolder((0, Const_1.$nsp)(node.id.value), state);
             return true;
         }
         return false;
-    }
-    processClientWindow(node) {
+    };
+    ResponseProcessor.prototype.processClientWindow = function (node) {
         if (ResponseProcessor.isClientWindowNode(node)) {
-            let state = node.cDATAAsString;
+            var state = node.cDATAAsString;
             this.internalContext.assign(Const_1.APPLIED_CLIENT_WINDOW, node.id.value).value = new ImplTypes_1.StateHolder((0, Const_1.$nsp)(node.id.value), state);
             return true;
         }
-    }
+    };
     /**
      * generic global eval which runs the embedded css and scripts
      */
-    globalEval() {
+    ResponseProcessor.prototype.globalEval = function () {
         //  phase one, if we have head inserts, we build up those before going into the script eval phase
-        let insertHeadElems = new ExtDomQuery_1.ExtDomQuery(...this.internalContext.getIf(Const_1.DEFERRED_HEAD_INSERTS).value);
+        var insertHeadElems = new (ExtDomQuery_1.ExtDomQuery.bind.apply(ExtDomQuery_1.ExtDomQuery, __spreadArray([void 0], this.internalContext.getIf(Const_1.DEFERRED_HEAD_INSERTS).value, false)))();
         insertHeadElems.runHeadInserts(true);
         // phase 2 we run a script eval on all updated elements in the body
-        let updateElems = new ExtDomQuery_1.ExtDomQuery(...this.internalContext.getIf(Const_1.UPDATE_ELEMS).value);
+        var updateElems = new (ExtDomQuery_1.ExtDomQuery.bind.apply(ExtDomQuery_1.ExtDomQuery, __spreadArray([void 0], this.internalContext.getIf(Const_1.UPDATE_ELEMS).value, false)))();
         updateElems.runCss();
         // phase 3, we do the same for the css
         updateElems.runScripts();
-    }
+    };
     /**
      * Postprocessing view state fixing
      * this appends basically the incoming view states to the forms.
      * It is called from outside after all forms have been processed basically
      * as last lifecycle step, before going into the next request.
      */
-    fixViewStates() {
+    ResponseProcessor.prototype.fixViewStates = function () {
+        var _this = this;
         mona_dish_1.Stream.ofAssoc(this.internalContext.getIf(Const_1.APPLIED_VST).orElse({}).value)
-            .each((item) => {
-            let value = item[1];
-            let nameSpace = mona_dish_1.DQ.byId(value.nameSpace, true).orElse(document.body);
-            let affectedForms = nameSpace.byTagName(Const_1.TAG_FORM);
-            let affectedForms2 = nameSpace.filter(item => item.tagName.orElse(Const_1.EMPTY_STR).value.toLowerCase() == Const_1.TAG_FORM);
-            this.appendViewStateToForms(new mona_dish_1.DomQuery(affectedForms, affectedForms2), value.value);
+            .each(function (item) {
+            var value = item[1];
+            var nameSpace = mona_dish_1.DQ.byId(value.nameSpace, true).orElse(document.body);
+            var affectedForms = nameSpace.byTagName(Const_1.TAG_FORM);
+            var affectedForms2 = nameSpace.filter(function (item) { return item.tagName.orElse(Const_1.EMPTY_STR).value.toLowerCase() == Const_1.TAG_FORM; });
+            _this.appendViewStateToForms(new mona_dish_1.DomQuery(affectedForms, affectedForms2), value.value);
         });
-    }
+    };
     /**
      * same as with view states before applies the incoming client windows as last step after the rest of the processing
      * is done.
      */
-    fixClientWindow() {
+    ResponseProcessor.prototype.fixClientWindow = function () {
+        var _this = this;
         mona_dish_1.Stream.ofAssoc(this.internalContext.getIf(Const_1.APPLIED_CLIENT_WINDOW).orElse({}).value)
-            .each((item) => {
-            let value = item[1];
-            let nameSpace = mona_dish_1.DQ.byId(value.nameSpace, true).orElse(document.body);
-            let affectedForms = nameSpace.byTagName(Const_1.TAG_FORM);
-            let affectedForms2 = nameSpace.filter(item => item.tagName.orElse(Const_1.EMPTY_STR).value.toLowerCase() == Const_1.TAG_FORM);
-            this.appendClientWindowToForms(new mona_dish_1.DomQuery(affectedForms, affectedForms2), value.value);
+            .each(function (item) {
+            var value = item[1];
+            var nameSpace = mona_dish_1.DQ.byId(value.nameSpace, true).orElse(document.body);
+            var affectedForms = nameSpace.byTagName(Const_1.TAG_FORM);
+            var affectedForms2 = nameSpace.filter(function (item) { return item.tagName.orElse(Const_1.EMPTY_STR).value.toLowerCase() == Const_1.TAG_FORM; });
+            _this.appendClientWindowToForms(new mona_dish_1.DomQuery(affectedForms, affectedForms2), value.value);
         });
-    }
+    };
     /**
      * all processing done we can close the request and send the appropriate events
      */
-    done() {
-        let eventData = EventData_1.EventData.createFromRequest(this.request.value, this.externalContext, Const_1.SUCCESS);
+    ResponseProcessor.prototype.done = function () {
+        var _this = this;
+        var eventData = EventData_1.EventData.createFromRequest(this.request.value, this.externalContext, Const_1.SUCCESS);
         //because some frameworks might decorate them over the context in the response
-        let eventHandler = this.externalContext.getIf(Const_1.ON_EVENT).orElseLazy(() => this.internalContext.getIf(Const_1.ON_EVENT).value).orElse(Const_1.EMPTY_FUNC).value;
+        var eventHandler = this.externalContext.getIf(Const_1.ON_EVENT).orElseLazy(function () { return _this.internalContext.getIf(Const_1.ON_EVENT).value; }).orElse(Const_1.EMPTY_FUNC).value;
         AjaxImpl_1.Implementation.sendEvent(eventData, eventHandler);
-    }
+    };
     /**
      * proper viewState -> form assignment
      *
      * @param forms the forms to append the viewState to
      * @param viewState the final viewState
      */
-    appendViewStateToForms(forms, viewState) {
+    ResponseProcessor.prototype.appendViewStateToForms = function (forms, viewState) {
         this.assignState(forms, (0, Const_1.$nsp)(Const_1.SEL_VIEWSTATE_ELEM), viewState);
-    }
+    };
     /**
      * proper clientWindow -> form assignment
      *
      * @param forms the forms to append the viewState to
      * @param clientWindow the final viewState
      */
-    appendClientWindowToForms(forms, clientWindow) {
+    ResponseProcessor.prototype.appendClientWindowToForms = function (forms, clientWindow) {
         this.assignState(forms, (0, Const_1.$nsp)(Const_1.SEL_CLIENT_WINDOW_ELEM), clientWindow);
-    }
+    };
     /**
      * generic append state which appends a certain state as hidden element to an existing set of forms
      *
@@ -6853,80 +7507,81 @@ class ResponseProcessor {
      *
      * @private
      */
-    assignState(forms, selector, state) {
-        forms.each((form) => {
-            let stateHolders = form.querySelectorAll(selector)
-                .orElseLazy(() => ResponseProcessor.newViewStateElement(form));
+    ResponseProcessor.prototype.assignState = function (forms, selector, state) {
+        forms.each(function (form) {
+            var stateHolders = form.querySelectorAll(selector)
+                .orElseLazy(function () { return ResponseProcessor.newViewStateElement(form); });
             stateHolders.attr("value").value = state;
         });
-    }
+    };
     /**
      * Helper to Create a new JSF ViewState Element
      *
      * @param parent, the parent node to attach the viewState element to
      * (usually a form node)
      */
-    static newViewStateElement(parent) {
-        let newViewState = mona_dish_1.DQ.fromMarkup((0, Const_1.$nsp)(Const_1.HTML_VIEWSTATE));
+    ResponseProcessor.newViewStateElement = function (parent) {
+        var newViewState = mona_dish_1.DQ.fromMarkup((0, Const_1.$nsp)(Const_1.HTML_VIEWSTATE));
         newViewState.appendTo(parent);
         return newViewState;
-    }
+    };
     /**
      * Stores certain aspects of the dom for later post-processing
      *
      * @param updateForms the update forms which should receive standardized internal jsf data
      * @param toBeEvaluated the resulting elements which should be evaluated
      */
-    storeForPostProcessing(updateForms, toBeEvaluated) {
+    ResponseProcessor.prototype.storeForPostProcessing = function (updateForms, toBeEvaluated) {
         this.storeForUpdate(updateForms);
         this.storeForEval(toBeEvaluated);
-    }
+    };
     /**
      * helper to store a given form for the update post-processing (viewState)
      *
      * @param updateForms the dom query object pointing to the forms which need to be updated
      */
-    storeForUpdate(updateForms) {
+    ResponseProcessor.prototype.storeForUpdate = function (updateForms) {
         this.internalContext.assign(Const_1.UPDATE_FORMS).value.push(updateForms);
-    }
+    };
     /**
      * same for eval (js and css)
      *
      * @param toBeEvaluated
      */
-    storeForEval(toBeEvaluated) {
+    ResponseProcessor.prototype.storeForEval = function (toBeEvaluated) {
         this.internalContext.assign(Const_1.UPDATE_ELEMS).value.push(toBeEvaluated);
-    }
+    };
     /**
      * check whether a given XMLQuery node is an explicit viewState node
      *
      * @param node the node to check
      * @returns if it is a viewState node
      */
-    static isViewStateNode(node) {
+    ResponseProcessor.isViewStateNode = function (node) {
         var _a, _b, _c, _d, _e, _f, _g;
-        let separatorChar = ((_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : window === null || window === void 0 ? void 0 : window.jsf).separatorchar;
+        var separatorChar = ((_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : window === null || window === void 0 ? void 0 : window.jsf).separatorchar;
         return "undefined" != typeof ((_b = node === null || node === void 0 ? void 0 : node.id) === null || _b === void 0 ? void 0 : _b.value) && (((_c = node === null || node === void 0 ? void 0 : node.id) === null || _c === void 0 ? void 0 : _c.value) == (0, Const_1.$nsp)(Const_1.P_VIEWSTATE) ||
             ((_e = (_d = node === null || node === void 0 ? void 0 : node.id) === null || _d === void 0 ? void 0 : _d.value) === null || _e === void 0 ? void 0 : _e.indexOf([separatorChar, (0, Const_1.$nsp)(Const_1.P_VIEWSTATE)].join(Const_1.EMPTY_STR))) != -1 ||
             ((_g = (_f = node === null || node === void 0 ? void 0 : node.id) === null || _f === void 0 ? void 0 : _f.value) === null || _g === void 0 ? void 0 : _g.indexOf([(0, Const_1.$nsp)(Const_1.P_VIEWSTATE), separatorChar].join(Const_1.EMPTY_STR))) != -1);
-    }
+    };
     /**
      * incoming client window node also needs special processing
      *
      * @param node the node to check
      * @returns true of it ii
      */
-    static isClientWindowNode(node) {
+    ResponseProcessor.isClientWindowNode = function (node) {
         var _a, _b, _c, _d, _e, _f, _g;
-        let separatorChar = ((_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : window === null || window === void 0 ? void 0 : window.jsf).separatorchar;
+        var separatorChar = ((_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : window === null || window === void 0 ? void 0 : window.jsf).separatorchar;
         return "undefined" != typeof ((_b = node === null || node === void 0 ? void 0 : node.id) === null || _b === void 0 ? void 0 : _b.value) && (((_c = node === null || node === void 0 ? void 0 : node.id) === null || _c === void 0 ? void 0 : _c.value) == (0, Const_1.$nsp)(Const_1.P_CLIENT_WINDOW) ||
             ((_e = (_d = node === null || node === void 0 ? void 0 : node.id) === null || _d === void 0 ? void 0 : _d.value) === null || _e === void 0 ? void 0 : _e.indexOf([separatorChar, (0, Const_1.$nsp)(Const_1.P_CLIENT_WINDOW)].join(Const_1.EMPTY_STR))) != -1 ||
             ((_g = (_f = node === null || node === void 0 ? void 0 : node.id) === null || _f === void 0 ? void 0 : _f.value) === null || _g === void 0 ? void 0 : _g.indexOf([(0, Const_1.$nsp)(Const_1.P_CLIENT_WINDOW), separatorChar].join(Const_1.EMPTY_STR))) != -1);
-    }
-    triggerOnError(errorData) {
+    };
+    ResponseProcessor.prototype.triggerOnError = function (errorData) {
         this.externalContext.getIf(Const_1.ON_ERROR).orElse(this.internalContext.getIf(Const_1.ON_ERROR).value).orElse(Const_1.EMPTY_FUNC).value(errorData);
-    }
-}
+    };
+    return ResponseProcessor;
+}());
 exports.ResponseProcessor = ResponseProcessor;
 
 
@@ -6936,9 +7591,33 @@ exports.ResponseProcessor = ResponseProcessor;
 /*!*********************************************************!*\
   !*** ./src/main/typescript/impl/xhrCore/XhrFormData.ts ***!
   \*********************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.XhrFormData = void 0;
 /*! Licensed to the Apache Software Foundation (ASF) under one or more
@@ -6956,10 +7635,10 @@ exports.XhrFormData = void 0;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
-const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
+var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
+var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 var isString = mona_dish_1.Lang.isString;
-const ExtDomQuery_1 = __webpack_require__(/*! ../util/ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
+var ExtDomQuery_1 = __webpack_require__(/*! ../util/ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
 /**
  * A unified form data class
  * which builds upon our configuration.
@@ -6972,7 +7651,8 @@ const ExtDomQuery_1 = __webpack_require__(/*! ../util/ExtDomQuery */ "./src/main
  * the entire file input storing probably is redundant now
  * that dom query has been fixed //TODO check this
  */
-class XhrFormData extends mona_dish_1.Config {
+var XhrFormData = /** @class */ (function (_super) {
+    __extends(XhrFormData, _super);
     /**
      * data collector from a given form
      *
@@ -6981,10 +7661,10 @@ class XhrFormData extends mona_dish_1.Config {
      * @param executes the executes id list for the elements to being processed
      * @param partialIds partial ids to collect, to reduce the data sent down
      */
-    constructor(dataSource, viewState, executes, partialIds) {
-        super({});
-        this.dataSource = dataSource;
-        this.partialIds = partialIds;
+    function XhrFormData(dataSource, viewState, executes, partialIds) {
+        var _this = _super.call(this, {}) || this;
+        _this.dataSource = dataSource;
+        _this.partialIds = partialIds;
         /**
          * Checks if the given datasource is a multipart request source
          * multipart is only needed if one of the executes is a file input
@@ -6992,7 +7672,7 @@ class XhrFormData extends mona_dish_1.Config {
          * and need special handling. With file submits we have to send a formData object
          * instead of an encoded string files cannot be sent that way
          */
-        this.isMultipartRequest = false;
+        _this.isMultipartRequest = false;
         //a call to getViewState before must pass the encoded line
         //a call from getViewState passes the form element as datasource,
         //so we have two call points
@@ -7001,75 +7681,80 @@ class XhrFormData extends mona_dish_1.Config {
         // which are already covered by an external viewstate do not need
         // the encoding a second time, because they are overwritten by the viewstate again
         if (isString(dataSource)) {
-            this.assignEncodedString(this.dataSource);
+            _this.assignEncodedString(_this.dataSource);
         }
         else {
-            this.applyFormDataToConfig();
+            _this.applyFormDataToConfig();
         }
         //now assign the external viewstate overrides
         if ('undefined' != typeof viewState) {
-            this.assignEncodedString(viewState);
+            _this.assignEncodedString(viewState);
         }
         if (executes) {
-            this.postInit(...executes);
+            _this.postInit.apply(_this, executes);
         }
+        return _this;
     }
     /**
      * generic post init code, for now, this performs some post assign data post-processing
      * @param executes the executable dom nodes which need to be processed into the form data, which we can send
      * in our ajax request
      */
-    postInit(...executes) {
-        let fetchFileInputs = (id) => {
-            const INPUT_FILE = "input[type='file']";
+    XhrFormData.prototype.postInit = function () {
+        var _this = this;
+        var executes = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            executes[_i] = arguments[_i];
+        }
+        var fetchFileInputs = function (id) {
+            var INPUT_FILE = "input[type='file']";
             if (id == Const_1.IDENT_ALL) {
                 return mona_dish_1.DQ.querySelectorAllDeep(INPUT_FILE);
             }
             else if (id == Const_1.IDENT_FORM) {
-                return this.dataSource.matchesSelector(INPUT_FILE) ?
-                    this.dataSource :
-                    this.dataSource.querySelectorAllDeep(INPUT_FILE);
+                return _this.dataSource.matchesSelector(INPUT_FILE) ?
+                    _this.dataSource :
+                    _this.dataSource.querySelectorAllDeep(INPUT_FILE);
             }
             else {
-                let element = mona_dish_1.DQ.byId(id, true);
-                return element.matchesSelector(INPUT_FILE) ? element : this.getFileInputs(element);
+                var element = mona_dish_1.DQ.byId(id, true);
+                return element.matchesSelector(INPUT_FILE) ? element : _this.getFileInputs(element);
             }
         };
-        let inputExists = (item) => {
+        var inputExists = function (item) {
             return item.isPresent();
         };
-        this.isMultipartRequest = mona_dish_1.LazyStream.of(...executes)
-            .map(fetchFileInputs)
+        this.isMultipartRequest = mona_dish_1.LazyStream.of.apply(mona_dish_1.LazyStream, executes).map(fetchFileInputs)
             .filter(inputExists)
             .first().isPresent();
-    }
+    };
     /**
      * special case view state handling
      *
      * @param form the form holding the view state value
      */
-    applyViewState(form) {
-        let viewState = form.byId(Const_1.P_VIEWSTATE, true).inputValue;
+    XhrFormData.prototype.applyViewState = function (form) {
+        var viewState = form.byId(Const_1.P_VIEWSTATE, true).inputValue;
         this.appendIf(viewState.isPresent(), Const_1.P_VIEWSTATE).value = viewState.value;
-    }
+    };
     /**
      * assigns an url encoded string to this xhrFormData object
      * as key value entry
      * @param encoded
      */
-    assignEncodedString(encoded) {
+    XhrFormData.prototype.assignEncodedString = function (encoded) {
         // this code filters out empty strings as key value pairs
-        let keyValueEntries = decodeURIComponent(encoded).split(/&/gi)
-            .filter(item => !!(item || '')
-            .replace(/\s+/g, ''));
+        var keyValueEntries = decodeURIComponent(encoded).split(/&/gi)
+            .filter(function (item) { return !!(item || '')
+            .replace(/\s+/g, ''); });
         this.assignString(keyValueEntries);
-    }
+    };
     /**
      * assign a set of key value pairs passed as array ['key=val1', 'key2=val2']
      * @param keyValueEntries
      */
-    assignString(keyValueEntries) {
-        let toMerge = new ExtDomQuery_1.ExtConfig({});
+    XhrFormData.prototype.assignString = function (keyValueEntries) {
+        var toMerge = new ExtDomQuery_1.ExtConfig({});
         function splitToKeyVal(line) {
             return line.split(/=(.*)/gi);
         }
@@ -7078,69 +7763,72 @@ class XhrFormData extends mona_dish_1.Config {
             return keyVal.length < 3 ? [(_a = keyVal === null || keyVal === void 0 ? void 0 : keyVal[0]) !== null && _a !== void 0 ? _a : [], (_b = keyVal === null || keyVal === void 0 ? void 0 : keyVal[1]) !== null && _b !== void 0 ? _b : []] : keyVal;
         }
         //TODO fix files...
-        mona_dish_1.Stream.of(...keyValueEntries)
-            .map(line => splitToKeyVal(line))
+        mona_dish_1.Stream.of.apply(mona_dish_1.Stream, keyValueEntries).map(function (line) { return splitToKeyVal(line); })
             //special case of having keys without values
-            .map(keyVal => fixKeyWithoutVal(keyVal))
-            .each(keyVal => {
+            .map(function (keyVal) { return fixKeyWithoutVal(keyVal); })
+            .each(function (keyVal) {
             var _a, _b;
             toMerge.append(keyVal[0]).value = (_b = (_a = keyVal === null || keyVal === void 0 ? void 0 : keyVal.splice(1)) === null || _a === void 0 ? void 0 : _a.join("")) !== null && _b !== void 0 ? _b : "";
         });
         //merge with overwrite but no append! (aka no double entries are allowed)
         this.shallowMerge(toMerge);
-    }
+    };
     /**
      * @returns a Form data representation, this is needed for file submits
      */
-    toFormData() {
-        let ret = new FormData();
+    XhrFormData.prototype.toFormData = function () {
+        var ret = new FormData();
         this.appendInputs(ret);
         return ret;
-    }
-    resolveSubmitIdentifier(elem) {
+    };
+    XhrFormData.prototype.resolveSubmitIdentifier = function (elem) {
         var _a;
-        let identifier = elem.name;
+        var identifier = elem.name;
         identifier = (((_a = elem === null || elem === void 0 ? void 0 : elem.name) !== null && _a !== void 0 ? _a : "").replace(/s+/gi, "") == "") ? elem.id : identifier;
         return identifier;
-    }
+    };
     /**
      * returns an encoded string representation of our xhr form data
      *
      * @param defaultStr optional default value if nothing is there to encode
      */
-    toString(defaultStr = Const_1.EMPTY_STR) {
+    XhrFormData.prototype.toString = function (defaultStr) {
+        var _this = this;
+        if (defaultStr === void 0) { defaultStr = Const_1.EMPTY_STR; }
         if (this.isAbsent()) {
             return defaultStr;
         }
-        let entries = mona_dish_1.LazyStream.of(...Object.keys(this.value))
-            .filter(key => this.value.hasOwnProperty(key))
-            .flatMap(key => mona_dish_1.Stream.of(...this.value[key]).map(val => [key, val])
+        var entries = mona_dish_1.LazyStream.of.apply(mona_dish_1.LazyStream, Object.keys(this.value)).filter(function (key) { return _this.value.hasOwnProperty(key); })
+            .flatMap(function (key) { return mona_dish_1.Stream.of.apply(mona_dish_1.Stream, _this.value[key]).map(function (val) { return [key, val]; })
             //we cannot encode file elements that is handled by multipart requests anyway
-            .filter(([, value]) => !(value instanceof ExtDomQuery_1.ExtDomQuery.global().File))
-            .collect(new mona_dish_1.ArrayCollector()))
-            .map(keyVal => {
-            return `${encodeURIComponent(keyVal[0])}=${encodeURIComponent(keyVal[1])}`;
+            .filter(function (_a) {
+            var value = _a[1];
+            return !(value instanceof ExtDomQuery_1.ExtDomQuery.global().File);
+        })
+            .collect(new mona_dish_1.ArrayCollector()); })
+            .map(function (keyVal) {
+            return "".concat(encodeURIComponent(keyVal[0]), "=").concat(encodeURIComponent(keyVal[1]));
         })
             .collect(new mona_dish_1.ArrayCollector());
         return entries.join("&");
-    }
+    };
     /**
      * helper to fetch all file inputs from as given root element
      * @param rootElement
      * @private
      */
-    getFileInputs(rootElement) {
-        const rootFileInputs = rootElement
-            .filter(elem => elem.matchesSelector("input[type='file']"));
-        const childFileInputs = rootElement
+    XhrFormData.prototype.getFileInputs = function (rootElement) {
+        var rootFileInputs = rootElement
+            .filter(function (elem) { return elem.matchesSelector("input[type='file']"); });
+        var childFileInputs = rootElement
             .querySelectorAll("input[type='file']");
         return rootFileInputs.concat(childFileInputs);
-    }
+    };
     /**
      * encode the given fields and apply the view state
      * @private
      */
-    applyFormDataToConfig() {
+    XhrFormData.prototype.applyFormDataToConfig = function () {
         //encode and append the issuing item if not a partial ids array of ids is passed
         /*
          * Spec. 13.3.1
@@ -7154,20 +7842,20 @@ class XhrFormData extends mona_dish_1.Config {
             return;
         }
         this.applyViewState(this.dataSource);
-    }
+    };
     /**
      * determines fields to submit
      * @param {Object} targetBuf - the target form buffer receiving the data
      * @param {Node} parentItem - form element item is nested in
      * @param {Array} partialIds - ids fo PPS
      */
-    encodeSubmittableFields(targetBuf, parentItem, partialIds) {
-        let toEncode = null;
+    XhrFormData.prototype.encodeSubmittableFields = function (targetBuf, parentItem, partialIds) {
+        var toEncode = null;
         if (this.partialIds && this.partialIds.length) {
             // in case of our myfaces reduced ppr we
             // only submit the partials
             this._value = {};
-            toEncode = new mona_dish_1.DQ(...this.partialIds);
+            toEncode = new (mona_dish_1.DQ.bind.apply(mona_dish_1.DQ, __spreadArray([void 0], this.partialIds, false)))();
         }
         else {
             if (parentItem.isAbsent())
@@ -7176,14 +7864,15 @@ class XhrFormData extends mona_dish_1.Config {
         }
         //lets encode the form elements
         this.shallowMerge(toEncode.deepElements.encodeFormElement());
-    }
-    appendInputs(ret) {
-        mona_dish_1.Stream.of(...Object.keys(this.value))
-            .each(key => {
-            mona_dish_1.Stream.of(...this.value[key]).each(item => ret.append(key, item));
+    };
+    XhrFormData.prototype.appendInputs = function (ret) {
+        var _this = this;
+        mona_dish_1.Stream.of.apply(mona_dish_1.Stream, Object.keys(this.value)).each(function (key) {
+            mona_dish_1.Stream.of.apply(mona_dish_1.Stream, _this.value[key]).each(function (item) { return ret.append(key, item); });
         });
-    }
-}
+    };
+    return XhrFormData;
+}(mona_dish_1.Config));
 exports.XhrFormData = XhrFormData;
 
 
@@ -7213,14 +7902,14 @@ exports.XhrFormData = XhrFormData;
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.XhrRequest = void 0;
-const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
-const AjaxImpl_1 = __webpack_require__(/*! ../AjaxImpl */ "./src/main/typescript/impl/AjaxImpl.ts");
-const XhrFormData_1 = __webpack_require__(/*! ./XhrFormData */ "./src/main/typescript/impl/xhrCore/XhrFormData.ts");
-const ErrorData_1 = __webpack_require__(/*! ./ErrorData */ "./src/main/typescript/impl/xhrCore/ErrorData.ts");
-const EventData_1 = __webpack_require__(/*! ./EventData */ "./src/main/typescript/impl/xhrCore/EventData.ts");
-const Lang_1 = __webpack_require__(/*! ../util/Lang */ "./src/main/typescript/impl/util/Lang.ts");
-const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
-const RequestDataResolver_1 = __webpack_require__(/*! ./RequestDataResolver */ "./src/main/typescript/impl/xhrCore/RequestDataResolver.ts");
+var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
+var AjaxImpl_1 = __webpack_require__(/*! ../AjaxImpl */ "./src/main/typescript/impl/AjaxImpl.ts");
+var XhrFormData_1 = __webpack_require__(/*! ./XhrFormData */ "./src/main/typescript/impl/xhrCore/XhrFormData.ts");
+var ErrorData_1 = __webpack_require__(/*! ./ErrorData */ "./src/main/typescript/impl/xhrCore/ErrorData.ts");
+var EventData_1 = __webpack_require__(/*! ./EventData */ "./src/main/typescript/impl/xhrCore/EventData.ts");
+var Lang_1 = __webpack_require__(/*! ../util/Lang */ "./src/main/typescript/impl/util/Lang.ts");
+var Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
+var RequestDataResolver_1 = __webpack_require__(/*! ./RequestDataResolver */ "./src/main/typescript/impl/xhrCore/RequestDataResolver.ts");
 var failSaveExecute = Lang_1.ExtLang.failSaveExecute;
 /**
  * Faces XHR Request Wrapper
@@ -7231,7 +7920,7 @@ var failSaveExecute = Lang_1.ExtLang.failSaveExecute;
  * and let the queue do the processing.
  *
  */
-class XhrRequest {
+var XhrRequest = /** @class */ (function () {
     /**
      * Required Parameters
      *
@@ -7248,7 +7937,13 @@ class XhrRequest {
      * @param contentType optional content type, default "application/x-www-form-urlencoded"
      * @param xhrObject optional xhr object which must fulfill the XMLHTTPRequest api, default XMLHttpRequest
      */
-    constructor(source, sourceForm, requestContext, internalContext, partialIdsArray = [], timeout = Const_1.NO_TIMEOUT, ajaxType = Const_1.REQ_TYPE_POST, contentType = Const_1.URL_ENCODED, xhrObject = new XMLHttpRequest()) {
+    function XhrRequest(source, sourceForm, requestContext, internalContext, partialIdsArray, timeout, ajaxType, contentType, xhrObject) {
+        if (partialIdsArray === void 0) { partialIdsArray = []; }
+        if (timeout === void 0) { timeout = Const_1.NO_TIMEOUT; }
+        if (ajaxType === void 0) { ajaxType = Const_1.REQ_TYPE_POST; }
+        if (contentType === void 0) { contentType = Const_1.URL_ENCODED; }
+        if (xhrObject === void 0) { xhrObject = new XMLHttpRequest(); }
+        var _this = this;
         this.source = source;
         this.sourceForm = sourceForm;
         this.requestContext = requestContext;
@@ -7267,22 +7962,23 @@ class XhrRequest {
         // we omit promises here because we have to deal with cancel functionality,
         // and promises to not provide that (yet) instead we have our async queue
         // which uses an api internally, which is very close to promises
-        this.registerXhrCallbacks((data) => {
-            this.resolve(data);
-        }, (data) => {
-            this.reject(data);
+        this.registerXhrCallbacks(function (data) {
+            _this.resolve(data);
+        }, function (data) {
+            _this.reject(data);
         });
     }
-    start() {
+    XhrRequest.prototype.start = function () {
+        var _this = this;
         var _a;
-        let ignoreErr = failSaveExecute;
-        let xhrObject = this.xhrObject;
-        let executesArr = () => {
-            return this.requestContext.getIf(Const_1.CTX_PARAM_PASS_THR, Const_1.P_EXECUTE).get("none").value.split(/\s+/gi);
+        var ignoreErr = failSaveExecute;
+        var xhrObject = this.xhrObject;
+        var executesArr = function () {
+            return _this.requestContext.getIf(Const_1.CTX_PARAM_PASS_THR, Const_1.P_EXECUTE).get("none").value.split(/\s+/gi);
         };
         try {
-            let formElement = this.sourceForm.getAsElem(0).value;
-            let viewState = ((_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : window === null || window === void 0 ? void 0 : window.jsf).getViewState(formElement);
+            var formElement = this.sourceForm.getAsElem(0).value;
+            var viewState = ((_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : window === null || window === void 0 ? void 0 : window.jsf).getViewState(formElement);
             // encoded we need to decode
             // We generated a base representation of the current form
             // in case someone has overloaded the viewState with additional decorators we merge
@@ -7292,18 +7988,18 @@ class XhrRequest {
             // the partialIdsArray arr is almost deprecated legacy code where we allowed to send a separate list of partial
             // ids for reduced load and server processing, this will be removed soon, we can handle the same via execute
             // anyway TODO remove the partial ids array
-            let formData = new XhrFormData_1.XhrFormData(this.sourceForm, viewState, executesArr(), this.partialIdsArray);
+            var formData = new XhrFormData_1.XhrFormData(this.sourceForm, viewState, executesArr(), this.partialIdsArray);
             this.contentType = formData.isMultipartRequest ? "undefined" : this.contentType;
             // next step the pass through parameters are merged in for post params
-            let requestContext = this.requestContext;
-            let passThroughParams = requestContext.getIf(Const_1.CTX_PARAM_PASS_THR);
+            var requestContext = this.requestContext;
+            var passThroughParams = requestContext.getIf(Const_1.CTX_PARAM_PASS_THR);
             // this is an extension where we allow pass through parameters to be sent down additionally
             // this can be used and is used in the impl to enrich the post request parameters with additional
             // information
             formData.shallowMerge(passThroughParams, true, true);
             this.responseContext = passThroughParams.deepCopy;
             // we have to shift the internal passthroughs around to build up our response context
-            let responseContext = this.responseContext;
+            var responseContext = this.responseContext;
             responseContext.assign(Const_1.CTX_PARAM_MF_INTERNAL).value = this.internalContext.value;
             // per spec the onevent and onerror handlers must be passed through to the response
             responseContext.assign(Const_1.ON_EVENT).value = requestContext.getIf(Const_1.ON_EVENT).value;
@@ -7315,13 +8011,13 @@ class XhrRequest {
             // normal browsers should resolve this
             // tests can quietly fail on this one
             if (this.contentType != "undefined") {
-                ignoreErr(() => xhrObject.setRequestHeader(Const_1.CONTENT_TYPE, `${this.contentType}; charset=utf-8`));
+                ignoreErr(function () { return xhrObject.setRequestHeader(Const_1.CONTENT_TYPE, "".concat(_this.contentType, "; charset=utf-8")); });
             }
-            ignoreErr(() => xhrObject.setRequestHeader(Const_1.HEAD_FACES_REQ, Const_1.VAL_AJAX));
+            ignoreErr(function () { return xhrObject.setRequestHeader(Const_1.HEAD_FACES_REQ, Const_1.VAL_AJAX); });
             // probably not needed anymore, will test this
             // some webkit based mobile browsers do not follow the w3c spec of
             // setting, they accept headers automatically
-            ignoreErr(() => xhrObject.setRequestHeader(Const_1.REQ_ACCEPT, Const_1.STD_ACCEPT));
+            ignoreErr(function () { return xhrObject.setRequestHeader(Const_1.REQ_ACCEPT, Const_1.STD_ACCEPT); });
             this.sendEvent(Const_1.BEGIN);
             this.sendRequest(formData);
         }
@@ -7330,39 +8026,39 @@ class XhrRequest {
             this.handleError(e);
         }
         return this;
-    }
-    cancel() {
+    };
+    XhrRequest.prototype.cancel = function () {
         try {
             this.xhrObject.abort();
         }
         catch (e) {
             this.handleError(e);
         }
-    }
-    resolve(data) {
-        mona_dish_1.Stream.of(...this.thenFunctions).reduce((inputVal, thenFunc) => {
+    };
+    XhrRequest.prototype.resolve = function (data) {
+        mona_dish_1.Stream.of.apply(mona_dish_1.Stream, this.thenFunctions).reduce(function (inputVal, thenFunc) {
             return thenFunc(inputVal);
         }, data);
-    }
-    reject(data) {
-        mona_dish_1.Stream.of(...this.catchFunctions).reduce((inputVal, catchFunc) => {
+    };
+    XhrRequest.prototype.reject = function (data) {
+        mona_dish_1.Stream.of.apply(mona_dish_1.Stream, this.catchFunctions).reduce(function (inputVal, catchFunc) {
             return catchFunc(inputVal);
         }, data);
-    }
-    catch(func) {
+    };
+    XhrRequest.prototype.catch = function (func) {
         this.catchFunctions.push(func);
         return this;
-    }
-    finally(func) {
+    };
+    XhrRequest.prototype.finally = function (func) {
         // no ie11 support we probably are going to revert to shims for that one
         this.catchFunctions.push(func);
         this.thenFunctions.push(func);
         return this;
-    }
-    then(func) {
+    };
+    XhrRequest.prototype.then = function (func) {
         this.thenFunctions.push(func);
         return this;
-    }
+    };
     /**
      * attaches the internal event and processing
      * callback within the promise to our xhr object
@@ -7370,55 +8066,56 @@ class XhrRequest {
      * @param resolve
      * @param reject
      */
-    registerXhrCallbacks(resolve, reject) {
-        let xhrObject = this.xhrObject;
-        xhrObject.onabort = () => {
-            this.onAbort(reject);
+    XhrRequest.prototype.registerXhrCallbacks = function (resolve, reject) {
+        var _this = this;
+        var xhrObject = this.xhrObject;
+        xhrObject.onabort = function () {
+            _this.onAbort(reject);
         };
-        xhrObject.ontimeout = () => {
-            this.onTimeout(reject);
+        xhrObject.ontimeout = function () {
+            _this.onTimeout(reject);
         };
-        xhrObject.onload = () => {
-            this.onSuccess(resolve);
+        xhrObject.onload = function () {
+            _this.onSuccess(resolve);
         };
-        xhrObject.onloadend = () => {
-            this.onDone(this.xhrObject, resolve);
+        xhrObject.onloadend = function () {
+            _this.onDone(_this.xhrObject, resolve);
         };
-        xhrObject.onerror = (errorData) => {
+        xhrObject.onerror = function (errorData) {
             // some browsers trigger an error when cancelling a request internally
             // in this case we simply ignore the request and clear up the queue, because
             // it is not safe anymore to proceed with the current queue
             // This bypasses a Safari issue where it keeps requests hanging after page unload
             // and then triggers a cancel error on then instead of just stopping
             // and clearing the code
-            if (this.isCancelledResponse(this.xhrObject)) {
+            if (_this.isCancelledResponse(_this.xhrObject)) {
                 reject();
-                this.stopProgress = true;
+                _this.stopProgress = true;
                 return;
             }
-            this.onError(errorData, reject);
+            _this.onError(errorData, reject);
         };
-    }
-    isCancelledResponse(currentTarget) {
+    };
+    XhrRequest.prototype.isCancelledResponse = function (currentTarget) {
         return (currentTarget === null || currentTarget === void 0 ? void 0 : currentTarget.status) === 0 && // cancelled by browser
             (currentTarget === null || currentTarget === void 0 ? void 0 : currentTarget.readyState) === 4 &&
             (currentTarget === null || currentTarget === void 0 ? void 0 : currentTarget.responseText) === '' &&
             (currentTarget === null || currentTarget === void 0 ? void 0 : currentTarget.responseXML) === null;
-    }
+    };
     /*
          * xhr processing callbacks
          *
          * Those methods are the callbacks called by
          * the xhr object depending on its own state
          */
-    onAbort(reject) {
+    XhrRequest.prototype.onAbort = function (reject) {
         reject();
-    }
-    onTimeout(reject) {
+    };
+    XhrRequest.prototype.onTimeout = function (reject) {
         this.sendEvent(Const_1.STATE_EVT_TIMEOUT);
         reject();
-    }
-    onSuccess(resolve) {
+    };
+    XhrRequest.prototype.onSuccess = function (resolve) {
         var _a, _b, _c;
         this.sendEvent(Const_1.COMPLETE);
         // malformed responses always result in empty response xml
@@ -7428,11 +8125,11 @@ class XhrRequest {
             return;
         }
         ((_b = window === null || window === void 0 ? void 0 : window.faces) !== null && _b !== void 0 ? _b : window.jsf).ajax.response(this.xhrObject, (_c = this.responseContext.value) !== null && _c !== void 0 ? _c : {});
-    }
-    handleMalFormedXML(resolve) {
+    };
+    XhrRequest.prototype.handleMalFormedXML = function (resolve) {
         var _a;
         this.stopProgress = true;
-        let errorData = {
+        var errorData = {
             type: Const_1.ERROR,
             status: Const_1.MALFORMEDXML,
             responseCode: 200,
@@ -7450,20 +8147,20 @@ class XhrRequest {
             resolve(errorData);
         }
         // non blocking non clearing
-    }
-    onDone(data, resolve) {
+    };
+    XhrRequest.prototype.onDone = function (data, resolve) {
         // if stop progress a special handling including resolve is already performed
         if (this.stopProgress) {
             return;
         }
         resolve(data);
-    }
-    onError(errorData, reject) {
+    };
+    XhrRequest.prototype.onError = function (errorData, reject) {
         this.handleError(errorData);
         reject();
-    }
-    sendRequest(formData) {
-        let isPost = this.ajaxType != Const_1.REQ_TYPE_GET;
+    };
+    XhrRequest.prototype.sendRequest = function (formData) {
+        var isPost = this.ajaxType != Const_1.REQ_TYPE_GET;
         if (formData.isMultipartRequest) {
             // in case of a multipart request we send in a formData object as body
             this.xhrObject.send((isPost) ? formData.toFormData() : null);
@@ -7472,31 +8169,33 @@ class XhrRequest {
             // in case of a normal request we send it normally
             this.xhrObject.send((isPost) ? formData.toString() : null);
         }
-    }
+    };
     /*
      * other helpers
      */
-    sendEvent(evtType) {
-        let eventData = EventData_1.EventData.createFromRequest(this.xhrObject, this.requestContext, evtType);
+    XhrRequest.prototype.sendEvent = function (evtType) {
+        var eventData = EventData_1.EventData.createFromRequest(this.xhrObject, this.requestContext, evtType);
         try {
             // User code error, we might cover
             // this in onError, but also we cannot swallow it.
             // We need to resolve the local handlers lazily,
             // because some frameworks might decorate them over the context in the response
-            let eventHandler = (0, RequestDataResolver_1.resolveHandlerFunc)(this.requestContext, this.responseContext, Const_1.ON_EVENT);
+            var eventHandler = (0, RequestDataResolver_1.resolveHandlerFunc)(this.requestContext, this.responseContext, Const_1.ON_EVENT);
             AjaxImpl_1.Implementation.sendEvent(eventData, eventHandler);
         }
         catch (e) {
             this.handleError(e);
             throw e;
         }
-    }
-    handleError(exception, responseFormatError = false) {
-        let errorData = (responseFormatError) ? ErrorData_1.ErrorData.fromHttpConnection(exception.source, exception.type, exception.status, exception.responseText, exception.responseCode, exception.status) : ErrorData_1.ErrorData.fromClient(exception);
-        let eventHandler = (0, RequestDataResolver_1.resolveHandlerFunc)(this.requestContext, this.responseContext, Const_1.ON_ERROR);
+    };
+    XhrRequest.prototype.handleError = function (exception, responseFormatError) {
+        if (responseFormatError === void 0) { responseFormatError = false; }
+        var errorData = (responseFormatError) ? ErrorData_1.ErrorData.fromHttpConnection(exception.source, exception.type, exception.status, exception.responseText, exception.responseCode, exception.status) : ErrorData_1.ErrorData.fromClient(exception);
+        var eventHandler = (0, RequestDataResolver_1.resolveHandlerFunc)(this.requestContext, this.responseContext, Const_1.ON_ERROR);
         AjaxImpl_1.Implementation.sendError(errorData, eventHandler);
-    }
-}
+    };
+    return XhrRequest;
+}());
 exports.XhrRequest = XhrRequest;
 
 
@@ -7526,7 +8225,7 @@ exports.XhrRequest = XhrRequest;
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.oam = void 0;
-const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
+var mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 /**
  * legacy code to enable various aspects
  * of myfaces, used to be rendered inline
@@ -7548,13 +8247,13 @@ var oam;
      */
     oam.setHiddenInput = function (formName, name, value) {
         mona_dish_1.DQ.byId(document.forms[formName])
-            .each(form => {
-            const input = form.querySelectorAll(`input[type='hidden'][name='${name}']`);
+            .each(function (form) {
+            var input = form.querySelectorAll("input[type='hidden'][name='".concat(name, "']"));
             if (input.isPresent()) {
                 input.inputValue.value = value;
             }
             else {
-                const newInput = mona_dish_1.DQ.fromMarkup(`<input type='hidden' id='${name}' name='${name}'>`);
+                var newInput = mona_dish_1.DQ.fromMarkup("<input type='hidden' id='".concat(name, "' name='").concat(name, "'>"));
                 newInput.inputValue.value = value;
                 newInput.appendTo(form);
             }
@@ -7568,7 +8267,7 @@ var oam;
      */
     oam.clearHiddenInput = function (formName, name) {
         var _a, _b, _c;
-        let element = (_c = (_b = (_a = document.forms) === null || _a === void 0 ? void 0 : _a[formName]) === null || _b === void 0 ? void 0 : _b.elements) === null || _c === void 0 ? void 0 : _c[name];
+        var element = (_c = (_b = (_a = document.forms) === null || _a === void 0 ? void 0 : _a[formName]) === null || _b === void 0 ? void 0 : _b.elements) === null || _c === void 0 ? void 0 : _c[name];
         if (!element) {
             return;
         }
@@ -7587,24 +8286,24 @@ var oam;
      */
     oam.submitForm = function (formName, linkId, target, params) {
         var _a, _b, _c, _d;
-        let clearFn = 'clearFormHiddenParams_' + formName.replace(/-/g, '\$:').replace(/:/g, '_');
+        var clearFn = 'clearFormHiddenParams_' + formName.replace(/-/g, '\$:').replace(/:/g, '_');
         (_a = window === null || window === void 0 ? void 0 : window[clearFn]) === null || _a === void 0 ? void 0 : _a.call(window, formName);
         //autoscroll code
         if (((_d = (_c = (_b = window === null || window === void 0 ? void 0 : window.myfaces) === null || _b === void 0 ? void 0 : _b.core) === null || _c === void 0 ? void 0 : _c.config) === null || _d === void 0 ? void 0 : _d.autoScroll) && (window === null || window === void 0 ? void 0 : window.getScrolling)) {
             myfaces.oam.setHiddenInput(formName, 'autoScroll', window === null || window === void 0 ? void 0 : window.getScrolling());
         }
-        mona_dish_1.Stream.ofAssoc(params).each((param) => {
+        mona_dish_1.Stream.ofAssoc(params).each(function (param) {
             myfaces.oam.setHiddenInput(formName, param[0], param[1]);
         });
         //we call the namespaced function, to allow decoration, via a direct call we would
-        myfaces.oam.setHiddenInput(formName, `${formName}:_idcl`, linkId);
-        mona_dish_1.DQ.byId(document.forms[formName]).each(form => {
+        myfaces.oam.setHiddenInput(formName, "".concat(formName, ":_idcl"), linkId);
+        mona_dish_1.DQ.byId(document.forms[formName]).each(function (form) {
             var _a;
-            const ATTR_TARGET = "target";
-            const formElement = form.getAsElem(0).value;
-            const oldTarget = form.attr(ATTR_TARGET).value;
+            var ATTR_TARGET = "target";
+            var formElement = form.getAsElem(0).value;
+            var oldTarget = form.attr(ATTR_TARGET).value;
             form.attr(ATTR_TARGET).value = target;
-            const result = (_a = formElement === null || formElement === void 0 ? void 0 : formElement.onsubmit) === null || _a === void 0 ? void 0 : _a.call(formElement, null);
+            var result = (_a = formElement === null || formElement === void 0 ? void 0 : formElement.onsubmit) === null || _a === void 0 ? void 0 : _a.call(formElement, null);
             try {
                 if ((!!result) || 'undefined' == typeof result) {
                     formElement.submit();
@@ -7615,10 +8314,10 @@ var oam;
             }
             finally {
                 form.attr(ATTR_TARGET).value = oldTarget;
-                mona_dish_1.Stream.ofAssoc(params).each((param) => {
+                mona_dish_1.Stream.ofAssoc(params).each(function (param) {
                     myfaces.oam.clearHiddenInput(formName, param[0]);
                 });
-                myfaces.oam.clearHiddenInput(formName, `${formName}:_idcl`);
+                myfaces.oam.clearHiddenInput(formName, "".concat(formName, ":_idcl"));
             }
         });
         return false;
@@ -7708,14 +8407,14 @@ exports.myfaces = exports.faces = void 0;
  */
 if (!window.faces) {
     //we lazily load the code to prevent ram bloat
-    const faces = (__webpack_require__(/*! ./_api */ "./src/main/typescript/api/_api.ts").faces);
-    window['faces'] = (_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : faces;
+    var faces_1 = (__webpack_require__(/*! ./_api */ "./src/main/typescript/api/_api.ts").faces);
+    window['faces'] = (_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : faces_1;
 }
 if (!((_b = window === null || window === void 0 ? void 0 : window.myfaces) === null || _b === void 0 ? void 0 : _b.ab)) {
-    const myfaces = (__webpack_require__(/*! ./_api */ "./src/main/typescript/api/_api.ts").myfaces);
+    var myfaces_1 = (__webpack_require__(/*! ./_api */ "./src/main/typescript/api/_api.ts").myfaces);
     //namespace might be extended is not exclusively reserved so we merge
     window["myfaces"] = (_c = window === null || window === void 0 ? void 0 : window.myfaces) !== null && _c !== void 0 ? _c : {};
-    Object.keys(myfaces).forEach(key => { var _a, _b; return window.myfaces[key] = (_b = (_a = window.myfaces) === null || _a === void 0 ? void 0 : _a[key]) !== null && _b !== void 0 ? _b : myfaces[key]; });
+    Object.keys(myfaces_1).forEach(function (key) { var _a, _b; return window.myfaces[key] = (_b = (_a = window.myfaces) === null || _a === void 0 ? void 0 : _a[key]) !== null && _b !== void 0 ? _b : myfaces_1[key]; });
 }
 exports.faces = window.faces;
 exports.myfaces = window.myfaces;

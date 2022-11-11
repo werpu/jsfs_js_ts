@@ -1709,12 +1709,17 @@ var DomQuery = /** @class */ (function () {
                     elemType != ALLOWED_SUBMITTABLE_ELEMENTS.SUBMIT &&
                     elemType != ALLOWED_SUBMITTABLE_ELEMENTS.IMAGE) && ((elemType != ALLOWED_SUBMITTABLE_ELEMENTS.CHECKBOX && elemType != ALLOWED_SUBMITTABLE_ELEMENTS.RADIO) ||
                     element.checked)) {
-                    var files = (_b = (_a = element.value.value) === null || _a === void 0 ? void 0 : _a.files) !== null && _b !== void 0 ? _b : [];
-                    if (files === null || files === void 0 ? void 0 : files.length) {
-                        // xhr level2
-                        target.append(name).value = files[0];
+                    var uploadedFiles = (_b = (_a = element.value) === null || _a === void 0 ? void 0 : _a.value) === null || _b === void 0 ? void 0 : _b.files;
+                    var filesArr = uploadedFiles !== null && uploadedFiles !== void 0 ? uploadedFiles : [];
+                    if (filesArr === null || filesArr === void 0 ? void 0 : filesArr.length) { //files can be empty but set
+                        // xhr level2, single multiple must be passes as they are
+                        target.assign(name).value = Array.from(filesArr);
                     }
                     else {
+                        if (!!uploadedFiles) { //we skip empty file elements i
+                            return;
+                        }
+                        //checkboxes etc.. need to be appended
                         target.append(name).value = element.inputValue.value;
                     }
                 }
@@ -2840,6 +2845,9 @@ var Config = /** @class */ (function (_super) {
         if (overwrite === void 0) { overwrite = true; }
         if (withAppend === void 0) { withAppend = false; }
         var _loop_1 = function (key) {
+            if ('undefined' == typeof key || null == key) {
+                return "continue";
+            }
             if (overwrite || !(key in this_1.value)) {
                 if (!withAppend) {
                     this_1.assign(key).value = other.getIf(key).value;
@@ -6862,7 +6870,6 @@ exports.getEventTarget = getEventTarget;
  */
 function resolveDefaults(event, opts, el) {
     var _a;
-    if (opts === void 0) { opts = {}; }
     if (el === void 0) { el = null; }
     //deep copy the options, so that further transformations to not backfire into the callers
     var resolvedEvent = event, options = new ExtDomQuery_1.ExtConfig(opts).deepCopy, elem = mona_dish_1.DQ.byId(el || resolvedEvent.target, true), elementId = elem.id.value, requestCtx = new ExtDomQuery_1.ExtConfig({}), internalCtx = new ExtDomQuery_1.ExtConfig({}), windowId = resolveWindowId(options), isResetValues = true === ((_a = options.value) === null || _a === void 0 ? void 0 : _a.resetValues);

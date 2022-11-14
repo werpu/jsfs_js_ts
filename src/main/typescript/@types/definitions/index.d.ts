@@ -28,6 +28,7 @@ declare global {
 
 
     type Options = {
+        render ?: string,
         execute ?: string, //space separated list of client ids
         onevent ?: Function, // event handler callback
         onerror ?: Function, // error handler callback

@@ -23,6 +23,8 @@
 declare global {
 
     type Consumer<T> = (s?: T) => void;
+    type Tuple<V,K> = [V, K];
+    type Tuples<V,K> = [Tuple<V, K>];
     type AssocArr<T> = { [key: string]: T };
     type EvalFuncs = Array<Function | string>;
 

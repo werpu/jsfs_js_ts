@@ -8293,6 +8293,11 @@ var oam;
      */
     oam.submitForm = function (formName, linkId, target, params) {
         var _a, _b, _c, _d, _e, _f;
+        if (linkId === void 0) { linkId = null; }
+        if (target === void 0) { target = null; }
+        if (params === void 0) { params = {}; }
+        //handle a possible incoming null, not sure if this is used that way anywhere, but we allow it
+        params = (!params) ? {} : params;
         var clearFn = 'clearFormHiddenParams_' + formName.replace(/-/g, '\$:').replace(/:/g, '_');
         (_a = window === null || window === void 0 ? void 0 : window[clearFn]) === null || _a === void 0 ? void 0 : _a.call(window, formName);
         //autoscroll code

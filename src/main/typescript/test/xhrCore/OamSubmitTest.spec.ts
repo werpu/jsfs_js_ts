@@ -116,18 +116,62 @@ describe('Tests for the MyFaces specifig oam submit', function () {
         myfaces.oam.submitForm("blarg", "bla", null, options);
 
     });
+
     it(("must handle target correctly, associative array"), (done) => {
 
         let options = {"booga1": "value1", "booga2": "value2"};
-
         (DQ.byId("blarg")
             .getAsElem(0).value as HTMLFormElement).onsubmit = (evt) => {
             expect(DQ$(`#blarg`).attr("target").value).to.eq("target1");
             done();
             return false;
         };
-
         myfaces.oam.submitForm("blarg", "bla", "target1", options);
 
     });
+
+    it(("must handle limited parameters"), (done) => {
+
+        (DQ.byId("blarg")
+            .getAsElem(0).value as HTMLFormElement).onsubmit = (evt) => {
+            expect(DQ.byId(`blarg:_idcl`).inputValue.value).to.eq("bla");
+            done();
+            return false;
+        };
+        try {
+        myfaces.oam.submitForm("blarg", "bla");
+        } catch(e) {
+            done(e);
+        }
+
+    });
+    it(("must handle limited parameters 2"), (done) => {
+
+        (DQ.byId("blarg")
+            .getAsElem(0).value as HTMLFormElement).onsubmit = (evt) => {
+            expect(DQ.byId(`blarg:_idcl`).inputValue.value).to.eq("bla");
+            done();
+            return false;
+        };
+        try {
+            myfaces.oam.submitForm("blarg", "bla", null);
+        } catch(e) {
+            done(e);
+        }
+    });
+    it(("must handle limited parameters 3"), (done) => {
+
+        (DQ.byId("blarg")
+            .getAsElem(0).value as HTMLFormElement).onsubmit = (evt) => {
+            expect(DQ.byId(`blarg:_idcl`).inputValue.value).to.eq("bla");
+            done();
+            return false;
+        };
+        try {
+            myfaces.oam.submitForm("blarg", "bla", null, null);
+        } catch(e) {
+            done(e);
+        }
+    });
+
 });

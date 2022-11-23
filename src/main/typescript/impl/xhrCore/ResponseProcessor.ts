@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Config, DomQuery, DQ, Lang, Stream, XMLQuery} from "mona-dish";
+import {Config, DomQuery, DomQueryCollector, DQ, Lang, Stream, XMLQuery} from "mona-dish";
 import {Implementation} from "../AjaxImpl";
 import {Assertions} from "../util/Assertions";
 import {IResponseProcessor} from "./IResponseProcessor";
@@ -40,7 +40,6 @@ import {
     P_PARTIAL_SOURCE,
     P_VIEWSTATE,
     RESPONSE_XML, SEL_CLIENT_WINDOW_ELEM,
-    SEL_SCRIPTS_STYLES,
     SEL_VIEWSTATE_ELEM,
     SOURCE,
     SUCCESS,
@@ -86,32 +85,30 @@ export class ResponseProcessor implements IResponseProcessor {
         if (!shadowHead.isPresent()) {
             return;
         }
-
         let head = ExtDomQuery.querySelectorAll(TAG_HEAD);
-
-        //delete all to avoid script and style overlays
-        // we delete everything
+        // full replace we delete everything
         head.childNodes.delete();
+        this.addToHead(shadowHead);
+    }
 
-        let postProcessTags = ["STYLE", "LINK", "SCRIPT"]
-        shadowHead.stream
-            .filter(item => postProcessTags.indexOf(item.tagName.orElse("").value) == -1)
-            .each(item => {
-                head.append(item);
-            });
+    addToHead(shadowHead: XMLQuery | DQ) {
+        const mappedHeadData = new ExtDomQuery(shadowHead);
+        const postProcessTags = ["STYLE", "LINK", "SCRIPT"];
+        const nonExecutables = mappedHeadData.filter(item => postProcessTags.indexOf(item.tagName.orElse("").value) == -1);
+        nonExecutables.runHeadInserts(true);
 
         //incoming either the outer head tag or its children
         const nodesToAdd = (shadowHead.tagName.value === "HEAD") ? shadowHead.childNodes : shadowHead;
         // this is stored for post processing
         // after the rest of the "pyhsical build up", head before body
-        this.addToHead(nodesToAdd);
+        const evalElements = nodesToAdd.stream
+            .filter(item => postProcessTags.indexOf(item.tagName.orElse("").value) != -1).collect(new DomQueryCollector());
+        this.addToHeadDeferred(evalElements);
     }
 
-    addToHead(newElements: XMLQuery | DQ) {
+    addToHeadDeferred(newElements: XMLQuery | DQ) {
         this.internalContext.assign(DEFERRED_HEAD_INSERTS).value.push(newElements);
     }
-
-
 
     /**
      * replaces the body in the expected manner

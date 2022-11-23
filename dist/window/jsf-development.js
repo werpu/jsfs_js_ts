@@ -3361,6 +3361,15 @@ exports.Stream = Stream;
  *
  */
 class LazyStream {
+    static of(...values) {
+        return new LazyStream(new SourcesCollectors_1.ArrayStreamDataSource(...values));
+    }
+    static ofAssoc(data) {
+        return this.of(...Object.keys(data)).map(key => [key, data[key]]);
+    }
+    static ofStreamDataSource(value) {
+        return new LazyStream(value);
+    }
     constructor(parent) {
         this._limits = -1;
         /*
@@ -3370,15 +3379,6 @@ class LazyStream {
          */
         this.pos = -1;
         this.dataSource = parent;
-    }
-    static of(...values) {
-        return new LazyStream(new SourcesCollectors_1.ArrayStreamDataSource(...values));
-    }
-    static ofAssoc(data) {
-        return this.of(...Object.keys(data)).map(key => [key, data[key]]);
-    }
-    static ofStreamDataSource(value) {
-        return new LazyStream(value);
     }
     hasNext() {
         if (this.isOverLimits()) {
@@ -5247,10 +5247,8 @@ exports.Assertions = void 0;
  * limitations under the License.
  */
 const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
-const Lang_1 = __webpack_require__(/*! ./Lang */ "./src/main/typescript/impl/util/Lang.ts");
-var getMessage = Lang_1.ExtLang.getMessage;
-var makeException = Lang_1.ExtLang.makeException;
 const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
+const Lang_1 = __webpack_require__(/*! ./Lang */ "./src/main/typescript/impl/util/Lang.ts");
 /**
  * a set of internal code assertions
  * which raise an error
@@ -5265,12 +5263,12 @@ var Assertions;
         assertFunction(options.getIf(Const_1.ON_EVENT).value);
         //improve the error messages if an empty elem is passed
         //Assertions.assertElementExists(elem);
-        assert(elem.isPresent(), getMessage("ERR_MUST_BE_PROVIDED1", "{0}: source  must be provided or exist", "source element id"), "faces.ajax.request", "ArgNotSet");
+        assert(elem.isPresent(), Lang_1.ExtLang.getMessage("ERR_MUST_BE_PROVIDED1", "{0}: source  must be provided or exist", "source element id"), "faces.ajax.request", "ArgNotSet");
     }
     Assertions.assertRequestIntegrity = assertRequestIntegrity;
     function assertUrlExists(node) {
         if (node.attr(Const_1.ATTR_URL).isAbsent()) {
-            throw Assertions.raiseError(new Error(), getMessage("ERR_RED_URL", null, "processRedirect"), "processRedirect");
+            throw Assertions.raiseError(new Error(), Lang_1.ExtLang.getMessage("ERR_RED_URL", null, "processRedirect"), "processRedirect");
         }
     }
     Assertions.assertUrlExists = assertUrlExists;
@@ -5299,7 +5297,7 @@ var Assertions;
         let finalName = name !== null && name !== void 0 ? name : Const_1.MALFORMEDXML;
         let finalMessage = message !== null && message !== void 0 ? message : Const_1.EMPTY_STR;
         //TODO clean up the messy makeException, this is a perfect case for encapsulation and sane defaults
-        return makeException(error, finalTitle, finalName, "Response", caller || ((arguments.caller) ? arguments.caller.toString() : "_raiseError"), finalMessage);
+        return Lang_1.ExtLang.makeException(error, finalTitle, finalName, "Response", caller || ((arguments.caller) ? arguments.caller.toString() : "_raiseError"), finalMessage);
     }
     Assertions.raiseError = raiseError;
     /*
@@ -5322,6 +5320,13 @@ var Assertions;
         assertType(value, "function", msg, caller, title);
     }
     Assertions.assertFunction = assertFunction;
+    function assertDelay(value) {
+        if (!(value >= 0)) { // >= 0 abbreviation which covers all cases of non positive values,
+            // including NaN and non numeric strings, no type equality is deliberate here,
+            throw new Error("Invalid delay value: " + value);
+        }
+    }
+    Assertions.assertDelay = assertDelay;
 })(Assertions = exports.Assertions || (exports.Assertions = {}));
 
 
@@ -6137,6 +6142,8 @@ const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-di
 const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 const Lang_1 = __webpack_require__(/*! ../util/Lang */ "./src/main/typescript/impl/util/Lang.ts");
 const ExtDomQuery_1 = __webpack_require__(/*! ../util/ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
+const Assertions_1 = __webpack_require__(/*! ../util/Assertions */ "./src/main/typescript/impl/util/Assertions.ts");
+var assertDelay = Assertions_1.Assertions.assertDelay;
 /**
  * Resolver functions for various aspects of the request data
  *
@@ -6199,7 +6206,15 @@ exports.resolveTimeout = resolveTimeout;
 function resolveDelay(options) {
     var _a;
     let getCfg = Lang_1.ExtLang.getLocalOrGlobalConfig;
-    return (_a = options.getIf(Const_1.CTX_PARAM_DELAY).value) !== null && _a !== void 0 ? _a : getCfg(options.value, Const_1.CTX_PARAM_DELAY, 0);
+    // null or non undefined will automatically be mapped to 0 aka no delay
+    let ret = (_a = options.getIf(Const_1.CTX_PARAM_DELAY).value) !== null && _a !== void 0 ? _a : getCfg(options.value, Const_1.CTX_PARAM_DELAY, 0);
+    // if delay === none, no delay must be used, aka delay 0
+    if ('none' === ret) {
+        ret = 0;
+    }
+    // negative, or invalid values will automatically get a js exception
+    assertDelay(ret);
+    return ret;
 }
 exports.resolveDelay = resolveDelay;
 /**

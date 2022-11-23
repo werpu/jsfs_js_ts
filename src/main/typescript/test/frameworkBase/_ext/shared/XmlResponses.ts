@@ -194,7 +194,7 @@ export class XmlResponses {
 <partial-response id="j_id__v_0"><changes><update id="jakarta.faces.Resource">
     <![CDATA[
         <script src="../../../xhrCore/fixtures/addedViewHead3.js"></script>
-        <style type="text/css" rel="../../../xhrCore/fixtures/addedViewHead2.css"></style>
+        <link rel="stylesheet" href="../../../xhrCore/fixtures/addedViewHead2.css"></link>
         <script type="text/javascript">
             document.getElementById('resource_area_1').innerHTML = 'booga';
         </script>
@@ -203,6 +203,24 @@ export class XmlResponses {
 </changes>
 </partial-response>
 `
+
+    static HEAD_REPLACE = `
+<partial-response id="j_id__v_0"><changes><update id="jakarta.faces.ViewHead">
+    <![CDATA[
+    <head>
+        <script type="text/javascript" src="../../../xhrCore/fixtures/addedViewHead3.js"></script>
+        <link rel="stylesheet" href="../../../xhrCore/fixtures/addedViewHead2.css"></link>
+        <script type="text/javascript">
+            setTimeout(() => document.getElementById('resource_area_1').innerHTML = 'booga', 1000);
+        </script>
+    </head>    
+    ]]>
+</update>
+</changes>
+</partial-response>
+`
+
+
 
     static NONCE_REPLY = `
     <partial-response><changes><update id='nonce_result'>

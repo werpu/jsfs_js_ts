@@ -21,7 +21,7 @@ import * as sinon from "sinon";
 
 import {XmlResponses} from "../frameworkBase/_ext/shared/XmlResponses";
 import {expect} from "chai";
-import {DomQuery, DQ} from "mona-dish";
+import {DomQuery, DQ, DQ$} from "mona-dish";
 import protocolPage = StandardInits.protocolPage;
 import exp from "constants";
 
@@ -410,7 +410,8 @@ describe('Tests of the various aspects of the response protocol functionality', 
        // this.respond("debugger; document.getElementById('resource_area_1').innerHTML = 'true3'",  {'Content-Type': 'text/javascript'});
         let headHTML = document.head.innerHTML;
         expect(headHTML.indexOf("../../../xhrCore/fixtures/addedViewHead3.js")).not.eq(-1);
-        expect(headHTML.indexOf("rel=\"../../../xhrCore/fixtures/addedViewHead2.css\"")).not.eq(-1);
+        expect(headHTML.indexOf("href=\"../../../xhrCore/fixtures/addedViewHead2.css\"")).not.eq(-1);
+        expect(DQ$("head link[rel='stylesheet'][href='../../../xhrCore/fixtures/addedViewHead2.css']").length).to.eq(1);
         setTimeout(() => {
             let evalAreaHtml = DQ.byId('resource_area_1').innerHTML;
             //last one must be the last item, order must be preserved
@@ -419,5 +420,27 @@ describe('Tests of the various aspects of the response protocol functionality', 
         }, 800)
 
     })
+
+
+    it("head replacement must work (https://issues.apache.org/jira/browse/MYFACES-4498 and TCK Issue 4345IT)", function(done) {
+
+        DQ.byId("cmd_complex_resource2").click();
+        this.respond(XmlResponses.HEAD_REPLACE);
+        let headHTML = document.head.innerHTML;
+
+        //failing now, no elements in the html head after respond!!!
+        expect(headHTML.indexOf("href=\"../../../xhrCore/fixtures/addedViewHead2.css\"")).not.eq(-1);
+        expect(DQ$("head link[rel='stylesheet'][href='../../../xhrCore/fixtures/addedViewHead2.css']").length).to.eq(1);
+
+        expect(headHTML.indexOf("../../../xhrCore/fixtures/addedViewHead3.js")).not.eq(-1);
+        setTimeout(() => {
+            let evalAreaHtml = DQ.byId('resource_area_1').innerHTML;
+            //last one must be the last item, order must be preserved
+            expect(evalAreaHtml).to.eq("booga");
+            done();
+        }, 800)
+
+    })
+
 
 });

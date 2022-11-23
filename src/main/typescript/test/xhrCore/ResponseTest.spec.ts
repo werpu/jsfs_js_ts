@@ -443,4 +443,28 @@ describe('Tests of the various aspects of the response protocol functionality', 
     })
 
 
+    it("complex head replacement must work", function(done) {
+
+        DQ.byId("cmd_complex_resource2").click();
+        this.respond(XmlResponses.HEAD_REPLACE2);
+        let headHTML = document.head.innerHTML;
+
+        //failing now, no elements in the html head after respond!!!
+        expect(headHTML.indexOf("href=\"../../../xhrCore/fixtures/addedViewHead2.css\"")).not.eq(-1);
+        expect(DQ$("head link[rel='stylesheet'][href='../../../xhrCore/fixtures/addedViewHead2.css']").length).to.eq(1);
+
+        let metas = DQ$("head meta");
+        expect(metas.length).to.eq(5);
+        expect(metas.get(0).attr("charSet").value == "UTF-8");
+        expect(metas.get(4).attr("author").value == "Whoever");
+
+        expect(headHTML.indexOf("../../../xhrCore/fixtures/addedViewHead3.js")).not.eq(-1);
+        setTimeout(() => {
+            let evalAreaHtml = DQ.byId('resource_area_1').innerHTML;
+            //last one must be the last item, order must be preserved
+            expect(evalAreaHtml).to.eq("booga");
+            done();
+        }, 800)
+
+    })
 });

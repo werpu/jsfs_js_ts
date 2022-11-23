@@ -211,7 +211,7 @@ export class XmlResponses {
         <script type="text/javascript" src="../../../xhrCore/fixtures/addedViewHead3.js"></script>
         <link rel="stylesheet" href="../../../xhrCore/fixtures/addedViewHead2.css"></link>
         <script type="text/javascript">
-            setTimeout(() => document.getElementById('resource_area_1').innerHTML = 'booga', 1000);
+            setTimeout(() => document.getElementById('resource_area_1').innerHTML = 'booga', 100);
         </script>
     </head>    
     ]]>
@@ -220,6 +220,27 @@ export class XmlResponses {
 </partial-response>
 `
 
+    static HEAD_REPLACE2 = `
+<partial-response id="j_id__v_0"><changes><update id="jakarta.faces.ViewHead">
+    <![CDATA[
+    <head>
+        <title>After Update</title>
+        <meta charset="UTF-8">
+        <meta name="description" content="Free Web tutorials">
+        <meta name="keywords" content="HTML, CSS, JavaScript, JSF">
+        <meta name="viewport" content="width=device-width, initial-scale=0.8">
+        <meta name="author" content="Whoever">
+        <script type="text/javascript" src="../../../xhrCore/fixtures/addedViewHead3.js"></script>
+        <link rel="stylesheet" href="../../../xhrCore/fixtures/addedViewHead2.css"></link>
+        <script type="text/javascript">
+            setTimeout(() => document.getElementById('resource_area_1').innerHTML = 'booga', 100);
+        </script>
+    </head>    
+    ]]>
+</update>
+</changes>
+</partial-response>
+`
 
 
     static NONCE_REPLY = `

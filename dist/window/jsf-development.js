@@ -42,7 +42,7 @@ const SourcesCollectors_1 = __webpack_require__(/*! ./SourcesCollectors */ "./no
 const Lang_1 = __webpack_require__(/*! ./Lang */ "./node_modules/mona-dish/src/main/typescript/Lang.ts");
 var trim = Lang_1.Lang.trim;
 var isString = Lang_1.Lang.isString;
-var eIgnoreC = Lang_1.Lang.equalsIgnoreCase;
+var eqi = Lang_1.Lang.equalsIgnoreCase;
 const Global_1 = __webpack_require__(/*! ./Global */ "./node_modules/mona-dish/src/main/typescript/Global.ts");
 var objToArray = Lang_1.Lang.objToArray;
 /**
@@ -867,6 +867,30 @@ class DomQuery {
         return this;
     }
     /**
+     * replace convenience function, replaces one or more elements with
+     * a set of elements passed as DomQuery
+     * @param toReplace the replaced nodes as reference (original node has been replaced)
+     */
+    replace(toReplace) {
+        this.each(item => {
+            let asElem = item.getAsElem(0).value;
+            let parent = asElem.parentElement;
+            let nextElement = asElem.nextElementSibling;
+            let previousElement = asElem.previousElementSibling;
+            if (nextElement != null) {
+                new DomQuery(nextElement).insertBefore(toReplace);
+            }
+            else if (previousElement) {
+                new DomQuery(previousElement).insertAfter(toReplace);
+            }
+            else {
+                new DomQuery(parent).append(toReplace);
+            }
+            item.delete();
+        });
+        return toReplace;
+    }
+    /**
      * returns a new dom query containing only the first element max
      *
      * @param func a an optional callback function to perform an operation on the first element
@@ -1184,7 +1208,7 @@ class DomQuery {
             let tagName = item.tagName;
             let itemType = ((_a = item === null || item === void 0 ? void 0 : item.type) !== null && _a !== void 0 ? _a : '').toLowerCase();
             if (tagName &&
-                eIgnoreC(tagName, "script") &&
+                eqi(tagName, "script") &&
                 allowedItemTypes.indexOf(itemType) != -1) {
                 let src = item.getAttribute('src');
                 if ('undefined' != typeof src
@@ -1270,36 +1294,30 @@ class DomQuery {
         return this;
     }
     runCss() {
-        const applyStyle = (item, style) => {
-            var _a, _b, _c, _d;
-            let newSS = document.createElement("style");
-            document.getElementsByTagName("head")[0].appendChild(newSS);
-            let styleSheet = (_a = newSS.sheet) !== null && _a !== void 0 ? _a : newSS.styleSheet;
-            newSS.setAttribute("rel", (_b = item.getAttribute("rel")) !== null && _b !== void 0 ? _b : "stylesheet");
-            newSS.setAttribute("type", (_c = item.getAttribute("type")) !== null && _c !== void 0 ? _c : "text/css");
-            if ((_d = styleSheet === null || styleSheet === void 0 ? void 0 : styleSheet.cssText) !== null && _d !== void 0 ? _d : false) {
-                styleSheet.cssText = style;
-            }
-            else {
-                newSS.appendChild(document.createTextNode(style));
-            }
-        }, execCss = (item) => {
-            const tagName = item.tagName;
-            if (tagName && eIgnoreC(tagName, "link") && eIgnoreC(item.getAttribute("type"), "text/css")) {
-                applyStyle(item, "@import url('" + item.getAttribute("href") + "');");
-            }
-            else if (tagName && eIgnoreC(tagName, "style") && eIgnoreC(item.getAttribute("type"), "text/css")) {
-                let innerText = [];
-                // compliant browsers know child nodes
-                let childNodes = Array.prototype.slice.call(item.childNodes);
-                if (childNodes) {
-                    childNodes.forEach(child => innerText.push(child.innerHTML || child.data));
-                    // non-compliant elements innerHTML
+        const execCss = (toReplace) => {
+            const _toReplace = DomQuery.byId(toReplace);
+            const tagName = _toReplace.tagName.orElse("").value;
+            const head = DomQuery.byTagName("head");
+            if (tagName && eqi(tagName, "link") && eqi(toReplace.getAttribute("rel"), "stylesheet")) {
+                const rel = toReplace.getAttribute("rel");
+                //if possible we are now replacing the existing elements where we reference this stylesheet
+                const matches = head.querySelectorAll(`link[rel='stylesheet'][href='${rel}']`);
+                if (matches.length) {
+                    matches.replace(_toReplace);
                 }
-                else if (item.innerHTML) {
-                    innerText.push(item.innerHTML);
+                else {
+                    head.append(_toReplace);
                 }
-                applyStyle(item, innerText.join(""));
+            }
+            else if (tagName && eqi(tagName, "style")) {
+                let innerText = _toReplace.innerHTML.replace(/\s+/gi, "");
+                let styles = head.querySelectorAll("style");
+                styles = styles.stream.filter(style => {
+                    return style.innerHTML.replace(/\s+/gi, "") == innerText;
+                }).collect(new DomQueryCollector());
+                if (!styles.length) { //already present
+                    head.append(_toReplace);
+                }
             }
         };
         const scriptElements = new DomQuery(this.filterSelector("link, style"), this.querySelectorAll("link, style"));
@@ -2719,7 +2737,7 @@ exports.Config = Config;
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.QueryFormStringCollector = exports.QueryFormDataCollector = exports.FormDataCollector = exports.AssocArrayCollector = exports.Run = exports.ArrayAssocArrayCollector = exports.ArrayCollector = exports.FlatMapStreamDataSource = exports.MappedStreamDataSource = exports.FilteredStreamDatasource = exports.ArrayStreamDataSource = exports.SequenceDataSource = exports.ITERATION_STATUS = void 0;
+exports.QueryFormStringCollector = exports.QueryFormDataCollector = exports.FormDataCollector = exports.AssocArrayCollector = exports.Run = exports.ArrayAssocArrayCollector = exports.InverseArrayCollector = exports.ArrayCollector = exports.FlatMapStreamDataSource = exports.MappedStreamDataSource = exports.FilteredStreamDatasource = exports.ArrayStreamDataSource = exports.SequenceDataSource = exports.ITERATION_STATUS = void 0;
 const Stream_1 = __webpack_require__(/*! ./Stream */ "./node_modules/mona-dish/src/main/typescript/Stream.ts");
 /**
  * special status of the datasource location pointer
@@ -3026,6 +3044,21 @@ class ArrayCollector {
     }
 }
 exports.ArrayCollector = ArrayCollector;
+/**
+ * collects the values as inverse array
+ */
+class InverseArrayCollector {
+    constructor() {
+        this.data = [];
+    }
+    collect(element) {
+        this.data.unshift(element);
+    }
+    get finalValue() {
+        return this.data;
+    }
+}
+exports.InverseArrayCollector = InverseArrayCollector;
 /**
  * collects an tuple array stream into an assoc array with elements being collected into arrays
  *
@@ -6630,16 +6663,21 @@ class ResponseProcessor {
         if (!shadowHead.isPresent()) {
             return;
         }
-        let oldHead = ExtDomQuery_1.ExtDomQuery.querySelectorAll(Const_1.TAG_HEAD);
+        let head = ExtDomQuery_1.ExtDomQuery.querySelectorAll(Const_1.TAG_HEAD);
         //delete all to avoid script and style overlays
-        oldHead.querySelectorAll(Const_1.SEL_SCRIPTS_STYLES).delete();
-        // we cannot replace new elements in the head, but we can eval the elements
-        // eval means the scripts will get attached (eval script attach method)
-        // but this is done by DomQuery not in this code
-        this.storeForEval(shadowHead);
+        // we delete everything
+        head.childNodes.delete();
+        let postProcessTags = ["STYLE", "LINK", "SCRIPT"];
+        shadowHead.stream
+            .filter(item => postProcessTags.indexOf(item.tagName.orElse("").value) == -1)
+            .each(item => {
+            head.append(item);
+        });
         //incoming either the outer head tag or its children
-        //shadowHead = (shadowHead.tagName.value === "HEAD") ? shadowHead.childNodes : shadowHead;
-        //this.addToHead(shadowHead);
+        const nodesToAdd = (shadowHead.tagName.value === "HEAD") ? shadowHead.childNodes : shadowHead;
+        // this is stored for post processing
+        // after the rest of the "pyhsical build up", head before body
+        this.addToHead(nodesToAdd);
     }
     addToHead(newElements) {
         this.internalContext.assign(Const_1.DEFERRED_HEAD_INSERTS).value.push(newElements);

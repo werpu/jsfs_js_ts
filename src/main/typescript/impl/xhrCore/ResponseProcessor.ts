@@ -87,18 +87,24 @@ export class ResponseProcessor implements IResponseProcessor {
             return;
         }
 
-        let oldHead = ExtDomQuery.querySelectorAll(TAG_HEAD);
+        let head = ExtDomQuery.querySelectorAll(TAG_HEAD);
 
         //delete all to avoid script and style overlays
-        oldHead.querySelectorAll(SEL_SCRIPTS_STYLES).delete();
+        // we delete everything
+        head.childNodes.delete();
 
-        // we cannot replace new elements in the head, but we can eval the elements
-        // eval means the scripts will get attached (eval script attach method)
-        // but this is done by DomQuery not in this code
-        this.storeForEval(shadowHead);
+        let postProcessTags = ["STYLE", "LINK", "SCRIPT"]
+        shadowHead.stream
+            .filter(item => postProcessTags.indexOf(item.tagName.orElse("").value) == -1)
+            .each(item => {
+                head.append(item);
+            });
+
         //incoming either the outer head tag or its children
-        //shadowHead = (shadowHead.tagName.value === "HEAD") ? shadowHead.childNodes : shadowHead;
-        //this.addToHead(shadowHead);
+        const nodesToAdd = (shadowHead.tagName.value === "HEAD") ? shadowHead.childNodes : shadowHead;
+        // this is stored for post processing
+        // after the rest of the "pyhsical build up", head before body
+        this.addToHead(nodesToAdd);
     }
 
     addToHead(newElements: XMLQuery | DQ) {

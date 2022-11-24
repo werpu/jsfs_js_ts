@@ -4945,15 +4945,16 @@ var PushImpl;
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.CTX_PARAM_SPEC_PARAMS = exports.CTX_PARAM_PASS_THR = exports.CTX_PARAM_TR_TYPE = exports.CTX_PARAM_SRC_CTL_ID = exports.CTX_PARAM_SRC_FRM_ID = exports.CTX_PARAM_MF_INTERNAL = exports.TIMEOUT_EVENT = exports.CLIENT_ERROR = exports.SERVER_ERROR = exports.MALFORMEDXML = exports.EMPTY_RESPONSE = exports.HTTPERROR = exports.RESPONSE_XML = exports.RESPONSE_TEXT = exports.ERROR_MESSAGE = exports.ERROR_NAME = exports.STATUS = exports.SOURCE = exports.SUCCESS = exports.COMPLETE = exports.BEGIN = exports.ON_EVENT = exports.ON_ERROR = exports.EVENT = exports.ERROR = exports.WINDOW_ID = exports.CTX_PARAM_RENDER = exports.P_BEHAVIOR_EVENT = exports.P_WINDOW_ID = exports.P_RESET_VALUES = exports.P_CLIENT_WINDOW = exports.P_EVT = exports.P_RENDER = exports.P_EXECUTE = exports.P_AJAX = exports.IDENT_FORM = exports.IDENT_THIS = exports.IDENT_NONE = exports.IDENT_ALL = exports.HTML_VIEWSTATE = exports.EMPTY_MAP = exports.EMPTY_STR = exports.EMPTY_FUNC = exports.P_RESOURCE = exports.P_VIEWBODY = exports.P_VIEWHEAD = exports.P_VIEWROOT = exports.P_VIEWSTATE = exports.PARTIAL_ID = exports.P_PARTIAL_SOURCE = void 0;
-exports.MF_NONE = exports.SEL_SCRIPTS_STYLES = exports.MYFACES = exports.DEFERRED_HEAD_INSERTS = exports.UPDATE_ELEMS = exports.UPDATE_FORMS = exports.CMD_REDIRECT = exports.CMD_EXTENSION = exports.CMD_ATTRIBUTES = exports.CMD_ERROR = exports.CMD_EVAL = exports.CMD_INSERT = exports.CMD_DELETE = exports.CMD_UPDATE = exports.CMD_CHANGES = exports.RESP_PARTIAL = exports.ATTR_ID = exports.ATTR_VALUE = exports.ATTR_NAME = exports.ATTR_URL = exports.ERR_NO_PARTIAL_RESPONSE = exports.PHASE_PROCESS_RESPONSE = exports.SEL_RESPONSE_XML = exports.SEL_CLIENT_WINDOW_ELEM = exports.SEL_VIEWSTATE_ELEM = exports.TAG_ATTR = exports.TAG_AFTER = exports.TAG_BEFORE = exports.TAG_BODY = exports.TAG_FORM = exports.TAG_HEAD = exports.STD_ACCEPT = exports.NO_TIMEOUT = exports.MULTIPART = exports.URL_ENCODED = exports.STATE_EVT_COMPLETE = exports.STATE_EVT_TIMEOUT = exports.STATE_EVT_BEGIN = exports.REQ_TYPE_POST = exports.REQ_TYPE_GET = exports.ENCODED_URL = exports.VAL_AJAX = exports.REQ_ACCEPT = exports.HEAD_FACES_REQ = exports.CONTENT_TYPE = exports.STAGE_DEVELOPMENT = exports.CTX_PARAM_EXECUTE = exports.CTX_PARAM_RST = exports.CTX_PARAM_TIMEOUT = exports.CTX_PARAM_DELAY = void 0;
-exports.$nsp = exports.UNKNOWN = exports.MAX_RECONNECT_ATTEMPTS = exports.RECONNECT_INTERVAL = exports.APPLIED_CLIENT_WINDOW = exports.APPLIED_VST = exports.REASON_EXPIRED = void 0;
+exports.CTX_PARAM_PASS_THR = exports.CTX_PARAM_TR_TYPE = exports.CTX_PARAM_SRC_CTL_ID = exports.CTX_PARAM_SRC_FRM_ID = exports.CTX_PARAM_MF_INTERNAL = exports.TIMEOUT_EVENT = exports.CLIENT_ERROR = exports.SERVER_ERROR = exports.MALFORMEDXML = exports.EMPTY_RESPONSE = exports.HTTPERROR = exports.RESPONSE_XML = exports.RESPONSE_TEXT = exports.ERROR_MESSAGE = exports.ERROR_NAME = exports.STATUS = exports.SOURCE = exports.SUCCESS = exports.COMPLETE = exports.BEGIN = exports.ON_EVENT = exports.ON_ERROR = exports.EVENT = exports.ERROR = exports.WINDOW_ID = exports.CTX_PARAM_RENDER = exports.P_BEHAVIOR_EVENT = exports.P_WINDOW_ID = exports.P_RESET_VALUES = exports.P_EVT = exports.P_RENDER = exports.P_EXECUTE = exports.P_AJAX = exports.IDENT_FORM = exports.IDENT_THIS = exports.IDENT_NONE = exports.IDENT_ALL = exports.HTML_CLIENT_WINDOW = exports.HTML_VIEWSTATE = exports.EMPTY_MAP = exports.EMPTY_STR = exports.EMPTY_FUNC = exports.P_RESOURCE = exports.P_VIEWBODY = exports.P_VIEWHEAD = exports.P_VIEWROOT = exports.P_CLIENT_WINDOW = exports.P_VIEWSTATE = exports.PARTIAL_ID = exports.P_PARTIAL_SOURCE = void 0;
+exports.SEL_SCRIPTS_STYLES = exports.MYFACES = exports.DEFERRED_HEAD_INSERTS = exports.UPDATE_ELEMS = exports.UPDATE_FORMS = exports.CMD_REDIRECT = exports.CMD_EXTENSION = exports.CMD_ATTRIBUTES = exports.CMD_ERROR = exports.CMD_EVAL = exports.CMD_INSERT = exports.CMD_DELETE = exports.CMD_UPDATE = exports.CMD_CHANGES = exports.RESP_PARTIAL = exports.ATTR_ID = exports.ATTR_VALUE = exports.ATTR_NAME = exports.ATTR_URL = exports.ERR_NO_PARTIAL_RESPONSE = exports.PHASE_PROCESS_RESPONSE = exports.SEL_RESPONSE_XML = exports.SEL_CLIENT_WINDOW_ELEM = exports.SEL_VIEWSTATE_ELEM = exports.TAG_ATTR = exports.TAG_AFTER = exports.TAG_BEFORE = exports.TAG_BODY = exports.TAG_FORM = exports.TAG_HEAD = exports.STD_ACCEPT = exports.NO_TIMEOUT = exports.MULTIPART = exports.URL_ENCODED = exports.STATE_EVT_COMPLETE = exports.STATE_EVT_TIMEOUT = exports.STATE_EVT_BEGIN = exports.REQ_TYPE_POST = exports.REQ_TYPE_GET = exports.ENCODED_URL = exports.VAL_AJAX = exports.REQ_ACCEPT = exports.HEAD_FACES_REQ = exports.CONTENT_TYPE = exports.STAGE_DEVELOPMENT = exports.CTX_PARAM_EXECUTE = exports.CTX_PARAM_RST = exports.CTX_PARAM_TIMEOUT = exports.CTX_PARAM_DELAY = exports.CTX_PARAM_SPEC_PARAMS = void 0;
+exports.$nsp = exports.UNKNOWN = exports.MAX_RECONNECT_ATTEMPTS = exports.RECONNECT_INTERVAL = exports.APPLIED_CLIENT_WINDOW = exports.APPLIED_VST = exports.REASON_EXPIRED = exports.MF_NONE = void 0;
 /*
  * [export const] constants
  */
 exports.P_PARTIAL_SOURCE = "jakarta.faces.source";
 exports.PARTIAL_ID = "partialId";
 exports.P_VIEWSTATE = "jakarta.faces.ViewState";
+exports.P_CLIENT_WINDOW = "jakarta.faces.ClientWindow";
 exports.P_VIEWROOT = "jakarta.faces.ViewRoot";
 exports.P_VIEWHEAD = "jakarta.faces.ViewHead";
 exports.P_VIEWBODY = "jakarta.faces.ViewBody";
@@ -4963,7 +4964,8 @@ exports.EMPTY_FUNC = Object.freeze(() => {
 });
 exports.EMPTY_STR = "";
 exports.EMPTY_MAP = Object.freeze({});
-exports.HTML_VIEWSTATE = ["<input type='hidden'", "id='", exports.P_VIEWSTATE, "' name='", exports.P_VIEWSTATE, "' value='' />"].join(exports.EMPTY_STR);
+exports.HTML_VIEWSTATE = ["<input type='hidden'", "name='", exports.P_VIEWSTATE, "' value='' />"].join(exports.EMPTY_STR);
+exports.HTML_CLIENT_WINDOW = ["<input type='hidden'", "' name='", exports.P_CLIENT_WINDOW, "' value='' />"].join(exports.EMPTY_STR);
 /*internal identifiers for options*/
 exports.IDENT_ALL = "@all";
 exports.IDENT_NONE = "@none";
@@ -4973,7 +4975,6 @@ exports.P_AJAX = "jakarta.faces.partial.ajax";
 exports.P_EXECUTE = "jakarta.faces.partial.execute";
 exports.P_RENDER = "jakarta.faces.partial.render";
 exports.P_EVT = "jakarta.faces.partial.event";
-exports.P_CLIENT_WINDOW = "jakarta.faces.ClientWindow";
 exports.P_RESET_VALUES = "jakarta.faces.partial.resetValues";
 exports.P_WINDOW_ID = "jakarta.faces.windowId";
 exports.P_BEHAVIOR_EVENT = "jakarta.faces.behavior.event";
@@ -6896,8 +6897,8 @@ class ResponseProcessor {
     fixClientWindow() {
         mona_dish_1.Stream.ofAssoc(this.internalContext.getIf(Const_1.APPLIED_CLIENT_WINDOW).orElse({}).value)
             .each((item) => {
-            let value = item[1];
-            let namingContainerId = this.internalContext.getIf(Const_1.PARTIAL_ID);
+            const value = item[1];
+            const namingContainerId = this.internalContext.getIf(Const_1.PARTIAL_ID);
             let affectedForms;
             affectedForms = this.getContainerForms(namingContainerId)
                 .filter(affectedForm => this.executeOrRenderFilter(affectedForm));
@@ -6943,7 +6944,11 @@ class ResponseProcessor {
     assignState(forms, selector, state) {
         forms.each((form) => {
             let stateHolders = form.querySelectorAll(selector)
-                .orElseLazy(() => ResponseProcessor.newViewStateElement(form));
+                .orElseLazy(() => {
+                return selector.indexOf("ViewState") != -1 ?
+                    ResponseProcessor.newViewStateElement(form) :
+                    ResponseProcessor.newClientWindowElement(form);
+            });
             stateHolders.attr("value").value = state;
         });
     }
@@ -6954,9 +6959,20 @@ class ResponseProcessor {
      * (usually a form node)
      */
     static newViewStateElement(parent) {
-        let newViewState = mona_dish_1.DQ.fromMarkup((0, Const_1.$nsp)(Const_1.HTML_VIEWSTATE));
-        newViewState.appendTo(parent);
-        return newViewState;
+        let newElement = mona_dish_1.DQ.fromMarkup((0, Const_1.$nsp)(Const_1.HTML_VIEWSTATE));
+        newElement.appendTo(parent);
+        return newElement;
+    }
+    /**
+     * Helper to Create a new JSF ViewState Element
+     *
+     * @param parent, the parent node to attach the viewState element to
+     * (usually a form node)
+     */
+    static newClientWindowElement(parent) {
+        let newElement = mona_dish_1.DQ.fromMarkup((0, Const_1.$nsp)(Const_1.HTML_CLIENT_WINDOW));
+        newElement.appendTo(parent);
+        return newElement;
     }
     /**
      * Stores certain aspects of the dom for later post-processing
@@ -7019,8 +7035,8 @@ class ResponseProcessor {
      * @private
      */
     executeOrRenderFilter(affectedForm) {
-        let executes = this.externalContext.getIf((0, Const_1.$nsp)(Const_1.P_EXECUTE)).orElse("@none").value.split(/s+/gi);
-        let renders = this.externalContext.getIf((0, Const_1.$nsp)(Const_1.P_RENDER)).orElse("@none").value.split(/s+/gi);
+        let executes = this.externalContext.getIf((0, Const_1.$nsp)(Const_1.P_EXECUTE)).orElse("@none").value.split(/\s+/gi);
+        let renders = this.externalContext.getIf((0, Const_1.$nsp)(Const_1.P_RENDER)).orElse("@none").value.split(/\s+/gi);
         let executeAndRenders = executes.concat(...renders);
         return mona_dish_1.LazyStream.of(...executeAndRenders).filter(nameOrId => {
             if (nameOrId == "@all") {
@@ -7029,9 +7045,10 @@ class ResponseProcessor {
             if (nameOrId == "@none") {
                 return true;
             }
-            const nameOrIdSelector = `#${nameOrId}, [name='#${nameOrId}']`;
-            affectedForm.matchesSelector(nameOrIdSelector) ||
-                affectedForm.querySelectorAllDeep(nameOrIdSelector).isPresent() ||
+            const nameOrIdSelector = `[id='${nameOrId}'], [name='#${nameOrId}']`;
+            //either the form directly is in execute or render or one of its children or one of its parents
+            return affectedForm.matchesSelector(nameOrIdSelector) ||
+                affectedForm.querySelectorAll(nameOrIdSelector).isPresent() ||
                 affectedForm.parents(nameOrIdSelector).isPresent();
         }).first().isPresent();
     }

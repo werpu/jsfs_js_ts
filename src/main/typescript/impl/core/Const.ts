@@ -20,6 +20,7 @@
 export const P_PARTIAL_SOURCE = "jakarta.faces.source";
 export const PARTIAL_ID = "partialId";
 export const P_VIEWSTATE = "jakarta.faces.ViewState";
+export const P_CLIENT_WINDOW = "jakarta.faces.ClientWindow";
 export const P_VIEWROOT = "jakarta.faces.ViewRoot";
 export const P_VIEWHEAD = "jakarta.faces.ViewHead";
 export const P_VIEWBODY = "jakarta.faces.ViewBody";
@@ -33,7 +34,8 @@ export const EMPTY_FUNC = Object.freeze(() => {
 export const EMPTY_STR = "";
 export const EMPTY_MAP = Object.freeze({});
 
-export const HTML_VIEWSTATE = ["<input type='hidden'", "id='", P_VIEWSTATE, "' name='", P_VIEWSTATE, "' value='' />"].join(EMPTY_STR);
+export const HTML_VIEWSTATE = ["<input type='hidden'", "name='", P_VIEWSTATE, "' value='' />"].join(EMPTY_STR);
+export const HTML_CLIENT_WINDOW = ["<input type='hidden'", "' name='", P_CLIENT_WINDOW, "' value='' />"].join(EMPTY_STR);
 
 
 /*internal identifiers for options*/
@@ -47,7 +49,7 @@ export const P_AJAX = "jakarta.faces.partial.ajax";
 export const P_EXECUTE = "jakarta.faces.partial.execute";
 export const P_RENDER = "jakarta.faces.partial.render";
 export const P_EVT = "jakarta.faces.partial.event";
-export const P_CLIENT_WINDOW = "jakarta.faces.ClientWindow";
+
 export const P_RESET_VALUES = "jakarta.faces.partial.resetValues";
 export const P_WINDOW_ID = "jakarta.faces.windowId";
 

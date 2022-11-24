@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Config, DomQuery, DomQueryCollector, DQ, DQ$, Lang, LazyStream, Stream, XMLQuery} from "mona-dish";
+import {Config, DomQueryCollector, DQ, DQ$, Lang, LazyStream, Stream, XMLQuery} from "mona-dish";
 import {Implementation} from "../AjaxImpl";
 import {Assertions} from "../util/Assertions";
 import {IResponseProcessor} from "./IResponseProcessor";
@@ -51,7 +51,7 @@ import {
     TAG_HEAD,
     UPDATE_ELEMS,
     UPDATE_FORMS,
-    DEFERRED_HEAD_INSERTS, PARTIAL_ID, P_EXECUTE, P_RENDER
+    DEFERRED_HEAD_INSERTS, PARTIAL_ID, P_EXECUTE, P_RENDER, HTML_CLIENT_WINDOW
 } from "../core/Const";
 import trim = Lang.trim;
 import {ExtConfig, ExtDomQuery} from "../util/ExtDomQuery";
@@ -357,8 +357,8 @@ export class ResponseProcessor implements IResponseProcessor {
     fixClientWindow() {
         Stream.ofAssoc<StateHolder>(this.internalContext.getIf(APPLIED_CLIENT_WINDOW).orElse({}).value)
             .each((item: Array<any>) => {
-                let value: StateHolder = item[1];
-                let namingContainerId = this.internalContext.getIf(PARTIAL_ID);
+                const value: StateHolder = item[1];
+                const namingContainerId = this.internalContext.getIf(PARTIAL_ID);
                 let affectedForms;
 
                 affectedForms = this.getContainerForms(namingContainerId)
@@ -412,7 +412,11 @@ export class ResponseProcessor implements IResponseProcessor {
     private assignState(forms: DQ, selector: string, state: string) {
         forms.each((form: DQ) => {
             let stateHolders = form.querySelectorAll(selector)
-                .orElseLazy(() => ResponseProcessor.newViewStateElement(form));
+                .orElseLazy(() => {
+                    return selector.indexOf("ViewState") != -1 ?
+                        ResponseProcessor.newViewStateElement(form):
+                        ResponseProcessor.newClientWindowElement(form);
+                });
 
             stateHolders.attr("value").value = state;
         });
@@ -425,9 +429,21 @@ export class ResponseProcessor implements IResponseProcessor {
      * (usually a form node)
      */
     private static newViewStateElement(parent: DQ): DQ {
-        let newViewState = DQ.fromMarkup($nsp(HTML_VIEWSTATE));
-        newViewState.appendTo(parent);
-        return newViewState;
+        let newElement = DQ.fromMarkup($nsp(HTML_VIEWSTATE));
+        newElement.appendTo(parent);
+        return newElement;
+    }
+
+    /**
+     * Helper to Create a new JSF ViewState Element
+     *
+     * @param parent, the parent node to attach the viewState element to
+     * (usually a form node)
+     */
+    private static newClientWindowElement(parent: DQ): DQ {
+        let newElement = DQ.fromMarkup($nsp(HTML_CLIENT_WINDOW));
+        newElement.appendTo(parent);
+        return newElement;
     }
 
     /**
@@ -495,8 +511,8 @@ export class ResponseProcessor implements IResponseProcessor {
      * @private
      */
     private executeOrRenderFilter(affectedForm) {
-        let executes = this.externalContext.getIf($nsp(P_EXECUTE)).orElse("@none").value.split(/s+/gi);
-        let renders = this.externalContext.getIf($nsp(P_RENDER)).orElse("@none").value.split(/s+/gi);
+        let executes = this.externalContext.getIf($nsp(P_EXECUTE)).orElse("@none").value.split(/\s+/gi);
+        let renders = this.externalContext.getIf($nsp(P_RENDER)).orElse("@none").value.split(/\s+/gi);
         let executeAndRenders = executes.concat(...renders);
         return LazyStream.of(...executeAndRenders).filter(nameOrId => {
             if (nameOrId == "@all") {
@@ -506,10 +522,10 @@ export class ResponseProcessor implements IResponseProcessor {
                 return true;
             }
 
-            const nameOrIdSelector = `#${nameOrId}, [name='#${nameOrId}']`;
-
-            affectedForm.matchesSelector(nameOrIdSelector) ||
-                affectedForm.querySelectorAllDeep(nameOrIdSelector).isPresent() ||
+            const nameOrIdSelector = `[id='${nameOrId}'], [name='#${nameOrId}']`;
+            //either the form directly is in execute or render or one of its children or one of its parents
+            return affectedForm.matchesSelector(nameOrIdSelector) ||
+                affectedForm.querySelectorAll(nameOrIdSelector).isPresent() ||
                 affectedForm.parents(nameOrIdSelector).isPresent();
         }).first().isPresent();
     }

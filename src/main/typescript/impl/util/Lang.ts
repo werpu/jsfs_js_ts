@@ -175,9 +175,9 @@ export module ExtLang {
             }
         }
 
-        let form = queryElem.parents(TAG_FORM)
+        let form = queryElem.firstParent(TAG_FORM)
             .orElseLazy(() => queryElem.byTagName(TAG_FORM, true))
-            .orElseLazy(() => eventTarget.parents(TAG_FORM))
+            .orElseLazy(() => eventTarget.firstParent(TAG_FORM))
             .orElseLazy(() => eventTarget.byTagName(TAG_FORM))
             .first();
 

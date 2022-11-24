@@ -632,6 +632,15 @@ class DomQuery {
             return this._querySelectorAll(selector);
         }
     }
+    closest(selector) {
+        // We could merge both methods, but for now this is more readable
+        if (selector.indexOf("/shadow/") != -1) {
+            return this._closestDeep(selector);
+        }
+        else {
+            return this._closest(selector);
+        }
+    }
     /**
      * core byId method
      * @param id the id to search for
@@ -1073,28 +1082,24 @@ class DomQuery {
             return new DomQuery(func());
         }
     }
-    parents(tagName) {
-        const retSet = new Set();
+    parents(selector) {
         const retArr = [];
-        const lowerTagName = tagName.toLowerCase();
-        let resolveItem = (item) => {
-            if ((item.tagName || "").toLowerCase() == lowerTagName && !retSet.has(item)) {
-                retSet.add(item);
-                retArr.push(item);
-            }
-        };
+        let parent = this.parent().filter(item => item.matchesSelector(selector));
+        while (parent.isPresent()) {
+            retArr.push(parent);
+            parent = parent.parent().filter(item => item.matchesSelector(selector));
+        }
+        return new DomQuery(...retArr);
+    }
+    parent() {
+        let ret = [];
         this.eachElem((item) => {
-            var _a;
-            while (item.parentNode || item.host) {
-                item = (_a = item === null || item === void 0 ? void 0 : item.parentNode) !== null && _a !== void 0 ? _a : item === null || item === void 0 ? void 0 : item.host;
-                resolveItem(item);
-                // nested forms not possible, performance shortcut
-                if (tagName == "form" && retArr.length) {
-                    return false;
-                }
+            let parent = item.parentNode || item.host;
+            if (parent && ret.indexOf(parent) == -1) {
+                ret.push(parent);
             }
         });
-        return new DomQuery(...retArr);
+        return new DomQuery(...ret);
     }
     copyAttrs(sourceItem) {
         sourceItem.eachElem((sourceNode) => {
@@ -1747,6 +1752,47 @@ class DomQuery {
             }
             let levelSelector = selectors[cnt2];
             foundNodes = foundNodes.querySelectorAll(levelSelector);
+            if (cnt2 < selectors.length - 1) {
+                foundNodes = foundNodes.shadowRoot;
+            }
+        }
+        return foundNodes;
+    }
+    /**
+     * query selector all on the existing dom queryX object
+     *
+     * @param selector the standard selector
+     * @return a DomQuery with the results
+     */
+    _closest(selector) {
+        var _a, _b;
+        if (!((_a = this === null || this === void 0 ? void 0 : this.rootNode) === null || _a === void 0 ? void 0 : _a.length)) {
+            return this;
+        }
+        let nodes = [];
+        for (let cnt = 0; cnt < this.rootNode.length; cnt++) {
+            if (!((_b = this.rootNode[cnt]) === null || _b === void 0 ? void 0 : _b.closest)) {
+                continue;
+            }
+            let res = [this.rootNode[cnt].closest(selector)];
+            nodes = nodes.concat(...res);
+        }
+        return new DomQuery(...nodes);
+    }
+    /*deep with a selector and a pseudo /shadow/ marker to break into the next level*/
+    _closestDeep(selector) {
+        var _a;
+        if (!((_a = this === null || this === void 0 ? void 0 : this.rootNode) === null || _a === void 0 ? void 0 : _a.length)) {
+            return this;
+        }
+        let foundNodes = new DomQuery(...this.rootNode);
+        let selectors = selector.split(/\/shadow\//);
+        for (let cnt2 = 0; cnt2 < selectors.length; cnt2++) {
+            if (selectors[cnt2] == "") {
+                continue;
+            }
+            let levelSelector = selectors[cnt2];
+            foundNodes = foundNodes.closest(levelSelector);
             if (cnt2 < selectors.length - 1) {
                 foundNodes = foundNodes.shadowRoot;
             }
@@ -6180,7 +6226,6 @@ const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/
 const Lang_1 = __webpack_require__(/*! ../util/Lang */ "./src/main/typescript/impl/util/Lang.ts");
 const ExtDomQuery_1 = __webpack_require__(/*! ../util/ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
 const Assertions_1 = __webpack_require__(/*! ../util/Assertions */ "./src/main/typescript/impl/util/Assertions.ts");
-var assertDelay = Assertions_1.Assertions.assertDelay;
 /**
  * Resolver functions for various aspects of the request data
  *
@@ -6250,7 +6295,7 @@ function resolveDelay(options) {
         ret = 0;
     }
     // negative, or invalid values will automatically get a js exception
-    assertDelay(ret);
+    Assertions_1.Assertions.assertDelay(ret);
     return ret;
 }
 exports.resolveDelay = resolveDelay;

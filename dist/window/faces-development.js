@@ -1082,7 +1082,40 @@ class DomQuery {
             return new DomQuery(func());
         }
     }
-    parents(selector) {
+    /**
+     * find all parents in the hierarchy for which the selector matches
+     * @param selector
+     */
+    allParents(selector) {
+        let parent = this.parent();
+        let ret = [];
+        while (parent.isPresent()) {
+            if (parent.matchesSelector(selector)) {
+                ret.push(parent);
+            }
+            parent = parent.parent();
+        }
+        return new DomQuery(...ret);
+    }
+    /**
+     * finds the first parent in the hierarchy for which the selector matches
+     * @param selector
+     */
+    firstParent(selector) {
+        let parent = this.parent();
+        while (parent.isPresent()) {
+            if (parent.matchesSelector(selector)) {
+                return parent;
+            }
+            parent = parent.parent();
+        }
+        return DomQuery.absent;
+    }
+    /**
+     * fetches all parents as long as the filter criterium matches
+     * @param selector
+     */
+    parentsWhileMatch(selector) {
         const retArr = [];
         let parent = this.parent().filter(item => item.matchesSelector(selector));
         while (parent.isPresent()) {
@@ -1094,7 +1127,7 @@ class DomQuery {
     parent() {
         let ret = [];
         this.eachElem((item) => {
-            let parent = item.parentNode || item.host;
+            let parent = item.parentNode || item.host || item.shadowRoot;
             if (parent && ret.indexOf(parent) == -1) {
                 ret.push(parent);
             }
@@ -6002,7 +6035,7 @@ var ExtLang;
      */
     function getForm(elem, event) {
         let queryElem = new mona_dish_1.DQ(elem);
-        let eventTarget = new mona_dish_1.DQ((0, RequestDataResolver_1.getEventTarget)(event));
+        let eventTarget = (event) ? new mona_dish_1.DQ((0, RequestDataResolver_1.getEventTarget)(event)) : mona_dish_1.DomQuery.absent;
         if (queryElem.isTag(Const_1.TAG_FORM)) {
             return queryElem;
         }
@@ -6014,9 +6047,9 @@ var ExtLang;
                 return foundForm;
             }
         }
-        let form = queryElem.parents(Const_1.TAG_FORM)
+        let form = queryElem.firstParent(Const_1.TAG_FORM)
             .orElseLazy(() => queryElem.byTagName(Const_1.TAG_FORM, true))
-            .orElseLazy(() => eventTarget.parents(Const_1.TAG_FORM))
+            .orElseLazy(() => eventTarget.firstParent(Const_1.TAG_FORM))
             .orElseLazy(() => eventTarget.byTagName(Const_1.TAG_FORM))
             .first();
         assertFormExists(form);
@@ -6455,7 +6488,7 @@ exports.resolveSourceElement = resolveSourceElement;
 function resolveSourceForm(internalContext, elem) {
     let sourceFormId = internalContext.getIf(Const_1.CTX_PARAM_SRC_FRM_ID);
     let sourceForm = new mona_dish_2.DQ(sourceFormId.isPresent() ? document.forms[sourceFormId.value] : null);
-    sourceForm = sourceForm.orElseLazy(() => elem.parents(Const_1.TAG_FORM))
+    sourceForm = sourceForm.orElseLazy(() => elem.firstParent(Const_1.TAG_FORM))
         .orElseLazy(() => elem.querySelectorAll(Const_1.TAG_FORM))
         .orElseLazy(() => mona_dish_2.DQ.querySelectorAll(Const_1.TAG_FORM));
     return sourceForm;
@@ -6810,7 +6843,7 @@ class ResponseProcessor {
      */
     update(node, cdataBlock) {
         let result = ExtDomQuery_1.ExtDomQuery.byId(node.id.value, true).outerHTML(cdataBlock, false, false);
-        let sourceForm = result === null || result === void 0 ? void 0 : result.parents(Const_1.TAG_FORM).orElseLazy(() => result.byTagName(Const_1.TAG_FORM, true));
+        let sourceForm = result === null || result === void 0 ? void 0 : result.firstParent(Const_1.TAG_FORM).orElseLazy(() => result.byTagName(Const_1.TAG_FORM, true));
         if (sourceForm) {
             this.storeForPostProcessing(sourceForm, result);
         }
@@ -7094,7 +7127,7 @@ class ResponseProcessor {
             //either the form directly is in execute or render or one of its children or one of its parents
             return affectedForm.matchesSelector(nameOrIdSelector) ||
                 affectedForm.querySelectorAll(nameOrIdSelector).isPresent() ||
-                affectedForm.parents(nameOrIdSelector).isPresent();
+                affectedForm.firstParent(nameOrIdSelector).isPresent();
         }).first().isPresent();
     }
     /**

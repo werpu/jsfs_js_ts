@@ -160,7 +160,7 @@ export module ExtLang {
     export function getForm(elem: Element, event ?: Event): DQ | never {
 
         let queryElem = new DQ(elem);
-        let eventTarget = new DQ(getEventTarget(event));
+        let eventTarget = (event) ?  new DQ(getEventTarget(event)) : DomQuery.absent;
 
         if (queryElem.isTag(TAG_FORM)) {
             return queryElem;

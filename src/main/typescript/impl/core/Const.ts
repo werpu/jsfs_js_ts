@@ -118,9 +118,9 @@ export const MULTIPART = "multipart/form-data";
 export const NO_TIMEOUT = 0;
 export const STD_ACCEPT = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
 
-export const TAG_HEAD = "head";
-export const TAG_FORM = "form";
-export const TAG_BODY = "body";
+export const TAG_HEAD = "HEAD";
+export const TAG_FORM = "FORM";
+export const TAG_BODY = "BODY";
 export const TAG_BEFORE = "before";
 export const TAG_AFTER = "after";
 

@@ -5026,9 +5026,9 @@ exports.URL_ENCODED = "application/x-www-form-urlencoded";
 exports.MULTIPART = "multipart/form-data";
 exports.NO_TIMEOUT = 0;
 exports.STD_ACCEPT = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
-exports.TAG_HEAD = "head";
-exports.TAG_FORM = "form";
-exports.TAG_BODY = "body";
+exports.TAG_HEAD = "HEAD";
+exports.TAG_FORM = "FORM";
+exports.TAG_BODY = "BODY";
 exports.TAG_BEFORE = "before";
 exports.TAG_AFTER = "after";
 exports.TAG_ATTR = "attribute";
@@ -5713,6 +5713,9 @@ class ExtDomQuery extends mona_dish_1.DQ {
     extractNonce(curScript) {
         var _a, _b;
         return (_b = (_a = curScript.getAsElem(0).value) === null || _a === void 0 ? void 0 : _a.nonce) !== null && _b !== void 0 ? _b : curScript.attr("nonce").value;
+    }
+    filter(func) {
+        return new ExtDomQuery(super.filter(func));
     }
 }
 exports.ExtDomQuery = ExtDomQuery;
@@ -6664,22 +6667,24 @@ class ResponseProcessor {
             return;
         }
         let head = ExtDomQuery_1.ExtDomQuery.querySelectorAll(Const_1.TAG_HEAD);
-        //delete all to avoid script and style overlays
-        // we delete everything
+        // full replace we delete everything
         head.childNodes.delete();
-        let postProcessTags = ["STYLE", "LINK", "SCRIPT"];
-        shadowHead.stream
-            .filter(item => postProcessTags.indexOf(item.tagName.orElse("").value) == -1)
-            .each(item => {
-            head.append(item);
-        });
+        this.addToHead(shadowHead);
+    }
+    addToHead(shadowHead) {
+        const mappedHeadData = new ExtDomQuery_1.ExtDomQuery(shadowHead);
+        const postProcessTags = ["STYLE", "LINK", "SCRIPT"];
+        const nonExecutables = mappedHeadData.filter(item => postProcessTags.indexOf(item.tagName.orElse("").value) == -1);
+        nonExecutables.runHeadInserts(true);
         //incoming either the outer head tag or its children
         const nodesToAdd = (shadowHead.tagName.value === "HEAD") ? shadowHead.childNodes : shadowHead;
         // this is stored for post processing
         // after the rest of the "pyhsical build up", head before body
-        this.addToHead(nodesToAdd);
+        const evalElements = nodesToAdd.stream
+            .filter(item => postProcessTags.indexOf(item.tagName.orElse("").value) != -1).collect(new mona_dish_1.DomQueryCollector());
+        this.addToHeadDeferred(evalElements);
     }
-    addToHead(newElements) {
+    addToHeadDeferred(newElements) {
         this.internalContext.assign(Const_1.DEFERRED_HEAD_INSERTS).value.push(newElements);
     }
     /**
@@ -6877,10 +6882,11 @@ class ResponseProcessor {
         mona_dish_1.Stream.ofAssoc(this.internalContext.getIf(Const_1.APPLIED_VST).orElse({}).value)
             .each((item) => {
             let value = item[1];
-            let nameSpace = mona_dish_1.DQ.byId(value.nameSpace, true).orElse(document.body);
-            let affectedForms = nameSpace.byTagName(Const_1.TAG_FORM);
-            let affectedForms2 = nameSpace.filter(item => item.tagName.orElse(Const_1.EMPTY_STR).value.toLowerCase() == Const_1.TAG_FORM);
-            this.appendViewStateToForms(new mona_dish_1.DomQuery(affectedForms, affectedForms2), value.value);
+            let namingContainerId = this.internalContext.getIf(Const_1.PARTIAL_ID);
+            let affectedForms;
+            affectedForms = this.getContainerForms(namingContainerId)
+                .filter(affectedForm => this.executeOrRenderFilter(affectedForm));
+            this.appendViewStateToForms(affectedForms, value.value);
         });
     }
     /**
@@ -6891,10 +6897,11 @@ class ResponseProcessor {
         mona_dish_1.Stream.ofAssoc(this.internalContext.getIf(Const_1.APPLIED_CLIENT_WINDOW).orElse({}).value)
             .each((item) => {
             let value = item[1];
-            let nameSpace = mona_dish_1.DQ.byId(value.nameSpace, true).orElse(document.body);
-            let affectedForms = nameSpace.byTagName(Const_1.TAG_FORM);
-            let affectedForms2 = nameSpace.filter(item => item.tagName.orElse(Const_1.EMPTY_STR).value.toLowerCase() == Const_1.TAG_FORM);
-            this.appendClientWindowToForms(new mona_dish_1.DomQuery(affectedForms, affectedForms2), value.value);
+            let namingContainerId = this.internalContext.getIf(Const_1.PARTIAL_ID);
+            let affectedForms;
+            affectedForms = this.getContainerForms(namingContainerId)
+                .filter(affectedForm => this.executeOrRenderFilter(affectedForm));
+            this.appendClientWindowToForms(affectedForms, value.value);
         });
     }
     /**
@@ -7005,6 +7012,42 @@ class ResponseProcessor {
     }
     triggerOnError(errorData) {
         this.externalContext.getIf(Const_1.ON_ERROR).orElse(this.internalContext.getIf(Const_1.ON_ERROR).value).orElse(Const_1.EMPTY_FUNC).value(errorData);
+    }
+    /**
+     * filters the forms according to being in the execute or render cycle
+     * @param affectedForm
+     * @private
+     */
+    executeOrRenderFilter(affectedForm) {
+        let executes = this.externalContext.getIf((0, Const_1.$nsp)(Const_1.P_EXECUTE)).orElse("@none").value.split(/s+/gi);
+        let renders = this.externalContext.getIf((0, Const_1.$nsp)(Const_1.P_RENDER)).orElse("@none").value.split(/s+/gi);
+        let executeAndRenders = executes.concat(...renders);
+        return mona_dish_1.LazyStream.of(...executeAndRenders).filter(nameOrId => {
+            if (nameOrId == "@all") {
+                return true;
+            }
+            if (nameOrId == "@none") {
+                return true;
+            }
+            const nameOrIdSelector = `#${nameOrId}, [name='#${nameOrId}']`;
+            affectedForm.matchesSelector(nameOrIdSelector) ||
+                affectedForm.querySelectorAllDeep(nameOrIdSelector).isPresent() ||
+                affectedForm.parents(nameOrIdSelector).isPresent();
+        }).first().isPresent();
+    }
+    /**
+     * gets all forms under a single naming container id
+     * @param namingContainerId
+     * @private
+     */
+    getContainerForms(namingContainerId) {
+        if (namingContainerId.isPresent()) {
+            //naming container mode, all forms under naming container id must be processed
+            return mona_dish_1.DQ.byId(namingContainerId.value).orElse((0, mona_dish_1.DQ$)(`form[name='${namingContainerId.value}']`)).byTagName(Const_1.TAG_FORM, true);
+        }
+        else {
+            return mona_dish_1.DQ.byTagName(Const_1.TAG_FORM);
+        }
     }
 }
 exports.ResponseProcessor = ResponseProcessor;

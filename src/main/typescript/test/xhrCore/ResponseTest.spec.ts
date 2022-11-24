@@ -199,7 +199,7 @@ describe('Tests of the various aspects of the response protocol functionality', 
             "embedded scripts must be executed").to.be.true;
     });
 
-    it("must have a viewstate update to be peformed", function () {
+    it("must have a viewState update to be performed", function () {
         DQ.byId("cmd_viewstate").click();
 
         this.respond(XmlResponses.VIEWSTATE_1);
@@ -253,7 +253,7 @@ describe('Tests of the various aspects of the response protocol functionality', 
             </partial-response>`);
 
 
-        expect(DQ.byId("jakarta.faces.ViewState").isAbsent()).to.be.false;
+        expect(DQ$("[name='jakarta.faces.ViewState']").isPresent()).to.be.true;
 
         expect((<HTMLInputElement>document.getElementById("jakarta.faces.ViewState")).value == "RTUyRDI0NzE4QzAxM0E5RDAwMDAwMDVD").to.be.true;
         expect(DQ.byId("jakarta.faces.ViewState").inputValue.value == "RTUyRDI0NzE4QzAxM0E5RDAwMDAwMDVD").to.be.true;

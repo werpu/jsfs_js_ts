@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Config, DomQuery, DomQueryCollector, DQ, Lang, Stream, XMLQuery} from "mona-dish";
+import {Config, DomQuery, DomQueryCollector, DQ, DQ$, Lang, LazyStream, Stream, XMLQuery} from "mona-dish";
 import {Implementation} from "../AjaxImpl";
 import {Assertions} from "../util/Assertions";
 import {IResponseProcessor} from "./IResponseProcessor";
@@ -51,7 +51,7 @@ import {
     TAG_HEAD,
     UPDATE_ELEMS,
     UPDATE_FORMS,
-    DEFERRED_HEAD_INSERTS
+    DEFERRED_HEAD_INSERTS, PARTIAL_ID, P_EXECUTE, P_RENDER
 } from "../core/Const";
 import trim = Lang.trim;
 import {ExtConfig, ExtDomQuery} from "../util/ExtDomQuery";
@@ -338,13 +338,17 @@ export class ResponseProcessor implements IResponseProcessor {
         Stream.ofAssoc<StateHolder>(this.internalContext.getIf(APPLIED_VST).orElse({}).value)
             .each((item: Array<any>) => {
                 let value: StateHolder = item[1];
-                let nameSpace = DQ.byId(value.nameSpace, true).orElse(document.body);
-                let affectedForms = nameSpace.byTagName(TAG_FORM);
-                let affectedForms2 = nameSpace.filter(item => item.tagName.orElse(EMPTY_STR).value.toLowerCase() == TAG_FORM);
+                let namingContainerId = this.internalContext.getIf(PARTIAL_ID);
+                let affectedForms;
 
-                this.appendViewStateToForms(new DomQuery(affectedForms, affectedForms2), value.value);
+                affectedForms = this.getContainerForms(namingContainerId)
+                    .filter(affectedForm => this.executeOrRenderFilter(affectedForm));
+
+                this.appendViewStateToForms(affectedForms, value.value);
             });
     }
+
+
 
     /**
      * same as with view states before applies the incoming client windows as last step after the rest of the processing
@@ -354,11 +358,13 @@ export class ResponseProcessor implements IResponseProcessor {
         Stream.ofAssoc<StateHolder>(this.internalContext.getIf(APPLIED_CLIENT_WINDOW).orElse({}).value)
             .each((item: Array<any>) => {
                 let value: StateHolder = item[1];
-                let nameSpace = DQ.byId(value.nameSpace, true).orElse(document.body);
-                let affectedForms = nameSpace.byTagName(TAG_FORM);
-                let affectedForms2 = nameSpace.filter(item => item.tagName.orElse(EMPTY_STR).value.toLowerCase() == TAG_FORM);
+                let namingContainerId = this.internalContext.getIf(PARTIAL_ID);
+                let affectedForms;
 
-                this.appendClientWindowToForms(new DomQuery(affectedForms, affectedForms2), value.value);
+                affectedForms = this.getContainerForms(namingContainerId)
+                    .filter(affectedForm => this.executeOrRenderFilter(affectedForm));
+
+                this.appendClientWindowToForms(affectedForms, value.value);
             });
     }
 
@@ -483,5 +489,42 @@ export class ResponseProcessor implements IResponseProcessor {
         this.externalContext.getIf(ON_ERROR).orElse(this.internalContext.getIf(ON_ERROR).value).orElse(EMPTY_FUNC).value(errorData);
     }
 
+    /**
+     * filters the forms according to being in the execute or render cycle
+     * @param affectedForm
+     * @private
+     */
+    private executeOrRenderFilter(affectedForm) {
+        let executes = this.externalContext.getIf($nsp(P_EXECUTE)).orElse("@none").value.split(/s+/gi);
+        let renders = this.externalContext.getIf($nsp(P_RENDER)).orElse("@none").value.split(/s+/gi);
+        let executeAndRenders = executes.concat(...renders);
+        return LazyStream.of(...executeAndRenders).filter(nameOrId => {
+            if (nameOrId == "@all") {
+                return true;
+            }
+            if (nameOrId == "@none") {
+                return true;
+            }
 
+            const nameOrIdSelector = `#${nameOrId}, [name='#${nameOrId}']`;
+
+            affectedForm.matchesSelector(nameOrIdSelector) ||
+                affectedForm.querySelectorAllDeep(nameOrIdSelector).isPresent() ||
+                affectedForm.parents(nameOrIdSelector).isPresent();
+        }).first().isPresent();
+    }
+
+    /**
+     * gets all forms under a single naming container id
+     * @param namingContainerId
+     * @private
+     */
+    private getContainerForms(namingContainerId: Config) {
+        if (namingContainerId.isPresent()) {
+            //naming container mode, all forms under naming container id must be processed
+            return DQ.byId(namingContainerId.value).orElse(DQ$(`form[name='${namingContainerId.value}']`)).byTagName(TAG_FORM, true);
+        } else {
+            return DQ.byTagName(TAG_FORM);
+        }
+    }
 }

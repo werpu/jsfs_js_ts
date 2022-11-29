@@ -674,63 +674,39 @@ describe('Tests of the various aspects of the response protocol functionality', 
         });
 
         this.respond(`<?xml version="1.0" encoding="UTF-8"?>
-<partial-response id="root_1">
+<partial-response id="viewroot_1">
     <changes>
         <update id="jakarta.faces.ViewRoot"><![CDATA[<!DOCTYPE html>
-            <!--
-            
-                Copyright (c) 1997, 2021 Oracle and/or its affiliates. All rights reserved.
-            
-                This program and the accompanying materials are made available under the
-                terms of the Eclipse Public License v. 2.0, which is available at
-                http://www.eclipse.org/legal/epl-2.0.
-            
-                This Source Code may also be made available under the following Secondary
-                Licenses when the conditions for such availability set forth in the
-                Eclipse Public License v. 2.0 are satisfied: GNU General Public License,
-                version 2 with the GNU Classpath Exception, which is available at
-                https://www.gnu.org/software/classpath/license.html.
-            
-                SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
-            
-            -->
             <html xmlns="http://www.w3.org/1999/xhtml">
             <head>
-                <title>JAVASERVERFACES_SPEC_PUBLIC-790 - Integration Test</title>
-                <script src="/82c63a2b-d60b-4115-a0a0-eb699032dc40/jakarta.faces.resource/faces.js.xhtml?ln=jakarta.faces&amp;stage=Development"></script>
+                <title>Spec 790</title>
+                <script src="/jakarta.faces.resource/faces.js.xhtml?ln=jakarta.faces;stage=Development"></script>
             </head>
             <body>
-            <div id="panel1">
-                <form id="form1" name="form1" method="post" action="/82c63a2b-d60b-4115-a0a0-eb699032dc40/spec790.xhtml"
-                      enctype="application/x-www-form-urlencoded"><input id="form1:button" name="form1:button"
-                                                                         type="submit"
-                                                                         value="submit form1 and render panel2 and panel3 using h:commandButton f:ajax"
-                                                                         onclick="faces.util.chain(this, event,function(event){myfaces.ab(this,event,'action','form1','panel2 panel3')}); return false;"/><input
-                        type="hidden" name="form1_SUBMIT" value="1"/></form>
-            </div>
-            <div id="panel2">
-                <form id="form2" name="form2" method="post" action="/82c63a2b-d60b-4115-a0a0-eb699032dc40/spec790.xhtml"
-                      ><a href="#"
-                                                                     onclick="faces.util.chain(this, event,function(event){myfaces.ab(this,event,'action','form2','panel1 panel3')}); return false;"
-                                                                     id="form2:link" name="form2:link">submit form2 and
-                    render panel1 and panel3 using h:commandLink f:ajax</a><input type="hidden" name="form2_SUBMIT"
-                                                                                  value="1"/></form>
-            </div>
-            <div id="panel3">
-                <form id="form3" name="form3" method="post" action="/82c63a2b-d60b-4115-a0a0-eb699032dc40/spec790.xhtml"
-                      ><a href="#"
-                                                                     onclick="return faces.util.chain(this, event,function(event){faces.ajax.request(this,event,{execute:'form3',render:':panel1 :panel2'});return false;}, function(event){return myfaces.oam.submitForm('form3','form3:link');});"
-                                                                     id="form3:link" name="form3:link">submit form3 and
-                    render panel1 and panel2 using manual faces.ajax.request()</a><input type="hidden"
-                                                                                         name="form3_SUBMIT" value="1"/>
+                <div id="panel1">
+                 <form id="form1" name="form1" method="post"
+                  action="booga"
+                  ><input id="form1:button" name="form1:button" type="submit"
+                                                                     value="submit form1 via ajax">
                 </form>
-            </div>
-            <div id="jakarta_faces_developmentstage_messages"></div>
+                </div>
+                <div id="panel2">
+                after update
+                    <form id="form2" name="form2" method="post" action="booga2"
+                          ><a href="#" id="form2:link" name="form2:link"></a>
+                         <input type="hidden" name="form2_SUBMIT" value="1"/></form>
+                </div>
+                  <div id="panel3">
+                    after update
+                        <form id="form3" name="form3" method="post" action="booga3"
+                              ><a href="#"  id="form3:link" name="form3:link"></a>
+                        </form>
+                    </div>
             </body>
-            </html>
-            ]]>
+             </html>
+          ]]>
         </update>
-        <update id="root_1:jakarta.faces.ViewState:1"><![CDATA[booga_after_update]]></update>
+        <update id="viewroot_1:jakarta.faces.ViewState:1"><![CDATA[booga_after_update]]></update>
     </changes>
 </partial-response>
 `)

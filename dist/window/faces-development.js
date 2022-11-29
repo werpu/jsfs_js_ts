@@ -5024,9 +5024,9 @@ var PushImpl;
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.CTX_PARAM_PASS_THR = exports.CTX_PARAM_TR_TYPE = exports.CTX_PARAM_SRC_CTL_ID = exports.CTX_PARAM_SRC_FRM_ID = exports.CTX_PARAM_MF_INTERNAL = exports.TIMEOUT_EVENT = exports.CLIENT_ERROR = exports.SERVER_ERROR = exports.MALFORMEDXML = exports.EMPTY_RESPONSE = exports.HTTPERROR = exports.RESPONSE_XML = exports.RESPONSE_TEXT = exports.ERROR_MESSAGE = exports.ERROR_NAME = exports.STATUS = exports.SOURCE = exports.SUCCESS = exports.COMPLETE = exports.BEGIN = exports.ON_EVENT = exports.ON_ERROR = exports.EVENT = exports.ERROR = exports.WINDOW_ID = exports.CTX_PARAM_RENDER = exports.P_BEHAVIOR_EVENT = exports.P_WINDOW_ID = exports.P_RESET_VALUES = exports.P_EVT = exports.P_RENDER = exports.P_EXECUTE = exports.P_AJAX = exports.IDENT_FORM = exports.IDENT_THIS = exports.IDENT_NONE = exports.IDENT_ALL = exports.HTML_CLIENT_WINDOW = exports.HTML_VIEWSTATE = exports.EMPTY_MAP = exports.EMPTY_STR = exports.EMPTY_FUNC = exports.P_RESOURCE = exports.P_VIEWBODY = exports.P_VIEWHEAD = exports.P_VIEWROOT = exports.P_CLIENT_WINDOW = exports.P_VIEWSTATE = exports.PARTIAL_ID = exports.P_PARTIAL_SOURCE = void 0;
-exports.SEL_SCRIPTS_STYLES = exports.MYFACES = exports.DEFERRED_HEAD_INSERTS = exports.UPDATE_ELEMS = exports.UPDATE_FORMS = exports.CMD_REDIRECT = exports.CMD_EXTENSION = exports.CMD_ATTRIBUTES = exports.CMD_ERROR = exports.CMD_EVAL = exports.CMD_INSERT = exports.CMD_DELETE = exports.CMD_UPDATE = exports.CMD_CHANGES = exports.RESP_PARTIAL = exports.ATTR_ID = exports.ATTR_VALUE = exports.ATTR_NAME = exports.ATTR_URL = exports.ERR_NO_PARTIAL_RESPONSE = exports.PHASE_PROCESS_RESPONSE = exports.SEL_RESPONSE_XML = exports.SEL_CLIENT_WINDOW_ELEM = exports.SEL_VIEWSTATE_ELEM = exports.TAG_ATTR = exports.TAG_AFTER = exports.TAG_BEFORE = exports.TAG_BODY = exports.TAG_FORM = exports.TAG_HEAD = exports.STD_ACCEPT = exports.NO_TIMEOUT = exports.MULTIPART = exports.URL_ENCODED = exports.STATE_EVT_COMPLETE = exports.STATE_EVT_TIMEOUT = exports.STATE_EVT_BEGIN = exports.REQ_TYPE_POST = exports.REQ_TYPE_GET = exports.ENCODED_URL = exports.VAL_AJAX = exports.REQ_ACCEPT = exports.HEAD_FACES_REQ = exports.CONTENT_TYPE = exports.STAGE_DEVELOPMENT = exports.CTX_PARAM_EXECUTE = exports.CTX_PARAM_RST = exports.CTX_PARAM_TIMEOUT = exports.CTX_PARAM_DELAY = exports.CTX_PARAM_SPEC_PARAMS = void 0;
-exports.$nsp = exports.UNKNOWN = exports.MAX_RECONNECT_ATTEMPTS = exports.RECONNECT_INTERVAL = exports.APPLIED_CLIENT_WINDOW = exports.APPLIED_VST = exports.REASON_EXPIRED = exports.MF_NONE = void 0;
+exports.CTX_PARAM_TR_TYPE = exports.CTX_PARAM_SRC_CTL_ID = exports.CTX_PARAM_SRC_FRM_ID = exports.CTX_PARAM_MF_INTERNAL = exports.TIMEOUT_EVENT = exports.CLIENT_ERROR = exports.SERVER_ERROR = exports.MALFORMEDXML = exports.EMPTY_RESPONSE = exports.HTTPERROR = exports.RESPONSE_XML = exports.RESPONSE_TEXT = exports.ERROR_MESSAGE = exports.ERROR_NAME = exports.STATUS = exports.SOURCE = exports.SUCCESS = exports.COMPLETE = exports.BEGIN = exports.ON_EVENT = exports.ON_ERROR = exports.EVENT = exports.ERROR = exports.WINDOW_ID = exports.CTX_PARAM_RENDER = exports.P_BEHAVIOR_EVENT = exports.P_WINDOW_ID = exports.P_RESET_VALUES = exports.P_EVT = exports.P_RENDER_OVERRIDE = exports.P_RENDER = exports.P_EXECUTE = exports.P_AJAX = exports.IDENT_FORM = exports.IDENT_THIS = exports.IDENT_NONE = exports.IDENT_ALL = exports.HTML_CLIENT_WINDOW = exports.HTML_VIEWSTATE = exports.EMPTY_MAP = exports.EMPTY_STR = exports.EMPTY_FUNC = exports.P_RESOURCE = exports.P_VIEWBODY = exports.P_VIEWHEAD = exports.P_VIEWROOT = exports.P_CLIENT_WINDOW = exports.P_VIEWSTATE = exports.PARTIAL_ID = exports.P_PARTIAL_SOURCE = void 0;
+exports.MYFACES = exports.DEFERRED_HEAD_INSERTS = exports.UPDATE_ELEMS = exports.UPDATE_FORMS = exports.CMD_REDIRECT = exports.CMD_EXTENSION = exports.CMD_ATTRIBUTES = exports.CMD_ERROR = exports.CMD_EVAL = exports.CMD_INSERT = exports.CMD_DELETE = exports.CMD_UPDATE = exports.CMD_CHANGES = exports.RESP_PARTIAL = exports.ATTR_ID = exports.ATTR_VALUE = exports.ATTR_NAME = exports.ATTR_URL = exports.ERR_NO_PARTIAL_RESPONSE = exports.PHASE_PROCESS_RESPONSE = exports.SEL_RESPONSE_XML = exports.SEL_CLIENT_WINDOW_ELEM = exports.SEL_VIEWSTATE_ELEM = exports.TAG_ATTR = exports.TAG_AFTER = exports.TAG_BEFORE = exports.TAG_BODY = exports.TAG_FORM = exports.TAG_HEAD = exports.STD_ACCEPT = exports.NO_TIMEOUT = exports.MULTIPART = exports.URL_ENCODED = exports.STATE_EVT_COMPLETE = exports.STATE_EVT_TIMEOUT = exports.STATE_EVT_BEGIN = exports.REQ_TYPE_POST = exports.REQ_TYPE_GET = exports.ENCODED_URL = exports.VAL_AJAX = exports.REQ_ACCEPT = exports.HEAD_FACES_REQ = exports.CONTENT_TYPE = exports.STAGE_DEVELOPMENT = exports.CTX_PARAM_EXECUTE = exports.CTX_PARAM_RST = exports.CTX_PARAM_TIMEOUT = exports.CTX_PARAM_DELAY = exports.CTX_PARAM_SPEC_PARAMS = exports.CTX_PARAM_PASS_THR = void 0;
+exports.$nsp = exports.UNKNOWN = exports.MAX_RECONNECT_ATTEMPTS = exports.RECONNECT_INTERVAL = exports.APPLIED_CLIENT_WINDOW = exports.APPLIED_VST = exports.REASON_EXPIRED = exports.MF_NONE = exports.SEL_SCRIPTS_STYLES = void 0;
 /*
  * [export const] constants
  */
@@ -5053,6 +5053,8 @@ exports.IDENT_FORM = "@form";
 exports.P_AJAX = "jakarta.faces.partial.ajax";
 exports.P_EXECUTE = "jakarta.faces.partial.execute";
 exports.P_RENDER = "jakarta.faces.partial.render";
+/*render override for viewbody or viewroot, in both cases an all is performed*/
+exports.P_RENDER_OVERRIDE = "_myfaces.rendeOverride";
 exports.P_EVT = "jakarta.faces.partial.event";
 exports.P_RESET_VALUES = "jakarta.faces.partial.resetValues";
 exports.P_WINDOW_ID = "jakarta.faces.windowId";
@@ -6786,6 +6788,7 @@ class ResponseProcessor {
         // we need a separate step for post-processing the incoming
         // attributes, like classes, styles etc...
         resultingBody.copyAttrs(shadowBody);
+        this.externalContext.assign((0, Const_1.$nsp)(Const_1.P_RENDER_OVERRIDE)).value = "@all";
         this.storeForPostProcessing(updateForms, resultingBody);
     }
     /**
@@ -7105,16 +7108,18 @@ class ResponseProcessor {
             ((_g = (_f = node === null || node === void 0 ? void 0 : node.id) === null || _f === void 0 ? void 0 : _f.value) === null || _g === void 0 ? void 0 : _g.indexOf([(0, Const_1.$nsp)(Const_1.P_CLIENT_WINDOW), separatorChar].join(Const_1.EMPTY_STR))) != -1);
     }
     triggerOnError(errorData) {
-        this.externalContext.getIf(Const_1.ON_ERROR).orElse(this.internalContext.getIf(Const_1.ON_ERROR).value).orElse(Const_1.EMPTY_FUNC).value(errorData);
+        this.externalContext.getIf(Const_1.ON_ERROR).orElseLazy(() => this.internalContext.getIf(Const_1.ON_ERROR).value).orElse(Const_1.EMPTY_FUNC).value(errorData);
     }
     /**
-     * filters the forms according to being in the execute or render cycle
+     * filters the forms according to being member of the "execute" or "render" cycle
      * @param affectedForm
      * @private
      */
     executeOrRenderFilter(affectedForm) {
         let executes = this.externalContext.getIf((0, Const_1.$nsp)(Const_1.P_EXECUTE)).orElse("@none").value.split(/\s+/gi);
-        let renders = this.externalContext.getIf((0, Const_1.$nsp)(Const_1.P_RENDER)).orElse("@none").value.split(/\s+/gi);
+        let renders = this.externalContext.getIf(Const_1.P_RENDER_OVERRIDE)
+            .orElseLazy(() => this.externalContext.getIf((0, Const_1.$nsp)(Const_1.P_RENDER)).value)
+            .orElse("@none").value.split(/\s+/gi);
         let executeAndRenders = executes.concat(...renders);
         return mona_dish_1.LazyStream.of(...executeAndRenders).filter(nameOrId => {
             if (nameOrId == "@all") {
@@ -7138,7 +7143,12 @@ class ResponseProcessor {
     getContainerForms(namingContainerId) {
         if (namingContainerId.isPresent()) {
             //naming container mode, all forms under naming container id must be processed
-            return mona_dish_1.DQ.byId(namingContainerId.value).orElse((0, mona_dish_1.DQ$)(`form[name='${namingContainerId.value}']`)).byTagName(Const_1.TAG_FORM, true);
+            return mona_dish_1.DQ.byId(namingContainerId.value)
+                .orElse((0, mona_dish_1.DQ$)(`form[id='${namingContainerId.value}'], form[name='${namingContainerId.value}']`))
+                // missing condition if the naming container is not present we have to
+                // use the body as fallback
+                .orElse(mona_dish_1.DQ.byTagName(Const_1.TAG_BODY))
+                .byTagName(Const_1.TAG_FORM, true);
         }
         else {
             return mona_dish_1.DQ.byTagName(Const_1.TAG_FORM);

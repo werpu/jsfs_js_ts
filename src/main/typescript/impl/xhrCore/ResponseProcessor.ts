@@ -551,10 +551,10 @@ export class ResponseProcessor implements IResponseProcessor {
         if (namingContainerId.isPresent()) {
             //naming container mode, all forms under naming container id must be processed
             return DQ.byId(namingContainerId.value)
-                .orElse(DQ$(`form[id='${namingContainerId.value}'], form[name='${namingContainerId.value}']`))
+                .orElseLazy(() => DQ$(`form[id='${namingContainerId.value}'], form[name='${namingContainerId.value}']`))
                 // missing condition if the naming container is not present we have to
                 // use the body as fallback
-                .orElse(DQ.byTagName(TAG_BODY))
+                .orElseLazy(() => DQ.byTagName(TAG_BODY))
                 .byTagName(TAG_FORM, true);
         } else {
             return DQ.byTagName(TAG_FORM);

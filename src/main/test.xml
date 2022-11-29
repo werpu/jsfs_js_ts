@@ -1,0 +1,23 @@
+<partial-response id="viewroot_1">
+    <changes>
+        <update id="panel2"><![CDATA[
+            <div id="panel2">
+            after update
+                <form id="form2" name="form2" method="post" action="booga2"
+                      ><a href="#" id="form2:link" name="form2:link"></a>
+                      <input type="hidden" name="form2_SUBMIT" value="1"/></form>
+            </div>
+            ]]>
+        </update>
+        <update id="panel3"><![CDATA[
+            <div id="panel3">
+            after update
+                <form id="form3" name="form3" method="post" action="booga3"
+                      ><a href="#"  id="form3:link" name="form3:link"></a>
+                </form>
+            </div>
+            ]]>
+        </update>
+        <update id="j_id__v_0:jakarta.faces.ViewState:1"><![CDATA[booga_after_update]]></update>
+    </changes>
+</partial-response>

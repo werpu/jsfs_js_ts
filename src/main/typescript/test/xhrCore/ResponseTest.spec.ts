@@ -584,4 +584,68 @@ describe('Tests of the various aspects of the response protocol functionality', 
 
         done();
     })
+
+    /**
+     * Similar to TCK 790
+     */
+    it("must handle a more complex replace with several forms and one issuing form and a viewstate and a viewroot id in response but viewroot is not present in page", function (done) {        //special case, viewid given but no viewid in page special result all render and executes must be updated
+
+        document.body.innerHTML = `
+        <div id="panel1">
+            <form id="form1" name="form1" method="post"
+                  action="booga"
+                  ><input id="form1:button" name="form1:button" type="submit"
+                                                                     value="submit form1 via ajax">
+                   <input type="hidden" name="jakarta.faces.ViewState"
+                                        id="viewroot_1:jakarta.faces.ViewState:1"
+                                        value="beforeUpdate">
+            </form>
+        </div>
+        <div id="panel2">
+            <form id="form2" name="form2" method="post" action="booga2"
+                  ><a href="#" id="form2:link" name="form2:link"></a>
+           </form>
+        </div>
+        <div id="panel3">
+            <form id="form3" name="form3" method="post" action="booga3"
+                  ><a href="#" id="form3:link" name="form3:link"></a>
+            </form>
+        </div>
+        `;
+
+        const RESPONSE_1 = `<partial-response id="viewroot_1">
+    <changes>
+        <update id="panel2"><![CDATA[
+            <div id="panel2">
+            after update
+                <form id="form2" name="form2" method="post" action="booga2"
+                      ><a href="#" id="form2:link" name="form2:link"></a>
+                      <input type="hidden" name="form2_SUBMIT" value="1"/></form>
+            </div>
+            ]]>
+        </update>
+        <update id="panel3"><![CDATA[
+            <div id="panel3">
+            after update
+                <form id="form3" name="form3" method="post" action="booga3"
+                      ><a href="#"  id="form3:link" name="form3:link"></a>
+                </form>
+            </div>
+            ]]>
+        </update>
+        <update id="j_id__v_0:jakarta.faces.ViewState:1"><![CDATA[booga_after_update]]></update>
+    </changes>
+</partial-response>`;
+        faces.ajax.request(window.document.getElementById("form1:button"), null, {
+            "javax.faces.behavior.event": "click",
+            execute: "form1",
+            render: "form2 form3"
+        });
+
+        this.respond(RESPONSE_1);
+        expect(DQ$("#form1 [name='jakarta.faces.ViewState']").val).to.eq("booga_after_update");
+        expect(DQ$("#form2 [name='jakarta.faces.ViewState']").val).to.eq("booga_after_update");
+        expect(DQ$("#form2 [name='jakarta.faces.ViewState']").val).to.eq("booga_after_update");
+        done();
+    })
 });

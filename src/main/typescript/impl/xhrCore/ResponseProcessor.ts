@@ -337,14 +337,12 @@ export class ResponseProcessor implements IResponseProcessor {
     fixViewStates() {
         Stream.ofAssoc<StateHolder>(this.internalContext.getIf(APPLIED_VST).orElse({}).value)
             .each((item: Array<any>) => {
-                let value: StateHolder = item[1];
-                let namingContainerId = this.internalContext.getIf(PARTIAL_ID);
-                let affectedForms;
-
-                affectedForms = this.getContainerForms(namingContainerId)
+                const value: StateHolder = item[1];
+                const namingContainerId = this.internalContext.getIf(PARTIAL_ID);
+                const affectedForms = this.getContainerForms(namingContainerId)
                     .filter(affectedForm => this.executeOrRenderFilter(affectedForm));
 
-                this.appendViewStateToForms(affectedForms, value.value);
+                this.appendViewStateToForms(affectedForms, value.value, namingContainerId.orElse("").value);
             });
     }
 
@@ -359,12 +357,10 @@ export class ResponseProcessor implements IResponseProcessor {
             .each((item: Array<any>) => {
                 const value: StateHolder = item[1];
                 const namingContainerId = this.internalContext.getIf(PARTIAL_ID);
-                let affectedForms;
-
-                affectedForms = this.getContainerForms(namingContainerId)
+                const affectedForms = this.getContainerForms(namingContainerId)
                     .filter(affectedForm => this.executeOrRenderFilter(affectedForm));
 
-                this.appendClientWindowToForms(affectedForms, value.value);
+                this.appendClientWindowToForms(affectedForms, value.value, namingContainerId.orElse("").value);
             });
     }
 
@@ -385,8 +381,8 @@ export class ResponseProcessor implements IResponseProcessor {
      * @param forms the forms to append the viewState to
      * @param viewState the final viewState
      */
-    private appendViewStateToForms(forms: DQ, viewState: string) {
-        this.assignState(forms, $nsp(SEL_VIEWSTATE_ELEM), viewState);
+    private appendViewStateToForms(forms: DQ, viewState: string, namingContainerId = "") {
+        this.assignState(forms, $nsp(SEL_VIEWSTATE_ELEM), viewState, namingContainerId);
     }
 
 
@@ -396,8 +392,8 @@ export class ResponseProcessor implements IResponseProcessor {
      * @param forms the forms to append the viewState to
      * @param clientWindow the final viewState
      */
-    private appendClientWindowToForms(forms: DQ, clientWindow: string) {
-        this.assignState(forms, $nsp(SEL_CLIENT_WINDOW_ELEM), clientWindow);
+    private appendClientWindowToForms(forms: DQ, clientWindow: string, namingContainerId = "") {
+        this.assignState(forms, $nsp(SEL_CLIENT_WINDOW_ELEM), clientWindow, namingContainerId);
     }
 
     /**
@@ -409,13 +405,13 @@ export class ResponseProcessor implements IResponseProcessor {
      *
      * @private
      */
-    private assignState(forms: DQ, selector: string, state: string) {
+    private assignState(forms: DQ, selector: string, state: string, namingContainerId) {
         forms.each((form: DQ) => {
             let stateHolders = form.querySelectorAll(selector)
                 .orElseLazy(() => {
                     return selector.indexOf("ViewState") != -1 ?
-                        ResponseProcessor.newViewStateElement(form):
-                        ResponseProcessor.newClientWindowElement(form);
+                        ResponseProcessor.newViewStateElement(form, namingContainerId):
+                        ResponseProcessor.newClientWindowElement(form, namingContainerId);
                 });
 
             stateHolders.attr("value").value = state;
@@ -428,8 +424,15 @@ export class ResponseProcessor implements IResponseProcessor {
      * @param parent, the parent node to attach the viewState element to
      * (usually a form node)
      */
-    private static newViewStateElement(parent: DQ): DQ {
+    private static newViewStateElement(parent: DQ, namingContainerId: string): DQ {
+        const SEP = (window?.faces ?? window.jsf).separatorchar;
+        const cnt = DQ$(`[name='${$nsp(P_VIEWSTATE)}']`).length;
+
         let newElement = DQ.fromMarkup($nsp(HTML_VIEWSTATE));
+        newElement.id.value = ((namingContainerId.length) ?
+            [namingContainerId,  $nsp(P_VIEWSTATE),  cnt]:
+            [$nsp(P_VIEWSTATE),  cnt]).join(SEP);
+
         newElement.appendTo(parent);
         return newElement;
     }
@@ -440,8 +443,15 @@ export class ResponseProcessor implements IResponseProcessor {
      * @param parent, the parent node to attach the viewState element to
      * (usually a form node)
      */
-    private static newClientWindowElement(parent: DQ): DQ {
+    private static newClientWindowElement(parent: DQ, namingContainerId: string): DQ {
+        const SEP = (window?.faces ?? window.jsf).separatorchar;
+        const cnt = DQ$(`[name='${$nsp(P_CLIENT_WINDOW)}']`).length;
+
         let newElement = DQ.fromMarkup($nsp(HTML_CLIENT_WINDOW));
+        newElement.id.value = ((namingContainerId.length) ?
+            [namingContainerId,  $nsp(P_CLIENT_WINDOW),  cnt]:
+            [$nsp(P_CLIENT_WINDOW),  cnt]).join(SEP);
+
         newElement.appendTo(parent);
         return newElement;
     }

@@ -16,12 +16,13 @@
 
 import {AssocArrayCollector, Config, DomQuery, DQ, Stream} from "mona-dish";
 import {
+    $nsp,
     CTX_PARAM_DELAY,
     CTX_PARAM_TIMEOUT,
     EMPTY_FUNC,
     EMPTY_STR,
     ENCODED_URL,
-    MF_NONE,
+    MF_NONE, P_VIEWSTATE,
     REQ_TYPE_GET,
     REQ_TYPE_POST
 } from "../core/Const";
@@ -78,6 +79,16 @@ export function resolveForm(requestCtx: Config, elem: DQ, event: Event): DQ {
     return DQ
         .byId(configId, true)
         .orElseLazy(() => ExtLang.getForm(elem.getAsElem(0).value, event));
+}
+
+export function resolveViewId(form: DQ): string {
+    let viewState = form.querySelectorAll(`input[name='${$nsp(P_VIEWSTATE)}']`).id.orElse("").value;
+    let divider = (window?.faces ?? window.jsf).separatorchar;
+    viewState = viewState.split(divider)[0];
+    if(viewState !== $nsp(P_VIEWSTATE)) {
+        return viewState;
+    }
+    return "";
 }
 
 export function resolveTimeout(options: Config): number {

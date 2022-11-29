@@ -19,6 +19,7 @@
  */
 export const P_PARTIAL_SOURCE = "jakarta.faces.source";
 export const PARTIAL_ID = "partialId";
+export const VIEW_ID = "myfaves.viewId";
 export const P_VIEWSTATE = "jakarta.faces.ViewState";
 export const P_CLIENT_WINDOW = "jakarta.faces.ClientWindow";
 export const P_VIEWROOT = "jakarta.faces.ViewRoot";

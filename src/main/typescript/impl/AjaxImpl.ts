@@ -18,7 +18,7 @@ import {IListener} from "./util/IListener";
 import {Response} from "./xhrCore/Response";
 import {XhrRequest} from "./xhrCore/XhrRequest";
 import {AsynchronousQueue} from "./util/AsyncQueue";
-import {AssocArrayCollector, Config, DQ, Lang, LazyStream, Optional, Stream} from "mona-dish";
+import {ArrayCollector, AssocArrayCollector, Config, DQ, Lang, LazyStream, Optional, Stream} from "mona-dish";
 import {Assertions} from "./util/Assertions";
 import {XhrFormData} from "./xhrCore/XhrFormData";
 import {ExtDomQuery} from "./util/ExtDomQuery";
@@ -50,13 +50,13 @@ import {
     CTX_PARAM_RENDER,
     REQ_TYPE_POST,
     SOURCE,
-    TAG_FORM, CTX_PARAM_SPEC_PARAMS
+    TAG_FORM, CTX_PARAM_SPEC_PARAMS, VIEW_ID
 } from "./core/Const";
 import {
     resolveDefaults,
     resolveDelay,
     resolveForm,
-    resolveTimeout
+    resolveTimeout, resolveViewId
 } from "./xhrCore/RequestDataResolver";
 
 /*
@@ -263,6 +263,7 @@ export module Implementation {
          * with detached objects
          */
         const form: DQ = resolveForm(requestCtx, elem, resolvedEvent);
+        const viewId: string = resolveViewId(form);
         const formId = form.id.value;
         const delay: number = resolveDelay(options);
         const timeout: number = resolveTimeout(options);
@@ -282,6 +283,8 @@ export module Implementation {
          * onresolved Event and onerror Event
          */
         requestCtx.assign(SOURCE).value = elementId;
+
+        requestCtx.assign(VIEW_ID).value = viewId;
 
         /**
          * on resolvedEvent and onError...
@@ -612,12 +615,22 @@ export module Implementation {
      * @param issuingForm the form where the issuing element originates
      * @param issuingElementId the issuing element
      */
-    function remapDefaultConstants(targetConfig: Config, targetKey: string, userValues: string, issuingForm: DQ, issuingElementId: string): Config {
+    function remapDefaultConstants(targetConfig: Config, targetKey: string, userValues: string, issuingForm: DQ, issuingElementId: string, viewId: string = ""): Config {
         //a cleaner implementation of the transform list method
-
+        const SEP = (window?.faces ?? window.jsf).separatorchar;
         let iterValues: string[] = (userValues) ? trim(userValues).split(/\s+/gi) : [];
         let ret = [];
         let processed: {[key: string]: boolean} = {};
+
+        //TODO check if this is right
+        const remapNamingContainer = item => {
+            if(item.indexOf(SEP) === 0 && viewId !== "") {
+                item = [viewId, SEP, item.substring(1)].join("");
+            } else if(item.indexOf(SEP) === 0) {
+                item = item.substring(1);
+            }
+            return item;
+        };
 
         // in this case we do not use lazy stream because it wont bring any code reduction
         // or speedup
@@ -636,22 +649,22 @@ export module Implementation {
                     return targetConfig;
                 //@form pushes the issuing form id into our list
                 case IDENT_FORM:
-                    ret.push(issuingForm.id.value);
+                    ret.push(remapNamingContainer(issuingForm.id.value));
                     processed[issuingForm.id.value] = true;
                     break;
                 //@this is replaced with the current issuing element id
                 case IDENT_THIS:
                     if (!(issuingElementId in processed)) {
-                        ret.push(issuingElementId);
+                        ret.push(remapNamingContainer(issuingElementId));
                         processed[issuingElementId] = true;
                     }
                     break;
                 default:
-                    ret.push(iterValues[cnt]);
+                    ret.push(remapNamingContainer(iterValues[cnt]));
                     processed[iterValues[cnt]] = true;
             }
         }
-        //We now add the target as joined list
+
         targetConfig.assign(targetKey).value = ret.join(" ");
         return targetConfig;
     }

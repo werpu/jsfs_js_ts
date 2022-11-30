@@ -340,6 +340,12 @@ class DomQuery {
     set val(value) {
         this.inputValue.value = value;
     }
+    get nodeId() {
+        return this.id.value;
+    }
+    set nodeId(value) {
+        this.id.value = value;
+    }
     get checked() {
         return Stream_1.Stream.of(...this.values).allMatch(el => !!el.checked);
     }
@@ -5886,6 +5892,72 @@ exports.ExtConfig = ExtConfig;
 
 /***/ }),
 
+/***/ "./src/main/typescript/impl/util/HiddenInputBuilder.ts":
+/*!*************************************************************!*\
+  !*** ./src/main/typescript/impl/util/HiddenInputBuilder.ts ***!
+  \*************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+/*! Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.HiddenInputBuilder = void 0;
+const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
+const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
+/**
+ * Builder for hidden inputs.
+ * ATM only ViewState and Client window
+ * are supported (per spec)
+ *
+ * Improves readability in the response processor!
+ */
+class HiddenInputBuilder {
+    constructor(selector) {
+        this.selector = selector;
+        const isViewState = selector.indexOf((0, Const_1.$nsp)(Const_1.P_VIEWSTATE)) != -1;
+        this.name = isViewState ? Const_1.P_VIEWSTATE : Const_1.P_CLIENT_WINDOW;
+        this.template = isViewState ? Const_1.HTML_VIEWSTATE : Const_1.HTML_CLIENT_WINDOW;
+    }
+    withNamingContainerId(namingContainer) {
+        this.namingContainerId = namingContainer;
+        return this;
+    }
+    withParent(parent) {
+        this.parent = parent;
+        return this;
+    }
+    build() {
+        var _a, _b, _c;
+        const cnt = (0, mona_dish_1.DQ$)(`[name='${(0, Const_1.$nsp)(this.name)}']`).length;
+        const SEP = ((_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : window.jsf).separatorchar;
+        const newElement = mona_dish_1.DQ.fromMarkup((0, Const_1.$nsp)(this.template));
+        newElement.id.value = (((_b = this.namingContainerId) === null || _b === void 0 ? void 0 : _b.length) ?
+            [this.namingContainerId, (0, Const_1.$nsp)(this.name), cnt] :
+            [(0, Const_1.$nsp)(this.name), cnt]).join(SEP);
+        (_c = this === null || this === void 0 ? void 0 : this.parent) === null || _c === void 0 ? void 0 : _c.append(newElement);
+        return newElement;
+    }
+}
+exports.HiddenInputBuilder = HiddenInputBuilder;
+
+
+/***/ }),
+
 /***/ "./src/main/typescript/impl/util/Lang.ts":
 /*!***********************************************!*\
   !*** ./src/main/typescript/impl/util/Lang.ts ***!
@@ -5907,8 +5979,6 @@ exports.ExtConfig = ExtConfig;
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
- * todo replace singleton with module definition
  *
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
@@ -6740,8 +6810,9 @@ const ErrorData_1 = __webpack_require__(/*! ./ErrorData */ "./src/main/typescrip
 const ImplTypes_1 = __webpack_require__(/*! ../core/ImplTypes */ "./src/main/typescript/impl/core/ImplTypes.ts");
 const EventData_1 = __webpack_require__(/*! ./EventData */ "./src/main/typescript/impl/xhrCore/EventData.ts");
 const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
-var trim = mona_dish_1.Lang.trim;
 const ExtDomQuery_1 = __webpack_require__(/*! ../util/ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
+const HiddenInputBuilder_1 = __webpack_require__(/*! ../util/HiddenInputBuilder */ "./src/main/typescript/impl/util/HiddenInputBuilder.ts");
+var trim = mona_dish_1.Lang.trim;
 /**
  * Response processor
  *
@@ -6767,11 +6838,11 @@ class ResponseProcessor {
      * the data incoming must represent the html representation of the head itself one way or the other
      */
     replaceHead(shadowDocument) {
-        let shadowHead = shadowDocument.querySelectorAll(Const_1.HTML_TAG_HEAD);
+        const shadowHead = shadowDocument.querySelectorAll(Const_1.HTML_TAG_HEAD);
         if (!shadowHead.isPresent()) {
             return;
         }
-        let head = ExtDomQuery_1.ExtDomQuery.querySelectorAll(Const_1.HTML_TAG_HEAD);
+        const head = ExtDomQuery_1.ExtDomQuery.querySelectorAll(Const_1.HTML_TAG_HEAD);
         // full replace we delete everything
         head.childNodes.delete();
         this.addToHead(shadowHead);
@@ -6801,17 +6872,17 @@ class ResponseProcessor {
      * @param shadowDocument .. an incoming shadow document hosting the new nodes
      */
     replaceBody(shadowDocument) {
-        let shadowBody = shadowDocument.querySelectorAll(Const_1.HTML_TAG_BODY);
+        const shadowBody = shadowDocument.querySelectorAll(Const_1.HTML_TAG_BODY);
         if (!shadowBody.isPresent()) {
             return;
         }
-        let shadowInnerHTML = shadowBody.html().value;
-        let resultingBody = ExtDomQuery_1.ExtDomQuery.querySelectorAll(Const_1.HTML_TAG_BODY).html(shadowInnerHTML);
-        let updateForms = resultingBody.querySelectorAll(Const_1.HTML_TAG_FORM);
+        const shadowInnerHTML = shadowBody.innerHTML;
+        const resultingBody = ExtDomQuery_1.ExtDomQuery.querySelectorAll(Const_1.HTML_TAG_BODY);
+        const updateForms = resultingBody.querySelectorAll(Const_1.HTML_TAG_FORM);
         // main difference, we cannot replace the body itself, but only its content
         // we need a separate step for post-processing the incoming
         // attributes, like classes, styles etc...
-        resultingBody.copyAttrs(shadowBody);
+        resultingBody.html(shadowInnerHTML).copyAttrs(shadowBody);
         this.externalContext.assign((0, Const_1.$nsp)(Const_1.P_RENDER_OVERRIDE)).value = "@all";
         this.storeForPostProcessing(updateForms, resultingBody);
     }
@@ -6836,15 +6907,15 @@ class ResponseProcessor {
          *      <error-message><![CDATA[message]]></error-message>
          * <error>
          */
-        let mergedErrorData = new ExtDomQuery_1.ExtConfig({});
+        const mergedErrorData = new ExtDomQuery_1.ExtConfig({});
         mergedErrorData.assign(Const_1.SOURCE).value = this.externalContext.getIf(Const_1.P_PARTIAL_SOURCE).get(0).value;
         mergedErrorData.assign(Const_1.ERROR_NAME).value = node.querySelectorAll(Const_1.ERROR_NAME).textContent(Const_1.EMPTY_STR);
         mergedErrorData.assign(Const_1.ERROR_MESSAGE).value = node.querySelectorAll(Const_1.ERROR_MESSAGE).cDATAAsString;
-        let hasResponseXML = this.internalContext.get(Const_1.RESPONSE_XML).isPresent();
+        const hasResponseXML = this.internalContext.get(Const_1.RESPONSE_XML).isPresent();
         //we now store the response xml also in the error data for further details
         mergedErrorData.assignIf(hasResponseXML, Const_1.RESPONSE_XML).value = this.internalContext.getIf(Const_1.RESPONSE_XML).value.get(0).value;
         // error post-processing and enrichment (standard messages from keys)
-        let errorData = ErrorData_1.ErrorData.fromServerError(mergedErrorData);
+        const errorData = ErrorData_1.ErrorData.fromServerError(mergedErrorData);
         // we now trigger an internally stored onError function which might be an attached to the context
         // either we do not have an internal on error, or an on error has been based via params from the outside.
         // In both cases they are attached to our contexts
@@ -6858,7 +6929,7 @@ class ResponseProcessor {
      */
     redirect(node) {
         Assertions_1.Assertions.assertUrlExists(node);
-        let redirectUrl = trim(node.attr(Const_1.ATTR_URL).value);
+        const redirectUrl = trim(node.attr(Const_1.ATTR_URL).value);
         if (redirectUrl != Const_1.EMPTY_STR) {
             window.location.href = redirectUrl;
         }
@@ -6869,8 +6940,8 @@ class ResponseProcessor {
      * @param cdataBlock the cdata block with the new html code
      */
     update(node, cdataBlock) {
-        let result = ExtDomQuery_1.ExtDomQuery.byId(node.id.value, true).outerHTML(cdataBlock, false, false);
-        let sourceForm = result === null || result === void 0 ? void 0 : result.firstParent(Const_1.HTML_TAG_FORM).orElseLazy(() => result.byTagName(Const_1.HTML_TAG_FORM, true));
+        const result = ExtDomQuery_1.ExtDomQuery.byId(node.id.value, true).outerHTML(cdataBlock, false, false);
+        const sourceForm = result === null || result === void 0 ? void 0 : result.firstParent(Const_1.HTML_TAG_FORM).orElseLazy(() => result.byTagName(Const_1.HTML_TAG_FORM, true));
         if (sourceForm) {
             this.storeForPostProcessing(sourceForm, result);
         }
@@ -6888,7 +6959,7 @@ class ResponseProcessor {
      * @param node
      */
     attributes(node) {
-        let elem = mona_dish_1.DQ.byId(node.id.value, true);
+        const elem = mona_dish_1.DQ.byId(node.id.value, true);
         node.byTagName(Const_1.XML_TAG_ATTR).each((item) => {
             elem.attr(item.attr(Const_1.ATTR_NAME).value).value = item.attr(Const_1.ATTR_VALUE).value;
         });
@@ -6907,15 +6978,15 @@ class ResponseProcessor {
      */
     insert(node) {
         //let insertId = node.id; //not used atm
-        let before = node.attr(Const_1.XML_TAG_BEFORE);
-        let after = node.attr(Const_1.XML_TAG_AFTER);
-        let insertNodes = mona_dish_1.DQ.fromMarkup(node.cDATAAsString);
+        const before = node.attr(Const_1.XML_TAG_BEFORE);
+        const after = node.attr(Const_1.XML_TAG_AFTER);
+        const insertNodes = mona_dish_1.DQ.fromMarkup(node.cDATAAsString);
         if (before.isPresent()) {
             mona_dish_1.DQ.byId(before.value, true).insertBefore(insertNodes);
             this.internalContext.assign(Const_1.UPDATE_ELEMS).value.push(insertNodes);
         }
         if (after.isPresent()) {
-            let domQuery = mona_dish_1.DQ.byId(after.value, true);
+            const domQuery = mona_dish_1.DQ.byId(after.value, true);
             domQuery.insertAfter(insertNodes);
             this.internalContext.assign(Const_1.UPDATE_ELEMS).value.push(insertNodes);
         }
@@ -6926,19 +6997,19 @@ class ResponseProcessor {
      * @param node the node hosting the insert data
      */
     insertWithSubTags(node) {
-        let before = node.querySelectorAll(Const_1.XML_TAG_BEFORE);
-        let after = node.querySelectorAll(Const_1.XML_TAG_AFTER);
+        const before = node.querySelectorAll(Const_1.XML_TAG_BEFORE);
+        const after = node.querySelectorAll(Const_1.XML_TAG_AFTER);
         before.each(item => {
-            let insertId = item.attr(Const_1.ATTR_ID);
-            let insertNodes = mona_dish_1.DQ.fromMarkup(item.cDATAAsString);
+            const insertId = item.attr(Const_1.ATTR_ID);
+            const insertNodes = mona_dish_1.DQ.fromMarkup(item.cDATAAsString);
             if (insertId.isPresent()) {
                 mona_dish_1.DQ.byId(insertId.value, true).insertBefore(insertNodes);
                 this.internalContext.assign(Const_1.UPDATE_ELEMS).value.push(insertNodes);
             }
         });
         after.each(item => {
-            let insertId = item.attr(Const_1.ATTR_ID);
-            let insertNodes = mona_dish_1.DQ.fromMarkup(item.cDATAAsString);
+            const insertId = item.attr(Const_1.ATTR_ID);
+            const insertNodes = mona_dish_1.DQ.fromMarkup(item.cDATAAsString);
             if (insertId.isPresent()) {
                 mona_dish_1.DQ.byId(insertId.value, true).insertAfter(insertNodes);
                 this.internalContext.assign(Const_1.UPDATE_ELEMS).value.push(insertNodes);
@@ -6952,7 +7023,7 @@ class ResponseProcessor {
      */
     processViewState(node) {
         if (ResponseProcessor.isViewStateNode(node)) {
-            let state = node.cDATAAsString;
+            const state = node.cDATAAsString;
             this.internalContext.assign(Const_1.APPLIED_VST, node.id.value).value = new ImplTypes_1.StateHolder((0, Const_1.$nsp)(node.id.value), state);
             return true;
         }
@@ -6960,7 +7031,7 @@ class ResponseProcessor {
     }
     processClientWindow(node) {
         if (ResponseProcessor.isClientWindowNode(node)) {
-            let state = node.cDATAAsString;
+            const state = node.cDATAAsString;
             this.internalContext.assign(Const_1.APPLIED_CLIENT_WINDOW, node.id.value).value = new ImplTypes_1.StateHolder((0, Const_1.$nsp)(node.id.value), state);
             return true;
         }
@@ -6986,11 +7057,10 @@ class ResponseProcessor {
      */
     fixViewStates() {
         mona_dish_1.Stream.ofAssoc(this.internalContext.getIf(Const_1.APPLIED_VST).orElse({}).value)
-            .each((item) => {
-            const value = item[1];
+            .each(([, value]) => {
             const namingContainerId = this.internalContext.getIf(Const_1.PARTIAL_ID);
             const affectedForms = this.getContainerForms(namingContainerId)
-                .filter(affectedForm => this.executeOrRenderFilter(affectedForm));
+                .filter(affectedForm => this.isInExecuteOrRender(affectedForm));
             this.appendViewStateToForms(affectedForms, value.value, namingContainerId.orElse("").value);
         });
     }
@@ -7000,11 +7070,10 @@ class ResponseProcessor {
      */
     fixClientWindow() {
         mona_dish_1.Stream.ofAssoc(this.internalContext.getIf(Const_1.APPLIED_CLIENT_WINDOW).orElse({}).value)
-            .each((item) => {
-            const value = item[1];
+            .each(([, value]) => {
             const namingContainerId = this.internalContext.getIf(Const_1.PARTIAL_ID);
             const affectedForms = this.getContainerForms(namingContainerId)
-                .filter(affectedForm => this.executeOrRenderFilter(affectedForm));
+                .filter(affectedForm => this.isInExecuteOrRender(affectedForm));
             this.appendClientWindowToForms(affectedForms, value.value, namingContainerId.orElse("").value);
         });
     }
@@ -7012,9 +7081,9 @@ class ResponseProcessor {
      * all processing done we can close the request and send the appropriate events
      */
     done() {
-        let eventData = EventData_1.EventData.createFromRequest(this.request.value, this.externalContext, Const_1.SUCCESS);
+        const eventData = EventData_1.EventData.createFromRequest(this.request.value, this.externalContext, Const_1.SUCCESS);
         //because some frameworks might decorate them over the context in the response
-        let eventHandler = this.externalContext.getIf(Const_1.ON_EVENT).orElseLazy(() => this.internalContext.getIf(Const_1.ON_EVENT).value).orElse(Const_1.EMPTY_FUNC).value;
+        const eventHandler = this.externalContext.getIf(Const_1.ON_EVENT).orElseLazy(() => this.internalContext.getIf(Const_1.ON_EVENT).value).orElse(Const_1.EMPTY_FUNC).value;
         AjaxImpl_1.Implementation.sendEvent(eventData, eventHandler);
     }
     /**
@@ -7045,49 +7114,21 @@ class ResponseProcessor {
      * @private
      */
     assignState(forms, selector, state, namingContainerId) {
-        forms.each((form) => {
-            let stateHolders = form.querySelectorAll(selector)
-                .orElseLazy(() => {
-                return selector.indexOf("ViewState") != -1 ?
-                    ResponseProcessor.newViewStateElement(form, namingContainerId) :
-                    ResponseProcessor.newClientWindowElement(form, namingContainerId);
-            });
-            stateHolders.attr("value").value = state;
+        /**
+         * creates the viewstate or client window id element
+         * @param form
+         */
+        const createAndAppendHiddenInput = (form) => {
+            return new HiddenInputBuilder_1.HiddenInputBuilder(selector)
+                .withNamingContainerId(namingContainerId)
+                .withParent(form)
+                .build();
+        };
+        forms.each(form => {
+            const hiddenInput = form.querySelectorAll(selector)
+                .orElseLazy(() => createAndAppendHiddenInput(form));
+            hiddenInput.val = state;
         });
-    }
-    /**
-     * Helper to Create a new JSF ViewState Element
-     *
-     * @param parent, the parent node to attach the viewState element to
-     * (usually a form node)
-     */
-    static newViewStateElement(parent, namingContainerId) {
-        var _a;
-        const SEP = ((_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : window.jsf).separatorchar;
-        const cnt = (0, mona_dish_1.DQ$)(`[name='${(0, Const_1.$nsp)(Const_1.P_VIEWSTATE)}']`).length;
-        let newElement = mona_dish_1.DQ.fromMarkup((0, Const_1.$nsp)(Const_1.HTML_VIEWSTATE));
-        newElement.id.value = ((namingContainerId.length) ?
-            [namingContainerId, (0, Const_1.$nsp)(Const_1.P_VIEWSTATE), cnt] :
-            [(0, Const_1.$nsp)(Const_1.P_VIEWSTATE), cnt]).join(SEP);
-        newElement.appendTo(parent);
-        return newElement;
-    }
-    /**
-     * Helper to Create a new JSF ViewState Element
-     *
-     * @param parent, the parent node to attach the viewState element to
-     * (usually a form node)
-     */
-    static newClientWindowElement(parent, namingContainerId) {
-        var _a;
-        const SEP = ((_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : window.jsf).separatorchar;
-        const cnt = (0, mona_dish_1.DQ$)(`[name='${(0, Const_1.$nsp)(Const_1.P_CLIENT_WINDOW)}']`).length;
-        let newElement = mona_dish_1.DQ.fromMarkup((0, Const_1.$nsp)(Const_1.HTML_CLIENT_WINDOW));
-        newElement.id.value = ((namingContainerId.length) ?
-            [namingContainerId, (0, Const_1.$nsp)(Const_1.P_CLIENT_WINDOW), cnt] :
-            [(0, Const_1.$nsp)(Const_1.P_CLIENT_WINDOW), cnt]).join(SEP);
-        newElement.appendTo(parent);
-        return newElement;
     }
     /**
      * Stores certain aspects of the dom for later post-processing
@@ -7123,10 +7164,10 @@ class ResponseProcessor {
      */
     static isViewStateNode(node) {
         var _a, _b, _c, _d, _e, _f, _g;
-        let separatorChar = ((_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : window === null || window === void 0 ? void 0 : window.jsf).separatorchar;
+        const SEP = ((_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : window === null || window === void 0 ? void 0 : window.jsf).separatorchar;
         return "undefined" != typeof ((_b = node === null || node === void 0 ? void 0 : node.id) === null || _b === void 0 ? void 0 : _b.value) && (((_c = node === null || node === void 0 ? void 0 : node.id) === null || _c === void 0 ? void 0 : _c.value) == (0, Const_1.$nsp)(Const_1.P_VIEWSTATE) ||
-            ((_e = (_d = node === null || node === void 0 ? void 0 : node.id) === null || _d === void 0 ? void 0 : _d.value) === null || _e === void 0 ? void 0 : _e.indexOf([separatorChar, (0, Const_1.$nsp)(Const_1.P_VIEWSTATE)].join(Const_1.EMPTY_STR))) != -1 ||
-            ((_g = (_f = node === null || node === void 0 ? void 0 : node.id) === null || _f === void 0 ? void 0 : _f.value) === null || _g === void 0 ? void 0 : _g.indexOf([(0, Const_1.$nsp)(Const_1.P_VIEWSTATE), separatorChar].join(Const_1.EMPTY_STR))) != -1);
+            ((_e = (_d = node === null || node === void 0 ? void 0 : node.id) === null || _d === void 0 ? void 0 : _d.value) === null || _e === void 0 ? void 0 : _e.indexOf([SEP, (0, Const_1.$nsp)(Const_1.P_VIEWSTATE)].join(Const_1.EMPTY_STR))) != -1 ||
+            ((_g = (_f = node === null || node === void 0 ? void 0 : node.id) === null || _f === void 0 ? void 0 : _f.value) === null || _g === void 0 ? void 0 : _g.indexOf([(0, Const_1.$nsp)(Const_1.P_VIEWSTATE), SEP].join(Const_1.EMPTY_STR))) != -1);
     }
     /**
      * incoming client window node also needs special processing
@@ -7136,10 +7177,10 @@ class ResponseProcessor {
      */
     static isClientWindowNode(node) {
         var _a, _b, _c, _d, _e, _f, _g;
-        let separatorChar = ((_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : window === null || window === void 0 ? void 0 : window.jsf).separatorchar;
+        const SEP = ((_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : window === null || window === void 0 ? void 0 : window.jsf).separatorchar;
         return "undefined" != typeof ((_b = node === null || node === void 0 ? void 0 : node.id) === null || _b === void 0 ? void 0 : _b.value) && (((_c = node === null || node === void 0 ? void 0 : node.id) === null || _c === void 0 ? void 0 : _c.value) == (0, Const_1.$nsp)(Const_1.P_CLIENT_WINDOW) ||
-            ((_e = (_d = node === null || node === void 0 ? void 0 : node.id) === null || _d === void 0 ? void 0 : _d.value) === null || _e === void 0 ? void 0 : _e.indexOf([separatorChar, (0, Const_1.$nsp)(Const_1.P_CLIENT_WINDOW)].join(Const_1.EMPTY_STR))) != -1 ||
-            ((_g = (_f = node === null || node === void 0 ? void 0 : node.id) === null || _f === void 0 ? void 0 : _f.value) === null || _g === void 0 ? void 0 : _g.indexOf([(0, Const_1.$nsp)(Const_1.P_CLIENT_WINDOW), separatorChar].join(Const_1.EMPTY_STR))) != -1);
+            ((_e = (_d = node === null || node === void 0 ? void 0 : node.id) === null || _d === void 0 ? void 0 : _d.value) === null || _e === void 0 ? void 0 : _e.indexOf([SEP, (0, Const_1.$nsp)(Const_1.P_CLIENT_WINDOW)].join(Const_1.EMPTY_STR))) != -1 ||
+            ((_g = (_f = node === null || node === void 0 ? void 0 : node.id) === null || _f === void 0 ? void 0 : _f.value) === null || _g === void 0 ? void 0 : _g.indexOf([(0, Const_1.$nsp)(Const_1.P_CLIENT_WINDOW), SEP].join(Const_1.EMPTY_STR))) != -1);
     }
     triggerOnError(errorData) {
         this.externalContext.getIf(Const_1.ON_ERROR).orElseLazy(() => this.internalContext.getIf(Const_1.ON_ERROR).value).orElse(Const_1.EMPTY_FUNC).value(errorData);
@@ -7149,24 +7190,21 @@ class ResponseProcessor {
      * @param affectedForm
      * @private
      */
-    executeOrRenderFilter(affectedForm) {
-        let executes = this.externalContext.getIf((0, Const_1.$nsp)(Const_1.P_EXECUTE)).orElse("@none").value.split(/\s+/gi);
-        let renders = this.externalContext.getIf(Const_1.P_RENDER_OVERRIDE)
+    isInExecuteOrRender(affectedForm) {
+        const executes = this.externalContext.getIf((0, Const_1.$nsp)(Const_1.P_EXECUTE)).orElse("@none").value.split(/\s+/gi);
+        const renders = this.externalContext.getIf(Const_1.P_RENDER_OVERRIDE)
             .orElseLazy(() => this.externalContext.getIf((0, Const_1.$nsp)(Const_1.P_RENDER)).value)
-            .orElse("@none").value.split(/\s+/gi);
-        let executeAndRenders = executes.concat(...renders);
+            .orElse(Const_1.IDENT_NONE).value.split(/\s+/gi);
+        const executeAndRenders = executes.concat(...renders);
         return mona_dish_1.LazyStream.of(...executeAndRenders).filter(nameOrId => {
-            if (nameOrId == "@all") {
+            if ([Const_1.IDENT_ALL, Const_1.IDENT_NONE].indexOf(nameOrId) != -1) {
                 return true;
             }
-            if (nameOrId == "@none") {
-                return true;
-            }
-            const nameOrIdSelector = `[id='${nameOrId}'], [name='#${nameOrId}']`;
+            const NAME_OR_ID = this.getNameOrIdSelector(nameOrId);
             //either the form directly is in execute or render or one of its children or one of its parents
-            return affectedForm.matchesSelector(nameOrIdSelector) ||
-                affectedForm.querySelectorAll(nameOrIdSelector).isPresent() ||
-                affectedForm.firstParent(nameOrIdSelector).isPresent();
+            return affectedForm.matchesSelector(NAME_OR_ID) ||
+                affectedForm.querySelectorAll(NAME_OR_ID).isPresent() ||
+                affectedForm.firstParent(NAME_OR_ID).isPresent();
         }).first().isPresent();
     }
     /**
@@ -7177,8 +7215,7 @@ class ResponseProcessor {
     getContainerForms(namingContainerId) {
         if (namingContainerId.isPresent()) {
             //naming container mode, all forms under naming container id must be processed
-            return mona_dish_1.DQ.byId(namingContainerId.value)
-                .orElseLazy(() => (0, mona_dish_1.DQ$)(`form[id='${namingContainerId.value}'], form[name='${namingContainerId.value}']`))
+            return (0, mona_dish_1.DQ$)(this.getNameOrIdSelector(namingContainerId.value))
                 // missing condition if the naming container is not present we have to
                 // use the body as fallback
                 .orElseLazy(() => mona_dish_1.DQ.byTagName(Const_1.HTML_TAG_BODY))
@@ -7187,6 +7224,9 @@ class ResponseProcessor {
         else {
             return mona_dish_1.DQ.byTagName(Const_1.HTML_TAG_FORM);
         }
+    }
+    getNameOrIdSelector(nameOrId) {
+        return `[id='${nameOrId}'], [name='${nameOrId}']`;
     }
 }
 exports.ResponseProcessor = ResponseProcessor;

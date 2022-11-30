@@ -17,6 +17,8 @@
 /*
  * [export const] constants
  */
+
+
 export const P_PARTIAL_SOURCE = "jakarta.faces.source";
 export const PARTIAL_ID = "partialId";
 export const VIEW_ID = "myfaves.viewId";
@@ -188,6 +190,10 @@ export const UNKNOWN = "UNKNOWN";
  * To take the compatibility layer out this method just has to be
  * changed to a simple value passthrough
  */
+
+export function $faces(): FacesAPI {
+     return (window?.faces ?? window?.jsf) as FacesAPI;
+}
 
 export function $nsp(inputNamespace?: any): any {
      if((!inputNamespace) || !inputNamespace?.replace) {

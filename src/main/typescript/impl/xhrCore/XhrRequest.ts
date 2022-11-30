@@ -23,6 +23,7 @@ import {ErrorData} from "./ErrorData";
 import {EventData} from "./EventData";
 import {ExtLang} from "../util/Lang";
 import {
+    $faces,
     BEGIN,
     COMPLETE,
     CONTENT_TYPE,
@@ -116,7 +117,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         try {
 
             let formElement = this.sourceForm.getAsElem(0).value;
-            let viewState = (window?.faces ?? window?.jsf).getViewState(formElement);
+            let viewState = $faces().getViewState(formElement);
             // encoded we need to decode
             // We generated a base representation of the current form
             // in case someone has overloaded the viewState with additional decorators we merge
@@ -290,7 +291,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             return;
         }
 
-        (window?.faces ?? window.jsf).ajax.response(this.xhrObject, this.responseContext.value ?? {});
+        $faces().ajax.response(this.xhrObject, this.responseContext.value ?? {});
     }
 
     private handleMalFormedXML(resolve: Function) {

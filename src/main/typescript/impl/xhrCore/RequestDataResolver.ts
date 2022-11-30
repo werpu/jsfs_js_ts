@@ -16,6 +16,7 @@
 
 import {AssocArrayCollector, Config, DomQuery, DQ, Stream} from "mona-dish";
 import {
+    $faces,
     $nsp,
     CTX_OPTIONS_DELAY,
     CTX_OPTIONS_TIMEOUT,
@@ -82,11 +83,11 @@ export function resolveForm(requestCtx: Config, elem: DQ, event: Event): DQ {
 }
 
 export function resolveViewId(form: DQ): string {
-    let viewState = form.querySelectorAll(`input[name='${$nsp(P_VIEWSTATE)}']`).id.orElse("").value;
-    let divider = (window?.faces ?? window.jsf).separatorchar;
-    viewState = viewState.split(divider)[0];
-    if(viewState !== $nsp(P_VIEWSTATE)) {
-        return viewState;
+    let viewState = form.querySelectorAll(`input[type='hidden'][name*='${$nsp(P_VIEWSTATE)}']`).id.orElse("").value;
+    let divider = $faces().separatorchar;
+    let viewId = viewState.split(divider, 2)[0];
+    if(viewId.indexOf($nsp(P_VIEWSTATE)) === -1) {
+        return viewId;
     }
     return "";
 }

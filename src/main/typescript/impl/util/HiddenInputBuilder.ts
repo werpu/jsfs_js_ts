@@ -16,7 +16,7 @@
  */
 
 import {DomQuery, DQ, DQ$} from "mona-dish";
-import {$nsp, HTML_CLIENT_WINDOW, HTML_VIEWSTATE, P_CLIENT_WINDOW, P_VIEWSTATE} from "../core/Const";
+import {$faces, $nsp, HTML_CLIENT_WINDOW, HTML_VIEWSTATE, P_CLIENT_WINDOW, P_VIEWSTATE} from "../core/Const";
 
 /**
  * Builder for hidden inputs.
@@ -49,8 +49,9 @@ export class HiddenInputBuilder {
 
 
     build(): DomQuery {
+        //TODO naming container id?
         const cnt = DQ$(`[name='${$nsp(this.name)}']`).length;
-        const SEP = (window?.faces ?? window.jsf).separatorchar;
+        const SEP = $faces().separatorchar;
         const newElement = DQ.fromMarkup($nsp(this.template));
         newElement.id.value = ((this.namingContainerId?.length) ?
             [this.namingContainerId,  $nsp(this.name),  cnt]:

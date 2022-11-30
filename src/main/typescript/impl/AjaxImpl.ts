@@ -18,7 +18,7 @@ import {IListener} from "./util/IListener";
 import {Response} from "./xhrCore/Response";
 import {XhrRequest} from "./xhrCore/XhrRequest";
 import {AsynchronousQueue} from "./util/AsyncQueue";
-import {ArrayCollector, AssocArrayCollector, Config, DQ, Lang, LazyStream, Optional, Stream} from "mona-dish";
+import {AssocArrayCollector, Config, DQ, Lang, LazyStream, Optional, Stream} from "mona-dish";
 import {Assertions} from "./util/Assertions";
 import {XhrFormData} from "./xhrCore/XhrFormData";
 import {ExtDomQuery} from "./util/ExtDomQuery";
@@ -47,9 +47,8 @@ import {
     P_RESET_VALUES,
     P_WINDOW_ID,
     CTX_PARAM_RENDER,
-    REQ_TYPE_POST,
     SOURCE,
-    HTML_TAG_FORM, CTX_OPTIONS_PARAMS, VIEW_ID
+    HTML_TAG_FORM, CTX_OPTIONS_PARAMS, VIEW_ID, $faces
 } from "./core/Const";
 import {
     resolveDefaults,
@@ -592,7 +591,7 @@ export module Implementation {
      */
     function assignClientWindowId(form: DQ, targetContext: Config) {
 
-        let clientWindow = (window?.faces ?? window?.jsf).getClientWindow(form.getAsElem(0).value);
+        let clientWindow = $faces().getClientWindow(form.getAsElem(0).value);
         if (clientWindow) {
             targetContext.assign(CTX_PARAM_REQ_PASS_THR, P_CLIENT_WINDOW).value = clientWindow;
         }
@@ -612,10 +611,11 @@ export module Implementation {
      * @param userValues the passed user values (aka input string which needs to be transformed)
      * @param issuingForm the form where the issuing element originates
      * @param issuingElementId the issuing element
+     * @param viewId the naming container id ("" default if none is given)
      */
     function remapDefaultConstants(targetConfig: Config, targetKey: string, userValues: string, issuingForm: DQ, issuingElementId: string, viewId: string = ""): Config {
         //a cleaner implementation of the transform list method
-        const SEP = (window?.faces ?? window.jsf).separatorchar;
+        const SEP = $faces().separatorchar;
         let iterValues: string[] = (userValues) ? trim(userValues).split(/\s+/gi) : [];
         let ret = [];
         let processed: {[key: string]: boolean} = {};

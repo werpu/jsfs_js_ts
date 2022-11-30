@@ -23,6 +23,7 @@ import {StateHolder} from "../core/ImplTypes";
 import {EventData} from "./EventData";
 
 import {
+    $faces,
     $nsp,
     APPLIED_CLIENT_WINDOW,
     APPLIED_VST,
@@ -108,8 +109,8 @@ export class ResponseProcessor implements IResponseProcessor {
 
         //incoming either the outer head tag or its children
         const nodesToAdd = (shadowHead.tagName.value === "HEAD") ? shadowHead.childNodes : shadowHead;
-        // this is stored for post processing
-        // after the rest of the "pyhsical build up", head before body
+        // this is stored for "post" processing
+        // after the rest of the "physical build up", head before body
         const evalElements = nodesToAdd.stream
             .filter(item => postProcessTags.indexOf(item.tagName.orElse("").value) != -1).collect(new DomQueryCollector());
         this.addToHeadDeferred(evalElements);
@@ -387,6 +388,7 @@ export class ResponseProcessor implements IResponseProcessor {
      *
      * @param forms the forms to append the viewState to
      * @param viewState the final viewState
+     * @param namingContainerId
      */
     private appendViewStateToForms(forms: DQ, viewState: string, namingContainerId = "") {
         this.assignState(forms, $nsp(SEL_VIEWSTATE_ELEM), viewState, namingContainerId);
@@ -398,6 +400,7 @@ export class ResponseProcessor implements IResponseProcessor {
      *
      * @param forms the forms to append the viewState to
      * @param clientWindow the final viewState
+     * @param namingContainerId
      */
     private appendClientWindowToForms(forms: DQ, clientWindow: string, namingContainerId = "") {
         this.assignState(forms, $nsp(SEL_CLIENT_WINDOW_ELEM), clientWindow, namingContainerId);
@@ -410,11 +413,12 @@ export class ResponseProcessor implements IResponseProcessor {
      * @param selector the selector for the state
      * @param state the state itself which needs to be assigned
      *
+     * @param namingContainerId
      * @private
      */
-    private assignState(forms: DQ, selector: string, state: string, namingContainerId) {
+    private assignState(forms: DQ, selector: string, state: string, namingContainerId: string) {
         /**
-         * creates the viewstate or client window id element
+         * creates the viewState or client window id element
          * @param form
          */
         const createAndAppendHiddenInput = (form: DomQuery)  => {
@@ -467,7 +471,7 @@ export class ResponseProcessor implements IResponseProcessor {
      * @returns if it is a viewState node
      */
     private static isViewStateNode(node: XMLQuery): boolean {
-        const SEP = (window?.faces ?? window?.jsf).separatorchar;
+        const SEP = $faces().separatorchar;
         return "undefined" != typeof node?.id?.value && (node?.id?.value == $nsp(P_VIEWSTATE) ||
             node?.id?.value?.indexOf([SEP, $nsp(P_VIEWSTATE)].join(EMPTY_STR)) != -1 ||
             node?.id?.value?.indexOf([$nsp(P_VIEWSTATE), SEP].join(EMPTY_STR)) != -1);
@@ -480,7 +484,7 @@ export class ResponseProcessor implements IResponseProcessor {
      * @returns true of it ii
      */
     private static isClientWindowNode(node: XMLQuery): boolean {
-        const SEP = (window?.faces ?? window?.jsf).separatorchar;
+        const SEP =  $faces().separatorchar;
         return "undefined" != typeof node?.id?.value && (node?.id?.value == $nsp(P_CLIENT_WINDOW) ||
             node?.id?.value?.indexOf([SEP, $nsp(P_CLIENT_WINDOW)].join(EMPTY_STR)) != -1 ||
             node?.id?.value?.indexOf([$nsp(P_CLIENT_WINDOW), SEP].join(EMPTY_STR)) != -1);

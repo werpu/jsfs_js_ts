@@ -4620,8 +4620,7 @@ var Implementation;
      * @param targetContext the target context receiving the value
      */
     function assignClientWindowId(form, targetContext) {
-        var _a;
-        let clientWindow = ((_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : window === null || window === void 0 ? void 0 : window.jsf).getClientWindow(form.getAsElem(0).value);
+        let clientWindow = (0, Const_1.$faces)().getClientWindow(form.getAsElem(0).value);
         if (clientWindow) {
             targetContext.assign(Const_1.CTX_PARAM_REQ_PASS_THR, Const_1.P_CLIENT_WINDOW).value = clientWindow;
         }
@@ -4640,11 +4639,11 @@ var Implementation;
      * @param userValues the passed user values (aka input string which needs to be transformed)
      * @param issuingForm the form where the issuing element originates
      * @param issuingElementId the issuing element
+     * @param viewId the naming container id ("" default if none is given)
      */
     function remapDefaultConstants(targetConfig, targetKey, userValues, issuingForm, issuingElementId, viewId = "") {
-        var _a;
         //a cleaner implementation of the transform list method
-        const SEP = ((_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : window.jsf).separatorchar;
+        const SEP = (0, Const_1.$faces)().separatorchar;
         let iterValues = (userValues) ? trim(userValues).split(/\s+/gi) : [];
         let ret = [];
         let processed = {};
@@ -5044,7 +5043,7 @@ var PushImpl;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CTX_OPTIONS_TIMEOUT = exports.CTX_OPTIONS_DELAY = exports.CTX_OPTIONS_PARAMS = exports.TIMEOUT_EVENT = exports.CLIENT_ERROR = exports.SERVER_ERROR = exports.MALFORMEDXML = exports.EMPTY_RESPONSE = exports.HTTPERROR = exports.RESPONSE_XML = exports.RESPONSE_TEXT = exports.ERROR_MESSAGE = exports.ERROR_NAME = exports.STATUS = exports.SOURCE = exports.SUCCESS = exports.COMPLETE = exports.BEGIN = exports.ON_EVENT = exports.ON_ERROR = exports.EVENT = exports.ERROR = exports.WINDOW_ID = exports.CTX_PARAM_RENDER = exports.P_BEHAVIOR_EVENT = exports.P_WINDOW_ID = exports.P_RESET_VALUES = exports.P_EVT = exports.P_RENDER_OVERRIDE = exports.P_RENDER = exports.P_EXECUTE = exports.P_AJAX = exports.IDENT_FORM = exports.IDENT_THIS = exports.IDENT_NONE = exports.IDENT_ALL = exports.HTML_CLIENT_WINDOW = exports.HTML_VIEWSTATE = exports.EMPTY_MAP = exports.EMPTY_STR = exports.EMPTY_FUNC = exports.P_RESOURCE = exports.P_VIEWBODY = exports.P_VIEWHEAD = exports.P_VIEWROOT = exports.P_CLIENT_WINDOW = exports.P_VIEWSTATE = exports.VIEW_ID = exports.PARTIAL_ID = exports.P_PARTIAL_SOURCE = void 0;
 exports.UPDATE_ELEMS = exports.UPDATE_FORMS = exports.XML_TAG_ATTR = exports.XML_TAG_AFTER = exports.XML_TAG_BEFORE = exports.XML_TAG_REDIRECT = exports.XML_TAG_EXTENSION = exports.XML_TAG_ATTRIBUTES = exports.XML_TAG_ERROR = exports.XML_TAG_EVAL = exports.XML_TAG_INSERT = exports.XML_TAG_DELETE = exports.XML_TAG_UPDATE = exports.XML_TAG_CHANGES = exports.XML_TAG_PARTIAL_RESP = exports.ATTR_ID = exports.ATTR_VALUE = exports.ATTR_NAME = exports.ATTR_URL = exports.ERR_NO_PARTIAL_RESPONSE = exports.PHASE_PROCESS_RESPONSE = exports.SEL_RESPONSE_XML = exports.SEL_CLIENT_WINDOW_ELEM = exports.SEL_VIEWSTATE_ELEM = exports.HTML_TAG_STYLE = exports.HTML_TAG_SCRIPT = exports.HTML_TAG_LINK = exports.HTML_TAG_BODY = exports.HTML_TAG_FORM = exports.HTML_TAG_HEAD = exports.STD_ACCEPT = exports.NO_TIMEOUT = exports.MULTIPART = exports.URL_ENCODED = exports.STATE_EVT_COMPLETE = exports.STATE_EVT_TIMEOUT = exports.STATE_EVT_BEGIN = exports.REQ_TYPE_POST = exports.REQ_TYPE_GET = exports.ENCODED_URL = exports.VAL_AJAX = exports.REQ_ACCEPT = exports.HEAD_FACES_REQ = exports.CONTENT_TYPE = exports.CTX_PARAM_REQ_PASS_THR = exports.CTX_PARAM_SRC_CTL_ID = exports.CTX_PARAM_SRC_FRM_ID = exports.CTX_PARAM_MF_INTERNAL = exports.CTX_OPTIONS_EXECUTE = exports.CTX_OPTIONS_RESET = void 0;
-exports.$nsp = exports.UNKNOWN = exports.MAX_RECONNECT_ATTEMPTS = exports.RECONNECT_INTERVAL = exports.APPLIED_CLIENT_WINDOW = exports.APPLIED_VST = exports.REASON_EXPIRED = exports.MF_NONE = exports.MYFACES = exports.DEFERRED_HEAD_INSERTS = void 0;
+exports.$nsp = exports.$faces = exports.UNKNOWN = exports.MAX_RECONNECT_ATTEMPTS = exports.RECONNECT_INTERVAL = exports.APPLIED_CLIENT_WINDOW = exports.APPLIED_VST = exports.REASON_EXPIRED = exports.MF_NONE = exports.MYFACES = exports.DEFERRED_HEAD_INSERTS = void 0;
 /*
  * [export const] constants
  */
@@ -5176,6 +5175,11 @@ exports.UNKNOWN = "UNKNOWN";
  * To take the compatibility layer out this method just has to be
  * changed to a simple value passthrough
  */
+function $faces() {
+    var _a;
+    return ((_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : window === null || window === void 0 ? void 0 : window.jsf);
+}
+exports.$faces = $faces;
 function $nsp(inputNamespace) {
     if ((!inputNamespace) || !(inputNamespace === null || inputNamespace === void 0 ? void 0 : inputNamespace.replace)) {
         return inputNamespace;
@@ -5942,14 +5946,15 @@ class HiddenInputBuilder {
         return this;
     }
     build() {
-        var _a, _b, _c;
+        var _a, _b;
+        //TODO naming container id?
         const cnt = (0, mona_dish_1.DQ$)(`[name='${(0, Const_1.$nsp)(this.name)}']`).length;
-        const SEP = ((_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : window.jsf).separatorchar;
+        const SEP = (0, Const_1.$faces)().separatorchar;
         const newElement = mona_dish_1.DQ.fromMarkup((0, Const_1.$nsp)(this.template));
-        newElement.id.value = (((_b = this.namingContainerId) === null || _b === void 0 ? void 0 : _b.length) ?
+        newElement.id.value = (((_a = this.namingContainerId) === null || _a === void 0 ? void 0 : _a.length) ?
             [this.namingContainerId, (0, Const_1.$nsp)(this.name), cnt] :
             [(0, Const_1.$nsp)(this.name), cnt]).join(SEP);
-        (_c = this === null || this === void 0 ? void 0 : this.parent) === null || _c === void 0 ? void 0 : _c.append(newElement);
+        (_b = this === null || this === void 0 ? void 0 : this.parent) === null || _b === void 0 ? void 0 : _b.append(newElement);
         return newElement;
     }
 }
@@ -6393,12 +6398,11 @@ function resolveForm(requestCtx, elem, event) {
 }
 exports.resolveForm = resolveForm;
 function resolveViewId(form) {
-    var _a;
-    let viewState = form.querySelectorAll(`input[name='${(0, Const_1.$nsp)(Const_1.P_VIEWSTATE)}']`).id.orElse("").value;
-    let divider = ((_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : window.jsf).separatorchar;
-    viewState = viewState.split(divider)[0];
-    if (viewState !== (0, Const_1.$nsp)(Const_1.P_VIEWSTATE)) {
-        return viewState;
+    let viewState = form.querySelectorAll(`input[type='hidden'][name*='${(0, Const_1.$nsp)(Const_1.P_VIEWSTATE)}']`).id.orElse("").value;
+    let divider = (0, Const_1.$faces)().separatorchar;
+    let viewId = viewState.split(divider, 2)[0];
+    if (viewId.indexOf((0, Const_1.$nsp)(Const_1.P_VIEWSTATE)) === -1) {
+        return viewId;
     }
     return "";
 }
@@ -6854,8 +6858,8 @@ class ResponseProcessor {
         nonExecutables.runHeadInserts(true);
         //incoming either the outer head tag or its children
         const nodesToAdd = (shadowHead.tagName.value === "HEAD") ? shadowHead.childNodes : shadowHead;
-        // this is stored for post processing
-        // after the rest of the "pyhsical build up", head before body
+        // this is stored for "post" processing
+        // after the rest of the "physical build up", head before body
         const evalElements = nodesToAdd.stream
             .filter(item => postProcessTags.indexOf(item.tagName.orElse("").value) != -1).collect(new mona_dish_1.DomQueryCollector());
         this.addToHeadDeferred(evalElements);
@@ -7091,6 +7095,7 @@ class ResponseProcessor {
      *
      * @param forms the forms to append the viewState to
      * @param viewState the final viewState
+     * @param namingContainerId
      */
     appendViewStateToForms(forms, viewState, namingContainerId = "") {
         this.assignState(forms, (0, Const_1.$nsp)(Const_1.SEL_VIEWSTATE_ELEM), viewState, namingContainerId);
@@ -7100,6 +7105,7 @@ class ResponseProcessor {
      *
      * @param forms the forms to append the viewState to
      * @param clientWindow the final viewState
+     * @param namingContainerId
      */
     appendClientWindowToForms(forms, clientWindow, namingContainerId = "") {
         this.assignState(forms, (0, Const_1.$nsp)(Const_1.SEL_CLIENT_WINDOW_ELEM), clientWindow, namingContainerId);
@@ -7111,11 +7117,12 @@ class ResponseProcessor {
      * @param selector the selector for the state
      * @param state the state itself which needs to be assigned
      *
+     * @param namingContainerId
      * @private
      */
     assignState(forms, selector, state, namingContainerId) {
         /**
-         * creates the viewstate or client window id element
+         * creates the viewState or client window id element
          * @param form
          */
         const createAndAppendHiddenInput = (form) => {
@@ -7163,11 +7170,11 @@ class ResponseProcessor {
      * @returns if it is a viewState node
      */
     static isViewStateNode(node) {
-        var _a, _b, _c, _d, _e, _f, _g;
-        const SEP = ((_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : window === null || window === void 0 ? void 0 : window.jsf).separatorchar;
-        return "undefined" != typeof ((_b = node === null || node === void 0 ? void 0 : node.id) === null || _b === void 0 ? void 0 : _b.value) && (((_c = node === null || node === void 0 ? void 0 : node.id) === null || _c === void 0 ? void 0 : _c.value) == (0, Const_1.$nsp)(Const_1.P_VIEWSTATE) ||
-            ((_e = (_d = node === null || node === void 0 ? void 0 : node.id) === null || _d === void 0 ? void 0 : _d.value) === null || _e === void 0 ? void 0 : _e.indexOf([SEP, (0, Const_1.$nsp)(Const_1.P_VIEWSTATE)].join(Const_1.EMPTY_STR))) != -1 ||
-            ((_g = (_f = node === null || node === void 0 ? void 0 : node.id) === null || _f === void 0 ? void 0 : _f.value) === null || _g === void 0 ? void 0 : _g.indexOf([(0, Const_1.$nsp)(Const_1.P_VIEWSTATE), SEP].join(Const_1.EMPTY_STR))) != -1);
+        var _a, _b, _c, _d, _e, _f;
+        const SEP = (0, Const_1.$faces)().separatorchar;
+        return "undefined" != typeof ((_a = node === null || node === void 0 ? void 0 : node.id) === null || _a === void 0 ? void 0 : _a.value) && (((_b = node === null || node === void 0 ? void 0 : node.id) === null || _b === void 0 ? void 0 : _b.value) == (0, Const_1.$nsp)(Const_1.P_VIEWSTATE) ||
+            ((_d = (_c = node === null || node === void 0 ? void 0 : node.id) === null || _c === void 0 ? void 0 : _c.value) === null || _d === void 0 ? void 0 : _d.indexOf([SEP, (0, Const_1.$nsp)(Const_1.P_VIEWSTATE)].join(Const_1.EMPTY_STR))) != -1 ||
+            ((_f = (_e = node === null || node === void 0 ? void 0 : node.id) === null || _e === void 0 ? void 0 : _e.value) === null || _f === void 0 ? void 0 : _f.indexOf([(0, Const_1.$nsp)(Const_1.P_VIEWSTATE), SEP].join(Const_1.EMPTY_STR))) != -1);
     }
     /**
      * incoming client window node also needs special processing
@@ -7176,11 +7183,11 @@ class ResponseProcessor {
      * @returns true of it ii
      */
     static isClientWindowNode(node) {
-        var _a, _b, _c, _d, _e, _f, _g;
-        const SEP = ((_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : window === null || window === void 0 ? void 0 : window.jsf).separatorchar;
-        return "undefined" != typeof ((_b = node === null || node === void 0 ? void 0 : node.id) === null || _b === void 0 ? void 0 : _b.value) && (((_c = node === null || node === void 0 ? void 0 : node.id) === null || _c === void 0 ? void 0 : _c.value) == (0, Const_1.$nsp)(Const_1.P_CLIENT_WINDOW) ||
-            ((_e = (_d = node === null || node === void 0 ? void 0 : node.id) === null || _d === void 0 ? void 0 : _d.value) === null || _e === void 0 ? void 0 : _e.indexOf([SEP, (0, Const_1.$nsp)(Const_1.P_CLIENT_WINDOW)].join(Const_1.EMPTY_STR))) != -1 ||
-            ((_g = (_f = node === null || node === void 0 ? void 0 : node.id) === null || _f === void 0 ? void 0 : _f.value) === null || _g === void 0 ? void 0 : _g.indexOf([(0, Const_1.$nsp)(Const_1.P_CLIENT_WINDOW), SEP].join(Const_1.EMPTY_STR))) != -1);
+        var _a, _b, _c, _d, _e, _f;
+        const SEP = (0, Const_1.$faces)().separatorchar;
+        return "undefined" != typeof ((_a = node === null || node === void 0 ? void 0 : node.id) === null || _a === void 0 ? void 0 : _a.value) && (((_b = node === null || node === void 0 ? void 0 : node.id) === null || _b === void 0 ? void 0 : _b.value) == (0, Const_1.$nsp)(Const_1.P_CLIENT_WINDOW) ||
+            ((_d = (_c = node === null || node === void 0 ? void 0 : node.id) === null || _c === void 0 ? void 0 : _c.value) === null || _d === void 0 ? void 0 : _d.indexOf([SEP, (0, Const_1.$nsp)(Const_1.P_CLIENT_WINDOW)].join(Const_1.EMPTY_STR))) != -1 ||
+            ((_f = (_e = node === null || node === void 0 ? void 0 : node.id) === null || _e === void 0 ? void 0 : _e.value) === null || _f === void 0 ? void 0 : _f.indexOf([(0, Const_1.$nsp)(Const_1.P_CLIENT_WINDOW), SEP].join(Const_1.EMPTY_STR))) != -1);
     }
     triggerOnError(errorData) {
         this.externalContext.getIf(Const_1.ON_ERROR).orElseLazy(() => this.internalContext.getIf(Const_1.ON_ERROR).value).orElse(Const_1.EMPTY_FUNC).value(errorData);
@@ -7351,7 +7358,7 @@ class XhrFormData extends mona_dish_1.Config {
      * @param form the form holding the view state value
      */
     applyViewState(form) {
-        let viewState = form.byId(Const_1.P_VIEWSTATE, true).inputValue;
+        let viewState = form.querySelectorAllDeep(`[name*='${Const_1.P_VIEWSTATE}'`).inputValue;
         this.appendIf(viewState.isPresent(), Const_1.P_VIEWSTATE).value = viewState.value;
     }
     /**
@@ -7576,7 +7583,6 @@ class XhrRequest {
         });
     }
     start() {
-        var _a;
         let ignoreErr = failSaveExecute;
         let xhrObject = this.xhrObject;
         let executesArr = () => {
@@ -7584,7 +7590,7 @@ class XhrRequest {
         };
         try {
             let formElement = this.sourceForm.getAsElem(0).value;
-            let viewState = ((_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : window === null || window === void 0 ? void 0 : window.jsf).getViewState(formElement);
+            let viewState = (0, Const_1.$faces)().getViewState(formElement);
             // encoded we need to decode
             // We generated a base representation of the current form
             // in case someone has overloaded the viewState with additional decorators we merge
@@ -7721,7 +7727,7 @@ class XhrRequest {
         reject();
     }
     onSuccess(resolve) {
-        var _a, _b, _c;
+        var _a, _b;
         this.sendEvent(Const_1.COMPLETE);
         // malformed responses always result in empty response xml
         // per spec a valid response cannot be empty
@@ -7729,7 +7735,7 @@ class XhrRequest {
             this.handleMalFormedXML(resolve);
             return;
         }
-        ((_b = window === null || window === void 0 ? void 0 : window.faces) !== null && _b !== void 0 ? _b : window.jsf).ajax.response(this.xhrObject, (_c = this.responseContext.value) !== null && _c !== void 0 ? _c : {});
+        (0, Const_1.$faces)().ajax.response(this.xhrObject, (_b = this.responseContext.value) !== null && _b !== void 0 ? _b : {});
     }
     handleMalFormedXML(resolve) {
         var _a;

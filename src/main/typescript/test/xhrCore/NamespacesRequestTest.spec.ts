@@ -114,4 +114,40 @@ describe('Namespacing tests', function () {
         }
     })
 
+    it('must send the element identifiers properly encoded 2', function () {
+        let send = sinon.spy(XMLHttpRequest.prototype, "send");
+        try {
+            faces.ajax.request(document.getElementById("jd_0:input_2"), null, {
+                execute: "jd_0:input_1",
+                render: ":blarg jd_0:input2",
+                params: {
+                    pass1: "pass1",
+                    pass2: "pass2"
+                }
+            });
+
+            expect(send.called).to.be.true;
+            let argsVal: any = send.args[0][0];
+            let arsArr = argsVal.split("&");
+            let resultsMap = {};
+            for (let val of arsArr) {
+                let keyVal = val.split("=");
+                resultsMap[keyVal[0]] = keyVal[1];
+            }
+
+            expect(resultsMap["pass1"]).to.eq("pass1");
+            expect(resultsMap["pass2"]).to.eq("pass2");
+            expect(!!resultsMap["render"]).to.be.false;
+            expect(!!resultsMap["execute"]).to.be.false;
+            expect(P_WINDOW_ID in resultsMap).to.be.false;
+            expect(P_VIEWSTATE in resultsMap).to.be.true;
+            expect(resultsMap[P_PARTIAL_SOURCE]).to.eq(escape("jd_0:input_2"));
+            expect(resultsMap[P_AJAX]).to.eq("true");
+            expect(resultsMap[P_RENDER]).to.eq(escape("jd_0:blarg jd_0:input2"));
+            expect(resultsMap[P_EXECUTE]).to.eq(escape("jd_0:input_1 jd_0:input_2"));
+        } finally {
+            send.restore();
+        }
+    })
+
 });

@@ -4585,7 +4585,7 @@ var Implementation;
      */
     function assignRender(requestOptions, targetContext, issuingForm, sourceElementId) {
         if (requestOptions.getIf(Const_1.CTX_PARAM_RENDER).isPresent()) {
-            remapDefaultConstants(targetContext.getIf(Const_1.CTX_PARAM_REQ_PASS_THR).get({}), Const_1.P_RENDER, requestOptions.getIf(Const_1.CTX_PARAM_RENDER).value, issuingForm, sourceElementId);
+            remapDefaultConstants(targetContext.getIf(Const_1.CTX_PARAM_REQ_PASS_THR).get({}), Const_1.P_RENDER, requestOptions.getIf(Const_1.CTX_PARAM_RENDER).value, issuingForm, sourceElementId, targetContext.getIf(Const_1.VIEW_ID).value);
         }
     }
     /**
@@ -4607,7 +4607,7 @@ var Implementation;
              * the spec rev 2.0a however states, if none is issued nothing at all should be sent down
              */
             requestOptions.assign(Const_1.CTX_OPTIONS_EXECUTE).value = [requestOptions.getIf(Const_1.CTX_OPTIONS_EXECUTE).value, Const_1.IDENT_THIS].join(" ");
-            remapDefaultConstants(targetContext.getIf(Const_1.CTX_PARAM_REQ_PASS_THR).get({}), Const_1.P_EXECUTE, requestOptions.getIf(Const_1.CTX_OPTIONS_EXECUTE).value, issuingForm, sourceElementId);
+            remapDefaultConstants(targetContext.getIf(Const_1.CTX_PARAM_REQ_PASS_THR).get({}), Const_1.P_EXECUTE, requestOptions.getIf(Const_1.CTX_OPTIONS_EXECUTE).value, issuingForm, sourceElementId, targetContext.getIf(Const_1.VIEW_ID).value);
         }
         else {
             targetContext.assign(Const_1.CTX_PARAM_REQ_PASS_THR, Const_1.P_EXECUTE).value = sourceElementId;

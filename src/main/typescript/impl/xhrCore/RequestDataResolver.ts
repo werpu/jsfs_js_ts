@@ -17,8 +17,8 @@
 import {AssocArrayCollector, Config, DomQuery, DQ, Stream} from "mona-dish";
 import {
     $nsp,
-    CTX_PARAM_DELAY,
-    CTX_PARAM_TIMEOUT,
+    CTX_OPTIONS_DELAY,
+    CTX_OPTIONS_TIMEOUT,
     EMPTY_FUNC,
     EMPTY_STR,
     ENCODED_URL,
@@ -93,7 +93,7 @@ export function resolveViewId(form: DQ): string {
 
 export function resolveTimeout(options: Config): number {
     let getCfg = ExtLang.getLocalOrGlobalConfig;
-    return options.getIf(CTX_PARAM_TIMEOUT).value ?? getCfg(options.value, CTX_PARAM_TIMEOUT, 0);
+    return options.getIf(CTX_OPTIONS_TIMEOUT).value ?? getCfg(options.value, CTX_OPTIONS_TIMEOUT, 0);
 }
 
 /**
@@ -105,7 +105,7 @@ export function resolveDelay(options: Config): number {
     let getCfg = ExtLang.getLocalOrGlobalConfig;
 
     // null or non undefined will automatically be mapped to 0 aka no delay
-    let ret = options.getIf(CTX_PARAM_DELAY).value ?? getCfg(options.value, CTX_PARAM_DELAY, 0);
+    let ret = options.getIf(CTX_OPTIONS_DELAY).value ?? getCfg(options.value, CTX_OPTIONS_DELAY, 0);
     // if delay === none, no delay must be used, aka delay 0
     if('none' === ret) {
         ret = 0;

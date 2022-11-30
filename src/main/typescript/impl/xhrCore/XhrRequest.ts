@@ -27,7 +27,7 @@ import {
     COMPLETE,
     CONTENT_TYPE,
     CTX_PARAM_MF_INTERNAL,
-    CTX_PARAM_PASS_THR,
+    CTX_PARAM_REQ_PASS_THR,
     ERROR,
     HEAD_FACES_REQ,
     MALFORMEDXML,
@@ -111,7 +111,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         let xhrObject = this.xhrObject;
 
         let executesArr = () => {
-            return this.requestContext.getIf(CTX_PARAM_PASS_THR, P_EXECUTE).get("none").value.split(/\s+/gi);
+            return this.requestContext.getIf(CTX_PARAM_REQ_PASS_THR, P_EXECUTE).get("none").value.split(/\s+/gi);
         };
         try {
 
@@ -132,14 +132,14 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
 
             // next step the pass through parameters are merged in for post params
             let requestContext = this.requestContext;
-            let passThroughParams = requestContext.getIf(CTX_PARAM_PASS_THR);
+            let requestPassThroughParams = requestContext.getIf(CTX_PARAM_REQ_PASS_THR);
 
             // this is an extension where we allow pass through parameters to be sent down additionally
             // this can be used and is used in the impl to enrich the post request parameters with additional
             // information
-            formData.shallowMerge(passThroughParams, true, true);
+            formData.shallowMerge(requestPassThroughParams, true, true);
 
-            this.responseContext = passThroughParams.deepCopy;
+            this.responseContext = requestPassThroughParams.deepCopy;
 
             // we have to shift the internal passthroughs around to build up our response context
             let responseContext = this.responseContext;

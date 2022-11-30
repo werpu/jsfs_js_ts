@@ -27,11 +27,10 @@ import {EventData} from "./xhrCore/EventData";
 import {ExtLang} from "./util/Lang";
 
 import {
-    CTX_PARAM_EXECUTE,
-    CTX_PARAM_PASS_THR,
+    CTX_OPTIONS_EXECUTE,
+    CTX_PARAM_REQ_PASS_THR,
     CTX_PARAM_SRC_CTL_ID,
     CTX_PARAM_SRC_FRM_ID,
-    CTX_PARAM_TR_TYPE,
     IDENT_ALL,
     IDENT_FORM,
     IDENT_NONE,
@@ -50,7 +49,7 @@ import {
     CTX_PARAM_RENDER,
     REQ_TYPE_POST,
     SOURCE,
-    TAG_FORM, CTX_PARAM_SPEC_PARAMS, VIEW_ID
+    HTML_TAG_FORM, CTX_OPTIONS_PARAMS, VIEW_ID
 } from "./core/Const";
 import {
     resolveDefaults,
@@ -271,12 +270,12 @@ export module Implementation {
         requestCtx.assignIf(!!windowId, P_WINDOW_ID).value = windowId;
 
         // old non spec behavior will be removed after it is clear whether the removal breaks any code
-        requestCtx.assign(CTX_PARAM_PASS_THR).value = filterPassThroughValues(options.value);
+        requestCtx.assign(CTX_PARAM_REQ_PASS_THR).value = filterPassThroughValues(options.value);
 
         // spec conform behavior, all passthrough params must be under "passthrough
-        const params = remapArrayToAssocArr(options.getIf(CTX_PARAM_SPEC_PARAMS).orElse({}).value);
-        requestCtx.getIf(CTX_PARAM_PASS_THR).shallowMerge(new Config(params), true);
-        requestCtx.assignIf(!!resolvedEvent, CTX_PARAM_PASS_THR, P_EVT).value = resolvedEvent?.type;
+        const params = remapArrayToAssocArr(options.getIf(CTX_OPTIONS_PARAMS).orElse({}).value);
+        requestCtx.getIf(CTX_PARAM_REQ_PASS_THR).shallowMerge(new Config(params), true);
+        requestCtx.assignIf(!!resolvedEvent, CTX_PARAM_REQ_PASS_THR, P_EVT).value = resolvedEvent?.type;
 
         /**
          * ajax pass through context with the source
@@ -302,12 +301,12 @@ export module Implementation {
         /**
          * binding contract the jakarta.faces.source must be set
          */
-        requestCtx.assign(CTX_PARAM_PASS_THR, P_PARTIAL_SOURCE).value = elementId;
+        requestCtx.assign(CTX_PARAM_REQ_PASS_THR, P_PARTIAL_SOURCE).value = elementId;
 
         /**
          * jakarta.faces.partial.ajax must be set to true
          */
-        requestCtx.assign(CTX_PARAM_PASS_THR, P_AJAX).value = true;
+        requestCtx.assign(CTX_PARAM_REQ_PASS_THR, P_AJAX).value = true;
 
         /**
          * if resetValues is set to true
@@ -316,7 +315,7 @@ export module Implementation {
          * the value has to be explicitly true, according to
          * the specs jsdoc
          */
-        requestCtx.assignIf(isResetValues, CTX_PARAM_PASS_THR, P_RESET_VALUES).value = true;
+        requestCtx.assignIf(isResetValues, CTX_PARAM_REQ_PASS_THR, P_RESET_VALUES).value = true;
 
         // additional meta information to speed things up, note internal non jsf
         // pass through options are stored under _mfInternal in the context
@@ -327,9 +326,8 @@ export module Implementation {
         // mojarra under blackbox conditions.
         // I assume it does the same as our formId_submit=1 so leaving it out
         // won't hurt but for the sake of compatibility we are going to add it
-        requestCtx.assign(CTX_PARAM_PASS_THR, formId).value = formId;
+        requestCtx.assign(CTX_PARAM_REQ_PASS_THR, formId).value = formId;
         internalCtx.assign(CTX_PARAM_SRC_CTL_ID).value = elementId;
-        internalCtx.assign(CTX_PARAM_TR_TYPE).value = REQ_TYPE_POST;
 
         assignClientWindowId(form, requestCtx);
         assignExecute(options, requestCtx, form, elementId);
@@ -515,7 +513,7 @@ export module Implementation {
          */
 
         let element: DQ = DQ.byId(form, true);
-        if (!element.isTag(TAG_FORM)) {
+        if (!element.isTag(HTML_TAG_FORM)) {
             throw new Error(getMessage("ERR_VIEWSTATE"));
         }
 
@@ -556,7 +554,7 @@ export module Implementation {
      */
     function assignRender(requestOptions: Config, targetContext: Config, issuingForm: DQ, sourceElementId: string) {
         if (requestOptions.getIf(CTX_PARAM_RENDER).isPresent()) {
-            remapDefaultConstants(targetContext.getIf(CTX_PARAM_PASS_THR).get({}), P_RENDER, <string>requestOptions.getIf(CTX_PARAM_RENDER).value, issuingForm, <any>sourceElementId);
+            remapDefaultConstants(targetContext.getIf(CTX_PARAM_REQ_PASS_THR).get({}), P_RENDER, <string>requestOptions.getIf(CTX_PARAM_RENDER).value, issuingForm, <any>sourceElementId);
         }
     }
 
@@ -574,15 +572,15 @@ export module Implementation {
      */
     function assignExecute(requestOptions: Config, targetContext: Config, issuingForm: DQ, sourceElementId: string) {
 
-        if (requestOptions.getIf(CTX_PARAM_EXECUTE).isPresent()) {
+        if (requestOptions.getIf(CTX_OPTIONS_EXECUTE).isPresent()) {
             /*the options must be a blank delimited list of strings*/
             /*compliance with Mojarra which automatically adds @this to an execute
              * the spec rev 2.0a however states, if none is issued nothing at all should be sent down
              */
-            requestOptions.assign(CTX_PARAM_EXECUTE).value = [requestOptions.getIf(CTX_PARAM_EXECUTE).value, IDENT_THIS].join(" ");
-            remapDefaultConstants(targetContext.getIf(CTX_PARAM_PASS_THR).get({}), P_EXECUTE, <string>requestOptions.getIf(CTX_PARAM_EXECUTE).value, issuingForm, <any>sourceElementId);
+            requestOptions.assign(CTX_OPTIONS_EXECUTE).value = [requestOptions.getIf(CTX_OPTIONS_EXECUTE).value, IDENT_THIS].join(" ");
+            remapDefaultConstants(targetContext.getIf(CTX_PARAM_REQ_PASS_THR).get({}), P_EXECUTE, <string>requestOptions.getIf(CTX_OPTIONS_EXECUTE).value, issuingForm, <any>sourceElementId);
         } else {
-            targetContext.assign(CTX_PARAM_PASS_THR, P_EXECUTE).value = sourceElementId;
+            targetContext.assign(CTX_PARAM_REQ_PASS_THR, P_EXECUTE).value = sourceElementId;
         }
     }
 
@@ -596,7 +594,7 @@ export module Implementation {
 
         let clientWindow = (window?.faces ?? window?.jsf).getClientWindow(form.getAsElem(0).value);
         if (clientWindow) {
-            targetContext.assign(CTX_PARAM_PASS_THR, P_CLIENT_WINDOW).value = clientWindow;
+            targetContext.assign(CTX_PARAM_REQ_PASS_THR, P_CLIENT_WINDOW).value = clientWindow;
         }
     }
 

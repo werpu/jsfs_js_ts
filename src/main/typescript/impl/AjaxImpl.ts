@@ -48,7 +48,7 @@ import {
     P_WINDOW_ID,
     CTX_PARAM_RENDER,
     SOURCE,
-    HTML_TAG_FORM, CTX_OPTIONS_PARAMS, VIEW_ID, $faces
+    HTML_TAG_FORM, CTX_OPTIONS_PARAMS, VIEW_ID, $faces, EMPTY_STR
 } from "./core/Const";
 import {
     resolveDefaults,
@@ -600,7 +600,7 @@ export module Implementation {
     /**
      * transforms the user values to the expected one
      * with the proper none all form and this handling
-     * (note we also could use a simple string replace but then
+     * (note we also could use a simple string replace, but then
      * we would have had double entries under some circumstances)
      *
      * there are several standardized constants which need a special treatment
@@ -611,23 +611,53 @@ export module Implementation {
      * @param userValues the passed user values (aka input string which needs to be transformed)
      * @param issuingForm the form where the issuing element originates
      * @param issuingElementId the issuing element
-     * @param viewId the naming container id ("" default if none is given)
+     * @param rootNamingContainerId the naming container id ("" default if none is given)
      */
-    function remapDefaultConstants(targetConfig: Config, targetKey: string, userValues: string, issuingForm: DQ, issuingElementId: string, viewId: string = ""): Config {
+    function remapDefaultConstants(targetConfig: Config, targetKey: string, userValues: string, issuingForm: DQ, issuingElementId: string, rootNamingContainerId: string = ""): Config {
         //a cleaner implementation of the transform list method
         const SEP = $faces().separatorchar;
         let iterValues: string[] = (userValues) ? trim(userValues).split(/\s+/gi) : [];
         let ret = [];
         let processed: {[key: string]: boolean} = {};
 
-        //TODO check if this is right
-        const remapNamingContainer = item => {
-            if(item.indexOf(SEP) === 0 && viewId !== "") {
-                item = [viewId, SEP, item.substring(1)].join("");
-            } else if(item.indexOf(SEP) === 0) {
-                item = item.substring(1);
+        /**
+         * remaps the client ids for the portlet case so that the server
+         * can deal with them either prefixed ir not
+         * also resolves the absolute id case (it was assumed the server does this, but
+         * apparently the RI does not, so we have to follow the RI behavior here)
+         * @param componentIdToTransform the componentId which needs post processing
+         */
+        const remapNamingContainer = componentIdToTransform => {
+            // pattern :<anything> must be prepended by viewRoot if there is one,
+            // otherwise we are in a not namespaced then only the id has to match
+            const rootNamingContainerPrefix = (rootNamingContainerId.length) ? rootNamingContainerId+SEP : EMPTY_STR;
+            let formClientId = issuingForm.id.value;
+            // nearest parent naming container relative to the form
+            const nearestNamingContainer = formClientId.substring(0, formClientId.lastIndexOf(SEP));
+            const nearestNamingContainerPrefix = (nearestNamingContainer.length) ? nearestNamingContainer + SEP : EMPTY_STR;
+            // Absolute search expressions, always start with SEP or the name of the root naming container
+            const hasLeadingSep = componentIdToTransform.indexOf(SEP) === 0;
+            const isAbsolutSearchExpr = hasLeadingSep || (rootNamingContainerId.length
+                && componentIdToTransform.indexOf(rootNamingContainerPrefix) == 0);
+
+            if (isAbsolutSearchExpr) {
+                //we cut off the leading sep if there is one
+                componentIdToTransform = hasLeadingSep ? componentIdToTransform.substring(1) : componentIdToTransform;
+                componentIdToTransform = componentIdToTransform.indexOf(rootNamingContainerPrefix) == 0 ? componentIdToTransform.substring(rootNamingContainerPrefix.length) : componentIdToTransform;
+                //now we prepend either the prefix or "" from the cut-off string to get the final result
+                return  [rootNamingContainerPrefix, componentIdToTransform].join(EMPTY_STR);
+            } else { //relative search according to the javadoc
+                //we cut off the root naming container id from the form
+                if (formClientId.indexOf(rootNamingContainerPrefix) == 0) {
+                    formClientId = formClientId.substring(rootNamingContainerPrefix.length);
+                }
+
+                //If prependId = true, the outer form id must be present in the id if same form
+                let hasPrependId = componentIdToTransform.indexOf(formClientId) == 0;
+                return hasPrependId ?
+                    [rootNamingContainerPrefix, componentIdToTransform].join(EMPTY_STR) :
+                    [nearestNamingContainerPrefix,  componentIdToTransform.substring(componentIdToTransform.lastIndexOf(SEP) + 1)].join(EMPTY_STR);
             }
-            return item;
         };
 
         // in this case we do not use lazy stream because it wont bring any code reduction

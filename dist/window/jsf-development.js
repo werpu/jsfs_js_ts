@@ -4684,7 +4684,7 @@ var Implementation;
                 let hasPrependId = componentIdToTransform.indexOf(formClientId) == 0;
                 return hasPrependId ?
                     [rootNamingContainerPrefix, componentIdToTransform].join(Const_1.EMPTY_STR) :
-                    [nearestNamingContainerPrefix, componentIdToTransform.substring(componentIdToTransform.lastIndexOf(SEP) + 1)].join(Const_1.EMPTY_STR);
+                    [nearestNamingContainerPrefix, componentIdToTransform].join(Const_1.EMPTY_STR);
             }
         };
         // in this case we do not use lazy stream because it wont bring any code reduction
@@ -6427,10 +6427,10 @@ function resolveViewId(form) {
     const viewState = form.querySelectorAll(`input[type='hidden'][name*='${(0, Const_1.$nsp)(Const_1.P_VIEWSTATE)}']`).id.orElse("").value;
     const divider = (0, Const_1.$faces)().separatorchar;
     const viewId = viewState.split(divider, 2)[0];
-    if (viewId.indexOf((0, Const_1.$nsp)(Const_1.P_VIEWSTATE)) === -1) {
-        return viewId;
-    }
-    return "";
+    const viewStateViewId = viewId.indexOf((0, Const_1.$nsp)(Const_1.P_VIEWSTATE)) === -1 ? viewId : "";
+    // myfaces specific, we in non portlet environments prepend the viewId
+    // even without being in a naming container, the other components ignore that
+    return form.id.value.indexOf(viewStateViewId) === 0 ? viewStateViewId : "";
 }
 exports.resolveViewId = resolveViewId;
 function resolveTimeout(options) {

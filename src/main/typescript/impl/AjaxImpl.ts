@@ -655,7 +655,7 @@ export module Implementation {
                 let hasPrependId = componentIdToTransform.indexOf(formClientId) == 0;
                 return hasPrependId ?
                     [rootNamingContainerPrefix, componentIdToTransform].join(EMPTY_STR) :
-                    [nearestNamingContainerPrefix,  componentIdToTransform.substring(componentIdToTransform.lastIndexOf(SEP) + 1)].join(EMPTY_STR);
+                    [nearestNamingContainerPrefix,  componentIdToTransform].join(EMPTY_STR);
             }
         };
 

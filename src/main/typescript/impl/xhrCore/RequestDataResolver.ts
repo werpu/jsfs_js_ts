@@ -83,10 +83,10 @@ export function resolveViewId(form: DQ): string {
     const viewState = form.querySelectorAll(`input[type='hidden'][name*='${$nsp(P_VIEWSTATE)}']`).id.orElse("").value;
     const divider = $faces().separatorchar;
     const viewId = viewState.split(divider, 2)[0];
-    if(viewId.indexOf($nsp(P_VIEWSTATE)) === -1) {
-        return viewId;
-    }
-    return "";
+    const viewStateViewId = viewId.indexOf($nsp(P_VIEWSTATE)) === -1 ? viewId : "";
+    // myfaces specific, we in non portlet environments prepend the viewId
+    // even without being in a naming container, the other components ignore that
+    return form.id.value.indexOf(viewStateViewId) === 0 ? viewStateViewId : "";
 }
 
 export function resolveTimeout(options: Config): number {

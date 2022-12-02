@@ -657,7 +657,8 @@ describe('Tests of the various aspects of the response protocol functionality', 
         });
 
         this.respond(RESPONSE_1);
-        expect(DQ$("#form1 [name='jakarta.faces.ViewState']").val).to.eq("beforeUpdate");
+        // all forms in execute and render must receive the latest viewstate
+        expect(DQ$("#form1 [name='jakarta.faces.ViewState']").val).to.eq("booga_after_update");
         expect(DQ$("#form2 [name='jakarta.faces.ViewState']").val).to.eq("booga_after_update");
         expect(DQ$("#form2 [name='jakarta.faces.ViewState']").val).to.eq("booga_after_update");
         done();

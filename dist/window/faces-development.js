@@ -4311,7 +4311,9 @@ var Implementation;
      */
     function request(el, event, opts) {
         var _a, _b, _c;
-        const { resolvedEvent, options, elem, elementId, requestCtx, internalCtx, windowId, isResetValues } = (0, RequestDataResolver_1.resolveDefaults)(event, opts, el);
+        const { options, elem, elementId, windowId, isResetValues } = (0, RequestDataResolver_1.resolveDefaults)(event, opts, el);
+        const requestCtx = new ExtDomQuery_1.ExtConfig({});
+        const internalCtx = new ExtDomQuery_1.ExtConfig({});
         Assertions_1.Assertions.assertRequestIntegrity(options, elem);
         /**
          * fetch the parent form
@@ -4320,18 +4322,18 @@ var Implementation;
          * so that people can use dummy forms and work
          * with detached objects
          */
-        const form = (0, RequestDataResolver_1.resolveForm)(requestCtx, elem, resolvedEvent);
+        const form = (0, RequestDataResolver_1.resolveForm)(elem, event);
         const viewId = (0, RequestDataResolver_1.resolveViewId)(form);
         const formId = form.id.value;
         const delay = (0, RequestDataResolver_1.resolveDelay)(options);
         const timeout = (0, RequestDataResolver_1.resolveTimeout)(options);
         requestCtx.assignIf(!!windowId, Const_1.P_WINDOW_ID).value = windowId;
         // old non spec behavior will be removed after it is clear whether the removal breaks any code
-        requestCtx.assign(Const_1.CTX_PARAM_REQ_PASS_THR).value = filterPassThroughValues(options.value);
+        requestCtx.assign(Const_1.CTX_PARAM_REQ_PASS_THR).value = extractLegacyParams(options.value);
         // spec conform behavior, all passthrough params must be under "passthrough
         const params = remapArrayToAssocArr(options.getIf(Const_1.CTX_OPTIONS_PARAMS).orElse({}).value);
         requestCtx.getIf(Const_1.CTX_PARAM_REQ_PASS_THR).shallowMerge(new mona_dish_1.Config(params), true);
-        requestCtx.assignIf(!!resolvedEvent, Const_1.CTX_PARAM_REQ_PASS_THR, Const_1.P_EVT).value = resolvedEvent === null || resolvedEvent === void 0 ? void 0 : resolvedEvent.type;
+        requestCtx.assignIf(!!event, Const_1.CTX_PARAM_REQ_PASS_THR, Const_1.P_EVT).value = event === null || event === void 0 ? void 0 : event.type;
         /**
          * ajax pass through context with the source
          * onresolved Event and onerror Event
@@ -4628,7 +4630,7 @@ var Implementation;
     /**
      * transforms the user values to the expected one
      * with the proper none all form and this handling
-     * (note we also could use a simple string replace but then
+     * (note we also could use a simple string replace, but then
      * we would have had double entries under some circumstances)
      *
      * there are several standardized constants which need a special treatment
@@ -4639,23 +4641,51 @@ var Implementation;
      * @param userValues the passed user values (aka input string which needs to be transformed)
      * @param issuingForm the form where the issuing element originates
      * @param issuingElementId the issuing element
-     * @param viewId the naming container id ("" default if none is given)
+     * @param rootNamingContainerId the naming container id ("" default if none is given)
      */
-    function remapDefaultConstants(targetConfig, targetKey, userValues, issuingForm, issuingElementId, viewId = "") {
+    function remapDefaultConstants(targetConfig, targetKey, userValues, issuingForm, issuingElementId, rootNamingContainerId = "") {
         //a cleaner implementation of the transform list method
         const SEP = (0, Const_1.$faces)().separatorchar;
         let iterValues = (userValues) ? trim(userValues).split(/\s+/gi) : [];
         let ret = [];
         let processed = {};
-        //TODO check if this is right
-        const remapNamingContainer = item => {
-            if (item.indexOf(SEP) === 0 && viewId !== "") {
-                item = [viewId, SEP, item.substring(1)].join("");
+        /**
+         * remaps the client ids for the portlet case so that the server
+         * can deal with them either prefixed ir not
+         * also resolves the absolute id case (it was assumed the server does this, but
+         * apparently the RI does not, so we have to follow the RI behavior here)
+         * @param componentIdToTransform the componentId which needs post processing
+         */
+        const remapNamingContainer = componentIdToTransform => {
+            // pattern :<anything> must be prepended by viewRoot if there is one,
+            // otherwise we are in a not namespaced then only the id has to match
+            const rootNamingContainerPrefix = (rootNamingContainerId.length) ? rootNamingContainerId + SEP : Const_1.EMPTY_STR;
+            let formClientId = issuingForm.id.value;
+            // nearest parent naming container relative to the form
+            const nearestNamingContainer = formClientId.substring(0, formClientId.lastIndexOf(SEP));
+            const nearestNamingContainerPrefix = (nearestNamingContainer.length) ? nearestNamingContainer + SEP : Const_1.EMPTY_STR;
+            // Absolute search expressions, always start with SEP or the name of the root naming container
+            const hasLeadingSep = componentIdToTransform.indexOf(SEP) === 0;
+            const isAbsolutSearchExpr = hasLeadingSep || (rootNamingContainerId.length
+                && componentIdToTransform.indexOf(rootNamingContainerPrefix) == 0);
+            if (isAbsolutSearchExpr) {
+                //we cut off the leading sep if there is one
+                componentIdToTransform = hasLeadingSep ? componentIdToTransform.substring(1) : componentIdToTransform;
+                componentIdToTransform = componentIdToTransform.indexOf(rootNamingContainerPrefix) == 0 ? componentIdToTransform.substring(rootNamingContainerPrefix.length) : componentIdToTransform;
+                //now we prepend either the prefix or "" from the cut-off string to get the final result
+                return [rootNamingContainerPrefix, componentIdToTransform].join(Const_1.EMPTY_STR);
             }
-            else if (item.indexOf(SEP) === 0) {
-                item = item.substring(1);
+            else { //relative search according to the javadoc
+                //we cut off the root naming container id from the form
+                if (formClientId.indexOf(rootNamingContainerPrefix) == 0) {
+                    formClientId = formClientId.substring(rootNamingContainerPrefix.length);
+                }
+                //If prependId = true, the outer form id must be present in the id if same form
+                let hasPrependId = componentIdToTransform.indexOf(formClientId) == 0;
+                return hasPrependId ?
+                    [rootNamingContainerPrefix, componentIdToTransform].join(Const_1.EMPTY_STR) :
+                    [nearestNamingContainerPrefix, componentIdToTransform.substring(componentIdToTransform.lastIndexOf(SEP) + 1)].join(Const_1.EMPTY_STR);
             }
-            return item;
         };
         // in this case we do not use lazy stream because it wont bring any code reduction
         // or speedup
@@ -4694,17 +4724,17 @@ var Implementation;
     }
     /**
      * Filter the options given with a blacklist, so that only
-     * the values required for pass-through are processed in the ajax request
+     * the values required for params-through are processed in the ajax request
      *
      * Note this is a bug carried over from the old implementation
      * the spec conform behavior is to use params for passthrough values
-     * this will be removed soon, after it is cleared up wheter removing
+     * this will be removed soon, after it is cleared up whether removing
      * it breaks any legacy code
      *
      * @param {Context} mappedOpts the options to be filtered
      * @deprecated
      */
-    function filterPassThroughValues(mappedOpts) {
+    function extractLegacyParams(mappedOpts) {
         //we now can use the full code reduction given by our stream api
         //to filter
         return mona_dish_1.Stream.ofAssoc(mappedOpts)
@@ -5041,9 +5071,9 @@ var PushImpl;
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.CTX_OPTIONS_TIMEOUT = exports.CTX_OPTIONS_DELAY = exports.CTX_OPTIONS_PARAMS = exports.TIMEOUT_EVENT = exports.CLIENT_ERROR = exports.SERVER_ERROR = exports.MALFORMEDXML = exports.EMPTY_RESPONSE = exports.HTTPERROR = exports.RESPONSE_XML = exports.RESPONSE_TEXT = exports.ERROR_MESSAGE = exports.ERROR_NAME = exports.STATUS = exports.SOURCE = exports.SUCCESS = exports.COMPLETE = exports.BEGIN = exports.ON_EVENT = exports.ON_ERROR = exports.EVENT = exports.ERROR = exports.WINDOW_ID = exports.CTX_PARAM_RENDER = exports.P_BEHAVIOR_EVENT = exports.P_WINDOW_ID = exports.P_RESET_VALUES = exports.P_EVT = exports.P_RENDER_OVERRIDE = exports.P_RENDER = exports.P_EXECUTE = exports.P_AJAX = exports.IDENT_FORM = exports.IDENT_THIS = exports.IDENT_NONE = exports.IDENT_ALL = exports.HTML_CLIENT_WINDOW = exports.HTML_VIEWSTATE = exports.EMPTY_MAP = exports.EMPTY_STR = exports.EMPTY_FUNC = exports.P_RESOURCE = exports.P_VIEWBODY = exports.P_VIEWHEAD = exports.P_VIEWROOT = exports.P_CLIENT_WINDOW = exports.P_VIEWSTATE = exports.VIEW_ID = exports.PARTIAL_ID = exports.P_PARTIAL_SOURCE = void 0;
-exports.UPDATE_ELEMS = exports.UPDATE_FORMS = exports.XML_TAG_ATTR = exports.XML_TAG_AFTER = exports.XML_TAG_BEFORE = exports.XML_TAG_REDIRECT = exports.XML_TAG_EXTENSION = exports.XML_TAG_ATTRIBUTES = exports.XML_TAG_ERROR = exports.XML_TAG_EVAL = exports.XML_TAG_INSERT = exports.XML_TAG_DELETE = exports.XML_TAG_UPDATE = exports.XML_TAG_CHANGES = exports.XML_TAG_PARTIAL_RESP = exports.ATTR_ID = exports.ATTR_VALUE = exports.ATTR_NAME = exports.ATTR_URL = exports.ERR_NO_PARTIAL_RESPONSE = exports.PHASE_PROCESS_RESPONSE = exports.SEL_RESPONSE_XML = exports.SEL_CLIENT_WINDOW_ELEM = exports.SEL_VIEWSTATE_ELEM = exports.HTML_TAG_STYLE = exports.HTML_TAG_SCRIPT = exports.HTML_TAG_LINK = exports.HTML_TAG_BODY = exports.HTML_TAG_FORM = exports.HTML_TAG_HEAD = exports.STD_ACCEPT = exports.NO_TIMEOUT = exports.MULTIPART = exports.URL_ENCODED = exports.STATE_EVT_COMPLETE = exports.STATE_EVT_TIMEOUT = exports.STATE_EVT_BEGIN = exports.REQ_TYPE_POST = exports.REQ_TYPE_GET = exports.ENCODED_URL = exports.VAL_AJAX = exports.REQ_ACCEPT = exports.HEAD_FACES_REQ = exports.CONTENT_TYPE = exports.CTX_PARAM_REQ_PASS_THR = exports.CTX_PARAM_SRC_CTL_ID = exports.CTX_PARAM_SRC_FRM_ID = exports.CTX_PARAM_MF_INTERNAL = exports.CTX_OPTIONS_EXECUTE = exports.CTX_OPTIONS_RESET = void 0;
-exports.$nsp = exports.$faces = exports.UNKNOWN = exports.MAX_RECONNECT_ATTEMPTS = exports.RECONNECT_INTERVAL = exports.APPLIED_CLIENT_WINDOW = exports.APPLIED_VST = exports.REASON_EXPIRED = exports.MF_NONE = exports.MYFACES = exports.DEFERRED_HEAD_INSERTS = void 0;
+exports.DELAY_NONE = exports.CTX_OPTIONS_DELAY = exports.CTX_OPTIONS_PARAMS = exports.TIMEOUT_EVENT = exports.CLIENT_ERROR = exports.SERVER_ERROR = exports.MALFORMEDXML = exports.EMPTY_RESPONSE = exports.HTTPERROR = exports.RESPONSE_XML = exports.RESPONSE_TEXT = exports.ERROR_MESSAGE = exports.ERROR_NAME = exports.STATUS = exports.SOURCE = exports.SUCCESS = exports.COMPLETE = exports.BEGIN = exports.ON_EVENT = exports.ON_ERROR = exports.EVENT = exports.ERROR = exports.WINDOW_ID = exports.CTX_PARAM_RENDER = exports.P_BEHAVIOR_EVENT = exports.P_WINDOW_ID = exports.P_RESET_VALUES = exports.P_EVT = exports.P_RENDER_OVERRIDE = exports.P_RENDER = exports.P_EXECUTE = exports.P_AJAX = exports.IDENT_FORM = exports.IDENT_THIS = exports.IDENT_NONE = exports.IDENT_ALL = exports.HTML_CLIENT_WINDOW = exports.HTML_VIEWSTATE = exports.EMPTY_MAP = exports.EMPTY_STR = exports.EMPTY_FUNC = exports.P_RESOURCE = exports.P_VIEWBODY = exports.P_VIEWHEAD = exports.P_VIEWROOT = exports.P_CLIENT_WINDOW = exports.P_VIEWSTATE = exports.VIEW_ID = exports.PARTIAL_ID = exports.P_PARTIAL_SOURCE = void 0;
+exports.UPDATE_FORMS = exports.XML_TAG_ATTR = exports.XML_TAG_AFTER = exports.XML_TAG_BEFORE = exports.XML_TAG_REDIRECT = exports.XML_TAG_EXTENSION = exports.XML_TAG_ATTRIBUTES = exports.XML_TAG_ERROR = exports.XML_TAG_EVAL = exports.XML_TAG_INSERT = exports.XML_TAG_DELETE = exports.XML_TAG_UPDATE = exports.XML_TAG_CHANGES = exports.XML_TAG_PARTIAL_RESP = exports.ATTR_ID = exports.ATTR_VALUE = exports.ATTR_NAME = exports.ATTR_URL = exports.ERR_NO_PARTIAL_RESPONSE = exports.PHASE_PROCESS_RESPONSE = exports.SEL_RESPONSE_XML = exports.SEL_CLIENT_WINDOW_ELEM = exports.SEL_VIEWSTATE_ELEM = exports.HTML_TAG_STYLE = exports.HTML_TAG_SCRIPT = exports.HTML_TAG_LINK = exports.HTML_TAG_BODY = exports.HTML_TAG_FORM = exports.HTML_TAG_HEAD = exports.STD_ACCEPT = exports.NO_TIMEOUT = exports.MULTIPART = exports.URL_ENCODED = exports.STATE_EVT_COMPLETE = exports.STATE_EVT_TIMEOUT = exports.STATE_EVT_BEGIN = exports.REQ_TYPE_POST = exports.REQ_TYPE_GET = exports.ENCODED_URL = exports.VAL_AJAX = exports.REQ_ACCEPT = exports.HEAD_FACES_REQ = exports.CONTENT_TYPE = exports.CTX_PARAM_REQ_PASS_THR = exports.CTX_PARAM_SRC_CTL_ID = exports.CTX_PARAM_SRC_FRM_ID = exports.CTX_PARAM_MF_INTERNAL = exports.CTX_OPTIONS_EXECUTE = exports.CTX_OPTIONS_RESET = exports.CTX_OPTIONS_TIMEOUT = void 0;
+exports.$nsp = exports.$faces = exports.UNKNOWN = exports.MAX_RECONNECT_ATTEMPTS = exports.RECONNECT_INTERVAL = exports.APPLIED_CLIENT_WINDOW = exports.APPLIED_VST = exports.REASON_EXPIRED = exports.MF_NONE = exports.MYFACES = exports.DEFERRED_HEAD_INSERTS = exports.UPDATE_ELEMS = void 0;
 /*
  * [export const] constants
  */
@@ -5103,6 +5133,7 @@ exports.CLIENT_ERROR = "clientError";
 exports.TIMEOUT_EVENT = "timeout";
 exports.CTX_OPTIONS_PARAMS = "params";
 exports.CTX_OPTIONS_DELAY = "delay";
+exports.DELAY_NONE = 'none';
 exports.CTX_OPTIONS_TIMEOUT = "timeout";
 exports.CTX_OPTIONS_RESET = "resetValues";
 exports.CTX_OPTIONS_EXECUTE = "execute";
@@ -6385,22 +6416,17 @@ exports.resolveFinalUrl = resolveFinalUrl;
  * it is either the id or the parent form of the element or an embedded form
  * of the element
  *
- * @param requestCtx
  * @param elem
  * @param event
  */
-function resolveForm(requestCtx, elem, event) {
-    var _a, _b, _c;
-    const configId = (_c = (_b = (_a = requestCtx.value) === null || _a === void 0 ? void 0 : _a.myfaces) === null || _b === void 0 ? void 0 : _b.form) !== null && _c !== void 0 ? _c : Const_1.MF_NONE;
-    return mona_dish_1.DQ
-        .byId(configId, true)
-        .orElseLazy(() => Lang_1.ExtLang.getForm(elem.getAsElem(0).value, event));
+function resolveForm(elem, event) {
+    return Lang_1.ExtLang.getForm(elem.getAsElem(0).value, event);
 }
 exports.resolveForm = resolveForm;
 function resolveViewId(form) {
-    let viewState = form.querySelectorAll(`input[type='hidden'][name*='${(0, Const_1.$nsp)(Const_1.P_VIEWSTATE)}']`).id.orElse("").value;
-    let divider = (0, Const_1.$faces)().separatorchar;
-    let viewId = viewState.split(divider, 2)[0];
+    const viewState = form.querySelectorAll(`input[type='hidden'][name*='${(0, Const_1.$nsp)(Const_1.P_VIEWSTATE)}']`).id.orElse("").value;
+    const divider = (0, Const_1.$faces)().separatorchar;
+    const viewId = viewState.split(divider, 2)[0];
     if (viewId.indexOf((0, Const_1.$nsp)(Const_1.P_VIEWSTATE)) === -1) {
         return viewId;
     }
@@ -6419,14 +6445,12 @@ exports.resolveTimeout = resolveTimeout;
  * @param options ... the options object, in most cases it will host the delay value
  */
 function resolveDelay(options) {
-    var _a;
-    let getCfg = Lang_1.ExtLang.getLocalOrGlobalConfig;
-    // null or non undefined will automatically be mapped to 0 aka no delay
-    let ret = (_a = options.getIf(Const_1.CTX_OPTIONS_DELAY).value) !== null && _a !== void 0 ? _a : getCfg(options.value, Const_1.CTX_OPTIONS_DELAY, 0);
+    // null, 'none', or undefined will automatically be mapped to 0 aka no delay
+    // the config delay will be dropped not needed anymore, it does not really
+    // make sense anymore now that it is part of a local spec
+    let ret = options.getIf(Const_1.CTX_OPTIONS_DELAY).orElse(0).value;
     // if delay === none, no delay must be used, aka delay 0
-    if ('none' === ret) {
-        ret = 0;
-    }
+    ret = (Const_1.DELAY_NONE === ret) ? 0 : ret;
     // negative, or invalid values will automatically get a js exception
     Assertions_1.Assertions.assertDelay(ret);
     return ret;
@@ -6481,8 +6505,15 @@ exports.getEventTarget = getEventTarget;
 function resolveDefaults(event, opts, el = null) {
     var _a;
     //deep copy the options, so that further transformations to not backfire into the callers
-    const resolvedEvent = event, options = new ExtDomQuery_1.ExtConfig(opts).deepCopy, elem = mona_dish_1.DQ.byId(el || resolvedEvent.target, true), elementId = elem.id.value, requestCtx = new ExtDomQuery_1.ExtConfig({}), internalCtx = new ExtDomQuery_1.ExtConfig({}), windowId = resolveWindowId(options), isResetValues = true === ((_a = options.value) === null || _a === void 0 ? void 0 : _a.resetValues);
-    return { resolvedEvent, options, elem, elementId, requestCtx, internalCtx, windowId, isResetValues };
+    const elem = mona_dish_1.DQ.byId(el || event.target, true);
+    const options = new ExtDomQuery_1.ExtConfig(opts).deepCopy;
+    return {
+        options: options,
+        elem: elem,
+        elementId: elem.id.value,
+        windowId: resolveWindowId(options),
+        isResetValues: true === ((_a = options.value) === null || _a === void 0 ? void 0 : _a.resetValues)
+    };
 }
 exports.resolveDefaults = resolveDefaults;
 
@@ -6850,6 +6881,8 @@ class ResponseProcessor {
         // full replace we delete everything
         head.childNodes.delete();
         this.addToHead(shadowHead);
+        //we copy the attributes as well (just in case myfaces introduces the id in head)
+        head.copyAttrs(shadowHead);
     }
     addToHead(shadowHead) {
         const mappedHeadData = new ExtDomQuery_1.ExtDomQuery(shadowHead);

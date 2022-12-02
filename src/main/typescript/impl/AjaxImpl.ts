@@ -21,7 +21,7 @@ import {AsynchronousQueue} from "./util/AsyncQueue";
 import {AssocArrayCollector, Config, DQ, Lang, LazyStream, Optional, Stream} from "mona-dish";
 import {Assertions} from "./util/Assertions";
 import {XhrFormData} from "./xhrCore/XhrFormData";
-import {ExtDomQuery} from "./util/ExtDomQuery";
+import {ExtConfig, ExtDomQuery} from "./util/ExtDomQuery";
 import {ErrorData} from "./xhrCore/ErrorData";
 import {EventData} from "./xhrCore/EventData";
 import {ExtLang} from "./util/Lang";
@@ -241,15 +241,14 @@ export module Implementation {
     export function request(el: ElemDef, event?: Event, opts ?: Options) {
 
         const {
-            resolvedEvent,
             options,
             elem,
             elementId,
-            requestCtx,
-            internalCtx,
             windowId,
             isResetValues
         } = resolveDefaults(event, opts, el);
+        const requestCtx = new ExtConfig({});
+        const internalCtx = new ExtConfig({});
 
         Assertions.assertRequestIntegrity(options, elem);
 
@@ -260,7 +259,7 @@ export module Implementation {
          * so that people can use dummy forms and work
          * with detached objects
          */
-        const form: DQ = resolveForm(requestCtx, elem, resolvedEvent);
+        const form: DQ = resolveForm(elem, event);
         const viewId: string = resolveViewId(form);
         const formId = form.id.value;
         const delay: number = resolveDelay(options);
@@ -269,12 +268,12 @@ export module Implementation {
         requestCtx.assignIf(!!windowId, P_WINDOW_ID).value = windowId;
 
         // old non spec behavior will be removed after it is clear whether the removal breaks any code
-        requestCtx.assign(CTX_PARAM_REQ_PASS_THR).value = filterPassThroughValues(options.value);
+        requestCtx.assign(CTX_PARAM_REQ_PASS_THR).value = extractLegacyParams(options.value);
 
         // spec conform behavior, all passthrough params must be under "passthrough
         const params = remapArrayToAssocArr(options.getIf(CTX_OPTIONS_PARAMS).orElse({}).value);
         requestCtx.getIf(CTX_PARAM_REQ_PASS_THR).shallowMerge(new Config(params), true);
-        requestCtx.assignIf(!!resolvedEvent, CTX_PARAM_REQ_PASS_THR, P_EVT).value = resolvedEvent?.type;
+        requestCtx.assignIf(!!event, CTX_PARAM_REQ_PASS_THR, P_EVT).value = event?.type;
 
         /**
          * ajax pass through context with the source
@@ -699,17 +698,17 @@ export module Implementation {
 
     /**
      * Filter the options given with a blacklist, so that only
-     * the values required for pass-through are processed in the ajax request
+     * the values required for params-through are processed in the ajax request
      *
      * Note this is a bug carried over from the old implementation
      * the spec conform behavior is to use params for passthrough values
-     * this will be removed soon, after it is cleared up wheter removing
+     * this will be removed soon, after it is cleared up whether removing
      * it breaks any legacy code
      *
      * @param {Context} mappedOpts the options to be filtered
      * @deprecated
      */
-    function filterPassThroughValues(mappedOpts: Context): Context {
+    function extractLegacyParams(mappedOpts: Options): Context {
         //we now can use the full code reduction given by our stream api
         //to filter
         return Stream.ofAssoc(mappedOpts)

@@ -5983,8 +5983,10 @@ class HiddenInputBuilder {
         let cnt = existingStates.stream.map(state => {
             let ident = state.id.orElse("-1").value;
             ident = ident.substring(ident.lastIndexOf(SEP) + 1);
-            return parseInt(ident) || -1;
-        }).reduce((item1, item2) => Math.max(item1, item2), -1).value;
+            return parseInt(ident);
+        })
+            .filter(item => !isNaN(item))
+            .reduce((item1, item2) => Math.max(item1, item2), -1).value;
         //the maximum  new ident is the current max + 1
         cnt++;
         const newElement = mona_dish_1.DQ.fromMarkup((0, Const_1.$nsp)(this.template));

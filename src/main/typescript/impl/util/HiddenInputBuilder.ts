@@ -57,6 +57,7 @@ export class HiddenInputBuilder {
             ident = ident.substring(ident.lastIndexOf(SEP)+1);
             return parseInt(ident);
         }).reduce((item1, item2) => Math.max(item1, item2), -1).value;
+        //the maximum  new ident is the current max + 1
         cnt++;
 
 

@@ -5978,9 +5978,15 @@ class HiddenInputBuilder {
     }
     build() {
         var _a, _b;
-        //TODO naming container id?
-        const cnt = (0, mona_dish_1.DQ$)(`[name='${(0, Const_1.$nsp)(this.name)}']`).length;
         const SEP = (0, Const_1.$faces)().separatorchar;
+        let existingStates = (0, mona_dish_1.DQ$)(`[name*='${(0, Const_1.$nsp)(this.name)}']`);
+        let cnt = existingStates.stream.map(state => {
+            let ident = state.id.orElse("-1").value;
+            ident = ident.substring(ident.lastIndexOf(SEP) + 1);
+            return parseInt(ident) || -1;
+        }).reduce((item1, item2) => Math.max(item1, item2), -1).value;
+        //the maximum  new ident is the current max + 1
+        cnt++;
         const newElement = mona_dish_1.DQ.fromMarkup((0, Const_1.$nsp)(this.template));
         newElement.id.value = (((_a = this.namingContainerId) === null || _a === void 0 ? void 0 : _a.length) ?
             [this.namingContainerId, (0, Const_1.$nsp)(this.name), cnt] :
@@ -6257,7 +6263,8 @@ class ErrorData extends EventData_1.EventData {
     constructor(source, errorName, errorMessage, responseText = null, responseXML = null, responseCode = "200", status = "UNKNOWN", type = ErrorType.CLIENT_ERROR) {
         super();
         this.type = "error";
-        this.source = source;
+        this.source = document.getElementById(source);
+        this.sourceId = source;
         this.type = "error";
         this.errorName = errorName;
         this.message = this.errorMessage = errorMessage;
@@ -6271,8 +6278,8 @@ class ErrorData extends EventData_1.EventData {
         }
     }
     static fromClient(e) {
-        var _a, _b, _c;
-        return new ErrorData("client", (_a = e === null || e === void 0 ? void 0 : e.name) !== null && _a !== void 0 ? _a : '', (_b = e === null || e === void 0 ? void 0 : e.message) !== null && _b !== void 0 ? _b : '', (_c = e === null || e === void 0 ? void 0 : e.stack) !== null && _c !== void 0 ? _c : '');
+        var _a, _b, _c, _d;
+        return new ErrorData((_a = e === null || e === void 0 ? void 0 : e.source) !== null && _a !== void 0 ? _a : "client", (_b = e === null || e === void 0 ? void 0 : e.name) !== null && _b !== void 0 ? _b : '', (_c = e === null || e === void 0 ? void 0 : e.message) !== null && _c !== void 0 ? _c : '', (_d = e === null || e === void 0 ? void 0 : e.stack) !== null && _d !== void 0 ? _d : '');
     }
     static fromHttpConnection(source, name, message, responseText, responseCode, status = 'UNKNOWN') {
         return new ErrorData(source, name, message, responseText, responseCode, `${responseCode}`, status, ErrorType.HTTP_ERROR);
@@ -7818,6 +7825,7 @@ class XhrRequest {
      * other helpers
      */
     sendEvent(evtType) {
+        var _a;
         let eventData = EventData_1.EventData.createFromRequest(this.xhrObject, this.requestContext, evtType);
         try {
             // User code error, we might cover
@@ -7828,6 +7836,7 @@ class XhrRequest {
             AjaxImpl_1.Implementation.sendEvent(eventData, eventHandler);
         }
         catch (e) {
+            e.source = (_a = e === null || e === void 0 ? void 0 : e.source) !== null && _a !== void 0 ? _a : this.requestContext.getIf(Const_1.SOURCE).value;
             this.handleError(e);
             throw e;
         }

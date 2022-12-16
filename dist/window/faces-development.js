@@ -4077,9 +4077,10 @@ var myfaces;
      * @param options
      */
     function ab(source, event, eventName, execute, render, options = {}) {
-        var _a;
+        var _a, _b;
         if (eventName) {
-            options[(0, Const_1.$nsp)(Const_1.P_BEHAVIOR_EVENT)] = eventName;
+            options[Const_1.CTX_OPTIONS_PARAMS] = (_a = options === null || options === void 0 ? void 0 : options[Const_1.CTX_OPTIONS_PARAMS]) !== null && _a !== void 0 ? _a : {};
+            options[Const_1.CTX_OPTIONS_PARAMS][(0, Const_1.$nsp)(Const_1.P_BEHAVIOR_EVENT)] = eventName;
         }
         if (execute) {
             options[Const_1.CTX_OPTIONS_EXECUTE] = execute;
@@ -4087,7 +4088,7 @@ var myfaces;
         if (render) {
             options[Const_1.CTX_PARAM_RENDER] = render;
         }
-        ((_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : window.jsf).ajax.request(source, event, options);
+        ((_b = window === null || window === void 0 ? void 0 : window.faces) !== null && _b !== void 0 ? _b : window.jsf).ajax.request(source, event, options);
     }
     myfaces.ab = ab;
     /**
@@ -6262,14 +6263,15 @@ var ErrorType;
  * I will add deprecated myfaces backwards compatibility attributes as well
  */
 class ErrorData extends EventData_1.EventData {
-    constructor(source, errorName, errorMessage, responseText = null, responseXML = null, responseCode = "200", status = "UNKNOWN", type = ErrorType.CLIENT_ERROR) {
+    constructor(source, errorName, errorMessage, responseText = null, responseXML = null, responseCode = "200", status = "", type = ErrorType.CLIENT_ERROR) {
         super();
         this.type = "error";
         this.source = document.getElementById(source);
         this.sourceId = source;
-        this.type = "error";
+        this.type = Const_1.ERROR;
         this.errorName = errorName;
-        this.message = this.errorMessage = errorMessage;
+        //tck requires that the type is prefixed to the message itself (jsdoc also) in case of a server error
+        this.message = this.errorMessage = (type == Const_1.SERVER_ERROR) ? type + ": " + errorMessage : errorMessage;
         this.responseCode = responseCode;
         this.responseText = responseText;
         this.status = status;
@@ -6281,9 +6283,9 @@ class ErrorData extends EventData_1.EventData {
     }
     static fromClient(e) {
         var _a, _b, _c, _d;
-        return new ErrorData((_a = e === null || e === void 0 ? void 0 : e.source) !== null && _a !== void 0 ? _a : "client", (_b = e === null || e === void 0 ? void 0 : e.name) !== null && _b !== void 0 ? _b : '', (_c = e === null || e === void 0 ? void 0 : e.message) !== null && _c !== void 0 ? _c : '', (_d = e === null || e === void 0 ? void 0 : e.stack) !== null && _d !== void 0 ? _d : '');
+        return new ErrorData((_a = e === null || e === void 0 ? void 0 : e.source) !== null && _a !== void 0 ? _a : "client", (_b = e === null || e === void 0 ? void 0 : e.name) !== null && _b !== void 0 ? _b : Const_1.EMPTY_STR, (_c = e === null || e === void 0 ? void 0 : e.message) !== null && _c !== void 0 ? _c : Const_1.EMPTY_STR, (_d = e === null || e === void 0 ? void 0 : e.stack) !== null && _d !== void 0 ? _d : Const_1.EMPTY_STR);
     }
-    static fromHttpConnection(source, name, message, responseText, responseCode, status = 'UNKNOWN') {
+    static fromHttpConnection(source, name, message, responseText, responseCode, status = Const_1.EMPTY_STR) {
         return new ErrorData(source, name, message, responseText, responseCode, `${responseCode}`, status, ErrorType.HTTP_ERROR);
     }
     static fromGeneric(context, errorCode, errorType = ErrorType.SERVER_ERROR) {
@@ -6297,7 +6299,7 @@ class ErrorData extends EventData_1.EventData {
         return new ErrorData(source, errorName, errorMessage, responseText, responseXML, errorCode + Const_1.EMPTY_STR, status, errorType);
     }
     static getMsg(context, param) {
-        return getMessage(context.getIf(param).orElse(Const_1.UNKNOWN).value);
+        return getMessage(context.getIf(param).orElse(Const_1.EMPTY_STR).value);
     }
     static fromServerError(context) {
         return this.fromGeneric(context, -1);
@@ -6895,16 +6897,16 @@ class ResponseProcessor {
     }
     addToHead(shadowHead) {
         const mappedHeadData = new ExtDomQuery_1.ExtDomQuery(shadowHead);
-        const postProcessTags = [Const_1.HTML_TAG_STYLE, Const_1.HTML_TAG_LINK, Const_1.HTML_TAG_SCRIPT];
-        const nonExecutables = mappedHeadData.filter(item => postProcessTags.indexOf(item.tagName.orElse("").value) == -1);
+        const scriptTags = [Const_1.HTML_TAG_SCRIPT];
+        const nonExecutables = mappedHeadData.filter(item => scriptTags.indexOf(item.tagName.orElse("").value) == -1);
         nonExecutables.runHeadInserts(true);
         //incoming either the outer head tag or its children
         const nodesToAdd = (shadowHead.tagName.value === "HEAD") ? shadowHead.childNodes : shadowHead;
         // this is stored for "post" processing
         // after the rest of the "physical build up", head before body
-        const evalElements = nodesToAdd.stream
-            .filter(item => postProcessTags.indexOf(item.tagName.orElse("").value) != -1).collect(new mona_dish_1.DomQueryCollector());
-        this.addToHeadDeferred(evalElements);
+        const scriptElements = nodesToAdd.stream
+            .filter(item => scriptTags.indexOf(item.tagName.orElse("").value) != -1).collect(new mona_dish_1.DomQueryCollector());
+        this.addToHeadDeferred(scriptElements);
     }
     addToHeadDeferred(newElements) {
         this.internalContext.assign(Const_1.DEFERRED_HEAD_INSERTS).value.push(newElements);
@@ -7787,9 +7789,9 @@ class XhrRequest {
             status: Const_1.MALFORMEDXML,
             responseCode: 200,
             responseText: (_a = this.xhrObject) === null || _a === void 0 ? void 0 : _a.responseText,
-            source: {
-                id: this.source.id.value
-            }
+            // we remap the element just in case it gets replaced
+            // it will be unremapped
+            source: this.source.id.value
         };
         try {
             this.handleError(errorData, true);
@@ -7955,8 +7957,10 @@ var oam;
             var _a;
             const ATTR_TARGET = "target";
             const formElement = form.getAsElem(0).value;
-            const oldTarget = form.attr(ATTR_TARGET).value;
-            form.attr(ATTR_TARGET).value = target;
+            const oldTarget = form.getAsElem(0).value.getAttribute("target");
+            if (target != "null" && target) {
+                form.getAsElem(0).value.setAttribute("target", target);
+            }
             const result = (_a = formElement === null || formElement === void 0 ? void 0 : formElement.onsubmit) === null || _a === void 0 ? void 0 : _a.call(formElement, null);
             try {
                 if ((!!result) || 'undefined' == typeof result) {
@@ -7967,7 +7971,12 @@ var oam;
                 window === null || window === void 0 ? void 0 : window.console.error(e);
             }
             finally {
-                form.attr(ATTR_TARGET).value = oldTarget;
+                if (oldTarget == null || oldTarget == "null") {
+                    form.getAsElem(0).value.removeAttribute("target");
+                }
+                else {
+                    form.getAsElem(0).value.setAttribute("target", oldTarget);
+                }
                 // noinspection JSUnusedLocalSymbols
                 paramsStream.each(([key, data]) => {
                     myfaces.oam.clearHiddenInput(formName, key);

@@ -2242,7 +2242,7 @@ var Lang;
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Config = exports.ValueEmbedder = exports.Optional = exports.Monad = void 0;
+exports.Config = exports.CONFIG_ANY = exports.CONFIG_VALUE = exports.ValueEmbedder = exports.Optional = exports.Monad = void 0;
 /**
  * A module which keeps  basic monadish like definitions in place without any sidedependencies to other modules.
  * Useful if you need the functions in another library to keep its dependencies down
@@ -2358,6 +2358,7 @@ class Optional extends Monad {
      * capabilites, unfortunately typesceript does not allow to have its own elvis operator
      * this is some syntactic sugar however which is quite useful*/
     getIf(...key) {
+        key = this.preprocessKeys(...key);
         let currentPos = this;
         for (let cnt = 0; cnt < key.length; cnt++) {
             let currKey = this.keyVal(key[cnt]);
@@ -2486,6 +2487,23 @@ class Optional extends Monad {
             return Optional.absent;
         }
     }
+    preprocessKeys(...keys) {
+        return Stream_1.Stream.of(...keys)
+            .flatMap(item => {
+            return Stream_1.Stream.of(...item.split(/\]\s*\[/gi))
+                .map(item => {
+                item = item.replace(/^\s+|\s+$/g, "");
+                if (item.indexOf("[") == -1 && item.indexOf("]") != -1) {
+                    item = "[" + item;
+                }
+                if (item.indexOf("]") == -1 && item.indexOf("[") != -1) {
+                    item = item + "]";
+                }
+                return item;
+            });
+        })
+            .collect(new SourcesCollectors_1.ArrayCollector());
+    }
 }
 exports.Optional = Optional;
 /*default value for absent*/
@@ -2577,6 +2595,9 @@ class ConfigEntry extends ValueEmbedder {
 }
 /*default value for absent*/
 ConfigEntry.absent = ConfigEntry.fromNullable(null);
+exports.CONFIG_VALUE = "__END_POINT__";
+exports.CONFIG_ANY = "__ANY_POINT__";
+const ALL_VALUES = "*";
 /**
  * Config, basically an optional wrapper for a json structure
  * (not sideeffect free, since we can alter the internal config state
@@ -2584,8 +2605,9 @@ ConfigEntry.absent = ConfigEntry.fromNullable(null);
  * since this would swallow a lot of performane and ram
  */
 class Config extends Optional {
-    constructor(root) {
+    constructor(root, configDef) {
         super(root);
+        this.configDef = configDef;
     }
     /**
      * shallow copy getter, copies only the first level, references the deeper nodes
@@ -2653,10 +2675,11 @@ class Config extends Optional {
         if (noKeys) {
             return;
         }
+        this.assertAccessPath(...accessPath);
         let lastKey = accessPath[accessPath.length - 1];
         let currKey, finalKey = this.keyVal(lastKey);
         let pathExists = this.getIf(...accessPath).isPresent();
-        this.buildPath(accessPath);
+        this.buildPath(...accessPath);
         let finalKeyArrPos = this.arrayIndex(lastKey);
         if (finalKeyArrPos > -1) {
             throw Error("Append only possible on non array properties, use assign on indexed data");
@@ -2692,7 +2715,8 @@ class Config extends Optional {
         if (accessPath.length < 1) {
             return;
         }
-        this.buildPath(accessPath);
+        this.assertAccessPath(...accessPath);
+        this.buildPath(...accessPath);
         let currKey = this.keyVal(accessPath[accessPath.length - 1]);
         let arrPos = this.arrayIndex(accessPath[accessPath.length - 1]);
         let retVal = new ConfigEntry(accessPath.length == 1 ? this.value : this.getIf.apply(this, accessPath.slice(0, accessPath.length - 1)).value, currKey, arrPos);
@@ -2713,6 +2737,7 @@ class Config extends Optional {
      * @param accessPath the access path
      */
     getIf(...accessPath) {
+        this.assertAccessPath(...accessPath);
         return this.getClass().fromNullable(super.getIf.apply(this, accessPath).value);
     }
     /**
@@ -2742,11 +2767,66 @@ class Config extends Optional {
         this._value = val;
     }
     /**
+     * asserts the access path for a semy typed access
+      * @param accessPath
+     * @private
+     */
+    assertAccessPath(...accessPath) {
+        var _a, _b;
+        accessPath = this.preprocessKeys(...accessPath);
+        if (!this.configDef) {
+            //untyped
+            return;
+        }
+        let currAccessPos = null;
+        const ERR_ACCESS_PATH = "Access Path to config invalid";
+        const ABSENT = "__ABSENT__";
+        currAccessPos = this.configDef;
+        for (let cnt = 0; cnt < accessPath.length; cnt++) {
+            let currKey = this.keyVal(accessPath[cnt]);
+            let arrPos = this.arrayIndex(accessPath[cnt]);
+            //key index
+            if (this.isArray(arrPos)) {
+                if (currKey != "") {
+                    currAccessPos = (Array.isArray(currAccessPos)) ?
+                        Stream_1.Stream.of(...currAccessPos)
+                            .filter(item => { var _a; return !!((_a = item === null || item === void 0 ? void 0 : item[currKey]) !== null && _a !== void 0 ? _a : false); })
+                            .map(item => item === null || item === void 0 ? void 0 : item[currKey]).first() :
+                        Optional.fromNullable((_a = currAccessPos === null || currAccessPos === void 0 ? void 0 : currAccessPos[currKey]) !== null && _a !== void 0 ? _a : null);
+                }
+                else {
+                    currAccessPos = (Array.isArray(currAccessPos)) ?
+                        Stream_1.Stream.of(...currAccessPos)
+                            .filter(item => Array.isArray(item))
+                            .flatMap(item => Stream_1.Stream.of(...item)).first() : Optional.absent;
+                }
+                //we noe store either the current array or the filtered look ahead to go further
+            }
+            else {
+                //we now have an array and go further with a singular key
+                currAccessPos = (Array.isArray(currAccessPos)) ? Stream_1.Stream.of(...currAccessPos)
+                    .filter(item => { var _a; return !!((_a = item === null || item === void 0 ? void 0 : item[currKey]) !== null && _a !== void 0 ? _a : false); })
+                    .map(item => item === null || item === void 0 ? void 0 : item[currKey])
+                    .first() :
+                    Optional.fromNullable((_b = currAccessPos === null || currAccessPos === void 0 ? void 0 : currAccessPos[currKey]) !== null && _b !== void 0 ? _b : null);
+            }
+            if (!currAccessPos.isPresent()) {
+                throw Error(ERR_ACCESS_PATH);
+            }
+            currAccessPos = currAccessPos.value;
+            //no further testing needed, from this point onwards we are on our own
+            if (currAccessPos == exports.CONFIG_ANY) {
+                return;
+            }
+        }
+    }
+    /**
      * builds the config path
      *
      * @param accessPath a sequential array of accessPath containing either a key name or an array reference name[<index>]
      */
-    buildPath(accessPath) {
+    buildPath(...accessPath) {
+        accessPath = this.preprocessKeys(...accessPath);
         let val = this;
         let parentVal = this.getClass().fromNullable(null);
         let parentPos = -1;
@@ -2760,7 +2840,7 @@ class Config extends Optional {
         for (let cnt = 0; cnt < accessPath.length; cnt++) {
             let currKey = this.keyVal(accessPath[cnt]);
             let arrPos = this.arrayIndex(accessPath[cnt]);
-            if (currKey === "" && arrPos >= 0) {
+            if (this.isArrayPos(currKey, arrPos)) {
                 val.setVal((val.value instanceof Array) ? val.value : []);
                 alloc(val.value, arrPos + 1);
                 if (parentPos >= 0) {
@@ -2772,7 +2852,7 @@ class Config extends Optional {
                 continue;
             }
             let tempVal = val.getIf(currKey);
-            if (arrPos == -1) {
+            if (this.isNoArray(arrPos)) {
                 if (tempVal.isAbsent()) {
                     tempVal = this.getClass().fromNullable(val.value[currKey] = {});
                 }
@@ -2791,6 +2871,15 @@ class Config extends Optional {
             val = tempVal;
         }
         return this;
+    }
+    isNoArray(arrPos) {
+        return arrPos == -1;
+    }
+    isArray(arrPos) {
+        return !this.isNoArray(arrPos);
+    }
+    isArrayPos(currKey, arrPos) {
+        return currKey === "" && arrPos >= 0;
     }
 }
 exports.Config = Config;
@@ -3778,7 +3867,7 @@ exports.XQ = XMLQuery;
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.QueryFormDataCollector = exports.FormDataCollector = exports.AssocArrayCollector = exports.ArrayCollector = exports.QueryFormStringCollector = exports.SequenceDataSource = exports.FlatMapStreamDataSource = exports.FilteredStreamDatasource = exports.MappedStreamDataSource = exports.ArrayStreamDataSource = exports.LazyStream = exports.Stream = exports.XQ = exports.XMLQuery = exports.ValueEmbedder = exports.Optional = exports.Monad = exports.Config = exports.Lang = exports.DQ$ = exports.DQ = exports.DomQueryCollector = exports.ElementAttribute = exports.DomQuery = void 0;
+exports.QueryFormDataCollector = exports.FormDataCollector = exports.AssocArrayCollector = exports.ArrayCollector = exports.QueryFormStringCollector = exports.SequenceDataSource = exports.FlatMapStreamDataSource = exports.FilteredStreamDatasource = exports.MappedStreamDataSource = exports.ArrayStreamDataSource = exports.LazyStream = exports.Stream = exports.XQ = exports.XMLQuery = exports.ValueEmbedder = exports.Optional = exports.Monad = exports.CONFIG_ANY = exports.CONFIG_VALUE = exports.Config = exports.Lang = exports.DQ$ = exports.DQ = exports.DomQueryCollector = exports.ElementAttribute = exports.DomQuery = void 0;
 /*!
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -3807,6 +3896,8 @@ var Lang_1 = __webpack_require__(/*! ./Lang */ "./node_modules/mona-dish/src/mai
 Object.defineProperty(exports, "Lang", ({ enumerable: true, get: function () { return Lang_1.Lang; } }));
 var Monad_1 = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
 Object.defineProperty(exports, "Config", ({ enumerable: true, get: function () { return Monad_1.Config; } }));
+Object.defineProperty(exports, "CONFIG_VALUE", ({ enumerable: true, get: function () { return Monad_1.CONFIG_VALUE; } }));
+Object.defineProperty(exports, "CONFIG_ANY", ({ enumerable: true, get: function () { return Monad_1.CONFIG_ANY; } }));
 Object.defineProperty(exports, "Monad", ({ enumerable: true, get: function () { return Monad_1.Monad; } }));
 Object.defineProperty(exports, "Optional", ({ enumerable: true, get: function () { return Monad_1.Optional; } }));
 Object.defineProperty(exports, "ValueEmbedder", ({ enumerable: true, get: function () { return Monad_1.ValueEmbedder; } }));
@@ -4333,7 +4424,13 @@ var Implementation;
         requestCtx.assign(Const_1.CTX_PARAM_REQ_PASS_THR).value = extractLegacyParams(options.value);
         // spec conform behavior, all passthrough params must be under "passthrough
         const params = remapArrayToAssocArr(options.getIf(Const_1.CTX_OPTIONS_PARAMS).orElse({}).value);
-        requestCtx.getIf(Const_1.CTX_PARAM_REQ_PASS_THR).shallowMerge(new mona_dish_1.Config(params), true);
+        //we turn off the remapping for the param merge, because we do not want to have
+        //any namespacing to be remapped
+        let ctxPassthrough = requestCtx.getIf(Const_1.CTX_PARAM_REQ_PASS_THR);
+        ctxPassthrough.$nspEnabled = false;
+        ctxPassthrough.shallowMerge(new mona_dish_1.Config(params), true);
+        //now we turn it on again
+        ctxPassthrough.$nspEnabled = true;
         requestCtx.assignIf(!!event, Const_1.CTX_PARAM_REQ_PASS_THR, Const_1.P_EVT).value = event === null || event === void 0 ? void 0 : event.type;
         /**
          * ajax pass through context with the source
@@ -4669,12 +4766,13 @@ var Implementation;
             const hasLeadingSep = componentIdToTransform.indexOf(SEP) === 0;
             const isAbsolutSearchExpr = hasLeadingSep || (rootNamingContainerId.length
                 && componentIdToTransform.indexOf(rootNamingContainerPrefix) == 0);
+            let finalIdentifier = "";
             if (isAbsolutSearchExpr) {
                 //we cut off the leading sep if there is one
                 componentIdToTransform = hasLeadingSep ? componentIdToTransform.substring(1) : componentIdToTransform;
                 componentIdToTransform = componentIdToTransform.indexOf(rootNamingContainerPrefix) == 0 ? componentIdToTransform.substring(rootNamingContainerPrefix.length) : componentIdToTransform;
                 //now we prepend either the prefix or "" from the cut-off string to get the final result
-                return [rootNamingContainerPrefix, componentIdToTransform].join(Const_1.EMPTY_STR);
+                finalIdentifier = [rootNamingContainerPrefix, componentIdToTransform].join(Const_1.EMPTY_STR);
             }
             else { //relative search according to the javadoc
                 //we cut off the root naming container id from the form
@@ -4683,10 +4781,15 @@ var Implementation;
                 }
                 //If prependId = true, the outer form id must be present in the id if same form
                 let hasPrependId = componentIdToTransform.indexOf(formClientId) == 0;
-                return hasPrependId ?
+                finalIdentifier = hasPrependId ?
                     [rootNamingContainerPrefix, componentIdToTransform].join(Const_1.EMPTY_STR) :
                     [nearestNamingContainerPrefix, componentIdToTransform].join(Const_1.EMPTY_STR);
             }
+            // We need to double check because we have scenarios where we have a naming container
+            // and no prepend (aka tobago testcase "must handle ':' in IDs properly", scenario 3,
+            // in this case we return the component id, and be happy
+            // we can roll a dom check here
+            return (!!document.getElementById(finalIdentifier)) ? finalIdentifier : componentIdToTransform;
         };
         // in this case we do not use lazy stream because it wont bring any code reduction
         // or speedup
@@ -5864,6 +5967,7 @@ exports.ExtDQ = ExtDomQuery;
 class ExtConfig extends mona_dish_1.Config {
     constructor(root) {
         super(root);
+        this.$nspEnabled = true;
     }
     assignIf(condition, ...accessPath) {
         const accessPathMapped = this.remap(accessPath);
@@ -5920,6 +6024,9 @@ class ExtConfig extends mona_dish_1.Config {
      * @private returns an array of access paths with version remapped namespaces
      */
     remap(accessPath) {
+        if (!this.$nspEnabled) {
+            return accessPath;
+        }
         return mona_dish_1.Stream.of(...accessPath).map(key => (0, Const_1.$nsp)(key)).collect(new mona_dish_1.ArrayCollector());
     }
 }
@@ -7647,12 +7754,20 @@ class XhrRequest {
             let formData = new XhrFormData_1.XhrFormData(this.sourceForm, viewState, executesArr(), this.partialIdsArray);
             this.contentType = formData.isMultipartRequest ? "undefined" : this.contentType;
             // next step the pass through parameters are merged in for post params
+            this.requestContext.$nspEnabled = false;
             let requestContext = this.requestContext;
             let requestPassThroughParams = requestContext.getIf(Const_1.CTX_PARAM_REQ_PASS_THR);
+            requestPassThroughParams.$nspEnabled = false;
             // this is an extension where we allow pass through parameters to be sent down additionally
             // this can be used and is used in the impl to enrich the post request parameters with additional
             // information
-            formData.shallowMerge(requestPassThroughParams, true, true);
+            try {
+                formData.shallowMerge(requestPassThroughParams, true, true);
+            }
+            finally {
+                this.requestContext.$nspEnabled = true;
+                requestPassThroughParams.$nspEnabled = true;
+            }
             this.responseContext = requestPassThroughParams.deepCopy;
             // we have to shift the internal passthroughs around to build up our response context
             let responseContext = this.responseContext;

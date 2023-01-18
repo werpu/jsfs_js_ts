@@ -6085,7 +6085,7 @@ class HiddenInputBuilder {
         return this;
     }
     build() {
-        var _a, _b;
+        var _a, _b, _c;
         const SEP = (0, Const_1.$faces)().separatorchar;
         let existingStates = (0, mona_dish_1.DQ$)(`[name*='${(0, Const_1.$nsp)(this.name)}']`);
         let cnt = existingStates.stream.map(state => {
@@ -6101,7 +6101,10 @@ class HiddenInputBuilder {
         newElement.id.value = (((_a = this.namingContainerId) === null || _a === void 0 ? void 0 : _a.length) ?
             [this.namingContainerId, (0, Const_1.$nsp)(this.name), cnt] :
             [(0, Const_1.$nsp)(this.name), cnt]).join(SEP);
-        (_b = this === null || this === void 0 ? void 0 : this.parent) === null || _b === void 0 ? void 0 : _b.append(newElement);
+        //name must be prefixed with the naming container id as well according to the jsdocs
+        newElement.name.value = ((_b = this.namingContainerId) === null || _b === void 0 ? void 0 : _b.length) ?
+            [this.namingContainerId, (0, Const_1.$nsp)(this.name)].join(SEP) : (0, Const_1.$nsp)(this.name);
+        (_c = this === null || this === void 0 ? void 0 : this.parent) === null || _c === void 0 ? void 0 : _c.append(newElement);
         return newElement;
     }
 }
@@ -7509,8 +7512,10 @@ class XhrFormData extends mona_dish_1.Config {
      * @param form the form holding the view state value
      */
     applyViewState(form) {
-        let viewState = form.querySelectorAllDeep(`[name*='${Const_1.P_VIEWSTATE}'`).inputValue;
-        this.appendIf(viewState.isPresent(), Const_1.P_VIEWSTATE).value = viewState.value;
+        let viewStateElement = form.querySelectorAllDeep(`[name*='${Const_1.P_VIEWSTATE}'`);
+        let viewState = viewStateElement.inputValue;
+        // this.appendIf(viewState.isPresent(), P_VIEWSTATE).value = viewState.value;
+        this.appendIf(viewState.isPresent(), viewStateElement.name.value).value = viewState.value;
     }
     /**
      * assigns an url encoded string to this xhrFormData object

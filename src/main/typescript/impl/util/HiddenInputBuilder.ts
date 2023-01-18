@@ -68,6 +68,10 @@ export class HiddenInputBuilder {
             [this.namingContainerId,  $nsp(this.name),  cnt]:
             [$nsp(this.name),  cnt]).join(SEP);
 
+        //name must be prefixed with the naming container id as well according to the jsdocs
+        newElement.name.value = (this.namingContainerId?.length) ?
+            [this.namingContainerId,  $nsp(this.name)].join(SEP): $nsp(this.name);
+
         this?.parent?.append(newElement);
         return newElement;
     }

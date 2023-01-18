@@ -139,7 +139,6 @@ export class ResponseProcessor implements IResponseProcessor {
         }
 
         const shadowInnerHTML: string = <string>shadowBody.innerHTML;
-
         const resultingBody = <DQ>ExtDomQuery.querySelectorAll(HTML_TAG_BODY);
         const updateForms = resultingBody.querySelectorAll(HTML_TAG_FORM);
 
@@ -261,7 +260,6 @@ export class ResponseProcessor implements IResponseProcessor {
 
         const before = node.attr(XML_TAG_BEFORE);
         const after = node.attr(XML_TAG_AFTER);
-
         const insertNodes = DQ.fromMarkup(<any>node.cDATAAsString);
 
         if (before.isPresent()) {

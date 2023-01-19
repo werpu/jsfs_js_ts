@@ -41,7 +41,7 @@ import {
     HTML_TAG_HEAD,
     HTML_TAG_LINK,
     HTML_TAG_SCRIPT,
-    HTML_TAG_STYLE, IDENT_ALL, IDENT_NONE,
+    HTML_TAG_STYLE, IDENT_ALL, IDENT_NONE, NAMED_VIEWROOT,
     ON_ERROR,
     ON_EVENT,
     P_CLIENT_WINDOW,
@@ -349,10 +349,11 @@ export class ResponseProcessor implements IResponseProcessor {
         Stream.ofAssoc<StateHolder>(this.internalContext.getIf(APPLIED_VST).orElse({}).value)
             .each(([, value]) => {
                 const namingContainerId = this.internalContext.getIf(PARTIAL_ID);
+                const namedViewRoot = !!this.internalContext.getIf(PARTIAL_ID).value
                 const affectedForms = this.getContainerForms(namingContainerId)
                     .filter(affectedForm => this.isInExecuteOrRender(affectedForm));
 
-                this.appendViewStateToForms(affectedForms, value.value, namingContainerId.orElse("").value);
+                this.appendViewStateToForms(affectedForms, namedViewRoot, value.value, namingContainerId.orElse("").value);
             });
     }
 
@@ -366,10 +367,11 @@ export class ResponseProcessor implements IResponseProcessor {
         Stream.ofAssoc<StateHolder>(this.internalContext.getIf(APPLIED_CLIENT_WINDOW).orElse({}).value)
             .each(([, value]) => {
                 const namingContainerId = this.internalContext.getIf(PARTIAL_ID);
+                const namedViewRoot = !!this.internalContext.getIf(NAMED_VIEWROOT).value;
                 const affectedForms = this.getContainerForms(namingContainerId)
                     .filter(affectedForm => this.isInExecuteOrRender(affectedForm));
 
-                this.appendClientWindowToForms(affectedForms, value.value, namingContainerId.orElse("").value);
+                this.appendClientWindowToForms(affectedForms, namedViewRoot, value.value, namingContainerId.orElse("").value);
             });
     }
 
@@ -391,8 +393,8 @@ export class ResponseProcessor implements IResponseProcessor {
      * @param viewState the final viewState
      * @param namingContainerId
      */
-    private appendViewStateToForms(forms: DQ, viewState: string, namingContainerId = "") {
-        this.assignState(forms, $nsp(SEL_VIEWSTATE_ELEM), viewState, namingContainerId);
+    private appendViewStateToForms(forms: DQ, namedViewRoot: boolean, viewState: string, namingContainerId = "") {
+        this.assignState(forms, $nsp(SEL_VIEWSTATE_ELEM), namedViewRoot, viewState, namingContainerId);
     }
 
 
@@ -403,8 +405,8 @@ export class ResponseProcessor implements IResponseProcessor {
      * @param clientWindow the final viewState
      * @param namingContainerId
      */
-    private appendClientWindowToForms(forms: DQ, clientWindow: string, namingContainerId = "") {
-        this.assignState(forms, $nsp(SEL_CLIENT_WINDOW_ELEM), clientWindow, namingContainerId);
+    private appendClientWindowToForms(forms: DQ, namedViewRoot: boolean, clientWindow: string, namingContainerId = "") {
+        this.assignState(forms, $nsp(SEL_CLIENT_WINDOW_ELEM), namedViewRoot, clientWindow, namingContainerId);
     }
 
     /**
@@ -412,12 +414,13 @@ export class ResponseProcessor implements IResponseProcessor {
      *
      * @param forms the forms to append or change to
      * @param selector the selector for the state
+     * @param namedViewRoot if set to true, the name is also prefixed
      * @param state the state itself which needs to be assigned
      *
      * @param namingContainerId
      * @private
      */
-    private assignState(forms: DQ, selector: string, state: string, namingContainerId: string) {
+    private assignState(forms: DQ,  selector: string, namedViewRoot: boolean, state: string, namingContainerId: string) {
         /**
          * creates the viewState or client window id element
          * @param form
@@ -426,6 +429,7 @@ export class ResponseProcessor implements IResponseProcessor {
             return new HiddenInputBuilder(selector)
                 .withNamingContainerId(namingContainerId)
                 .withParent(form)
+                .withNamedViewRoot(namedViewRoot)
                 .build();
         };
 

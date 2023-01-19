@@ -36,7 +36,7 @@ import {
     XML_TAG_PARTIAL_RESP,
     RESPONSE_XML,
     XML_TAG_AFTER,
-    XML_TAG_BEFORE
+    XML_TAG_BEFORE, NAMED_VIEWROOT, XML_ATTR_NAMED_VIEWROOT
 } from "../core/Const";
 import {resolveContexts, resolveResponseXML} from "./ResonseDataResolver";
 import {ExtConfig} from "../util/ExtDomQuery";
@@ -88,7 +88,20 @@ export module Response {
      */
      function processPartialTag(node: XMLQuery, responseProcessor: IResponseProcessor, internalContext) {
 
-        internalContext.assign(PARTIAL_ID).value = node.id;
+        let namedAttr = node.attr(XML_ATTR_NAMED_VIEWROOT);
+        // MyFaces.
+        // there are two differences here on how we determine the naming container scenario
+        // mojarra only partial reponse identifier, and if there is none we do not have any naming container
+        // myfaces either uses the reponse identifier
+        let namedViewRoot = namedAttr.isPresent() ?  namedAttr.value === "true" : false;
+        if(!namedAttr.isPresent() && node.id) { // defauts fallback if namedViewRoot is not set, if node id is set
+                                                // it defaults to a naming container
+            namedViewRoot = !(document?.head?.id);
+        }
+
+        internalContext.assignIf(node?.id ?? document?.head.id, PARTIAL_ID).value = node?.id ?? document?.head.id; // second case mojarra
+        internalContext.assign(NAMED_VIEWROOT).value = namedViewRoot;
+
         const SEL_SUB_TAGS = [XML_TAG_ERROR, XML_TAG_REDIRECT, XML_TAG_CHANGES].join(",");
 
         // now we can process the main operations

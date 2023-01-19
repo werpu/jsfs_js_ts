@@ -5175,15 +5175,17 @@ var PushImpl;
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.DELAY_NONE = exports.CTX_OPTIONS_DELAY = exports.CTX_OPTIONS_PARAMS = exports.TIMEOUT_EVENT = exports.CLIENT_ERROR = exports.SERVER_ERROR = exports.MALFORMEDXML = exports.EMPTY_RESPONSE = exports.HTTPERROR = exports.RESPONSE_XML = exports.RESPONSE_TEXT = exports.ERROR_MESSAGE = exports.ERROR_NAME = exports.STATUS = exports.SOURCE = exports.SUCCESS = exports.COMPLETE = exports.BEGIN = exports.ON_EVENT = exports.ON_ERROR = exports.EVENT = exports.ERROR = exports.WINDOW_ID = exports.CTX_PARAM_RENDER = exports.P_BEHAVIOR_EVENT = exports.P_WINDOW_ID = exports.P_RESET_VALUES = exports.P_EVT = exports.P_RENDER_OVERRIDE = exports.P_RENDER = exports.P_EXECUTE = exports.P_AJAX = exports.IDENT_FORM = exports.IDENT_THIS = exports.IDENT_NONE = exports.IDENT_ALL = exports.HTML_CLIENT_WINDOW = exports.HTML_VIEWSTATE = exports.EMPTY_MAP = exports.EMPTY_STR = exports.EMPTY_FUNC = exports.P_RESOURCE = exports.P_VIEWBODY = exports.P_VIEWHEAD = exports.P_VIEWROOT = exports.P_CLIENT_WINDOW = exports.P_VIEWSTATE = exports.VIEW_ID = exports.PARTIAL_ID = exports.P_PARTIAL_SOURCE = void 0;
-exports.UPDATE_FORMS = exports.XML_TAG_ATTR = exports.XML_TAG_AFTER = exports.XML_TAG_BEFORE = exports.XML_TAG_REDIRECT = exports.XML_TAG_EXTENSION = exports.XML_TAG_ATTRIBUTES = exports.XML_TAG_ERROR = exports.XML_TAG_EVAL = exports.XML_TAG_INSERT = exports.XML_TAG_DELETE = exports.XML_TAG_UPDATE = exports.XML_TAG_CHANGES = exports.XML_TAG_PARTIAL_RESP = exports.ATTR_ID = exports.ATTR_VALUE = exports.ATTR_NAME = exports.ATTR_URL = exports.ERR_NO_PARTIAL_RESPONSE = exports.PHASE_PROCESS_RESPONSE = exports.SEL_RESPONSE_XML = exports.SEL_CLIENT_WINDOW_ELEM = exports.SEL_VIEWSTATE_ELEM = exports.HTML_TAG_STYLE = exports.HTML_TAG_SCRIPT = exports.HTML_TAG_LINK = exports.HTML_TAG_BODY = exports.HTML_TAG_FORM = exports.HTML_TAG_HEAD = exports.STD_ACCEPT = exports.NO_TIMEOUT = exports.MULTIPART = exports.URL_ENCODED = exports.STATE_EVT_COMPLETE = exports.STATE_EVT_TIMEOUT = exports.STATE_EVT_BEGIN = exports.REQ_TYPE_POST = exports.REQ_TYPE_GET = exports.ENCODED_URL = exports.VAL_AJAX = exports.REQ_ACCEPT = exports.HEAD_FACES_REQ = exports.CONTENT_TYPE = exports.CTX_PARAM_REQ_PASS_THR = exports.CTX_PARAM_SRC_CTL_ID = exports.CTX_PARAM_SRC_FRM_ID = exports.CTX_PARAM_MF_INTERNAL = exports.CTX_OPTIONS_EXECUTE = exports.CTX_OPTIONS_RESET = exports.CTX_OPTIONS_TIMEOUT = void 0;
-exports.$nsp = exports.$faces = exports.UNKNOWN = exports.MAX_RECONNECT_ATTEMPTS = exports.RECONNECT_INTERVAL = exports.APPLIED_CLIENT_WINDOW = exports.APPLIED_VST = exports.REASON_EXPIRED = exports.MF_NONE = exports.MYFACES = exports.DEFERRED_HEAD_INSERTS = exports.UPDATE_ELEMS = void 0;
+exports.CTX_OPTIONS_PARAMS = exports.TIMEOUT_EVENT = exports.CLIENT_ERROR = exports.SERVER_ERROR = exports.MALFORMEDXML = exports.EMPTY_RESPONSE = exports.HTTPERROR = exports.RESPONSE_XML = exports.RESPONSE_TEXT = exports.ERROR_MESSAGE = exports.ERROR_NAME = exports.STATUS = exports.SOURCE = exports.SUCCESS = exports.COMPLETE = exports.BEGIN = exports.ON_EVENT = exports.ON_ERROR = exports.EVENT = exports.ERROR = exports.WINDOW_ID = exports.CTX_PARAM_RENDER = exports.P_BEHAVIOR_EVENT = exports.P_WINDOW_ID = exports.P_RESET_VALUES = exports.P_EVT = exports.P_RENDER_OVERRIDE = exports.P_RENDER = exports.P_EXECUTE = exports.P_AJAX = exports.IDENT_FORM = exports.IDENT_THIS = exports.IDENT_NONE = exports.IDENT_ALL = exports.HTML_CLIENT_WINDOW = exports.HTML_VIEWSTATE = exports.EMPTY_MAP = exports.EMPTY_STR = exports.EMPTY_FUNC = exports.P_RESOURCE = exports.P_VIEWBODY = exports.P_VIEWHEAD = exports.P_VIEWROOT = exports.P_CLIENT_WINDOW = exports.P_VIEWSTATE = exports.VIEW_ID = exports.PARTIAL_ID = exports.P_PARTIAL_SOURCE = exports.NAMED_VIEWROOT = exports.XML_ATTR_NAMED_VIEWROOT = void 0;
+exports.XML_TAG_AFTER = exports.XML_TAG_BEFORE = exports.XML_TAG_REDIRECT = exports.XML_TAG_EXTENSION = exports.XML_TAG_ATTRIBUTES = exports.XML_TAG_ERROR = exports.XML_TAG_EVAL = exports.XML_TAG_INSERT = exports.XML_TAG_DELETE = exports.XML_TAG_UPDATE = exports.XML_TAG_CHANGES = exports.XML_TAG_PARTIAL_RESP = exports.ATTR_ID = exports.ATTR_VALUE = exports.ATTR_NAME = exports.ATTR_URL = exports.ERR_NO_PARTIAL_RESPONSE = exports.PHASE_PROCESS_RESPONSE = exports.SEL_RESPONSE_XML = exports.SEL_CLIENT_WINDOW_ELEM = exports.SEL_VIEWSTATE_ELEM = exports.HTML_TAG_STYLE = exports.HTML_TAG_SCRIPT = exports.HTML_TAG_LINK = exports.HTML_TAG_BODY = exports.HTML_TAG_FORM = exports.HTML_TAG_HEAD = exports.STD_ACCEPT = exports.NO_TIMEOUT = exports.MULTIPART = exports.URL_ENCODED = exports.STATE_EVT_COMPLETE = exports.STATE_EVT_TIMEOUT = exports.STATE_EVT_BEGIN = exports.REQ_TYPE_POST = exports.REQ_TYPE_GET = exports.ENCODED_URL = exports.VAL_AJAX = exports.REQ_ACCEPT = exports.HEAD_FACES_REQ = exports.CONTENT_TYPE = exports.CTX_PARAM_REQ_PASS_THR = exports.CTX_PARAM_SRC_CTL_ID = exports.CTX_PARAM_SRC_FRM_ID = exports.CTX_PARAM_MF_INTERNAL = exports.CTX_OPTIONS_EXECUTE = exports.CTX_OPTIONS_RESET = exports.CTX_OPTIONS_TIMEOUT = exports.DELAY_NONE = exports.CTX_OPTIONS_DELAY = void 0;
+exports.$nsp = exports.$faces = exports.UNKNOWN = exports.MAX_RECONNECT_ATTEMPTS = exports.RECONNECT_INTERVAL = exports.APPLIED_CLIENT_WINDOW = exports.APPLIED_VST = exports.REASON_EXPIRED = exports.MF_NONE = exports.MYFACES = exports.DEFERRED_HEAD_INSERTS = exports.UPDATE_ELEMS = exports.UPDATE_FORMS = exports.XML_TAG_ATTR = void 0;
 /*
  * [export const] constants
  */
+exports.XML_ATTR_NAMED_VIEWROOT = "namedViewRoot";
+exports.NAMED_VIEWROOT = "namedViewRoot";
 exports.P_PARTIAL_SOURCE = "jakarta.faces.source";
 exports.PARTIAL_ID = "partialId";
-exports.VIEW_ID = "myfaves.viewId";
+exports.VIEW_ID = "myfaces.viewId";
 exports.P_VIEWSTATE = "jakarta.faces.ViewState";
 exports.P_CLIENT_WINDOW = "jakarta.faces.ClientWindow";
 exports.P_VIEWROOT = "jakarta.faces.ViewRoot";
@@ -6072,6 +6074,7 @@ const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/
 class HiddenInputBuilder {
     constructor(selector) {
         this.selector = selector;
+        this.namedViewRoot = false;
         const isViewState = selector.indexOf((0, Const_1.$nsp)(Const_1.P_VIEWSTATE)) != -1;
         this.name = isViewState ? Const_1.P_VIEWSTATE : Const_1.P_CLIENT_WINDOW;
         this.template = isViewState ? Const_1.HTML_VIEWSTATE : Const_1.HTML_CLIENT_WINDOW;
@@ -6082,6 +6085,10 @@ class HiddenInputBuilder {
     }
     withParent(parent) {
         this.parent = parent;
+        return this;
+    }
+    withNamedViewRoot(namedViewRoot) {
+        this.namedViewRoot = namedViewRoot;
         return this;
     }
     build() {
@@ -6102,8 +6109,13 @@ class HiddenInputBuilder {
             [this.namingContainerId, (0, Const_1.$nsp)(this.name), cnt] :
             [(0, Const_1.$nsp)(this.name), cnt]).join(SEP);
         //name must be prefixed with the naming container id as well according to the jsdocs
-        newElement.name.value = ((_b = this.namingContainerId) === null || _b === void 0 ? void 0 : _b.length) ?
-            [this.namingContainerId, (0, Const_1.$nsp)(this.name)].join(SEP) : (0, Const_1.$nsp)(this.name);
+        if (this.namedViewRoot) {
+            newElement.name.value = ((_b = this.namingContainerId) === null || _b === void 0 ? void 0 : _b.length) ?
+                [this.namingContainerId, (0, Const_1.$nsp)(this.name)].join(SEP) : (0, Const_1.$nsp)(this.name);
+        }
+        else {
+            newElement.name.value = (0, Const_1.$nsp)(this.name);
+        }
         (_c = this === null || this === void 0 ? void 0 : this.parent) === null || _c === void 0 ? void 0 : _c.append(newElement);
         return newElement;
     }
@@ -6822,7 +6834,19 @@ var Response;
      * highest node partial-response from there the main operations are triggered
      */
     function processPartialTag(node, responseProcessor, internalContext) {
-        internalContext.assign(Const_1.PARTIAL_ID).value = node.id;
+        var _a, _b;
+        let namedAttr = node.attr(Const_1.XML_ATTR_NAMED_VIEWROOT);
+        // MyFaces.
+        // there are two differences here on how we determine the naming container scenario
+        // mojarra only partial reponse identifier, and if there is none we do not have any naming container
+        // myfaces either uses the reponse identifier
+        let namedViewRoot = namedAttr.isPresent() ? namedAttr.value === "true" : false;
+        if (!namedAttr.isPresent() && node.id) { // defauts fallback if namedViewRoot is not set, if node id is set
+            // it defaults to a naming container
+            namedViewRoot = !((_a = document === null || document === void 0 ? void 0 : document.head) === null || _a === void 0 ? void 0 : _a.id);
+        }
+        internalContext.assignIf(Const_1.PARTIAL_ID).value = (_b = node.id) !== null && _b !== void 0 ? _b : document === null || document === void 0 ? void 0 : document.head.id; // second case mojarra
+        internalContext.assignIf(Const_1.NAMED_VIEWROOT).value = namedViewRoot;
         const SEL_SUB_TAGS = [Const_1.XML_TAG_ERROR, Const_1.XML_TAG_REDIRECT, Const_1.XML_TAG_CHANGES].join(",");
         // now we can process the main operations
         node.querySelectorAll(SEL_SUB_TAGS).each((node) => {
@@ -7217,9 +7241,10 @@ class ResponseProcessor {
         mona_dish_1.Stream.ofAssoc(this.internalContext.getIf(Const_1.APPLIED_VST).orElse({}).value)
             .each(([, value]) => {
             const namingContainerId = this.internalContext.getIf(Const_1.PARTIAL_ID);
+            const namedViewRoot = !!this.internalContext.getIf(Const_1.PARTIAL_ID).value;
             const affectedForms = this.getContainerForms(namingContainerId)
                 .filter(affectedForm => this.isInExecuteOrRender(affectedForm));
-            this.appendViewStateToForms(affectedForms, value.value, namingContainerId.orElse("").value);
+            this.appendViewStateToForms(affectedForms, namedViewRoot, value.value, namingContainerId.orElse("").value);
         });
     }
     /**
@@ -7230,9 +7255,10 @@ class ResponseProcessor {
         mona_dish_1.Stream.ofAssoc(this.internalContext.getIf(Const_1.APPLIED_CLIENT_WINDOW).orElse({}).value)
             .each(([, value]) => {
             const namingContainerId = this.internalContext.getIf(Const_1.PARTIAL_ID);
+            const namedViewRoot = !!this.internalContext.getIf(Const_1.NAMED_VIEWROOT).value;
             const affectedForms = this.getContainerForms(namingContainerId)
                 .filter(affectedForm => this.isInExecuteOrRender(affectedForm));
-            this.appendClientWindowToForms(affectedForms, value.value, namingContainerId.orElse("").value);
+            this.appendClientWindowToForms(affectedForms, namedViewRoot, value.value, namingContainerId.orElse("").value);
         });
     }
     /**
@@ -7251,8 +7277,8 @@ class ResponseProcessor {
      * @param viewState the final viewState
      * @param namingContainerId
      */
-    appendViewStateToForms(forms, viewState, namingContainerId = "") {
-        this.assignState(forms, (0, Const_1.$nsp)(Const_1.SEL_VIEWSTATE_ELEM), viewState, namingContainerId);
+    appendViewStateToForms(forms, namedViewRoot, viewState, namingContainerId = "") {
+        this.assignState(forms, (0, Const_1.$nsp)(Const_1.SEL_VIEWSTATE_ELEM), namedViewRoot, viewState, namingContainerId);
     }
     /**
      * proper clientWindow -> form assignment
@@ -7261,20 +7287,21 @@ class ResponseProcessor {
      * @param clientWindow the final viewState
      * @param namingContainerId
      */
-    appendClientWindowToForms(forms, clientWindow, namingContainerId = "") {
-        this.assignState(forms, (0, Const_1.$nsp)(Const_1.SEL_CLIENT_WINDOW_ELEM), clientWindow, namingContainerId);
+    appendClientWindowToForms(forms, namedViewRoot, clientWindow, namingContainerId = "") {
+        this.assignState(forms, (0, Const_1.$nsp)(Const_1.SEL_CLIENT_WINDOW_ELEM), namedViewRoot, clientWindow, namingContainerId);
     }
     /**
      * generic append state which appends a certain state as hidden element to an existing set of forms
      *
      * @param forms the forms to append or change to
      * @param selector the selector for the state
+     * @param namedViewRoot if set to true, the name is also prefixed
      * @param state the state itself which needs to be assigned
      *
      * @param namingContainerId
      * @private
      */
-    assignState(forms, selector, state, namingContainerId) {
+    assignState(forms, selector, namedViewRoot, state, namingContainerId) {
         /**
          * creates the viewState or client window id element
          * @param form
@@ -7283,6 +7310,7 @@ class ResponseProcessor {
             return new HiddenInputBuilder_1.HiddenInputBuilder(selector)
                 .withNamingContainerId(namingContainerId)
                 .withParent(form)
+                .withNamedViewRoot(namedViewRoot)
                 .build();
         };
         forms.each(form => {

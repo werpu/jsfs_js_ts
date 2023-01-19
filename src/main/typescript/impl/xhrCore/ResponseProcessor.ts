@@ -349,7 +349,7 @@ export class ResponseProcessor implements IResponseProcessor {
         Stream.ofAssoc<StateHolder>(this.internalContext.getIf(APPLIED_VST).orElse({}).value)
             .each(([, value]) => {
                 const namingContainerId = this.internalContext.getIf(PARTIAL_ID);
-                const namedViewRoot = !!this.internalContext.getIf(PARTIAL_ID).value
+                const namedViewRoot = !!this.internalContext.getIf(NAMED_VIEWROOT).value
                 const affectedForms = this.getContainerForms(namingContainerId)
                     .filter(affectedForm => this.isInExecuteOrRender(affectedForm));
 

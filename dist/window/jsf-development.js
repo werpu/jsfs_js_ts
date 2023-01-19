@@ -6834,7 +6834,7 @@ var Response;
      * highest node partial-response from there the main operations are triggered
      */
     function processPartialTag(node, responseProcessor, internalContext) {
-        var _a, _b;
+        var _a, _b, _c;
         let namedAttr = node.attr(Const_1.XML_ATTR_NAMED_VIEWROOT);
         // MyFaces.
         // there are two differences here on how we determine the naming container scenario
@@ -6845,8 +6845,8 @@ var Response;
             // it defaults to a naming container
             namedViewRoot = !((_a = document === null || document === void 0 ? void 0 : document.head) === null || _a === void 0 ? void 0 : _a.id);
         }
-        internalContext.assignIf(Const_1.PARTIAL_ID).value = (_b = node.id) !== null && _b !== void 0 ? _b : document === null || document === void 0 ? void 0 : document.head.id; // second case mojarra
-        internalContext.assignIf(Const_1.NAMED_VIEWROOT).value = namedViewRoot;
+        internalContext.assignIf((_b = node === null || node === void 0 ? void 0 : node.id) !== null && _b !== void 0 ? _b : document === null || document === void 0 ? void 0 : document.head.id, Const_1.PARTIAL_ID).value = (_c = node === null || node === void 0 ? void 0 : node.id) !== null && _c !== void 0 ? _c : document === null || document === void 0 ? void 0 : document.head.id; // second case mojarra
+        internalContext.assign(Const_1.NAMED_VIEWROOT).value = namedViewRoot;
         const SEL_SUB_TAGS = [Const_1.XML_TAG_ERROR, Const_1.XML_TAG_REDIRECT, Const_1.XML_TAG_CHANGES].join(",");
         // now we can process the main operations
         node.querySelectorAll(SEL_SUB_TAGS).each((node) => {
@@ -7241,7 +7241,7 @@ class ResponseProcessor {
         mona_dish_1.Stream.ofAssoc(this.internalContext.getIf(Const_1.APPLIED_VST).orElse({}).value)
             .each(([, value]) => {
             const namingContainerId = this.internalContext.getIf(Const_1.PARTIAL_ID);
-            const namedViewRoot = !!this.internalContext.getIf(Const_1.PARTIAL_ID).value;
+            const namedViewRoot = !!this.internalContext.getIf(Const_1.NAMED_VIEWROOT).value;
             const affectedForms = this.getContainerForms(namingContainerId)
                 .filter(affectedForm => this.isInExecuteOrRender(affectedForm));
             this.appendViewStateToForms(affectedForms, namedViewRoot, value.value, namingContainerId.orElse("").value);

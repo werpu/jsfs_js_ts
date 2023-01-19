@@ -375,6 +375,18 @@ export class ResponseProcessor implements IResponseProcessor {
             });
     }
 
+    updateNamedViewRootState() {
+        let partialId = this.internalContext.getIf(PARTIAL_ID);
+        let namedViewRoot = this.internalContext.getIf(NAMED_VIEWROOT);
+        if(partialId.isPresent() &&
+            (namedViewRoot.isAbsent() ||
+                !namedViewRoot.value)) {
+            const SEP = $faces().separatorchar;
+            this.internalContext.assign(NAMED_VIEWROOT).value = (!!document.getElementById(partialId.value)) || DQ$(`input[name*='${$nsp(P_VIEWSTATE)}']`)
+                .filter(node => node.attr("name").value.indexOf(partialId.value + SEP) == 0).length > 0;
+        }
+    }
+
     /**
      * all processing done we can close the request and send the appropriate events
      */

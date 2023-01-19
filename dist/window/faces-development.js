@@ -6824,6 +6824,7 @@ var Response;
         // doing any evaluations even on embedded scripts.
         // Usually this does not matter, the client window comes in almost last always anyway
         // we maybe drop this deferred assignment in the future, but myfaces did it until now.
+        responseProcessor.updateNamedViewRootState();
         responseProcessor.fixViewStates();
         responseProcessor.fixClientWindow();
         responseProcessor.globalEval();
@@ -6834,19 +6835,21 @@ var Response;
      * highest node partial-response from there the main operations are triggered
      */
     function processPartialTag(node, responseProcessor, internalContext) {
-        var _a, _b, _c;
-        let namedAttr = node.attr(Const_1.XML_ATTR_NAMED_VIEWROOT);
-        // MyFaces.
-        // there are two differences here on how we determine the naming container scenario
-        // mojarra only partial reponse identifier, and if there is none we do not have any naming container
-        // myfaces either uses the reponse identifier
-        let namedViewRoot = namedAttr.isPresent() ? namedAttr.value === "true" : false;
-        if (!namedAttr.isPresent() && node.id) { // defauts fallback if namedViewRoot is not set, if node id is set
-            // it defaults to a naming container
-            namedViewRoot = !((_a = document === null || document === void 0 ? void 0 : document.head) === null || _a === void 0 ? void 0 : _a.id);
-        }
-        internalContext.assignIf((_b = node === null || node === void 0 ? void 0 : node.id) !== null && _b !== void 0 ? _b : document === null || document === void 0 ? void 0 : document.head.id, Const_1.PARTIAL_ID).value = (_c = node === null || node === void 0 ? void 0 : node.id) !== null && _c !== void 0 ? _c : document === null || document === void 0 ? void 0 : document.head.id; // second case mojarra
-        internalContext.assign(Const_1.NAMED_VIEWROOT).value = namedViewRoot;
+        /*
+        https://javaee.github.io/javaserverfaces/docs/2.2/javadocs/web-partialresponse.html#ns_xsd
+        The "partial-response" element is the root of the partial response information hierarchy,
+        and contains nested elements for all possible elements that can exist in the response.
+        This element must have an "id" attribute whose value is the return from calling getContainerClientId()
+        on the UIViewRoot to which this response pertains.
+         */
+        // we can determine whether we are in a naming container scenario by checking whether the passed view id is present in the page
+        // under or in body as identifier
+        var _a;
+        let partialId = (_a = node === null || node === void 0 ? void 0 : node.id) === null || _a === void 0 ? void 0 : _a.value;
+        internalContext.assignIf(!!partialId, Const_1.PARTIAL_ID).value = partialId; // second case mojarra
+        // there must be at least one container viewstate element resembling the viewroot that we know
+        // this is named
+        responseProcessor.updateNamedViewRootState();
         const SEL_SUB_TAGS = [Const_1.XML_TAG_ERROR, Const_1.XML_TAG_REDIRECT, Const_1.XML_TAG_CHANGES].join(",");
         // now we can process the main operations
         node.querySelectorAll(SEL_SUB_TAGS).each((node) => {
@@ -7260,6 +7263,17 @@ class ResponseProcessor {
                 .filter(affectedForm => this.isInExecuteOrRender(affectedForm));
             this.appendClientWindowToForms(affectedForms, namedViewRoot, value.value, namingContainerId.orElse("").value);
         });
+    }
+    updateNamedViewRootState() {
+        let partialId = this.internalContext.getIf(Const_1.PARTIAL_ID);
+        let namedViewRoot = this.internalContext.getIf(Const_1.NAMED_VIEWROOT);
+        if (partialId.isPresent() &&
+            (namedViewRoot.isAbsent() ||
+                !namedViewRoot.value)) {
+            const SEP = (0, Const_1.$faces)().separatorchar;
+            this.internalContext.assign(Const_1.NAMED_VIEWROOT).value = (!!document.getElementById(partialId.value)) || (0, mona_dish_1.DQ$)(`input[name*='${(0, Const_1.$nsp)(Const_1.P_VIEWSTATE)}']`)
+                .filter(node => node.attr("name").value.indexOf(partialId.value + SEP) == 0).length > 0;
+        }
     }
     /**
      * all processing done we can close the request and send the appropriate events

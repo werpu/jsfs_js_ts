@@ -36,7 +36,7 @@ import {
     XML_TAG_PARTIAL_RESP,
     RESPONSE_XML,
     XML_TAG_AFTER,
-    XML_TAG_BEFORE, NAMED_VIEWROOT, XML_ATTR_NAMED_VIEWROOT
+    XML_TAG_BEFORE, NAMED_VIEWROOT, XML_ATTR_NAMED_VIEWROOT, P_VIEWSTATE, $faces
 } from "../core/Const";
 import {resolveContexts, resolveResponseXML} from "./ResonseDataResolver";
 import {ExtConfig} from "../util/ExtDomQuery";
@@ -76,6 +76,7 @@ export module Response {
         // doing any evaluations even on embedded scripts.
         // Usually this does not matter, the client window comes in almost last always anyway
         // we maybe drop this deferred assignment in the future, but myfaces did it until now.
+        responseProcessor.updateNamedViewRootState();
         responseProcessor.fixViewStates();
         responseProcessor.fixClientWindow();
         responseProcessor.globalEval();
@@ -86,21 +87,24 @@ export module Response {
     /**
      * highest node partial-response from there the main operations are triggered
      */
-     function processPartialTag(node: XMLQuery, responseProcessor: IResponseProcessor, internalContext) {
+    function processPartialTag(node: XMLQuery, responseProcessor: IResponseProcessor, internalContext) {
 
-        let namedAttr = node.attr(XML_ATTR_NAMED_VIEWROOT);
-        // MyFaces.
-        // there are two differences here on how we determine the naming container scenario
-        // mojarra only partial reponse identifier, and if there is none we do not have any naming container
-        // myfaces either uses the reponse identifier
-        let namedViewRoot = namedAttr.isPresent() ?  namedAttr.value === "true" : false;
-        if(!namedAttr.isPresent() && node.id) { // defauts fallback if namedViewRoot is not set, if node id is set
-                                                // it defaults to a naming container
-            namedViewRoot = !(document?.head?.id);
-        }
 
-        internalContext.assignIf(node?.id ?? document?.head.id, PARTIAL_ID).value = node?.id ?? document?.head.id; // second case mojarra
-        internalContext.assign(NAMED_VIEWROOT).value = namedViewRoot;
+        /*
+        https://javaee.github.io/javaserverfaces/docs/2.2/javadocs/web-partialresponse.html#ns_xsd
+        The "partial-response" element is the root of the partial response information hierarchy,
+        and contains nested elements for all possible elements that can exist in the response.
+        This element must have an "id" attribute whose value is the return from calling getContainerClientId()
+        on the UIViewRoot to which this response pertains.
+         */
+        // we can determine whether we are in a naming container scenario by checking whether the passed view id is present in the page
+        // under or in body as identifier
+
+        let partialId:string = node?.id?.value;
+        internalContext.assignIf(!!partialId, PARTIAL_ID).value = partialId; // second case mojarra
+        // there must be at least one container viewstate element resembling the viewroot that we know
+        // this is named
+        responseProcessor.updateNamedViewRootState();
 
         const SEL_SUB_TAGS = [XML_TAG_ERROR, XML_TAG_REDIRECT, XML_TAG_CHANGES].join(",");
 
@@ -122,12 +126,12 @@ export module Response {
     }
 
     let processInsert = function (responseProcessor: IResponseProcessor, node: XMLQuery) {
-         // path1 insert after as child tags
-         if(node.querySelectorAll([XML_TAG_BEFORE, XML_TAG_AFTER].join(",")).length) {
-             responseProcessor.insertWithSubTags(node);
-         } else { // insert before after with id
-             responseProcessor.insert(node);
-         }
+        // path1 insert after as child tags
+        if(node.querySelectorAll([XML_TAG_BEFORE, XML_TAG_AFTER].join(",")).length) {
+            responseProcessor.insertWithSubTags(node);
+        } else { // insert before after with id
+            responseProcessor.insert(node);
+        }
 
     };
 
@@ -137,7 +141,7 @@ export module Response {
      * @param node
      * @param responseProcessor
      */
-     function processChangesTag(node: XMLQuery, responseProcessor: IResponseProcessor): boolean {
+    function processChangesTag(node: XMLQuery, responseProcessor: IResponseProcessor): boolean {
         const ALLOWED_TAGS = [XML_TAG_UPDATE, XML_TAG_EVAL, XML_TAG_INSERT, XML_TAG_DELETE, XML_TAG_ATTRIBUTES, XML_TAG_EXTENSION].join(", ");
         node.querySelectorAll(ALLOWED_TAGS).each(
             (node: XMLQuery) => {
@@ -190,8 +194,8 @@ export module Response {
      * @param node
      * @param responseProcessor
      */
-     function processUpdateTag(node: XMLQuery, responseProcessor: IResponseProcessor) {
-         // early state storing, if no state we perform a normal update cycle
+    function processUpdateTag(node: XMLQuery, responseProcessor: IResponseProcessor) {
+        // early state storing, if no state we perform a normal update cycle
         if (!storeState(responseProcessor, node)) {
             handleElementUpdate(node, responseProcessor);
         }
@@ -203,7 +207,7 @@ export module Response {
      * @param node
      * @param responseProcessor
      */
-     function handleElementUpdate(node: XMLQuery, responseProcessor: IResponseProcessor) {
+    function handleElementUpdate(node: XMLQuery, responseProcessor: IResponseProcessor) {
         let cdataBlock = node.cDATAAsString;
         switch (node.id.value) {
             case $nsp(P_VIEWROOT) :

@@ -32,7 +32,7 @@ import {
     P_VIEWBODY,
     P_VIEWHEAD,
     P_VIEWROOT,
-    PARTIAL_ID,
+    NAMING_CONTAINER_ID,
     XML_TAG_PARTIAL_RESP,
     RESPONSE_XML,
     XML_TAG_AFTER,
@@ -101,7 +101,8 @@ export module Response {
         // under or in body as identifier
 
         let partialId:string = node?.id?.value;
-        internalContext.assignIf(!!partialId, PARTIAL_ID).value = partialId; // second case mojarra
+        internalContext.assignIf(!!partialId, NAMING_CONTAINER_ID).value = partialId; // second case mojarra
+
         // there must be at least one container viewstate element resembling the viewroot that we know
         // this is named
         responseProcessor.updateNamedViewRootState();

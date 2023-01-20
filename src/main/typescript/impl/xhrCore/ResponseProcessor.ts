@@ -50,7 +50,7 @@ import {
     P_RENDER,
     P_RENDER_OVERRIDE,
     P_VIEWSTATE,
-    PARTIAL_ID,
+    NAMING_CONTAINER_ID,
     RESPONSE_XML,
     SEL_CLIENT_WINDOW_ELEM,
     SEL_VIEWSTATE_ELEM,
@@ -348,7 +348,7 @@ export class ResponseProcessor implements IResponseProcessor {
     fixViewStates() {
         Stream.ofAssoc<StateHolder>(this.internalContext.getIf(APPLIED_VST).orElse({}).value)
             .each(([, value]) => {
-                const namingContainerId = this.internalContext.getIf(PARTIAL_ID);
+                const namingContainerId = this.internalContext.getIf(NAMING_CONTAINER_ID);
                 const namedViewRoot = !!this.internalContext.getIf(NAMED_VIEWROOT).value
                 const affectedForms = this.getContainerForms(namingContainerId)
                     .filter(affectedForm => this.isInExecuteOrRender(affectedForm));
@@ -366,7 +366,7 @@ export class ResponseProcessor implements IResponseProcessor {
     fixClientWindow() {
         Stream.ofAssoc<StateHolder>(this.internalContext.getIf(APPLIED_CLIENT_WINDOW).orElse({}).value)
             .each(([, value]) => {
-                const namingContainerId = this.internalContext.getIf(PARTIAL_ID);
+                const namingContainerId = this.internalContext.getIf(NAMING_CONTAINER_ID);
                 const namedViewRoot = !!this.internalContext.getIf(NAMED_VIEWROOT).value;
                 const affectedForms = this.getContainerForms(namingContainerId)
                     .filter(affectedForm => this.isInExecuteOrRender(affectedForm));
@@ -376,7 +376,7 @@ export class ResponseProcessor implements IResponseProcessor {
     }
 
     updateNamedViewRootState() {
-        let partialId = this.internalContext.getIf(PARTIAL_ID);
+        let partialId = this.internalContext.getIf(NAMING_CONTAINER_ID);
         let namedViewRoot = this.internalContext.getIf(NAMED_VIEWROOT);
         if(partialId.isPresent() &&
             (namedViewRoot.isAbsent() ||

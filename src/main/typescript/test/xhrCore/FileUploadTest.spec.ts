@@ -66,6 +66,8 @@ describe('Tests on the xhr core when it starts to call the request', function ()
         const CONTENT_TYPE = "Content-Type";
         const POST = "POST";
 
+        global["debug_f"] = true;
+
         try {
 
             let button = DomQuery.byId("input_1");

@@ -19,6 +19,9 @@ import isString = Lang.isString;
 import {ExtConfig, ExtDomQuery} from "../util/ExtDomQuery";
 
 
+type ParamsMapper<V, K> = (key: V, item: K) => [V, K];
+const defaultParamsMapper: ParamsMapper<string, any> = (key, item) => [key, item];
+
 /**
  * A unified form data class
  * which builds upon our configuration.
@@ -156,11 +159,12 @@ export class XhrFormData extends Config {
     }
 
     /**
+     * @param paramsMapper ... pre encode the params if needed, default is to map them 1:1
      * @returns a Form data representation, this is needed for file submits
      */
-    toFormData(): FormData {
+    toFormData(paramsMapper: ParamsMapper<string, any> = defaultParamsMapper): FormData {
         let ret: any = new FormData();
-        this.appendInputs(ret);
+        this.appendInputs(ret, paramsMapper);
         return ret;
     }
 
@@ -175,13 +179,14 @@ export class XhrFormData extends Config {
      *
      * @param defaultStr optional default value if nothing is there to encode
      */
-    toString(defaultStr = EMPTY_STR): string {
+    toString(paramsMapper: ParamsMapper<string, any> = defaultParamsMapper, defaultStr = EMPTY_STR): string {
         if (this.isAbsent()) {
             return defaultStr;
         }
         let entries = LazyStream.of(...Object.keys(this.value))
             .filter(key => this.value.hasOwnProperty(key))
-            .flatMap(key => Stream.of(...this.value[key]).map(val => [key, val])
+            .flatMap(key => Stream.of(...this.value[key])
+                .map(val => paramsMapper(key, val))
                 //we cannot encode file elements that is handled by multipart requests anyway
                 .filter(([, value]) => !(value instanceof ExtDomQuery.global().File))
                 .collect(new ArrayCollector()))
@@ -254,10 +259,13 @@ export class XhrFormData extends Config {
         this.shallowMerge(toEncode.deepElements.encodeFormElement());
     }
 
-    private appendInputs(ret: any) {
-        Stream.of(...Object.keys(this.value))
-            .each(key => {
-                Stream.of(...this.value[key]).each(item => ret.append(key, item));
-            });
+    private appendInputs(ret: any, paramsMapper: ParamsMapper<string, any>) {
+        Stream.ofAssoc(this.value)
+            .flatMap(([key, item]) =>
+                Stream.of(...(item as Array<any>)).map(item => {
+                    return {key, item};
+                }))
+            .map(({key, item}) => paramsMapper(key, item))
+            .each(([key, item]) => ret.append(key, item))
     }
 }

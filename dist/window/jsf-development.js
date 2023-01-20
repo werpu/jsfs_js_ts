@@ -4478,6 +4478,7 @@ var Implementation;
         assignClientWindowId(form, requestCtx);
         assignExecute(options, requestCtx, form, elementId);
         assignRender(options, requestCtx, form, elementId);
+        assignNamingContainerData(internalCtx, form);
         //now we enqueue the request as asynchronous runnable into our request
         //queue and let the queue take over the rest
         Implementation.queueHandler.addRequestToQueue(elem, form, requestCtx, internalCtx, delay, timeout);
@@ -4723,6 +4724,21 @@ var Implementation;
         let clientWindow = (0, Const_1.$faces)().getClientWindow(form.getAsElem(0).value);
         if (clientWindow) {
             targetContext.assign(Const_1.CTX_PARAM_REQ_PASS_THR, Const_1.P_CLIENT_WINDOW).value = clientWindow;
+        }
+    }
+    /**
+     * determines the current naming container
+     * and assigns it internally
+     *
+     * @param internalContext
+     * @param formElement
+     * @private
+     */
+    function assignNamingContainerData(internalContext, formElement) {
+        const viewRootId = (0, RequestDataResolver_1.resolveViewRootId)(formElement);
+        if (!!viewRootId) {
+            internalContext.assign(Const_1.NAMED_VIEWROOT).value = true;
+            internalContext.assign(Const_1.NAMING_CONTAINER_ID).value = viewRootId;
         }
     }
     /**
@@ -5175,7 +5191,7 @@ var PushImpl;
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.CTX_OPTIONS_PARAMS = exports.TIMEOUT_EVENT = exports.CLIENT_ERROR = exports.SERVER_ERROR = exports.MALFORMEDXML = exports.EMPTY_RESPONSE = exports.HTTPERROR = exports.RESPONSE_XML = exports.RESPONSE_TEXT = exports.ERROR_MESSAGE = exports.ERROR_NAME = exports.STATUS = exports.SOURCE = exports.SUCCESS = exports.COMPLETE = exports.BEGIN = exports.ON_EVENT = exports.ON_ERROR = exports.EVENT = exports.ERROR = exports.WINDOW_ID = exports.CTX_PARAM_RENDER = exports.P_BEHAVIOR_EVENT = exports.P_WINDOW_ID = exports.P_RESET_VALUES = exports.P_EVT = exports.P_RENDER_OVERRIDE = exports.P_RENDER = exports.P_EXECUTE = exports.P_AJAX = exports.IDENT_FORM = exports.IDENT_THIS = exports.IDENT_NONE = exports.IDENT_ALL = exports.HTML_CLIENT_WINDOW = exports.HTML_VIEWSTATE = exports.EMPTY_MAP = exports.EMPTY_STR = exports.EMPTY_FUNC = exports.P_RESOURCE = exports.P_VIEWBODY = exports.P_VIEWHEAD = exports.P_VIEWROOT = exports.P_CLIENT_WINDOW = exports.P_VIEWSTATE = exports.VIEW_ID = exports.PARTIAL_ID = exports.P_PARTIAL_SOURCE = exports.NAMED_VIEWROOT = exports.XML_ATTR_NAMED_VIEWROOT = void 0;
+exports.CTX_OPTIONS_PARAMS = exports.TIMEOUT_EVENT = exports.CLIENT_ERROR = exports.SERVER_ERROR = exports.MALFORMEDXML = exports.EMPTY_RESPONSE = exports.HTTPERROR = exports.RESPONSE_XML = exports.RESPONSE_TEXT = exports.ERROR_MESSAGE = exports.ERROR_NAME = exports.STATUS = exports.SOURCE = exports.SUCCESS = exports.COMPLETE = exports.BEGIN = exports.ON_EVENT = exports.ON_ERROR = exports.EVENT = exports.ERROR = exports.WINDOW_ID = exports.CTX_PARAM_RENDER = exports.P_BEHAVIOR_EVENT = exports.P_WINDOW_ID = exports.P_RESET_VALUES = exports.P_EVT = exports.P_RENDER_OVERRIDE = exports.P_RENDER = exports.P_EXECUTE = exports.P_AJAX = exports.IDENT_FORM = exports.IDENT_THIS = exports.IDENT_NONE = exports.IDENT_ALL = exports.HTML_CLIENT_WINDOW = exports.HTML_VIEWSTATE = exports.EMPTY_MAP = exports.EMPTY_STR = exports.EMPTY_FUNC = exports.P_RESOURCE = exports.P_VIEWBODY = exports.P_VIEWHEAD = exports.P_VIEWROOT = exports.P_CLIENT_WINDOW = exports.P_VIEWSTATE = exports.VIEW_ID = exports.NAMING_CONTAINER_ID = exports.P_PARTIAL_SOURCE = exports.NAMED_VIEWROOT = exports.XML_ATTR_NAMED_VIEWROOT = void 0;
 exports.XML_TAG_AFTER = exports.XML_TAG_BEFORE = exports.XML_TAG_REDIRECT = exports.XML_TAG_EXTENSION = exports.XML_TAG_ATTRIBUTES = exports.XML_TAG_ERROR = exports.XML_TAG_EVAL = exports.XML_TAG_INSERT = exports.XML_TAG_DELETE = exports.XML_TAG_UPDATE = exports.XML_TAG_CHANGES = exports.XML_TAG_PARTIAL_RESP = exports.ATTR_ID = exports.ATTR_VALUE = exports.ATTR_NAME = exports.ATTR_URL = exports.ERR_NO_PARTIAL_RESPONSE = exports.PHASE_PROCESS_RESPONSE = exports.SEL_RESPONSE_XML = exports.SEL_CLIENT_WINDOW_ELEM = exports.SEL_VIEWSTATE_ELEM = exports.HTML_TAG_STYLE = exports.HTML_TAG_SCRIPT = exports.HTML_TAG_LINK = exports.HTML_TAG_BODY = exports.HTML_TAG_FORM = exports.HTML_TAG_HEAD = exports.STD_ACCEPT = exports.NO_TIMEOUT = exports.MULTIPART = exports.URL_ENCODED = exports.STATE_EVT_COMPLETE = exports.STATE_EVT_TIMEOUT = exports.STATE_EVT_BEGIN = exports.REQ_TYPE_POST = exports.REQ_TYPE_GET = exports.ENCODED_URL = exports.VAL_AJAX = exports.REQ_ACCEPT = exports.HEAD_FACES_REQ = exports.CONTENT_TYPE = exports.CTX_PARAM_REQ_PASS_THR = exports.CTX_PARAM_SRC_CTL_ID = exports.CTX_PARAM_SRC_FRM_ID = exports.CTX_PARAM_MF_INTERNAL = exports.CTX_OPTIONS_EXECUTE = exports.CTX_OPTIONS_RESET = exports.CTX_OPTIONS_TIMEOUT = exports.DELAY_NONE = exports.CTX_OPTIONS_DELAY = void 0;
 exports.$nsp = exports.$faces = exports.UNKNOWN = exports.MAX_RECONNECT_ATTEMPTS = exports.RECONNECT_INTERVAL = exports.APPLIED_CLIENT_WINDOW = exports.APPLIED_VST = exports.REASON_EXPIRED = exports.MF_NONE = exports.MYFACES = exports.DEFERRED_HEAD_INSERTS = exports.UPDATE_ELEMS = exports.UPDATE_FORMS = exports.XML_TAG_ATTR = void 0;
 /*
@@ -5184,7 +5200,7 @@ exports.$nsp = exports.$faces = exports.UNKNOWN = exports.MAX_RECONNECT_ATTEMPTS
 exports.XML_ATTR_NAMED_VIEWROOT = "namedViewRoot";
 exports.NAMED_VIEWROOT = "namedViewRoot";
 exports.P_PARTIAL_SOURCE = "jakarta.faces.source";
-exports.PARTIAL_ID = "partialId";
+exports.NAMING_CONTAINER_ID = "myfaces.partialId";
 exports.VIEW_ID = "myfaces.viewId";
 exports.P_VIEWSTATE = "jakarta.faces.ViewState";
 exports.P_CLIENT_WINDOW = "jakarta.faces.ClientWindow";
@@ -6507,7 +6523,7 @@ exports.EventData = EventData;
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.resolveDefaults = exports.getEventTarget = exports.resolveWindowId = exports.resolveDelay = exports.resolveTimeout = exports.resolveViewId = exports.resolveForm = exports.resolveFinalUrl = exports.resolveTargetUrl = exports.resolveHandlerFunc = void 0;
+exports.resolveDefaults = exports.getEventTarget = exports.resolveWindowId = exports.resolveDelay = exports.resolveTimeout = exports.resolveViewRootId = exports.resolveViewId = exports.resolveForm = exports.resolveFinalUrl = exports.resolveTargetUrl = exports.resolveHandlerFunc = void 0;
 const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 const Lang_1 = __webpack_require__(/*! ../util/Lang */ "./src/main/typescript/impl/util/Lang.ts");
@@ -6566,6 +6582,14 @@ function resolveViewId(form) {
     return form.id.value.indexOf(viewStateViewId) === 0 ? viewStateViewId : "";
 }
 exports.resolveViewId = resolveViewId;
+function resolveViewRootId(form) {
+    const viewState = form.querySelectorAll(`input[type='hidden'][name*='${(0, Const_1.$nsp)(Const_1.P_VIEWSTATE)}']`).attr("name").orElse("").value;
+    const divider = (0, Const_1.$faces)().separatorchar;
+    const viewId = viewState.split(divider, 2)[0];
+    //different to the identifier the form id is never prepended to the viewstate
+    return viewId.indexOf((0, Const_1.$nsp)(Const_1.P_VIEWSTATE)) === -1 ? viewId : "";
+}
+exports.resolveViewRootId = resolveViewRootId;
 function resolveTimeout(options) {
     var _a;
     let getCfg = Lang_1.ExtLang.getLocalOrGlobalConfig;
@@ -6846,7 +6870,7 @@ var Response;
         // under or in body as identifier
         var _a;
         let partialId = (_a = node === null || node === void 0 ? void 0 : node.id) === null || _a === void 0 ? void 0 : _a.value;
-        internalContext.assignIf(!!partialId, Const_1.PARTIAL_ID).value = partialId; // second case mojarra
+        internalContext.assignIf(!!partialId, Const_1.NAMING_CONTAINER_ID).value = partialId; // second case mojarra
         // there must be at least one container viewstate element resembling the viewroot that we know
         // this is named
         responseProcessor.updateNamedViewRootState();
@@ -7243,7 +7267,7 @@ class ResponseProcessor {
     fixViewStates() {
         mona_dish_1.Stream.ofAssoc(this.internalContext.getIf(Const_1.APPLIED_VST).orElse({}).value)
             .each(([, value]) => {
-            const namingContainerId = this.internalContext.getIf(Const_1.PARTIAL_ID);
+            const namingContainerId = this.internalContext.getIf(Const_1.NAMING_CONTAINER_ID);
             const namedViewRoot = !!this.internalContext.getIf(Const_1.NAMED_VIEWROOT).value;
             const affectedForms = this.getContainerForms(namingContainerId)
                 .filter(affectedForm => this.isInExecuteOrRender(affectedForm));
@@ -7257,7 +7281,7 @@ class ResponseProcessor {
     fixClientWindow() {
         mona_dish_1.Stream.ofAssoc(this.internalContext.getIf(Const_1.APPLIED_CLIENT_WINDOW).orElse({}).value)
             .each(([, value]) => {
-            const namingContainerId = this.internalContext.getIf(Const_1.PARTIAL_ID);
+            const namingContainerId = this.internalContext.getIf(Const_1.NAMING_CONTAINER_ID);
             const namedViewRoot = !!this.internalContext.getIf(Const_1.NAMED_VIEWROOT).value;
             const affectedForms = this.getContainerForms(namingContainerId)
                 .filter(affectedForm => this.isInExecuteOrRender(affectedForm));
@@ -7265,7 +7289,7 @@ class ResponseProcessor {
         });
     }
     updateNamedViewRootState() {
-        let partialId = this.internalContext.getIf(Const_1.PARTIAL_ID);
+        let partialId = this.internalContext.getIf(Const_1.NAMING_CONTAINER_ID);
         let namedViewRoot = this.internalContext.getIf(Const_1.NAMED_VIEWROOT);
         if (partialId.isPresent() &&
             (namedViewRoot.isAbsent() ||
@@ -7465,6 +7489,7 @@ const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-di
 const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 var isString = mona_dish_1.Lang.isString;
 const ExtDomQuery_1 = __webpack_require__(/*! ../util/ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
+const defaultParamsMapper = (key, item) => [key, item];
 /**
  * A unified form data class
  * which builds upon our configuration.
@@ -7597,11 +7622,12 @@ class XhrFormData extends mona_dish_1.Config {
         this.shallowMerge(toMerge);
     }
     /**
+     * @param paramsMapper ... pre encode the params if needed, default is to map them 1:1
      * @returns a Form data representation, this is needed for file submits
      */
-    toFormData() {
+    toFormData(paramsMapper = defaultParamsMapper) {
         let ret = new FormData();
-        this.appendInputs(ret);
+        this.appendInputs(ret, paramsMapper);
         return ret;
     }
     resolveSubmitIdentifier(elem) {
@@ -7615,13 +7641,14 @@ class XhrFormData extends mona_dish_1.Config {
      *
      * @param defaultStr optional default value if nothing is there to encode
      */
-    toString(defaultStr = Const_1.EMPTY_STR) {
+    toString(paramsMapper = defaultParamsMapper, defaultStr = Const_1.EMPTY_STR) {
         if (this.isAbsent()) {
             return defaultStr;
         }
         let entries = mona_dish_1.LazyStream.of(...Object.keys(this.value))
             .filter(key => this.value.hasOwnProperty(key))
-            .flatMap(key => mona_dish_1.Stream.of(...this.value[key]).map(val => [key, val])
+            .flatMap(key => mona_dish_1.Stream.of(...this.value[key])
+            .map(val => paramsMapper(key, val))
             //we cannot encode file elements that is handled by multipart requests anyway
             .filter(([, value]) => !(value instanceof ExtDomQuery_1.ExtDomQuery.global().File))
             .collect(new mona_dish_1.ArrayCollector()))
@@ -7684,11 +7711,13 @@ class XhrFormData extends mona_dish_1.Config {
         //lets encode the form elements
         this.shallowMerge(toEncode.deepElements.encodeFormElement());
     }
-    appendInputs(ret) {
-        mona_dish_1.Stream.of(...Object.keys(this.value))
-            .each(key => {
-            mona_dish_1.Stream.of(...this.value[key]).each(item => ret.append(key, item));
-        });
+    appendInputs(ret, paramsMapper) {
+        mona_dish_1.Stream.ofAssoc(this.value)
+            .flatMap(([key, item]) => mona_dish_1.Stream.of(...item).map(item => {
+            return { key, item };
+        }))
+            .map(({ key, item }) => paramsMapper(key, item))
+            .each(([key, item]) => ret.append(key, item));
     }
 }
 exports.XhrFormData = XhrFormData;
@@ -7980,12 +8009,29 @@ class XhrRequest {
         let isPost = this.ajaxType != Const_1.REQ_TYPE_GET;
         if (formData.isMultipartRequest) {
             // in case of a multipart request we send in a formData object as body
-            this.xhrObject.send((isPost) ? formData.toFormData() : null);
+            this.xhrObject.send((isPost) ? formData.toFormData(this.getNamingContainerMapper()) : null);
         }
         else {
             // in case of a normal request we send it normally
-            this.xhrObject.send((isPost) ? formData.toString() : null);
+            this.xhrObject.send((isPost) ? formData.toString(this.getNamingContainerMapper()) : null);
         }
+    }
+    /**
+     * as per jsdoc before the request it must be ensured that every post argument
+     * is prefixed with the naming container id (there is an exception in mojarra with
+     * the element=element param, which we have to follow here as well.
+     * (inputs are prefixed by name anyway normally this only affects our standard parameters)
+     * @private
+     */
+    getNamingContainerMapper() {
+        const isNamedViewRoot = this.internalContext.getIf(Const_1.NAMED_VIEWROOT).isPresent();
+        if (!isNamedViewRoot) {
+            return;
+        }
+        const partialId = this.internalContext.getIf(Const_1.NAMING_CONTAINER_ID).value;
+        const SEP = (0, Const_1.$faces)().separatorchar;
+        const prefix = partialId + SEP;
+        return (key, value) => (key.indexOf(prefix) == 0) ? [key, value] : [prefix + key, value];
     }
     /*
      * other helpers

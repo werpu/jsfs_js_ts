@@ -23,7 +23,7 @@ import {
     DELAY_NONE,
     EMPTY_FUNC,
     EMPTY_STR,
-    ENCODED_URL,
+    ENCODED_URL, NAMED_VIEWROOT, NAMING_CONTAINER_ID,
     P_VIEWSTATE,
     REQ_TYPE_GET,
     REQ_TYPE_POST
@@ -88,6 +88,15 @@ export function resolveViewId(form: DQ): string {
     // even without being in a naming container, the other components ignore that
     return form.id.value.indexOf(viewStateViewId) === 0 ? viewStateViewId : "";
 }
+
+export function resolveViewRootId(form: DQ): string {
+    const viewState = form.querySelectorAll(`input[type='hidden'][name*='${$nsp(P_VIEWSTATE)}']`).attr("name").orElse("").value;
+    const divider = $faces().separatorchar;
+    const viewId = viewState.split(divider, 2)[0];
+    //different to the identifier the form id is never prepended to the viewstate
+    return viewId.indexOf($nsp(P_VIEWSTATE)) === -1 ? viewId : "";
+}
+
 
 export function resolveTimeout(options: Config): number {
     let getCfg = ExtLang.getLocalOrGlobalConfig;

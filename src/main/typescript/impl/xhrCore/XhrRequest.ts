@@ -15,7 +15,7 @@
  */
 
 import {AsyncRunnable} from "../util/AsyncRunnable";
-import {Config, DQ, Stream} from "mona-dish";
+import {Config, DQ, DQ$, Stream} from "mona-dish";
 import {Implementation} from "../AjaxImpl";
 
 import {XhrFormData} from "./XhrFormData";
@@ -23,7 +23,7 @@ import {ErrorData} from "./ErrorData";
 import {EventData} from "./EventData";
 import {ExtLang} from "../util/Lang";
 import {
-    $faces,
+    $faces, $nsp,
     BEGIN,
     COMPLETE,
     CONTENT_TYPE,
@@ -31,10 +31,10 @@ import {
     CTX_PARAM_REQ_PASS_THR,
     ERROR,
     HEAD_FACES_REQ,
-    MALFORMEDXML,
+    MALFORMEDXML, NAMED_VIEWROOT,
     NO_TIMEOUT,
     ON_ERROR,
-    ON_EVENT, P_EXECUTE, P_PARTIAL_SOURCE,
+    ON_EVENT, P_EXECUTE, P_PARTIAL_SOURCE, P_VIEWSTATE, NAMING_CONTAINER_ID,
     REQ_ACCEPT,
     REQ_TYPE_GET,
     REQ_TYPE_POST, SOURCE,
@@ -43,9 +43,10 @@ import {
     URL_ENCODED,
     VAL_AJAX
 } from "../core/Const";
-import {resolveFinalUrl, resolveHandlerFunc} from "./RequestDataResolver";
+import {resolveFinalUrl, resolveHandlerFunc, resolveViewRootId} from "./RequestDataResolver";
 import failSaveExecute = ExtLang.failSaveExecute;
 import {ExtConfig} from "../util/ExtDomQuery";
+import {ResponseProcessor} from "./ResponseProcessor";
 
 /**
  * Faces XHR Request Wrapper
@@ -115,10 +116,11 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         let executesArr = () => {
             return this.requestContext.getIf(CTX_PARAM_REQ_PASS_THR, P_EXECUTE).get("none").value.split(/\s+/gi);
         };
-        try {
 
+        try {
             let formElement = this.sourceForm.getAsElem(0).value;
             let viewState = $faces().getViewState(formElement);
+
             // encoded we need to decode
             // We generated a base representation of the current form
             // in case someone has overloaded the viewState with additional decorators we merge
@@ -178,8 +180,9 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             // setting, they accept headers automatically
             ignoreErr(() => xhrObject.setRequestHeader(REQ_ACCEPT, STD_ACCEPT));
 
-            this.sendEvent(BEGIN);
 
+
+            this.sendEvent(BEGIN);
             this.sendRequest(formData);
 
         } catch (e) {
@@ -340,11 +343,29 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         let isPost = this.ajaxType != REQ_TYPE_GET;
         if (formData.isMultipartRequest) {
             // in case of a multipart request we send in a formData object as body
-            this.xhrObject.send((isPost) ? formData.toFormData() : null);
+            this.xhrObject.send((isPost) ? formData.toFormData(this.getNamingContainerMapper()) : null);
         } else {
             // in case of a normal request we send it normally
-            this.xhrObject.send((isPost) ? formData.toString() : null);
+            this.xhrObject.send((isPost) ? formData.toString(this.getNamingContainerMapper()) : null);
         }
+    }
+
+    /**
+     * as per jsdoc before the request it must be ensured that every post argument
+     * is prefixed with the naming container id (there is an exception in mojarra with
+     * the element=element param, which we have to follow here as well.
+     * (inputs are prefixed by name anyway normally this only affects our standard parameters)
+     * @private
+     */
+    private getNamingContainerMapper(): (key: string, value: any) => [string, any] {
+        const isNamedViewRoot = this.internalContext.getIf(NAMED_VIEWROOT).isPresent();
+        if(!isNamedViewRoot) {
+            return;
+        }
+        const partialId = this.internalContext.getIf(NAMING_CONTAINER_ID).value;
+        const SEP = $faces().separatorchar;
+        const prefix = partialId + SEP;
+        return (key: string, value: any) => (key.indexOf(prefix) == 0) ? [key, value] : [prefix + key, value];
     }
 
     /*
@@ -373,5 +394,6 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         let eventHandler = resolveHandlerFunc(this.requestContext, this.responseContext, ON_ERROR);
         Implementation.sendError(errorData, eventHandler);
     }
+
 
 }

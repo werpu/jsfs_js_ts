@@ -48,13 +48,20 @@ import {
     P_WINDOW_ID,
     CTX_PARAM_RENDER,
     SOURCE,
-    HTML_TAG_FORM, CTX_OPTIONS_PARAMS, VIEW_ID, $faces, EMPTY_STR
+    HTML_TAG_FORM,
+    CTX_OPTIONS_PARAMS,
+    VIEW_ID,
+    $faces,
+    EMPTY_STR,
+    CTX_PARAM_MF_INTERNAL,
+    NAMED_VIEWROOT,
+    NAMING_CONTAINER_ID
 } from "./core/Const";
 import {
     resolveDefaults,
     resolveDelay,
     resolveForm,
-    resolveTimeout, resolveViewId
+    resolveTimeout, resolveViewId, resolveViewRootId
 } from "./xhrCore/RequestDataResolver";
 
 /*
@@ -337,6 +344,7 @@ export module Implementation {
         assignClientWindowId(form, requestCtx);
         assignExecute(options, requestCtx, form, elementId);
         assignRender(options, requestCtx, form, elementId);
+        assignNamingContainerData(internalCtx, form);
 
         //now we enqueue the request as asynchronous runnable into our request
         //queue and let the queue take over the rest
@@ -600,6 +608,23 @@ export module Implementation {
         let clientWindow = $faces().getClientWindow(form.getAsElem(0).value);
         if (clientWindow) {
             targetContext.assign(CTX_PARAM_REQ_PASS_THR, P_CLIENT_WINDOW).value = clientWindow;
+        }
+    }
+
+    /**
+     * determines the current naming container
+     * and assigns it internally
+     *
+     * @param internalContext
+     * @param formElement
+     * @private
+     */
+    function assignNamingContainerData(internalContext: Config, formElement: DQ) {
+        const viewRootId = resolveViewRootId(formElement);
+
+        if(!!viewRootId) {
+            internalContext.assign(NAMED_VIEWROOT).value = true;
+            internalContext.assign(NAMING_CONTAINER_ID).value = viewRootId;
         }
     }
 

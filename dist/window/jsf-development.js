@@ -2760,6 +2760,12 @@ class Config extends Optional {
     toJson() {
         return JSON.stringify(this.value);
     }
+    /**
+     * returns the first config level as streeam
+     */
+    get stream() {
+        return Stream_1.Stream.of(...Object.keys(this.value)).map(key => [key, this.value[key]]);
+    }
     getClass() {
         return Config;
     }
@@ -4651,7 +4657,9 @@ var Implementation;
         if (!element.isTag(Const_1.HTML_TAG_FORM)) {
             throw new Error(getMessage("ERR_VIEWSTATE"));
         }
-        let formData = new XhrFormData_1.XhrFormData(element);
+        const dummyContext = new mona_dish_1.Config({});
+        assignNamingContainerData(dummyContext, mona_dish_1.DQ.byId(form));
+        let formData = new XhrFormData_1.XhrFormData(element, (0, RequestDataResolver_1.resoveNamingContainerMapper)(dummyContext));
         return formData.toString();
     }
     Implementation.getViewState = getViewState;
@@ -6523,7 +6531,7 @@ exports.EventData = EventData;
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.resolveDefaults = exports.getEventTarget = exports.resolveWindowId = exports.resolveDelay = exports.resolveTimeout = exports.resolveViewRootId = exports.resolveViewId = exports.resolveForm = exports.resolveFinalUrl = exports.resolveTargetUrl = exports.resolveHandlerFunc = void 0;
+exports.resolveDefaults = exports.getEventTarget = exports.resolveWindowId = exports.resolveDelay = exports.resolveTimeout = exports.resoveNamingContainerMapper = exports.resolveViewRootId = exports.resolveViewId = exports.resolveForm = exports.resolveFinalUrl = exports.resolveTargetUrl = exports.resolveHandlerFunc = void 0;
 const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 const Lang_1 = __webpack_require__(/*! ../util/Lang */ "./src/main/typescript/impl/util/Lang.ts");
@@ -6544,6 +6552,7 @@ const Assertions_1 = __webpack_require__(/*! ../util/Assertions */ "./src/main/t
  * @param funcName
  */
 function resolveHandlerFunc(requestContext, responseContext, funcName) {
+    responseContext = responseContext || new mona_dish_1.Config({});
     return responseContext.getIf(funcName)
         .orElseLazy(() => requestContext.getIf(funcName).value)
         .orElse(Const_1.EMPTY_FUNC).value;
@@ -6590,6 +6599,24 @@ function resolveViewRootId(form) {
     return viewId.indexOf((0, Const_1.$nsp)(Const_1.P_VIEWSTATE)) === -1 ? viewId : "";
 }
 exports.resolveViewRootId = resolveViewRootId;
+/**
+ * as per jsdoc before the request it must be ensured that every post argument
+ * is prefixed with the naming container id (there is an exception in mojarra with
+ * the element=element param, which we have to follow here as well.
+ * (inputs are prefixed by name anyway normally this only affects our standard parameters)
+ * @private
+ */
+function resoveNamingContainerMapper(internalContext) {
+    const isNamedViewRoot = internalContext.getIf(Const_1.NAMED_VIEWROOT).isPresent();
+    if (!isNamedViewRoot) {
+        return;
+    }
+    const partialId = internalContext.getIf(Const_1.NAMING_CONTAINER_ID).value;
+    const SEP = (0, Const_1.$faces)().separatorchar;
+    const prefix = partialId + SEP;
+    return (key, value) => (key.indexOf(prefix) == 0) ? [key, value] : [prefix + key, value];
+}
+exports.resoveNamingContainerMapper = resoveNamingContainerMapper;
 function resolveTimeout(options) {
     var _a;
     let getCfg = Lang_1.ExtLang.getLocalOrGlobalConfig;
@@ -7511,9 +7538,10 @@ class XhrFormData extends mona_dish_1.Config {
      * @param executes the executes id list for the elements to being processed
      * @param partialIds partial ids to collect, to reduce the data sent down
      */
-    constructor(dataSource, viewState, executes, partialIds) {
+    constructor(dataSource, paramsMapper = defaultParamsMapper, viewState, executes, partialIds) {
         super({});
         this.dataSource = dataSource;
+        this.paramsMapper = paramsMapper;
         this.partialIds = partialIds;
         /**
          * Checks if the given datasource is a multipart request source
@@ -7579,10 +7607,10 @@ class XhrFormData extends mona_dish_1.Config {
      * @param form the form holding the view state value
      */
     applyViewState(form) {
-        let viewStateElement = form.querySelectorAllDeep(`[name*='${Const_1.P_VIEWSTATE}'`);
+        let viewStateElement = form.querySelectorAllDeep(`[name*='${(0, Const_1.$nsp)(Const_1.P_VIEWSTATE)}'`);
         let viewState = viewStateElement.inputValue;
         // this.appendIf(viewState.isPresent(), P_VIEWSTATE).value = viewState.value;
-        this.appendIf(viewState.isPresent(), viewStateElement.name.value).value = viewState.value;
+        this.appendIf(viewState.isPresent(), this.remapKeyForNamingContainer(viewStateElement.name.value)).value = viewState.value;
     }
     /**
      * assigns an url encoded string to this xhrFormData object
@@ -7609,11 +7637,11 @@ class XhrFormData extends mona_dish_1.Config {
             var _a, _b;
             return keyVal.length < 3 ? [(_a = keyVal === null || keyVal === void 0 ? void 0 : keyVal[0]) !== null && _a !== void 0 ? _a : [], (_b = keyVal === null || keyVal === void 0 ? void 0 : keyVal[1]) !== null && _b !== void 0 ? _b : []] : keyVal;
         }
-        //TODO fix files...
         mona_dish_1.Stream.of(...keyValueEntries)
             .map(line => splitToKeyVal(line))
             //special case of having keys without values
             .map(keyVal => fixKeyWithoutVal(keyVal))
+            .map(keyVal => this.paramsMapper(keyVal[0], keyVal[1]))
             .each(keyVal => {
             var _a, _b;
             toMerge.append(keyVal[0]).value = (_b = (_a = keyVal === null || keyVal === void 0 ? void 0 : keyVal.splice(1)) === null || _a === void 0 ? void 0 : _a.join("")) !== null && _b !== void 0 ? _b : "";
@@ -7625,9 +7653,9 @@ class XhrFormData extends mona_dish_1.Config {
      * @param paramsMapper ... pre encode the params if needed, default is to map them 1:1
      * @returns a Form data representation, this is needed for file submits
      */
-    toFormData(paramsMapper = defaultParamsMapper) {
+    toFormData() {
         let ret = new FormData();
-        this.appendInputs(ret, paramsMapper);
+        this.appendInputs(ret);
         return ret;
     }
     resolveSubmitIdentifier(elem) {
@@ -7641,17 +7669,18 @@ class XhrFormData extends mona_dish_1.Config {
      *
      * @param defaultStr optional default value if nothing is there to encode
      */
-    toString(paramsMapper = defaultParamsMapper, defaultStr = Const_1.EMPTY_STR) {
+    toString(defaultStr = Const_1.EMPTY_STR) {
         if (this.isAbsent()) {
             return defaultStr;
         }
         let entries = mona_dish_1.LazyStream.of(...Object.keys(this.value))
             .filter(key => this.value.hasOwnProperty(key))
             .flatMap(key => mona_dish_1.Stream.of(...this.value[key])
-            .map(val => paramsMapper(key, val))
+            .map(val => {
+            return this.paramsMapper(key, val);
+        }))
             //we cannot encode file elements that is handled by multipart requests anyway
             .filter(([, value]) => !(value instanceof ExtDomQuery_1.ExtDomQuery.global().File))
-            .collect(new mona_dish_1.ArrayCollector()))
             .map(keyVal => {
             return `${encodeURIComponent(keyVal[0])}=${encodeURIComponent(keyVal[1])}`;
         })
@@ -7684,7 +7713,7 @@ class XhrFormData extends mona_dish_1.Config {
          *
          */
         this.encodeSubmittableFields(this, this.dataSource, this.partialIds);
-        if (this.getIf(Const_1.P_VIEWSTATE).isPresent()) {
+        if (this.getIf((0, Const_1.$nsp)(Const_1.P_VIEWSTATE)).isPresent()) {
             return;
         }
         this.applyViewState(this.dataSource);
@@ -7709,15 +7738,27 @@ class XhrFormData extends mona_dish_1.Config {
             toEncode = parentItem;
         }
         //lets encode the form elements
-        this.shallowMerge(toEncode.deepElements.encodeFormElement());
+        let formElements = toEncode.deepElements.encodeFormElement();
+        const mapped = this.remapKeysForNamingCoontainer(formElements);
+        this.shallowMerge(mapped);
     }
-    appendInputs(ret, paramsMapper) {
+    remapKeysForNamingCoontainer(formElements) {
+        let ret = new mona_dish_1.Config({});
+        formElements.stream.map(([key, item]) => this.paramsMapper(key, item))
+            .each(([key, item]) => {
+            ret.assign(key).value = item;
+        });
+        return ret;
+    }
+    remapKeyForNamingContainer(key) {
+        return this.paramsMapper(key, "")[0];
+    }
+    appendInputs(ret) {
         mona_dish_1.Stream.ofAssoc(this.value)
             .flatMap(([key, item]) => mona_dish_1.Stream.of(...item).map(item => {
             return { key, item };
         }))
-            .map(({ key, item }) => paramsMapper(key, item))
-            .each(([key, item]) => ret.append(key, item));
+            .each(({ key, item }) => ret.append(key, item));
     }
 }
 exports.XhrFormData = XhrFormData;
@@ -7827,7 +7868,7 @@ class XhrRequest {
             // the partialIdsArray arr is almost deprecated legacy code where we allowed to send a separate list of partial
             // ids for reduced load and server processing, this will be removed soon, we can handle the same via execute
             // anyway TODO remove the partial ids array
-            let formData = new XhrFormData_1.XhrFormData(this.sourceForm, viewState, executesArr(), this.partialIdsArray);
+            let formData = new XhrFormData_1.XhrFormData(this.sourceForm, (0, RequestDataResolver_1.resoveNamingContainerMapper)(this.internalContext), viewState, executesArr(), this.partialIdsArray);
             this.contentType = formData.isMultipartRequest ? "undefined" : this.contentType;
             // next step the pass through parameters are merged in for post params
             this.requestContext.$nspEnabled = false;
@@ -8009,29 +8050,12 @@ class XhrRequest {
         let isPost = this.ajaxType != Const_1.REQ_TYPE_GET;
         if (formData.isMultipartRequest) {
             // in case of a multipart request we send in a formData object as body
-            this.xhrObject.send((isPost) ? formData.toFormData(this.getNamingContainerMapper()) : null);
+            this.xhrObject.send((isPost) ? formData.toFormData() : null);
         }
         else {
             // in case of a normal request we send it normally
-            this.xhrObject.send((isPost) ? formData.toString(this.getNamingContainerMapper()) : null);
+            this.xhrObject.send((isPost) ? formData.toString() : null);
         }
-    }
-    /**
-     * as per jsdoc before the request it must be ensured that every post argument
-     * is prefixed with the naming container id (there is an exception in mojarra with
-     * the element=element param, which we have to follow here as well.
-     * (inputs are prefixed by name anyway normally this only affects our standard parameters)
-     * @private
-     */
-    getNamingContainerMapper() {
-        const isNamedViewRoot = this.internalContext.getIf(Const_1.NAMED_VIEWROOT).isPresent();
-        if (!isNamedViewRoot) {
-            return;
-        }
-        const partialId = this.internalContext.getIf(Const_1.NAMING_CONTAINER_ID).value;
-        const SEP = (0, Const_1.$faces)().separatorchar;
-        const prefix = partialId + SEP;
-        return (key, value) => (key.indexOf(prefix) == 0) ? [key, value] : [prefix + key, value];
     }
     /*
      * other helpers

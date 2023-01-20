@@ -61,7 +61,7 @@ import {
     resolveDefaults,
     resolveDelay,
     resolveForm,
-    resolveTimeout, resolveViewId, resolveViewRootId
+    resolveTimeout, resolveViewId, resolveViewRootId, resoveNamingContainerMapper
 } from "./xhrCore/RequestDataResolver";
 
 /*
@@ -530,7 +530,10 @@ export module Implementation {
             throw new Error(getMessage("ERR_VIEWSTATE"));
         }
 
-        let formData = new XhrFormData(element);
+        const dummyContext = new Config({});
+        assignNamingContainerData(dummyContext, DQ.byId(form))
+
+        let formData = new XhrFormData(element, resoveNamingContainerMapper(dummyContext));
         return formData.toString();
     }
 

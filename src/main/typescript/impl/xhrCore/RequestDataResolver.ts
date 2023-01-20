@@ -50,6 +50,7 @@ import {Assertions} from "../util/Assertions";
  * @param funcName
  */
 export function resolveHandlerFunc(requestContext: Config, responseContext: Config, funcName: string) {
+    responseContext = responseContext || new Config({});
     return responseContext.getIf(funcName)
         .orElseLazy(() =>requestContext.getIf(funcName).value)
         .orElse(EMPTY_FUNC).value;
@@ -97,6 +98,23 @@ export function resolveViewRootId(form: DQ): string {
     return viewId.indexOf($nsp(P_VIEWSTATE)) === -1 ? viewId : "";
 }
 
+/**
+ * as per jsdoc before the request it must be ensured that every post argument
+ * is prefixed with the naming container id (there is an exception in mojarra with
+ * the element=element param, which we have to follow here as well.
+ * (inputs are prefixed by name anyway normally this only affects our standard parameters)
+ * @private
+ */
+export function resoveNamingContainerMapper(internalContext: Config): (key: string, value: any) => [string, any] {
+    const isNamedViewRoot = internalContext.getIf(NAMED_VIEWROOT).isPresent();
+    if(!isNamedViewRoot) {
+        return;
+    }
+    const partialId = internalContext.getIf(NAMING_CONTAINER_ID).value;
+    const SEP = $faces().separatorchar;
+    const prefix = partialId + SEP;
+    return (key: string, value: any) => (key.indexOf(prefix) == 0) ? [key, value] : [prefix + key, value];
+}
 
 export function resolveTimeout(options: Config): number {
     let getCfg = ExtLang.getLocalOrGlobalConfig;

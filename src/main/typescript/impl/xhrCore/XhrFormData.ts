@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import {ArrayCollector, Config, DQ, Lang, LazyStream, Stream} from "mona-dish";
-import {EMPTY_STR, IDENT_ALL, IDENT_FORM, P_VIEWSTATE} from "../core/Const";
+import {$nsp, EMPTY_STR, IDENT_ALL, IDENT_FORM, P_VIEWSTATE} from "../core/Const";
 import isString = Lang.isString;
 import {ExtConfig, ExtDomQuery} from "../util/ExtDomQuery";
 
@@ -52,7 +52,7 @@ export class XhrFormData extends Config {
      * @param executes the executes id list for the elements to being processed
      * @param partialIds partial ids to collect, to reduce the data sent down
      */
-    constructor(private dataSource: DQ | string, viewState?: string, executes?: string[], private partialIds?: string[]) {
+    constructor(private dataSource: DQ | string, private paramsMapper: ParamsMapper<string, any> = defaultParamsMapper, viewState?: string, executes?: string[], private partialIds?: string[]) {
         super({});
         //a call to getViewState before must pass the encoded line
         //a call from getViewState passes the form element as datasource,
@@ -112,10 +112,10 @@ export class XhrFormData extends Config {
      * @param form the form holding the view state value
      */
     private applyViewState(form: DQ) {
-        let viewStateElement = form.querySelectorAllDeep(`[name*='${P_VIEWSTATE}'`);
+        let viewStateElement = form.querySelectorAllDeep(`[name*='${$nsp(P_VIEWSTATE)}'`);
         let viewState = viewStateElement.inputValue;
         // this.appendIf(viewState.isPresent(), P_VIEWSTATE).value = viewState.value;
-        this.appendIf(viewState.isPresent(), viewStateElement.name.value).value = viewState.value;
+        this.appendIf(viewState.isPresent(), this.remapKeyForNamingContainer(viewStateElement.name.value)).value = viewState.value;
     }
 
     /**
@@ -146,11 +146,11 @@ export class XhrFormData extends Config {
             return keyVal.length < 3 ? [keyVal?.[0] ?? [], keyVal?.[1] ?? []] : keyVal;
         }
 
-        //TODO fix files...
         Stream.of(...keyValueEntries)
             .map(line => splitToKeyVal(line))
             //special case of having keys without values
             .map(keyVal => fixKeyWithoutVal(keyVal))
+            .map(keyVal => this.paramsMapper(keyVal[0] as string, keyVal[1]))
             .each(keyVal => {
                 toMerge.append(keyVal[0] as string).value = keyVal?.splice(1)?.join("") ?? "";
             });
@@ -162,9 +162,9 @@ export class XhrFormData extends Config {
      * @param paramsMapper ... pre encode the params if needed, default is to map them 1:1
      * @returns a Form data representation, this is needed for file submits
      */
-    toFormData(paramsMapper: ParamsMapper<string, any> = defaultParamsMapper): FormData {
+    toFormData(): FormData {
         let ret: any = new FormData();
-        this.appendInputs(ret, paramsMapper);
+        this.appendInputs(ret);
         return ret;
     }
 
@@ -179,18 +179,18 @@ export class XhrFormData extends Config {
      *
      * @param defaultStr optional default value if nothing is there to encode
      */
-    toString(paramsMapper: ParamsMapper<string, any> = defaultParamsMapper, defaultStr = EMPTY_STR): string {
+    toString( defaultStr = EMPTY_STR): string {
         if (this.isAbsent()) {
             return defaultStr;
         }
         let entries = LazyStream.of(...Object.keys(this.value))
             .filter(key => this.value.hasOwnProperty(key))
             .flatMap(key => Stream.of(...this.value[key])
-                .map(val => paramsMapper(key, val))
-                //we cannot encode file elements that is handled by multipart requests anyway
-                .filter(([, value]) => !(value instanceof ExtDomQuery.global().File))
-                .collect(new ArrayCollector()))
-
+                .map(val => {
+                    return this.paramsMapper(key, val)
+                }))
+            //we cannot encode file elements that is handled by multipart requests anyway
+            .filter(([, value]) => !(value instanceof ExtDomQuery.global().File))
             .map(keyVal => {
                 return `${encodeURIComponent(keyVal[0])}=${encodeURIComponent(keyVal[1])}`;
             })
@@ -227,8 +227,7 @@ export class XhrFormData extends Config {
          *
          */
         this.encodeSubmittableFields(this, <DQ>this.dataSource, this.partialIds);
-
-        if (this.getIf(P_VIEWSTATE).isPresent()) {
+        if (this.getIf($nsp(P_VIEWSTATE)).isPresent()) {
             return;
         }
 
@@ -256,16 +255,31 @@ export class XhrFormData extends Config {
         }
 
         //lets encode the form elements
-        this.shallowMerge(toEncode.deepElements.encodeFormElement());
+        let formElements = toEncode.deepElements.encodeFormElement();
+        const mapped = this.remapKeysForNamingCoontainer(formElements);
+        this.shallowMerge(mapped);
     }
 
-    private appendInputs(ret: any, paramsMapper: ParamsMapper<string, any>) {
+    private remapKeysForNamingCoontainer(formElements: Config): Config {
+        let ret = new Config({});
+        formElements.stream.map(([key, item]) => this.paramsMapper(key, item))
+            .each( ([key, item]) => {
+            ret.assign(key).value = item;
+        });
+        return ret;
+
+    }
+
+    private remapKeyForNamingContainer(key: string): string {
+        return this.paramsMapper(key, "")[0];
+    }
+
+    private appendInputs(ret: any) {
         Stream.ofAssoc(this.value)
             .flatMap(([key, item]) =>
                 Stream.of(...(item as Array<any>)).map(item => {
                     return {key, item};
                 }))
-            .map(({key, item}) => paramsMapper(key, item))
-            .each(([key, item]) => ret.append(key, item))
+            .each(({key, item}) => ret.append(key, item))
     }
 }

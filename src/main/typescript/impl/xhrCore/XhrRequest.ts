@@ -43,7 +43,12 @@ import {
     URL_ENCODED,
     VAL_AJAX
 } from "../core/Const";
-import {resolveFinalUrl, resolveHandlerFunc, resolveViewRootId} from "./RequestDataResolver";
+import {
+    resolveFinalUrl,
+    resolveHandlerFunc,
+    resolveViewRootId,
+    resoveNamingContainerMapper
+} from "./RequestDataResolver";
 import failSaveExecute = ExtLang.failSaveExecute;
 import {ExtConfig} from "../util/ExtDomQuery";
 import {ResponseProcessor} from "./ResponseProcessor";
@@ -130,7 +135,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             // the partialIdsArray arr is almost deprecated legacy code where we allowed to send a separate list of partial
             // ids for reduced load and server processing, this will be removed soon, we can handle the same via execute
             // anyway TODO remove the partial ids array
-            let formData: XhrFormData = new XhrFormData(this.sourceForm, viewState, executesArr(), this.partialIdsArray);
+            let formData: XhrFormData = new XhrFormData(this.sourceForm, resoveNamingContainerMapper(this.internalContext), viewState, executesArr(), this.partialIdsArray);
 
             this.contentType = formData.isMultipartRequest ? "undefined" : this.contentType;
 
@@ -343,29 +348,11 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         let isPost = this.ajaxType != REQ_TYPE_GET;
         if (formData.isMultipartRequest) {
             // in case of a multipart request we send in a formData object as body
-            this.xhrObject.send((isPost) ? formData.toFormData(this.getNamingContainerMapper()) : null);
+            this.xhrObject.send((isPost) ? formData.toFormData() : null);
         } else {
             // in case of a normal request we send it normally
-            this.xhrObject.send((isPost) ? formData.toString(this.getNamingContainerMapper()) : null);
+            this.xhrObject.send((isPost) ? formData.toString() : null);
         }
-    }
-
-    /**
-     * as per jsdoc before the request it must be ensured that every post argument
-     * is prefixed with the naming container id (there is an exception in mojarra with
-     * the element=element param, which we have to follow here as well.
-     * (inputs are prefixed by name anyway normally this only affects our standard parameters)
-     * @private
-     */
-    private getNamingContainerMapper(): (key: string, value: any) => [string, any] {
-        const isNamedViewRoot = this.internalContext.getIf(NAMED_VIEWROOT).isPresent();
-        if(!isNamedViewRoot) {
-            return;
-        }
-        const partialId = this.internalContext.getIf(NAMING_CONTAINER_ID).value;
-        const SEP = $faces().separatorchar;
-        const prefix = partialId + SEP;
-        return (key: string, value: any) => (key.indexOf(prefix) == 0) ? [key, value] : [prefix + key, value];
     }
 
     /*

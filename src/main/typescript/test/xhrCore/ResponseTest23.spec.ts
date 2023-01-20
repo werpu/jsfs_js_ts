@@ -228,7 +228,7 @@ describe('Tests of the various aspects of the response protocol functionality', 
 
     });
 
-    it("must have updated the viewstates properly", function () {
+    it("must have updated the viewstates properly 2.3", function () {
         DQ.byId("cmd_eval").click();
         /*js full submit form, coming from the integration tests*/
         window.document.body.innerHTML = `<form id="j_id__v_0" name="j_id__v_0" method="post" action="/IntegrationJSTest/integrationtestsjasmine/test7-eventtest.jsf"
@@ -263,7 +263,7 @@ describe('Tests of the various aspects of the response protocol functionality', 
     });
 
 
-    it("must have updated the viewstates properly with lenient update block", function () {
+    it("must have updated the viewstates properly with lenient update block 2.3", function () {
         DQ.byId("cmd_eval").click();
         /*js full submit form, coming from the integration tests*/
         window.document.body.innerHTML = `<form id="j_id__v_0" name="j_id__v_0" method="post" action="/IntegrationJSTest/integrationtestsjasmine/test7-eventtest.jsf"

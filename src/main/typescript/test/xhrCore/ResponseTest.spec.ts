@@ -225,7 +225,7 @@ describe('Tests of the various aspects of the response protocol functionality', 
 
     });
 
-    it("must have updated the viewstates properly", function () {
+    it("must have updated the viewstates properly", function (done) {
         DQ.byId("cmd_eval").click();
         /*js full submit form, coming from the integration tests*/
         window.document.body.innerHTML = `<form id="j_id__v_0" name="j_id__v_0" method="post" action="/IntegrationJSTest/integrationtestsjasmine/test7-eventtest.jsf"
@@ -252,10 +252,11 @@ describe('Tests of the various aspects of the response protocol functionality', 
             </changes>
         </partial-response>`);
 
-
-        expect(DQ$("[name*='jakarta.faces.ViewState']").isPresent()).to.be.true;
-
-        expect(DQ$("[name*='jakarta.faces.ViewState']").val == "RTUyRDI0NzE4QzAxM0E5RDAwMDAwMDVD").to.be.true;
+        setTimeout(() => {
+            expect(DQ$("[name*='jakarta.faces.ViewState']").isPresent()).to.be.true;
+            expect(DQ$("[name*='jakarta.faces.ViewState']").val == "RTUyRDI0NzE4QzAxM0E5RDAwMDAwMDVD").to.be.true;
+            done();
+        }, 100);
     });
 
 

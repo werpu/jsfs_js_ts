@@ -6531,7 +6531,7 @@ exports.EventData = EventData;
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.resolveDefaults = exports.getEventTarget = exports.resolveWindowId = exports.resolveDelay = exports.resolveTimeout = exports.resoveNamingContainerMapper = exports.resolveViewRootId = exports.resolveViewId = exports.resolveForm = exports.resolveFinalUrl = exports.resolveTargetUrl = exports.resolveHandlerFunc = void 0;
+exports.resolveDefaults = exports.getEventTarget = exports.resolveWindowId = exports.resolveDelay = exports.resolveTimeout = exports.resoveConfigNamingContainerMapper = exports.resoveNamingContainerMapper = exports.resolveViewRootId = exports.resolveViewId = exports.resolveForm = exports.resolveFinalUrl = exports.resolveTargetUrl = exports.resolveHandlerFunc = void 0;
 const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 const Lang_1 = __webpack_require__(/*! ../util/Lang */ "./src/main/typescript/impl/util/Lang.ts");
@@ -6617,6 +6617,26 @@ function resoveNamingContainerMapper(internalContext) {
     return (key, value) => (key.indexOf(prefix) == 0) ? [key, value] : [prefix + key, value];
 }
 exports.resoveNamingContainerMapper = resoveNamingContainerMapper;
+/**
+ * we provide the same for configs
+ * @param internalContext
+ */
+function resoveConfigNamingContainerMapper(internalContext) {
+    const isNamedViewRoot = internalContext.getIf(Const_1.NAMED_VIEWROOT).isPresent();
+    if (!isNamedViewRoot) {
+        return;
+    }
+    const partialId = internalContext.getIf(Const_1.NAMING_CONTAINER_ID).value;
+    const SEP = (0, Const_1.$faces)().separatorchar;
+    const prefix = partialId + SEP;
+    return (config) => {
+        let assoc = config.stream
+            .map(([key, data]) => (key.indexOf(prefix) == 0) ? [key, data] : [prefix + key, data])
+            .collect(new mona_dish_1.AssocArrayCollector());
+        return new ExtDomQuery_1.ExtConfig(assoc);
+    };
+}
+exports.resoveConfigNamingContainerMapper = resoveConfigNamingContainerMapper;
 function resolveTimeout(options) {
     var _a;
     let getCfg = Lang_1.ExtLang.getLocalOrGlobalConfig;
@@ -7555,9 +7575,9 @@ class XhrFormData extends mona_dish_1.Config {
         //a call from getViewState passes the form element as datasource,
         //so we have two call points
         // atm we basically encode twice, to keep the code leaner
-        // this will be later optmized, practically elements
-        // which are already covered by an external viewstate do not need
-        // the encoding a second time, because they are overwritten by the viewstate again
+        // this will be later optimized, practically elements
+        // which are already covered by an external ViewState do not need
+        // the encoding a second time, because they are overwritten by the ViewState again
         if (isString(dataSource)) {
             this.assignEncodedString(this.dataSource);
         }
@@ -7609,15 +7629,15 @@ class XhrFormData extends mona_dish_1.Config {
     applyViewState(form) {
         let viewStateElement = form.querySelectorAllDeep(`[name*='${(0, Const_1.$nsp)(Const_1.P_VIEWSTATE)}'`);
         let viewState = viewStateElement.inputValue;
-        // this.appendIf(viewState.isPresent(), P_VIEWSTATE).value = viewState.value;
-        this.appendIf(viewState.isPresent(), this.remapKeyForNamingContainer(viewStateElement.name.value)).value = viewState.value;
+        let viewStateName = viewStateElement.name.value;
+        this.assignIf(viewState.isPresent(), viewStateName).value = [viewState.value];
     }
     /**
      * assigns an url encoded string to this xhrFormData object
      * as key value entry
      * @param encoded
      */
-    assignEncodedString(encoded) {
+    assignEncodedString(encoded, overwrite = true) {
         // this code filters out empty strings as key value pairs
         let keyValueEntries = decodeURIComponent(encoded).split(/&/gi)
             .filter(item => !!(item || '')
@@ -7628,7 +7648,7 @@ class XhrFormData extends mona_dish_1.Config {
      * assign a set of key value pairs passed as array ['key=val1', 'key2=val2']
      * @param keyValueEntries
      */
-    assignString(keyValueEntries) {
+    assignString(keyValueEntries, overwrite = true) {
         let toMerge = new ExtDomQuery_1.ExtConfig({});
         function splitToKeyVal(line) {
             return line.split(/=(.*)/gi);
@@ -7647,7 +7667,7 @@ class XhrFormData extends mona_dish_1.Config {
             toMerge.append(keyVal[0]).value = (_b = (_a = keyVal === null || keyVal === void 0 ? void 0 : keyVal.splice(1)) === null || _a === void 0 ? void 0 : _a.join("")) !== null && _b !== void 0 ? _b : "";
         });
         //merge with overwrite but no append! (aka no double entries are allowed)
-        this.shallowMerge(toMerge);
+        this.shallowMerge(toMerge, overwrite);
     }
     /**
      * @param paramsMapper ... pre encode the params if needed, default is to map them 1:1
@@ -7739,19 +7759,17 @@ class XhrFormData extends mona_dish_1.Config {
         }
         //lets encode the form elements
         let formElements = toEncode.deepElements.encodeFormElement();
-        const mapped = this.remapKeysForNamingCoontainer(formElements);
+        const mapped = this.remapKeysForNamingContainer(formElements);
         this.shallowMerge(mapped);
     }
-    remapKeysForNamingCoontainer(formElements) {
+    remapKeysForNamingContainer(formElements) {
         let ret = new mona_dish_1.Config({});
-        formElements.stream.map(([key, item]) => this.paramsMapper(key, item))
+        formElements.stream
+            .map(([key, item]) => this.paramsMapper(key, item))
             .each(([key, item]) => {
             ret.assign(key).value = item;
         });
         return ret;
-    }
-    remapKeyForNamingContainer(key) {
-        return this.paramsMapper(key, "")[0];
     }
     appendInputs(ret) {
         mona_dish_1.Stream.ofAssoc(this.value)
@@ -7858,6 +7876,8 @@ class XhrRequest {
         };
         try {
             let formElement = this.sourceForm.getAsElem(0).value;
+            // by spec the viewstate must be called to provide
+            // decorated encoding capabilities
             let viewState = (0, Const_1.$faces)().getViewState(formElement);
             // encoded we need to decode
             // We generated a base representation of the current form
@@ -7867,8 +7887,11 @@ class XhrRequest {
             // whatever the formData object delivers
             // the partialIdsArray arr is almost deprecated legacy code where we allowed to send a separate list of partial
             // ids for reduced load and server processing, this will be removed soon, we can handle the same via execute
-            // anyway TODO remove the partial ids array
-            let formData = new XhrFormData_1.XhrFormData(this.sourceForm, (0, RequestDataResolver_1.resoveNamingContainerMapper)(this.internalContext), viewState, executesArr(), this.partialIdsArray);
+            // anyway
+            // per spec every parameter sent into the request must be naming container
+            // prefixed
+            const namingContainerMapper = (0, RequestDataResolver_1.resoveNamingContainerMapper)(this.internalContext);
+            let formData = new XhrFormData_1.XhrFormData(this.sourceForm, namingContainerMapper, viewState, executesArr(), this.partialIdsArray);
             this.contentType = formData.isMultipartRequest ? "undefined" : this.contentType;
             // next step the pass through parameters are merged in for post params
             this.requestContext.$nspEnabled = false;
@@ -7879,6 +7902,10 @@ class XhrRequest {
             // this can be used and is used in the impl to enrich the post request parameters with additional
             // information
             try {
+                // per spec every param sent down needs to be remapped
+                // and prefixed by the naming container id
+                let configNamingContainerMapper = (0, RequestDataResolver_1.resoveConfigNamingContainerMapper)(this.internalContext);
+                //   requestPassThroughParams = configNamingContainerMapper(requestPassThroughParams);
                 formData.shallowMerge(requestPassThroughParams, true, true);
             }
             finally {

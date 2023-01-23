@@ -58,9 +58,9 @@ export class XhrFormData extends Config {
         //a call from getViewState passes the form element as datasource,
         //so we have two call points
         // atm we basically encode twice, to keep the code leaner
-        // this will be later optmized, practically elements
-        // which are already covered by an external viewstate do not need
-        // the encoding a second time, because they are overwritten by the viewstate again
+        // this will be later optimized, practically elements
+        // which are already covered by an external ViewState do not need
+        // the encoding a second time, because they are overwritten by the ViewState again
         if (isString(dataSource)) {
             this.assignEncodedString(<string>this.dataSource);
         } else {
@@ -114,8 +114,9 @@ export class XhrFormData extends Config {
     private applyViewState(form: DQ) {
         let viewStateElement = form.querySelectorAllDeep(`[name*='${$nsp(P_VIEWSTATE)}'`);
         let viewState = viewStateElement.inputValue;
-        // this.appendIf(viewState.isPresent(), P_VIEWSTATE).value = viewState.value;
-        this.appendIf(viewState.isPresent(), this.remapKeyForNamingContainer(viewStateElement.name.value)).value = viewState.value;
+
+        let viewStateName = viewStateElement.name.value;
+        this.assignIf(viewState.isPresent(), viewStateName).value = [viewState.value];
     }
 
     /**
@@ -123,7 +124,7 @@ export class XhrFormData extends Config {
      * as key value entry
      * @param encoded
      */
-    assignEncodedString(encoded: string) {
+    assignEncodedString(encoded: string, overwrite = true) {
         // this code filters out empty strings as key value pairs
         let keyValueEntries = decodeURIComponent(encoded).split(/&/gi)
             .filter(item => !!(item || '')
@@ -135,7 +136,7 @@ export class XhrFormData extends Config {
      * assign a set of key value pairs passed as array ['key=val1', 'key2=val2']
      * @param keyValueEntries
      */
-    assignString(keyValueEntries: string[]) {
+    assignString(keyValueEntries: string[], overwrite = true) {
         let toMerge = new ExtConfig({});
 
         function splitToKeyVal(line: string) {
@@ -155,7 +156,7 @@ export class XhrFormData extends Config {
                 toMerge.append(keyVal[0] as string).value = keyVal?.splice(1)?.join("") ?? "";
             });
         //merge with overwrite but no append! (aka no double entries are allowed)
-        this.shallowMerge(toMerge);
+        this.shallowMerge(toMerge, overwrite);
     }
 
     /**
@@ -256,22 +257,18 @@ export class XhrFormData extends Config {
 
         //lets encode the form elements
         let formElements = toEncode.deepElements.encodeFormElement();
-        const mapped = this.remapKeysForNamingCoontainer(formElements);
+        const mapped = this.remapKeysForNamingContainer(formElements);
         this.shallowMerge(mapped);
     }
 
-    private remapKeysForNamingCoontainer(formElements: Config): Config {
+    private remapKeysForNamingContainer(formElements: Config): Config {
         let ret = new Config({});
-        formElements.stream.map(([key, item]) => this.paramsMapper(key, item))
+        formElements.stream
+            .map(([key, item]) => this.paramsMapper(key, item))
             .each( ([key, item]) => {
-            ret.assign(key).value = item;
-        });
+                ret.assign(key).value = item;
+            });
         return ret;
-
-    }
-
-    private remapKeyForNamingContainer(key: string): string {
-        return this.paramsMapper(key, "")[0];
     }
 
     private appendInputs(ret: any) {

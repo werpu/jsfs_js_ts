@@ -520,10 +520,10 @@ class DomQuery {
         const doc = document.implementation.createHTMLDocument("");
         markup = trim(markup);
         let lowerMarkup = markup.toLowerCase();
-        if (lowerMarkup.indexOf('<!doctype') != -1 ||
-            lowerMarkup.indexOf('<html') != -1 ||
-            lowerMarkup.indexOf('<head') != -1 ||
-            lowerMarkup.indexOf('<body') != -1) {
+        if (lowerMarkup.search(/\<\!doctypeW+/gi) != -1 ||
+            lowerMarkup.search(/\<html\w+/gi) != -1 ||
+            lowerMarkup.search(/\<head\W+/gi) != -1 ||
+            lowerMarkup.search(/\<body\W+/gi) != -1) {
             doc.documentElement.innerHTML = markup;
             return new DomQuery(doc.documentElement);
         }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {AssocArrayCollector, Config, DomQuery, DQ} from "mona-dish";
+import {Config, DomQuery, DQ} from "mona-dish";
 import {
     $faces,
     $nsp,
@@ -114,26 +114,6 @@ export function resoveNamingContainerMapper(internalContext: Config): (key: stri
     const SEP = $faces().separatorchar;
     const prefix = partialId + SEP;
     return (key: string, value: any) => (key.indexOf(prefix) == 0) ? [key, value] : [prefix + key, value];
-}
-
-/**
- * we provide the same for configs
- * @param internalContext
- */
-export function resoveConfigNamingContainerMapper(internalContext: Config): (config: Config) => ExtConfig {
-    const isNamedViewRoot = internalContext.getIf(NAMED_VIEWROOT).isPresent();
-    if(!isNamedViewRoot) {
-        return;
-    }
-    const partialId = internalContext.getIf(NAMING_CONTAINER_ID).value;
-    const SEP = $faces().separatorchar;
-    const prefix = partialId + SEP;
-    return (config: Config) => {
-        let assoc = config.stream
-            .map(([key, data]) => (key.indexOf(prefix) == 0) ? [key, data] : [prefix + key, data])
-            .collect(new AssocArrayCollector() as any);
-        return new ExtConfig(assoc);
-    }
 }
 
 export function resolveTimeout(options: Config): number {

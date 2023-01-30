@@ -46,7 +46,7 @@ import {
 import {
     resolveFinalUrl,
     resolveHandlerFunc,
-    resolveViewRootId, resoveConfigNamingContainerMapper,
+    resolveViewRootId,
     resoveNamingContainerMapper
 } from "./RequestDataResolver";
 import failSaveExecute = ExtLang.failSaveExecute;
@@ -124,9 +124,6 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
 
         try {
             let formElement = this.sourceForm.getAsElem(0).value;
-
-            // by spec the viewstate must be called to provide
-            // decorated encoding capabilities
             let viewState = $faces().getViewState(formElement);
 
             // encoded we need to decode
@@ -137,12 +134,8 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             // whatever the formData object delivers
             // the partialIdsArray arr is almost deprecated legacy code where we allowed to send a separate list of partial
             // ids for reduced load and server processing, this will be removed soon, we can handle the same via execute
-            // anyway
-
-            // per spec every parameter sent into the request must be naming container
-            // prefixed
-            const namingContainerMapper = resoveNamingContainerMapper(this.internalContext);
-            let formData: XhrFormData = new XhrFormData(this.sourceForm, namingContainerMapper, viewState, executesArr(), this.partialIdsArray);
+            // anyway TODO remove the partial ids array
+            let formData: XhrFormData = new XhrFormData(this.sourceForm, resoveNamingContainerMapper(this.internalContext), viewState, executesArr(), this.partialIdsArray);
 
             this.contentType = formData.isMultipartRequest ? "undefined" : this.contentType;
 
@@ -156,10 +149,6 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             // information
 
             try {
-                // per spec every param sent down needs to be remapped
-                // and prefixed by the naming container id
-                let configNamingContainerMapper = resoveConfigNamingContainerMapper(this.internalContext);
-             //   requestPassThroughParams = configNamingContainerMapper(requestPassThroughParams);
                 formData.shallowMerge(requestPassThroughParams, true, true);
             } finally {
                 this.requestContext.$nspEnabled = true;

@@ -123,7 +123,6 @@ export module Response {
                     break;
             }
         });
-
     }
 
     let processInsert = function (responseProcessor: IResponseProcessor, node: XMLQuery) {

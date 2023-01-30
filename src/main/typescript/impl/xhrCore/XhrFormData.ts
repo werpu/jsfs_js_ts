@@ -185,15 +185,10 @@ export class XhrFormData extends Config {
         }
         let entries = LazyStream.of(...Object.keys(this.value))
             .filter(key => this.value.hasOwnProperty(key))
-            .flatMap(key => Stream.of(...this.value[key])
-                .map(val => {
-                    return this.paramsMapper(key, val)
-                }))
+            .flatMap(key => Stream.of(...this.value[key]).map(val => this.paramsMapper(key, val)))
             //we cannot encode file elements that is handled by multipart requests anyway
             .filter(([, value]) => !(value instanceof ExtDomQuery.global().File))
-            .map(keyVal => {
-                return `${encodeURIComponent(keyVal[0])}=${encodeURIComponent(keyVal[1])}`;
-            })
+            .map(keyVal => `${encodeURIComponent(keyVal[0])}=${encodeURIComponent(keyVal[1])}`)
             .collect(new ArrayCollector());
 
         return entries.join("&")

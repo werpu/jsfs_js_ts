@@ -520,10 +520,10 @@ class DomQuery {
         const doc = document.implementation.createHTMLDocument("");
         markup = trim(markup);
         let lowerMarkup = markup.toLowerCase();
-        if (lowerMarkup.search(/\<\!doctypeW+/gi) != -1 ||
-            lowerMarkup.search(/\<html\w+/gi) != -1 ||
-            lowerMarkup.search(/\<head\W+/gi) != -1 ||
-            lowerMarkup.search(/\<body\W+/gi) != -1) {
+        if (lowerMarkup.search(/\<\!doctype[^\w\-]+/gi) != -1 ||
+            lowerMarkup.search(/\<html[^\w\-]+/gi) != -1 ||
+            lowerMarkup.search(/\<head[^\w\-]+/gi) != -1 ||
+            lowerMarkup.search(/\<body[^\w\-]+/gi) != -1) {
             doc.documentElement.innerHTML = markup;
             return new DomQuery(doc.documentElement);
         }
@@ -7675,15 +7675,10 @@ class XhrFormData extends mona_dish_1.Config {
         }
         let entries = mona_dish_1.LazyStream.of(...Object.keys(this.value))
             .filter(key => this.value.hasOwnProperty(key))
-            .flatMap(key => mona_dish_1.Stream.of(...this.value[key])
-            .map(val => {
-            return this.paramsMapper(key, val);
-        }))
+            .flatMap(key => mona_dish_1.Stream.of(...this.value[key]).map(val => this.paramsMapper(key, val)))
             //we cannot encode file elements that is handled by multipart requests anyway
             .filter(([, value]) => !(value instanceof ExtDomQuery_1.ExtDomQuery.global().File))
-            .map(keyVal => {
-            return `${encodeURIComponent(keyVal[0])}=${encodeURIComponent(keyVal[1])}`;
-        })
+            .map(keyVal => `${encodeURIComponent(keyVal[0])}=${encodeURIComponent(keyVal[1])}`)
             .collect(new mona_dish_1.ArrayCollector());
         return entries.join("&");
     }

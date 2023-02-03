@@ -18,13 +18,20 @@ import {Implementation} from "../../impl/AjaxImpl";
 import {StandardInits} from "../frameworkBase/_ext/shared/StandardInits";
 
 import protocolPage = StandardInits.protocolPage;
-import {DQ} from "mona-dish";
+import {Config, DQ} from "mona-dish";
 import {XhrFormData} from "../../impl/xhrCore/XhrFormData";
 import {expect} from "chai";
 import prefixPage = StandardInits.prefixEmbeddedPage;
 import prefixEmbeddedPage = StandardInits.prefixEmbeddedPage;
 import HTML_PREFIX_EMBEDDED_BODY = StandardInits.HTML_PREFIX_EMBEDDED_BODY;
 import {it} from "mocha";
+import {decodeEncodedValues, mergeKeyValueEntries} from "../../impl/util/URLCodec";
+
+function getFormData(requestBody: string): Config {
+    let ret = new Config({});
+    mergeKeyValueEntries(ret, decodeEncodedValues(requestBody));
+    return ret;
+}
 
 describe("test for proper request param patterns identical to the old implementation", function () {
     const UPDATE_INSERT_2 = {
@@ -85,10 +92,9 @@ describe("test for proper request param patterns identical to the old implementa
         DQ.byId("cmd_update_insert2").click();
 
         let requestBody = this.requests[0].requestBody;
-        let formData = new XhrFormData(requestBody);
+        let formData = getFormData(requestBody);
 
         expect(matches(formData.value, UPDATE_INSERT_2)).to.be.true;
-
     });
 
 
@@ -98,7 +104,7 @@ describe("test for proper request param patterns identical to the old implementa
         DQ.byId("cmd_update_insert2").click();
         let requestBody = this.requests[0].requestBody;
         //We check if the base64 encoded string matches the original
-        let formData = new XhrFormData(requestBody);
+        let formData = getFormData(requestBody);
 
         expect(decodeURIComponent(formData.getIf("jakarta.faces.ViewState").value) == probe).to.be.true;
     });
@@ -110,7 +116,7 @@ describe("test for proper request param patterns identical to the old implementa
         DQ.byId("cmd_update_insert2").click();
         let requestBody = this.requests[0].requestBody;
         //We check if the base64 encoded string matches the original
-        let formData = new XhrFormData(requestBody);
+        let formData = getFormData(requestBody);
 
         expect(decodeURIComponent(formData.getIf("jakarta.faces.ViewState").value) == probe).to.be.true;
     });
@@ -123,7 +129,7 @@ describe("test for proper request param patterns identical to the old implementa
         DQ.byId("cmd_update_insert2").click();
         let requestBody = this.requests[0].requestBody;
         //We check if the base64 encoded string matches the original
-        let formData = new XhrFormData(requestBody);
+        let formData = getFormData(requestBody);
 
         expect(decodeURIComponent(formData.getIf("jakarta.faces.ViewState").value) == probe).to.be.true;
     });

@@ -123,9 +123,6 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         };
 
         try {
-            let formElement = this.sourceForm.getAsElem(0).value;
-            let viewState = $faces().getViewState(formElement);
-
             // encoded we need to decode
             // We generated a base representation of the current form
             // in case someone has overloaded the viewState with additional decorators we merge
@@ -135,7 +132,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             // the partialIdsArray arr is almost deprecated legacy code where we allowed to send a separate list of partial
             // ids for reduced load and server processing, this will be removed soon, we can handle the same via execute
             // anyway TODO remove the partial ids array
-            let formData: XhrFormData = new XhrFormData(this.sourceForm, resoveNamingContainerMapper(this.internalContext), viewState, executesArr(), this.partialIdsArray);
+            let formData: XhrFormData = new XhrFormData(this.sourceForm, resoveNamingContainerMapper(this.internalContext), executesArr(), this.partialIdsArray);
 
             this.contentType = formData.isMultipartRequest ? "undefined" : this.contentType;
 

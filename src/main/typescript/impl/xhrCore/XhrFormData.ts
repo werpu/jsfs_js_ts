@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ArrayCollector, Config, DQ, Lang, LazyStream, Stream} from "mona-dish";
-import {$nsp, EMPTY_STR, IDENT_ALL, IDENT_FORM, P_VIEWSTATE} from "../core/Const";
-import isString = Lang.isString;
-import {ExtConfig, ExtDomQuery} from "../util/ExtDomQuery";
+import {Config, DQ, LazyStream, Stream} from "mona-dish";
+import {$faces, $nsp, EMPTY_STR, IDENT_ALL, IDENT_FORM, P_VIEWSTATE} from "../core/Const";
+import {ExtConfig} from "../util/ExtDomQuery";
+import {decodeEncodedValues, encodeFormData, mergeKeyValueEntries} from "../util/URLCodec";
 
 
 type ParamsMapper<V, K> = (key: V, item: K) => [V, K];
@@ -48,31 +48,22 @@ export class XhrFormData extends Config {
      * data collector from a given form
      *
      * @param dataSource either a form as DomQuery object or an encoded url string
-     * @param viewState the form view state or an external viewState coming in as string
+     * @param paramsMapper a remapper for the params keys and values
      * @param executes the executes id list for the elements to being processed
      * @param partialIds partial ids to collect, to reduce the data sent down
      */
-    constructor(private dataSource: DQ | string, private paramsMapper: ParamsMapper<string, any> = defaultParamsMapper, viewState?: string, executes?: string[], private partialIds?: string[]) {
+    constructor(private dataSource: DQ, private paramsMapper: ParamsMapper<string, any> = defaultParamsMapper, executes?: string[], private partialIds?: string[]) {
         super({});
-        //a call to getViewState before must pass the encoded line
-        //a call from getViewState passes the form element as datasource,
-        //so we have two call points
-        // atm we basically encode twice, to keep the code leaner
-        // this will be later optmized, practically elements
-        // which are already covered by an external viewstate do not need
-        // the encoding a second time, because they are overwritten by the viewstate again
-        if (isString(dataSource)) {
-            this.assignEncodedString(<string>this.dataSource);
-        } else {
-            this.applyFormDataToConfig();
-        }
-        //now assign the external viewstate overrides
-        if ('undefined' != typeof viewState) {
-            this.assignEncodedString(viewState)
-        }
-        if (executes) {
-            this.postInit(...executes);
-        }
+        //encode and append the issuing item if not a partial ids array of ids is passed
+        /*
+         * Spec. 13.3.1
+         * Collect and encode input elements.
+         * Additionally the hidden element jakarta.faces.ViewState
+         * Enhancement partial page submit
+         */
+        this.encodeSubmittableFields(this, this.dataSource, this.partialIds);
+        this.applyViewState(this.dataSource);
+        this.resolveRequestType(executes);
     }
 
     /**
@@ -80,29 +71,28 @@ export class XhrFormData extends Config {
      * @param executes the executable dom nodes which need to be processed into the form data, which we can send
      * in our ajax request
      */
-    postInit(...executes: Array<string>) {
-        let fetchFileInputs = (id: string): DQ => {
-            const INPUT_FILE = "input[type='file']";
+    resolveRequestType(executes?: Array<string>) {
+        if (!executes) {
+            return;
+        }
+        let isMultiPartContainer = (id: string): boolean => {
             if (id == IDENT_ALL) {
-                return DQ.querySelectorAllDeep(INPUT_FILE);
+                let namingContainer = this.remapKeyForNamingContainer("");
+                if (namingContainer.length) {
+                    namingContainer = namingContainer.substring(0, namingContainer.length - 1);
+                    return DQ.byId(namingContainer).isMultipartCandidate();
+                }
+                return DQ.byId(document.body).isMultipartCandidate();
             } else if (id == IDENT_FORM) {
-                return (<DQ>this.dataSource).matchesSelector(INPUT_FILE) ?
-                    (<DQ>this.dataSource) :
-                    (<DQ>this.dataSource).querySelectorAllDeep(INPUT_FILE);
+                return this.dataSource.isMultipartCandidate(true);
             } else {
-                let element = DQ.byId(id, true);
-                return element.matchesSelector(INPUT_FILE) ? element : this.getFileInputs(element);
+                const element = DQ.byId(id, true);
+                return element.isMultipartCandidate();
             }
         };
 
-        let inputExists = (item: DQ) => {
-            return item.isPresent();
-        };
-
-
         this.isMultipartRequest = LazyStream.of(...executes)
-            .map(fetchFileInputs)
-            .filter(inputExists)
+            .filter(isMultiPartContainer)
             .first().isPresent();
     }
 
@@ -112,54 +102,16 @@ export class XhrFormData extends Config {
      * @param form the form holding the view state value
      */
     private applyViewState(form: DQ) {
+        if (this.getIf($nsp(P_VIEWSTATE)).isPresent()) {
+            return;
+        }
         let viewStateElement = form.querySelectorAllDeep(`[name*='${$nsp(P_VIEWSTATE)}'`);
         let viewState = viewStateElement.inputValue;
-        // this.appendIf(viewState.isPresent(), P_VIEWSTATE).value = viewState.value;
         this.appendIf(viewState.isPresent(), this.remapKeyForNamingContainer(viewStateElement.name.value)).value = viewState.value;
     }
 
-    /**
-     * assigns an url encoded string to this xhrFormData object
-     * as key value entry
-     * @param encoded
-     */
-    assignEncodedString(encoded: string) {
-        // this code filters out empty strings as key value pairs
-        let keyValueEntries = decodeURIComponent(encoded).split(/&/gi)
-            .filter(item => !!(item || '')
-                .replace(/\s+/g, ''));
-        this.assignString(keyValueEntries);
-    }
 
     /**
-     * assign a set of key value pairs passed as array ['key=val1', 'key2=val2']
-     * @param keyValueEntries
-     */
-    assignString(keyValueEntries: string[]) {
-        let toMerge = new ExtConfig({});
-
-        function splitToKeyVal(line: string) {
-            return line.split(/=(.*)/gi);
-        }
-
-        function fixKeyWithoutVal(keyVal: string[]) {
-            return keyVal.length < 3 ? [keyVal?.[0] ?? [], keyVal?.[1] ?? []] : keyVal;
-        }
-
-        Stream.of(...keyValueEntries)
-            .map(line => splitToKeyVal(line))
-            //special case of having keys without values
-            .map(keyVal => fixKeyWithoutVal(keyVal))
-            .map(keyVal => this.paramsMapper(keyVal[0] as string, keyVal[1]))
-            .each(keyVal => {
-                toMerge.append(keyVal[0] as string).value = keyVal?.splice(1)?.join("") ?? "";
-            });
-        //merge with overwrite but no append! (aka no double entries are allowed)
-        this.shallowMerge(toMerge);
-    }
-
-    /**
-     * @param paramsMapper ... pre encode the params if needed, default is to map them 1:1
      * @returns a Form data representation, this is needed for file submits
      */
     toFormData(): FormData {
@@ -168,66 +120,15 @@ export class XhrFormData extends Config {
         return ret;
     }
 
-    resolveSubmitIdentifier(elem: HTMLInputElement) {
-        let identifier = elem.name;
-        identifier = ((elem?.name ?? "").replace(/s+/gi, "") == "") ? elem.id : identifier;
-        return identifier;
-    }
-
     /**
      * returns an encoded string representation of our xhr form data
      *
      * @param defaultStr optional default value if nothing is there to encode
      */
-    toString( defaultStr = EMPTY_STR): string {
-        if (this.isAbsent()) {
-            return defaultStr;
-        }
-        let entries = LazyStream.of(...Object.keys(this.value))
-            .filter(key => this.value.hasOwnProperty(key))
-            .flatMap(key => Stream.of(...this.value[key]).map(val => this.paramsMapper(key, val)))
-            //we cannot encode file elements that is handled by multipart requests anyway
-            .filter(([, value]) => !(value instanceof ExtDomQuery.global().File))
-            .map(keyVal => `${encodeURIComponent(keyVal[0])}=${encodeURIComponent(keyVal[1])}`)
-            .collect(new ArrayCollector());
-
-        return entries.join("&")
+    toString(defaultStr = EMPTY_STR): string {
+        return encodeFormData(this, this.paramsMapper, defaultStr);
     }
 
-    /**
-     * helper to fetch all file inputs from as given root element
-     * @param rootElement
-     * @private
-     */
-    private getFileInputs(rootElement: DQ): DQ {
-        const rootFileInputs = rootElement
-            .filter(elem => elem.matchesSelector("input[type='file']"))
-        const childFileInputs = rootElement
-            .querySelectorAll("input[type='file']");
-
-        return rootFileInputs.concat(childFileInputs);
-    }
-
-    /**
-     * encode the given fields and apply the view state
-     * @private
-     */
-    private applyFormDataToConfig() {
-        //encode and append the issuing item if not a partial ids array of ids is passed
-        /*
-         * Spec. 13.3.1
-         * Collect and encode input elements.
-         * Additionally the hidden element jakarta.faces.ViewState
-         * Enhancement partial page submit
-         *
-         */
-        this.encodeSubmittableFields(this, <DQ>this.dataSource, this.partialIds);
-        if (this.getIf($nsp(P_VIEWSTATE)).isPresent()) {
-            return;
-        }
-
-        this.applyViewState(<DQ>this.dataSource);
-    }
 
     /**
      * determines fields to submit
@@ -235,34 +136,16 @@ export class XhrFormData extends Config {
      * @param {Node} parentItem - form element item is nested in
      * @param {Array} partialIds - ids fo PPS
      */
-    private encodeSubmittableFields(targetBuf: Config,
-                                    parentItem: DQ, partialIds ?: string[]) {
-        let toEncode = null;
-        if (this.partialIds && this.partialIds.length) {
-            // in case of our myfaces reduced ppr we
-            // only submit the partials
-            this._value = {};
-            toEncode = new DQ(...this.partialIds);
-
-        } else {
-            if (parentItem.isAbsent()) throw 'NO_PAR_ITEM';
-            toEncode = parentItem;
-        }
-
-        //lets encode the form elements
-        let formElements = toEncode.deepElements.encodeFormElement();
-        const mapped = this.remapKeysForNamingCoontainer(formElements);
-        this.shallowMerge(mapped);
-    }
-
-    private remapKeysForNamingCoontainer(formElements: Config): Config {
-        let ret = new Config({});
-        formElements.stream.map(([key, item]) => this.paramsMapper(key, item))
-            .each( ([key, item]) => {
-                ret.assign(key).value = item;
-            });
-        return ret;
-
+    public encodeSubmittableFields(targetBuf: Config,
+                                   parentItem: DQ, partialIds ?: string[]) {
+        //encoded String
+        let viewStateStr = $faces().getViewState(parentItem.getAsElem(0).value);
+        // we now need to decode it and then merge it into the target buf
+        // which hosts already our overrides (aka do not override what is already there(
+        // after that we need to deal with form elements on a separate level
+        let target = new ExtConfig({});
+        mergeKeyValueEntries(target, decodeEncodedValues(viewStateStr), this.paramsMapper);
+        this.shallowMerge(target);
     }
 
     private remapKeyForNamingContainer(key: string): string {
@@ -271,10 +154,14 @@ export class XhrFormData extends Config {
 
     private appendInputs(ret: any) {
         Stream.ofAssoc(this.value)
-            .flatMap(([key, item]) =>
+            .flatMap(([key, item])  =>
                 Stream.of(...(item as Array<any>)).map(item => {
                     return {key, item};
-                }))
+            }))
+            .map(({key, item}) => {
+                key = this.remapKeyForNamingContainer(key);
+                return {key, item}
+            })
             .each(({key, item}) => ret.append(key, item))
     }
 }

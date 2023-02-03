@@ -3121,7 +3121,7 @@ var XhrFormData = /** @class */ (function (_super) {
      */
     XhrFormData.prototype.assignEncodedString = function (encoded) {
         var keyValueEntries = decodeURIComponent(encoded).split(/&/gi);
-        this.assignString(keyValueEntries);
+        this.assignKeyValueEntries(keyValueEntries);
     };
     XhrFormData.prototype.assignString = function (keyValueEntries) {
         var toMerge = new mona_dish_1.Config({});

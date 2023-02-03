@@ -4226,12 +4226,12 @@ const XhrRequest_1 = __webpack_require__(/*! ./xhrCore/XhrRequest */ "./src/main
 const AsyncQueue_1 = __webpack_require__(/*! ./util/AsyncQueue */ "./src/main/typescript/impl/util/AsyncQueue.ts");
 const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const Assertions_1 = __webpack_require__(/*! ./util/Assertions */ "./src/main/typescript/impl/util/Assertions.ts");
-const XhrFormData_1 = __webpack_require__(/*! ./xhrCore/XhrFormData */ "./src/main/typescript/impl/xhrCore/XhrFormData.ts");
 const ExtDomQuery_1 = __webpack_require__(/*! ./util/ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
 const ErrorData_1 = __webpack_require__(/*! ./xhrCore/ErrorData */ "./src/main/typescript/impl/xhrCore/ErrorData.ts");
 const Lang_1 = __webpack_require__(/*! ./util/Lang */ "./src/main/typescript/impl/util/Lang.ts");
 const Const_1 = __webpack_require__(/*! ./core/Const */ "./src/main/typescript/impl/core/Const.ts");
 const RequestDataResolver_1 = __webpack_require__(/*! ./xhrCore/RequestDataResolver */ "./src/main/typescript/impl/xhrCore/RequestDataResolver.ts");
+const URLCodec_1 = __webpack_require__(/*! ./util/URLCodec */ "./src/main/typescript/impl/util/URLCodec.ts");
 /*
  * allowed project stages
  */
@@ -4657,10 +4657,13 @@ var Implementation;
         if (!element.isTag(Const_1.HTML_TAG_FORM)) {
             throw new Error(getMessage("ERR_VIEWSTATE"));
         }
+        // determine the naming container scenario
         const dummyContext = new mona_dish_1.Config({});
         assignNamingContainerData(dummyContext, mona_dish_1.DQ.byId(form));
-        let formData = new XhrFormData_1.XhrFormData(element, (0, RequestDataResolver_1.resoveNamingContainerMapper)(dummyContext));
-        return formData.toString();
+        // fetch all non file input form elements
+        let formElements = element.deepElements.encodeFormElement();
+        // encode them! (file inputs are handled differently and are not part of the viewstate)
+        return (0, URLCodec_1.encodeFormData)(formElements, (0, RequestDataResolver_1.resoveNamingContainerMapper)(dummyContext));
     }
     Implementation.getViewState = getViewState;
     /**
@@ -6364,6 +6367,84 @@ var ExtLang;
 
 /***/ }),
 
+/***/ "./src/main/typescript/impl/util/URLCodec.ts":
+/*!***************************************************!*\
+  !*** ./src/main/typescript/impl/util/URLCodec.ts ***!
+  \***************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.decodeEncodedValues = exports.encodeFormData = exports.mergeKeyValueEntries = void 0;
+const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
+const ExtDomQuery_1 = __webpack_require__(/*! ./ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
+const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
+/*
+ * various routines for encoding and decoding url parameters
+ * into configs and vice versa
+ */
+/**
+ * merges a list of key value entries into a target config
+ * @param target the target receiving the key value entries
+ * @param keyValueEntries a list of key value entries divided by =
+ * @param paramsMapper a key value remapper
+ */
+function mergeKeyValueEntries(target, keyValueEntries, paramsMapper = (key, value) => [key, value]) {
+    function splitToKeyVal(line) {
+        return line.split(/=(.*)/gi);
+    }
+    function fixKeyWithoutVal(keyVal) {
+        var _a, _b;
+        return keyVal.length < 3 ? [(_a = keyVal === null || keyVal === void 0 ? void 0 : keyVal[0]) !== null && _a !== void 0 ? _a : [], (_b = keyVal === null || keyVal === void 0 ? void 0 : keyVal[1]) !== null && _b !== void 0 ? _b : []] : keyVal;
+    }
+    let toMerge = new ExtDomQuery_1.ExtConfig({});
+    mona_dish_1.Stream.of(...keyValueEntries)
+        .map(line => splitToKeyVal(line))
+        //special case of having keys without values
+        .map(keyVal => fixKeyWithoutVal(keyVal))
+        .map(keyVal => paramsMapper(keyVal[0], keyVal[1]))
+        .each(keyVal => {
+        var _a, _b;
+        toMerge.append(keyVal[0]).value = (_b = (_a = keyVal === null || keyVal === void 0 ? void 0 : keyVal.splice(1)) === null || _a === void 0 ? void 0 : _a.join("")) !== null && _b !== void 0 ? _b : "";
+    });
+    target.shallowMerge(toMerge);
+}
+exports.mergeKeyValueEntries = mergeKeyValueEntries;
+/**
+ * encodes a given form data into a url encoded string
+ * @param formData the form data config object
+ * @param paramsMapper the params mapper
+ * @param defaultStr a default string if nothing comes out of it
+ */
+function encodeFormData(formData, paramsMapper = (inStr, inVal) => [inStr, inVal], defaultStr = Const_1.EMPTY_STR) {
+    if (formData.isAbsent()) {
+        return defaultStr;
+    }
+    let assocValues = formData.value;
+    let entries = mona_dish_1.LazyStream.of(...Object.keys(assocValues))
+        .filter(key => assocValues.hasOwnProperty(key))
+        .flatMap(key => mona_dish_1.Stream.of(...assocValues[key]).map(val => paramsMapper(key, val)))
+        //we cannot encode file elements that is handled by multipart requests anyway
+        .filter(([, value]) => !(value instanceof ExtDomQuery_1.ExtDomQuery.global().File))
+        .map(keyVal => `${encodeURIComponent(keyVal[0])}=${encodeURIComponent(keyVal[1])}`)
+        .collect(new mona_dish_1.ArrayCollector());
+    return entries.join("&");
+}
+exports.encodeFormData = encodeFormData;
+/**
+ * splits and decodes encoded values into strings containing of key=value
+ * @param encoded
+ */
+function decodeEncodedValues(encoded) {
+    return decodeURIComponent(encoded).split(/&/gi)
+        .filter(item => !!(item || '')
+        .replace(/\s+/g, ''));
+}
+exports.decodeEncodedValues = decodeEncodedValues;
+
+
+/***/ }),
+
 /***/ "./src/main/typescript/impl/xhrCore/ErrorData.ts":
 /*!*******************************************************!*\
   !*** ./src/main/typescript/impl/xhrCore/ErrorData.ts ***!
@@ -6609,7 +6690,7 @@ exports.resolveViewRootId = resolveViewRootId;
 function resoveNamingContainerMapper(internalContext) {
     const isNamedViewRoot = internalContext.getIf(Const_1.NAMED_VIEWROOT).isPresent();
     if (!isNamedViewRoot) {
-        return;
+        return (key, value) => [key, value];
     }
     const partialId = internalContext.getIf(Const_1.NAMING_CONTAINER_ID).value;
     const SEP = (0, Const_1.$faces)().separatorchar;
@@ -7514,8 +7595,8 @@ exports.XhrFormData = void 0;
  */
 const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
-var isString = mona_dish_1.Lang.isString;
 const ExtDomQuery_1 = __webpack_require__(/*! ../util/ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
+const URLCodec_1 = __webpack_require__(/*! ../util/URLCodec */ "./src/main/typescript/impl/util/URLCodec.ts");
 const defaultParamsMapper = (key, item) => [key, item];
 /**
  * A unified form data class
@@ -7534,11 +7615,11 @@ class XhrFormData extends mona_dish_1.Config {
      * data collector from a given form
      *
      * @param dataSource either a form as DomQuery object or an encoded url string
-     * @param viewState the form view state or an external viewState coming in as string
+     * @param paramsMapper a remapper for the params keys and values
      * @param executes the executes id list for the elements to being processed
      * @param partialIds partial ids to collect, to reduce the data sent down
      */
-    constructor(dataSource, paramsMapper = defaultParamsMapper, viewState, executes, partialIds) {
+    constructor(dataSource, paramsMapper = defaultParamsMapper, executes, partialIds) {
         super({});
         this.dataSource = dataSource;
         this.paramsMapper = paramsMapper;
@@ -7551,54 +7632,45 @@ class XhrFormData extends mona_dish_1.Config {
          * instead of an encoded string files cannot be sent that way
          */
         this.isMultipartRequest = false;
-        //a call to getViewState before must pass the encoded line
-        //a call from getViewState passes the form element as datasource,
-        //so we have two call points
-        // atm we basically encode twice, to keep the code leaner
-        // this will be later optmized, practically elements
-        // which are already covered by an external viewstate do not need
-        // the encoding a second time, because they are overwritten by the viewstate again
-        if (isString(dataSource)) {
-            this.assignEncodedString(this.dataSource);
-        }
-        else {
-            this.applyFormDataToConfig();
-        }
-        //now assign the external viewstate overrides
-        if ('undefined' != typeof viewState) {
-            this.assignEncodedString(viewState);
-        }
-        if (executes) {
-            this.postInit(...executes);
-        }
+        //encode and append the issuing item if not a partial ids array of ids is passed
+        /*
+         * Spec. 13.3.1
+         * Collect and encode input elements.
+         * Additionally the hidden element jakarta.faces.ViewState
+         * Enhancement partial page submit
+         */
+        this.encodeSubmittableFields(this, this.dataSource, this.partialIds);
+        this.applyViewState(this.dataSource);
+        this.resolveRequestType(executes);
     }
     /**
      * generic post init code, for now, this performs some post assign data post-processing
      * @param executes the executable dom nodes which need to be processed into the form data, which we can send
      * in our ajax request
      */
-    postInit(...executes) {
-        let fetchFileInputs = (id) => {
-            const INPUT_FILE = "input[type='file']";
+    resolveRequestType(executes) {
+        if (!executes) {
+            return;
+        }
+        let isMultiPartContainer = (id) => {
             if (id == Const_1.IDENT_ALL) {
-                return mona_dish_1.DQ.querySelectorAllDeep(INPUT_FILE);
+                let namingContainer = this.remapKeyForNamingContainer("");
+                if (namingContainer.length) {
+                    namingContainer = namingContainer.substring(0, namingContainer.length - 1);
+                    return mona_dish_1.DQ.byId(namingContainer).isMultipartCandidate();
+                }
+                return mona_dish_1.DQ.byId(document.body).isMultipartCandidate();
             }
             else if (id == Const_1.IDENT_FORM) {
-                return this.dataSource.matchesSelector(INPUT_FILE) ?
-                    this.dataSource :
-                    this.dataSource.querySelectorAllDeep(INPUT_FILE);
+                return this.dataSource.isMultipartCandidate(true);
             }
             else {
-                let element = mona_dish_1.DQ.byId(id, true);
-                return element.matchesSelector(INPUT_FILE) ? element : this.getFileInputs(element);
+                const element = mona_dish_1.DQ.byId(id, true);
+                return element.isMultipartCandidate();
             }
         };
-        let inputExists = (item) => {
-            return item.isPresent();
-        };
         this.isMultipartRequest = mona_dish_1.LazyStream.of(...executes)
-            .map(fetchFileInputs)
-            .filter(inputExists)
+            .filter(isMultiPartContainer)
             .first().isPresent();
     }
     /**
@@ -7607,50 +7679,14 @@ class XhrFormData extends mona_dish_1.Config {
      * @param form the form holding the view state value
      */
     applyViewState(form) {
+        if (this.getIf((0, Const_1.$nsp)(Const_1.P_VIEWSTATE)).isPresent()) {
+            return;
+        }
         let viewStateElement = form.querySelectorAllDeep(`[name*='${(0, Const_1.$nsp)(Const_1.P_VIEWSTATE)}'`);
         let viewState = viewStateElement.inputValue;
-        // this.appendIf(viewState.isPresent(), P_VIEWSTATE).value = viewState.value;
         this.appendIf(viewState.isPresent(), this.remapKeyForNamingContainer(viewStateElement.name.value)).value = viewState.value;
     }
     /**
-     * assigns an url encoded string to this xhrFormData object
-     * as key value entry
-     * @param encoded
-     */
-    assignEncodedString(encoded) {
-        // this code filters out empty strings as key value pairs
-        let keyValueEntries = decodeURIComponent(encoded).split(/&/gi)
-            .filter(item => !!(item || '')
-            .replace(/\s+/g, ''));
-        this.assignString(keyValueEntries);
-    }
-    /**
-     * assign a set of key value pairs passed as array ['key=val1', 'key2=val2']
-     * @param keyValueEntries
-     */
-    assignString(keyValueEntries) {
-        let toMerge = new ExtDomQuery_1.ExtConfig({});
-        function splitToKeyVal(line) {
-            return line.split(/=(.*)/gi);
-        }
-        function fixKeyWithoutVal(keyVal) {
-            var _a, _b;
-            return keyVal.length < 3 ? [(_a = keyVal === null || keyVal === void 0 ? void 0 : keyVal[0]) !== null && _a !== void 0 ? _a : [], (_b = keyVal === null || keyVal === void 0 ? void 0 : keyVal[1]) !== null && _b !== void 0 ? _b : []] : keyVal;
-        }
-        mona_dish_1.Stream.of(...keyValueEntries)
-            .map(line => splitToKeyVal(line))
-            //special case of having keys without values
-            .map(keyVal => fixKeyWithoutVal(keyVal))
-            .map(keyVal => this.paramsMapper(keyVal[0], keyVal[1]))
-            .each(keyVal => {
-            var _a, _b;
-            toMerge.append(keyVal[0]).value = (_b = (_a = keyVal === null || keyVal === void 0 ? void 0 : keyVal.splice(1)) === null || _a === void 0 ? void 0 : _a.join("")) !== null && _b !== void 0 ? _b : "";
-        });
-        //merge with overwrite but no append! (aka no double entries are allowed)
-        this.shallowMerge(toMerge);
-    }
-    /**
-     * @param paramsMapper ... pre encode the params if needed, default is to map them 1:1
      * @returns a Form data representation, this is needed for file submits
      */
     toFormData() {
@@ -7658,60 +7694,13 @@ class XhrFormData extends mona_dish_1.Config {
         this.appendInputs(ret);
         return ret;
     }
-    resolveSubmitIdentifier(elem) {
-        var _a;
-        let identifier = elem.name;
-        identifier = (((_a = elem === null || elem === void 0 ? void 0 : elem.name) !== null && _a !== void 0 ? _a : "").replace(/s+/gi, "") == "") ? elem.id : identifier;
-        return identifier;
-    }
     /**
      * returns an encoded string representation of our xhr form data
      *
      * @param defaultStr optional default value if nothing is there to encode
      */
     toString(defaultStr = Const_1.EMPTY_STR) {
-        if (this.isAbsent()) {
-            return defaultStr;
-        }
-        let entries = mona_dish_1.LazyStream.of(...Object.keys(this.value))
-            .filter(key => this.value.hasOwnProperty(key))
-            .flatMap(key => mona_dish_1.Stream.of(...this.value[key]).map(val => this.paramsMapper(key, val)))
-            //we cannot encode file elements that is handled by multipart requests anyway
-            .filter(([, value]) => !(value instanceof ExtDomQuery_1.ExtDomQuery.global().File))
-            .map(keyVal => `${encodeURIComponent(keyVal[0])}=${encodeURIComponent(keyVal[1])}`)
-            .collect(new mona_dish_1.ArrayCollector());
-        return entries.join("&");
-    }
-    /**
-     * helper to fetch all file inputs from as given root element
-     * @param rootElement
-     * @private
-     */
-    getFileInputs(rootElement) {
-        const rootFileInputs = rootElement
-            .filter(elem => elem.matchesSelector("input[type='file']"));
-        const childFileInputs = rootElement
-            .querySelectorAll("input[type='file']");
-        return rootFileInputs.concat(childFileInputs);
-    }
-    /**
-     * encode the given fields and apply the view state
-     * @private
-     */
-    applyFormDataToConfig() {
-        //encode and append the issuing item if not a partial ids array of ids is passed
-        /*
-         * Spec. 13.3.1
-         * Collect and encode input elements.
-         * Additionally the hidden element jakarta.faces.ViewState
-         * Enhancement partial page submit
-         *
-         */
-        this.encodeSubmittableFields(this, this.dataSource, this.partialIds);
-        if (this.getIf((0, Const_1.$nsp)(Const_1.P_VIEWSTATE)).isPresent()) {
-            return;
-        }
-        this.applyViewState(this.dataSource);
+        return (0, URLCodec_1.encodeFormData)(this, this.paramsMapper, defaultStr);
     }
     /**
      * determines fields to submit
@@ -7720,30 +7709,14 @@ class XhrFormData extends mona_dish_1.Config {
      * @param {Array} partialIds - ids fo PPS
      */
     encodeSubmittableFields(targetBuf, parentItem, partialIds) {
-        let toEncode = null;
-        if (this.partialIds && this.partialIds.length) {
-            // in case of our myfaces reduced ppr we
-            // only submit the partials
-            this._value = {};
-            toEncode = new mona_dish_1.DQ(...this.partialIds);
-        }
-        else {
-            if (parentItem.isAbsent())
-                throw 'NO_PAR_ITEM';
-            toEncode = parentItem;
-        }
-        //lets encode the form elements
-        let formElements = toEncode.deepElements.encodeFormElement();
-        const mapped = this.remapKeysForNamingCoontainer(formElements);
-        this.shallowMerge(mapped);
-    }
-    remapKeysForNamingCoontainer(formElements) {
-        let ret = new mona_dish_1.Config({});
-        formElements.stream.map(([key, item]) => this.paramsMapper(key, item))
-            .each(([key, item]) => {
-            ret.assign(key).value = item;
-        });
-        return ret;
+        //encoded String
+        let viewStateStr = (0, Const_1.$faces)().getViewState(parentItem.getAsElem(0).value);
+        // we now need to decode it and then merge it into the target buf
+        // which hosts already our overrides (aka do not override what is already there(
+        // after that we need to deal with form elements on a separate level
+        let target = new ExtDomQuery_1.ExtConfig({});
+        (0, URLCodec_1.mergeKeyValueEntries)(target, (0, URLCodec_1.decodeEncodedValues)(viewStateStr), this.paramsMapper);
+        this.shallowMerge(target);
     }
     remapKeyForNamingContainer(key) {
         return this.paramsMapper(key, "")[0];
@@ -7753,6 +7726,10 @@ class XhrFormData extends mona_dish_1.Config {
             .flatMap(([key, item]) => mona_dish_1.Stream.of(...item).map(item => {
             return { key, item };
         }))
+            .map(({ key, item }) => {
+            key = this.remapKeyForNamingContainer(key);
+            return { key, item };
+        })
             .each(({ key, item }) => ret.append(key, item));
     }
 }
@@ -7852,8 +7829,6 @@ class XhrRequest {
             return this.requestContext.getIf(Const_1.CTX_PARAM_REQ_PASS_THR, Const_1.P_EXECUTE).get("none").value.split(/\s+/gi);
         };
         try {
-            let formElement = this.sourceForm.getAsElem(0).value;
-            let viewState = (0, Const_1.$faces)().getViewState(formElement);
             // encoded we need to decode
             // We generated a base representation of the current form
             // in case someone has overloaded the viewState with additional decorators we merge
@@ -7863,12 +7838,14 @@ class XhrRequest {
             // the partialIdsArray arr is almost deprecated legacy code where we allowed to send a separate list of partial
             // ids for reduced load and server processing, this will be removed soon, we can handle the same via execute
             // anyway TODO remove the partial ids array
-            let formData = new XhrFormData_1.XhrFormData(this.sourceForm, (0, RequestDataResolver_1.resoveNamingContainerMapper)(this.internalContext), viewState, executesArr(), this.partialIdsArray);
+            let formData = new XhrFormData_1.XhrFormData(this.sourceForm, (0, RequestDataResolver_1.resoveNamingContainerMapper)(this.internalContext), executesArr(), this.partialIdsArray);
             this.contentType = formData.isMultipartRequest ? "undefined" : this.contentType;
             // next step the pass through parameters are merged in for post params
             this.requestContext.$nspEnabled = false;
             let requestContext = this.requestContext;
             let requestPassThroughParams = requestContext.getIf(Const_1.CTX_PARAM_REQ_PASS_THR);
+            // we are turning off here the jsf, faces remapping because we are now dealing with
+            // pass-through parameters
             requestPassThroughParams.$nspEnabled = false;
             // this is an extension where we allow pass through parameters to be sent down additionally
             // this can be used and is used in the impl to enrich the post request parameters with additional

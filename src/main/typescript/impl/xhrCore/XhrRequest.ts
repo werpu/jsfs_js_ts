@@ -140,11 +140,13 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             this.requestContext.$nspEnabled = false;
             let requestContext = this.requestContext;
             let requestPassThroughParams = requestContext.getIf(CTX_PARAM_REQ_PASS_THR) as ExtConfig;
+
+            // we are turning off here the jsf, faces remapping because we are now dealing with
+            // pass-through parameters
             requestPassThroughParams.$nspEnabled = false;
             // this is an extension where we allow pass through parameters to be sent down additionally
             // this can be used and is used in the impl to enrich the post request parameters with additional
             // information
-
             try {
                 formData.shallowMerge(requestPassThroughParams, true, true);
             } finally {
@@ -182,11 +184,8 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             // setting, they accept headers automatically
             ignoreErr(() => xhrObject.setRequestHeader(REQ_ACCEPT, STD_ACCEPT));
 
-
-
             this.sendEvent(BEGIN);
             this.sendRequest(formData);
-
         } catch (e) {
             // _onError
             this.handleError(e);

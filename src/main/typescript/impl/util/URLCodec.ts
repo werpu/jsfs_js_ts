@@ -62,7 +62,7 @@ export function encodeFormData(formData: Config,
 
 /**
  * splits and decodes encoded values into strings containing of key=value
- * @param encoded
+ * @param encoded encoded string
  */
 export function decodeEncodedValues(encoded: string): string[] {
     return decodeURIComponent(encoded).split(/&/gi)

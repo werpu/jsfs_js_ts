@@ -18,14 +18,41 @@ import {Implementation} from "../../impl/AjaxImpl";
 import {StandardInits} from "../frameworkBase/_ext/shared/StandardInits";
 
 import protocolPage = StandardInits.protocolPage;
-import {Config, DQ} from "mona-dish";
-import {XhrFormData} from "../../impl/xhrCore/XhrFormData";
+import {Config, DQ, Stream} from "mona-dish";
 import {expect} from "chai";
-import prefixPage = StandardInits.prefixEmbeddedPage;
-import prefixEmbeddedPage = StandardInits.prefixEmbeddedPage;
 import HTML_PREFIX_EMBEDDED_BODY = StandardInits.HTML_PREFIX_EMBEDDED_BODY;
 import {it} from "mocha";
-import {decodeEncodedValues, mergeKeyValueEntries} from "../../impl/util/URLCodec";
+import {decodeEncodedValues} from "../../impl/util/FileUtils";
+import {ExtConfig} from "../../impl/util/ExtDomQuery";
+
+/**
+ * merges a list of key value entries into a target config
+ * @param target the target receiving the key value entries
+ * @param keyValueEntries a list of key value entries divided by =
+ * @param paramsMapper a key value remapper
+ */
+function mergeKeyValueEntries(target: Config, keyValueEntries: Stream<string[]>, paramsMapper = (key, value) => [key, value]) {
+
+    function fixKeyWithoutVal(keyVal: string[]) {
+        return keyVal.length < 3 ? [keyVal?.[0] ?? [], keyVal?.[1] ?? []] : keyVal;
+    }
+
+    let toMerge = new ExtConfig({});
+    keyValueEntries
+        //special case of having keys without values
+        .map(keyVal => fixKeyWithoutVal(keyVal))
+        .map(keyVal => paramsMapper(keyVal[0] as string, keyVal[1]))
+        .each(keyVal => {
+            let value = keyVal?.splice(1)?.join("") ?? "";
+            if(toMerge.getIfPresent(keyVal[0]).isPresent()) {
+                toMerge.append(keyVal[0] as string).value = value;
+            } else {
+                toMerge.assign(keyVal[0] as string).value = value;
+            }
+        });
+
+    target.shallowMerge(toMerge);
+}
 
 function getFormData(requestBody: string): Config {
     let ret = new Config({});
@@ -106,7 +133,7 @@ describe("test for proper request param patterns identical to the old implementa
         //We check if the base64 encoded string matches the original
         let formData = getFormData(requestBody);
 
-        expect(decodeURIComponent(formData.getIf("jakarta.faces.ViewState").value) == probe).to.be.true;
+        expect(formData.getIf("jakarta.faces.ViewState").value == probe).to.be.true;
     });
 
 
@@ -137,6 +164,7 @@ describe("test for proper request param patterns identical to the old implementa
     it("must handle prefixed inputs properly (prefixes must be present) faces4", function (done) {
         window.document.body.innerHTML = HTML_PREFIX_EMBEDDED_BODY;
 
+        global["debug_inp"] = true;
         //we now run the tests here
         try {
 

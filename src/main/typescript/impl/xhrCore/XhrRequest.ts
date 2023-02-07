@@ -41,7 +41,7 @@ import {
     STATE_EVT_TIMEOUT,
     STD_ACCEPT,
     URL_ENCODED,
-    VAL_AJAX
+    VAL_AJAX, IDENT_NONE
 } from "../core/Const";
 import {
     resolveFinalUrl,
@@ -60,6 +60,7 @@ import {ResponseProcessor} from "./ResponseProcessor";
  * The idea is that we basically just enqueue
  * a single ajax request into our queue
  * and let the queue do the processing.
+ *
  *
  */
 
@@ -119,7 +120,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         let xhrObject = this.xhrObject;
 
         let executesArr = () => {
-            return this.requestContext.getIf(CTX_PARAM_REQ_PASS_THR, P_EXECUTE).get("none").value.split(/\s+/gi);
+            return this.requestContext.getIf(CTX_PARAM_REQ_PASS_THR, P_EXECUTE).get(IDENT_NONE).value.split(/\s+/gi);
         };
 
         try {
@@ -131,7 +132,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             // whatever the formData object delivers
             // the partialIdsArray arr is almost deprecated legacy code where we allowed to send a separate list of partial
             // ids for reduced load and server processing, this will be removed soon, we can handle the same via execute
-            // anyway TODO remove the partial ids array
+            // anyway TODO reimplement the partial ids array, we still do not have it in jsf the way we need it
             let formData: XhrFormData = new XhrFormData(this.sourceForm, resoveNamingContainerMapper(this.internalContext), executesArr(), this.partialIdsArray);
 
             this.contentType = formData.isMultipartRequest ? "undefined" : this.contentType;

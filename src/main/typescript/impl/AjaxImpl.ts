@@ -63,7 +63,7 @@ import {
     resolveForm,
     resolveTimeout, resolveViewId, resolveViewRootId, resoveNamingContainerMapper
 } from "./xhrCore/RequestDataResolver";
-import {encodeFormData} from "./util/URLCodec";
+import {encodeFormData} from "./util/FileUtils";
 
 /*
  * allowed project stages

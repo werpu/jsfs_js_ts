@@ -456,7 +456,7 @@ class DomQuery {
             .reduce((accumulate, incoming) => accumulate + incoming, 0).value;
     }
     get asNodeArray() {
-        return [].concat(Stream_1.Stream.of(this.rootNode).filter(item => item != null).collect(new SourcesCollectors_1.ArrayCollector()));
+        return [].concat(Stream_1.Stream.of(...this.rootNode).filter(item => item != null).collect(new SourcesCollectors_1.ArrayCollector()));
     }
     static querySelectorAllDeep(selector) {
         return new DomQuery(document).querySelectorAllDeep(selector);
@@ -1311,7 +1311,7 @@ class DomQuery {
             let scriptElements = new DomQuery(this.filterSelector("script"), this.querySelectorAll("script"));
             // script execution order by relative pos in their dom tree
             scriptElements.stream
-                .flatMap(item => Stream_1.Stream.of(item.values))
+                .flatMap(item => Stream_1.Stream.of(...item.values))
                 .sort((node1, node2) => node1.compareDocumentPosition(node2) - 3) // preceding 2, following == 4)
                 .each(item => execScript(item));
             evalCollectedScripts(finalScripts);
@@ -1366,7 +1366,7 @@ class DomQuery {
         };
         const scriptElements = new DomQuery(this.filterSelector("link, style"), this.querySelectorAll("link, style"));
         scriptElements.stream
-            .flatMap(item => Stream_1.Stream.of(item.values))
+            .flatMap(item => Stream_1.Stream.of(...item.values))
             .sort((node1, node2) => node1.compareDocumentPosition(node2) - 3)
             .each(item => execCss(item));
         return this;
@@ -2917,7 +2917,7 @@ exports.Config = Config;
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.QueryFormStringCollector = exports.QueryFormDataCollector = exports.FormDataCollector = exports.AssocArrayCollector = exports.Run = exports.ArrayAssocArrayCollector = exports.InverseArrayCollector = exports.ArrayCollector = exports.FlatMapStreamDataSource = exports.MappedStreamDataSource = exports.FilteredStreamDatasource = exports.ArrayStreamDataSource = exports.SequenceDataSource = exports.ITERATION_STATUS = void 0;
+exports.QueryFormStringCollector = exports.QueryFormDataCollector = exports.FormDataCollector = exports.AssocArrayCollector = exports.Run = exports.ArrayAssocArrayCollector = exports.InverseArrayCollector = exports.ArrayCollector = exports.FlatMapStreamDataSource = exports.MappedStreamDataSource = exports.FilteredStreamDatasource = exports.ArrayStreamDataSource = exports.SequenceDataSource = exports.MultiStreamDatasource = exports.ITERATION_STATUS = void 0;
 const Stream_1 = __webpack_require__(/*! ./Stream */ "./node_modules/mona-dish/src/main/typescript/Stream.ts");
 /**
  * special status of the datasource location pointer
@@ -2935,6 +2935,84 @@ var ITERATION_STATUS;
     ITERATION_STATUS["EO_STRM"] = "__EO_STRM__";
     ITERATION_STATUS["BEF_STRM"] = "___BEF_STRM__";
 })(ITERATION_STATUS = exports.ITERATION_STATUS || (exports.ITERATION_STATUS = {}));
+class MultiStreamDatasource {
+    constructor(first, ...strms) {
+        this.first = first;
+        this.selectedPos = 0;
+        this.strms = [first].concat(...strms);
+        this.activeStrm = this.strms[this.selectedPos];
+    }
+    current() {
+        return this.activeStrm.current();
+    }
+    hasNext() {
+        if (this.activeStrm.hasNext()) {
+            return true;
+        }
+        if (this.selectedPos >= this.strms.length) {
+            return false;
+        }
+        return this.findNextStrm() != -1;
+    }
+    findNextStrm() {
+        let hasNext = false;
+        let cnt = this.selectedPos;
+        while (!hasNext && cnt < this.strms.length) {
+            hasNext = this.strms[cnt].hasNext();
+            if (!hasNext) {
+                cnt++;
+            }
+        }
+        return hasNext ? cnt : -1;
+    }
+    lookAhead(cnt) {
+        let posPtr = 1;
+        let strmPos = this.selectedPos;
+        let valueFound = null;
+        if (this.strms[strmPos].lookAhead(cnt) != ITERATION_STATUS.EO_STRM) {
+            //speedup
+            return this.strms[strmPos].lookAhead(cnt);
+        }
+        for (let loop = posPtr; loop <= cnt; loop++) {
+            if (!this.strms[strmPos]) {
+                return ITERATION_STATUS.EO_STRM;
+            }
+            let val = (posPtr > 0) ? this.strms[strmPos].lookAhead(posPtr) : this.strms[strmPos].current();
+            valueFound = val;
+            if (val != ITERATION_STATUS.EO_STRM) {
+                posPtr++;
+            }
+            else {
+                if (strmPos >= this.strms.length) {
+                    return ITERATION_STATUS.EO_STRM;
+                }
+                strmPos++;
+                posPtr = 1;
+                loop--; //empty iteration
+            }
+        }
+        return valueFound;
+    }
+    next() {
+        if (this.activeStrm.hasNext()) {
+            return this.activeStrm.next();
+        }
+        this.selectedPos = this.findNextStrm();
+        if (this.selectedPos == -1) {
+            return ITERATION_STATUS.EO_STRM;
+        }
+        this.activeStrm = this.strms[this.selectedPos];
+        return this.activeStrm.next();
+    }
+    reset() {
+        this.activeStrm = this.strms[0];
+        this.selectedPos = 0;
+        for (let cnt = 0; cnt < this.strms.length; cnt++) {
+            this.strms[cnt].reset();
+        }
+    }
+}
+exports.MultiStreamDatasource = MultiStreamDatasource;
 /**
  * defines a sequence of numbers for our stream input
  */
@@ -3390,6 +3468,15 @@ class Stream {
         }
         return new Stream(...value);
     }
+    current() {
+        if (this.pos == -1) {
+            return SourcesCollectors_1.ITERATION_STATUS.BEF_STRM;
+        }
+        if (this.pos >= this.value.length) {
+            return SourcesCollectors_1.ITERATION_STATUS.EO_STRM;
+        }
+        return this.value[this.pos];
+    }
     limits(end) {
         this._limits = end;
         return this;
@@ -3399,9 +3486,8 @@ class Stream {
      * @param toAppend
      */
     concat(...toAppend) {
-        //let dataSource = new MultiStreamDatasource<T>(this, ...toAppend);
-        //return Stream.ofDataSource<T>(dataSource);
-        return Stream.of(this, ...toAppend).flatMap(item => item);
+        let toConcat = [this].concat(toAppend);
+        return Stream.of(...toConcat).flatMap(item => item);
     }
     onElem(fn) {
         for (let cnt = 0; cnt < this.value.length && (this._limits == -1 || cnt < this._limits); cnt++) {
@@ -3433,7 +3519,7 @@ class Stream {
         let ret = [];
         this.each(item => {
             let strmR = fn(item);
-            ret = Array.isArray(strmR) ? ret.concat(strmR) : ret.concat(...strmR.value);
+            ret = Array.isArray(strmR) ? ret.concat(strmR) : ret.concat(strmR.value);
         });
         return Stream.of(...ret);
     }
@@ -3623,7 +3709,8 @@ class LazyStream {
     concat(...toAppend) {
         //this.dataSource =  new MultiStreamDatasource<T>(this, ... toAppend);
         //return this;
-        return LazyStream.of(this, ...toAppend).flatMap(item => item);
+        return LazyStream.ofStreamDataSource(new SourcesCollectors_1.MultiStreamDatasource(this, toAppend));
+        //return LazyStream.of(<IStream<T>>this, ...toAppend).flatMap(item => item);
     }
     nextFilter(fn) {
         if (this.hasNext()) {
@@ -4231,7 +4318,7 @@ const ErrorData_1 = __webpack_require__(/*! ./xhrCore/ErrorData */ "./src/main/t
 const Lang_1 = __webpack_require__(/*! ./util/Lang */ "./src/main/typescript/impl/util/Lang.ts");
 const Const_1 = __webpack_require__(/*! ./core/Const */ "./src/main/typescript/impl/core/Const.ts");
 const RequestDataResolver_1 = __webpack_require__(/*! ./xhrCore/RequestDataResolver */ "./src/main/typescript/impl/xhrCore/RequestDataResolver.ts");
-const URLCodec_1 = __webpack_require__(/*! ./util/URLCodec */ "./src/main/typescript/impl/util/URLCodec.ts");
+const FileUtils_1 = __webpack_require__(/*! ./util/FileUtils */ "./src/main/typescript/impl/util/FileUtils.ts");
 /*
  * allowed project stages
  */
@@ -4663,7 +4750,7 @@ var Implementation;
         // fetch all non file input form elements
         let formElements = element.deepElements.encodeFormElement();
         // encode them! (file inputs are handled differently and are not part of the viewstate)
-        return (0, URLCodec_1.encodeFormData)(formElements, (0, RequestDataResolver_1.resoveNamingContainerMapper)(dummyContext));
+        return (0, FileUtils_1.encodeFormData)(formElements, (0, RequestDataResolver_1.resoveNamingContainerMapper)(dummyContext));
     }
     Implementation.getViewState = getViewState;
     /**
@@ -6064,6 +6151,79 @@ exports.ExtConfig = ExtConfig;
 
 /***/ }),
 
+/***/ "./src/main/typescript/impl/util/FileUtils.ts":
+/*!****************************************************!*\
+  !*** ./src/main/typescript/impl/util/FileUtils.ts ***!
+  \****************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.fixKeyWithoutVal = exports.resolveFiles = exports.decodeEncodedValues = exports.encodeFormData = void 0;
+const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
+const ExtDomQuery_1 = __webpack_require__(/*! ./ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
+const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
+/*
+ * various routines for encoding and decoding url parameters
+ * into configs and vice versa
+ */
+/**
+ * encodes a given form data into a url encoded string
+ * @param formData the form data config object
+ * @param paramsMapper the params mapper
+ * @param defaultStr a default string if nothing comes out of it
+ */
+function encodeFormData(formData, paramsMapper = (inStr, inVal) => [inStr, inVal], defaultStr = Const_1.EMPTY_STR) {
+    if (formData.isAbsent()) {
+        return defaultStr;
+    }
+    let assocValues = formData.value;
+    let entries = mona_dish_1.LazyStream.of(...Object.keys(assocValues))
+        .filter(key => assocValues.hasOwnProperty(key))
+        .flatMap(key => mona_dish_1.Stream.of(...assocValues[key]).map(val => paramsMapper(key, val)))
+        //we cannot encode file elements that is handled by multipart requests anyway
+        .filter(([, value]) => !(value instanceof ExtDomQuery_1.ExtDomQuery.global().File))
+        .map(keyVal => `${encodeURIComponent(keyVal[0])}=${encodeURIComponent(keyVal[1])}`)
+        .collect(new mona_dish_1.ArrayCollector());
+    return entries.join("&");
+}
+exports.encodeFormData = encodeFormData;
+/**
+ * splits and decodes encoded values into strings containing of key=value
+ * @param encoded encoded string
+ */
+function decodeEncodedValues(encoded) {
+    return mona_dish_1.Stream.of(...decodeURIComponent(encoded).split(/&/gi))
+        .filter(item => !!(item || '')
+        .replace(/\s+/g, ''))
+        .map(line => {
+        let index = line.indexOf("=");
+        if (index == -1) {
+            return [line];
+        }
+        return [line.substring(0, index), line.substring(index + 1)];
+    });
+}
+exports.decodeEncodedValues = decodeEncodedValues;
+function resolveFiles(dataSource) {
+    return dataSource
+        .querySelectorAllDeep("input[type='file']")
+        .stream
+        .map(fileInput => [fileInput.name.value || fileInput.id.value, fileInput.filesFromElem(0)])
+        .flatMap(([key, files]) => {
+        return mona_dish_1.Stream.of(...files).map(file => [key, file]);
+    });
+}
+exports.resolveFiles = resolveFiles;
+function fixKeyWithoutVal(keyVal) {
+    var _a, _b;
+    return keyVal.length < 3 ? [(_a = keyVal === null || keyVal === void 0 ? void 0 : keyVal[0]) !== null && _a !== void 0 ? _a : [], (_b = keyVal === null || keyVal === void 0 ? void 0 : keyVal[1]) !== null && _b !== void 0 ? _b : []] : keyVal;
+}
+exports.fixKeyWithoutVal = fixKeyWithoutVal;
+
+
+/***/ }),
+
 /***/ "./src/main/typescript/impl/util/HiddenInputBuilder.ts":
 /*!*************************************************************!*\
   !*** ./src/main/typescript/impl/util/HiddenInputBuilder.ts ***!
@@ -6363,84 +6523,6 @@ var ExtLang;
         }
     }
 })(ExtLang = exports.ExtLang || (exports.ExtLang = {}));
-
-
-/***/ }),
-
-/***/ "./src/main/typescript/impl/util/URLCodec.ts":
-/*!***************************************************!*\
-  !*** ./src/main/typescript/impl/util/URLCodec.ts ***!
-  \***************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.decodeEncodedValues = exports.encodeFormData = exports.mergeKeyValueEntries = void 0;
-const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
-const ExtDomQuery_1 = __webpack_require__(/*! ./ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
-const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
-/*
- * various routines for encoding and decoding url parameters
- * into configs and vice versa
- */
-/**
- * merges a list of key value entries into a target config
- * @param target the target receiving the key value entries
- * @param keyValueEntries a list of key value entries divided by =
- * @param paramsMapper a key value remapper
- */
-function mergeKeyValueEntries(target, keyValueEntries, paramsMapper = (key, value) => [key, value]) {
-    function splitToKeyVal(line) {
-        return line.split(/=(.*)/gi);
-    }
-    function fixKeyWithoutVal(keyVal) {
-        var _a, _b;
-        return keyVal.length < 3 ? [(_a = keyVal === null || keyVal === void 0 ? void 0 : keyVal[0]) !== null && _a !== void 0 ? _a : [], (_b = keyVal === null || keyVal === void 0 ? void 0 : keyVal[1]) !== null && _b !== void 0 ? _b : []] : keyVal;
-    }
-    let toMerge = new ExtDomQuery_1.ExtConfig({});
-    mona_dish_1.Stream.of(...keyValueEntries)
-        .map(line => splitToKeyVal(line))
-        //special case of having keys without values
-        .map(keyVal => fixKeyWithoutVal(keyVal))
-        .map(keyVal => paramsMapper(keyVal[0], keyVal[1]))
-        .each(keyVal => {
-        var _a, _b;
-        toMerge.append(keyVal[0]).value = (_b = (_a = keyVal === null || keyVal === void 0 ? void 0 : keyVal.splice(1)) === null || _a === void 0 ? void 0 : _a.join("")) !== null && _b !== void 0 ? _b : "";
-    });
-    target.shallowMerge(toMerge);
-}
-exports.mergeKeyValueEntries = mergeKeyValueEntries;
-/**
- * encodes a given form data into a url encoded string
- * @param formData the form data config object
- * @param paramsMapper the params mapper
- * @param defaultStr a default string if nothing comes out of it
- */
-function encodeFormData(formData, paramsMapper = (inStr, inVal) => [inStr, inVal], defaultStr = Const_1.EMPTY_STR) {
-    if (formData.isAbsent()) {
-        return defaultStr;
-    }
-    let assocValues = formData.value;
-    let entries = mona_dish_1.LazyStream.of(...Object.keys(assocValues))
-        .filter(key => assocValues.hasOwnProperty(key))
-        .flatMap(key => mona_dish_1.Stream.of(...assocValues[key]).map(val => paramsMapper(key, val)))
-        //we cannot encode file elements that is handled by multipart requests anyway
-        .filter(([, value]) => !(value instanceof ExtDomQuery_1.ExtDomQuery.global().File))
-        .map(keyVal => `${encodeURIComponent(keyVal[0])}=${encodeURIComponent(keyVal[1])}`)
-        .collect(new mona_dish_1.ArrayCollector());
-    return entries.join("&");
-}
-exports.encodeFormData = encodeFormData;
-/**
- * splits and decodes encoded values into strings containing of key=value
- * @param encoded
- */
-function decodeEncodedValues(encoded) {
-    return decodeURIComponent(encoded).split(/&/gi)
-        .filter(item => !!(item || '')
-        .replace(/\s+/g, ''));
-}
-exports.decodeEncodedValues = decodeEncodedValues;
 
 
 /***/ }),
@@ -7596,7 +7678,7 @@ exports.XhrFormData = void 0;
 const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 const ExtDomQuery_1 = __webpack_require__(/*! ../util/ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
-const URLCodec_1 = __webpack_require__(/*! ../util/URLCodec */ "./src/main/typescript/impl/util/URLCodec.ts");
+const FileUtils_1 = __webpack_require__(/*! ../util/FileUtils */ "./src/main/typescript/impl/util/FileUtils.ts");
 const defaultParamsMapper = (key, item) => [key, item];
 /**
  * A unified form data class
@@ -7608,7 +7690,11 @@ const defaultParamsMapper = (key, item) => [key, item];
  *
  * probably only one needed and one overlay!
  * the entire file input storing probably is redundant now
- * that dom query has been fixed //TODO check this
+ * that dom query has been fixed
+ *
+ * internal storage format
+ * every value is stored as an array
+ * even scalar ones!
  */
 class XhrFormData extends mona_dish_1.Config {
     /**
@@ -7639,39 +7725,20 @@ class XhrFormData extends mona_dish_1.Config {
          * Additionally the hidden element jakarta.faces.ViewState
          * Enhancement partial page submit
          */
-        this.encodeSubmittableFields(this, this.dataSource, this.partialIds);
+        this.resolveRequestType(this.dataSource, executes);
+        this.encodeSubmittableFields(this.dataSource, this.partialIds);
         this.applyViewState(this.dataSource);
-        this.resolveRequestType(executes);
     }
     /**
      * generic post init code, for now, this performs some post assign data post-processing
      * @param executes the executable dom nodes which need to be processed into the form data, which we can send
      * in our ajax request
      */
-    resolveRequestType(executes) {
-        if (!executes) {
+    resolveRequestType(rootElement, executes) {
+        if (!executes || executes.indexOf(Const_1.IDENT_NONE) != -1) {
             return;
         }
-        let isMultiPartContainer = (id) => {
-            if (id == Const_1.IDENT_ALL) {
-                let namingContainer = this.remapKeyForNamingContainer("");
-                if (namingContainer.length) {
-                    namingContainer = namingContainer.substring(0, namingContainer.length - 1);
-                    return mona_dish_1.DQ.byId(namingContainer).isMultipartCandidate();
-                }
-                return mona_dish_1.DQ.byId(document.body).isMultipartCandidate();
-            }
-            else if (id == Const_1.IDENT_FORM) {
-                return this.dataSource.isMultipartCandidate(true);
-            }
-            else {
-                const element = mona_dish_1.DQ.byId(id, true);
-                return element.isMultipartCandidate();
-            }
-        };
-        this.isMultipartRequest = mona_dish_1.LazyStream.of(...executes)
-            .filter(isMultiPartContainer)
-            .first().isPresent();
+        this.isMultipartRequest = rootElement.isMultipartCandidate(true);
     }
     /**
      * special case view state handling
@@ -7691,7 +7758,31 @@ class XhrFormData extends mona_dish_1.Config {
      */
     toFormData() {
         let ret = new FormData();
-        this.appendInputs(ret);
+        /*
+         * expands key: [item1, item2]
+         * to: [{key: item1}, {key, item2}]
+         */
+        let expandArrayedData = ([key, item]) => mona_dish_1.Stream.of(...item).map(item => {
+            return { key, item };
+        });
+        /*
+         * remaps the incoming {key, value} tuples
+         * to naming container prefixed keys and values
+         */
+        let remapForNamingContainer = ({ key, item }) => {
+            key = this.remapKeyForNamingContainer(key);
+            return { key, item };
+        };
+        /*
+         * collects everything into a FormData object
+         */
+        let collectFormData = ({ key, item }) => {
+            ret.append(key, item);
+        };
+        mona_dish_1.Stream.ofAssoc(this.value)
+            .flatMap(expandArrayedData)
+            .map(remapForNamingContainer)
+            .each(collectFormData);
         return ret;
     }
     /**
@@ -7700,7 +7791,7 @@ class XhrFormData extends mona_dish_1.Config {
      * @param defaultStr optional default value if nothing is there to encode
      */
     toString(defaultStr = Const_1.EMPTY_STR) {
-        return (0, URLCodec_1.encodeFormData)(this, this.paramsMapper, defaultStr);
+        return (0, FileUtils_1.encodeFormData)(this, this.paramsMapper, defaultStr);
     }
     /**
      * determines fields to submit
@@ -7708,29 +7799,26 @@ class XhrFormData extends mona_dish_1.Config {
      * @param {Node} parentItem - form element item is nested in
      * @param {Array} partialIds - ids fo PPS
      */
-    encodeSubmittableFields(targetBuf, parentItem, partialIds) {
+    encodeSubmittableFields(parentItem, partialIds) {
         //encoded String
         let viewStateStr = (0, Const_1.$faces)().getViewState(parentItem.getAsElem(0).value);
         // we now need to decode it and then merge it into the target buf
         // which hosts already our overrides (aka do not override what is already there(
         // after that we need to deal with form elements on a separate level
-        let target = new ExtDomQuery_1.ExtConfig({});
-        (0, URLCodec_1.mergeKeyValueEntries)(target, (0, URLCodec_1.decodeEncodedValues)(viewStateStr), this.paramsMapper);
-        this.shallowMerge(target);
+        const keyValueEntries = (0, FileUtils_1.decodeEncodedValues)(viewStateStr);
+        const fileEntries = (0, FileUtils_1.resolveFiles)(parentItem);
+        const concatted = keyValueEntries.concat(fileEntries);
+        const formData = new ExtDomQuery_1.ExtConfig({});
+        concatted
+            .map(FileUtils_1.fixKeyWithoutVal)
+            .map(keyVal => this.paramsMapper(keyVal[0], keyVal[1]))
+            .each((entry) => {
+            formData.append(entry[0]).value = entry[1];
+        });
+        this.shallowMerge(formData, true, true);
     }
     remapKeyForNamingContainer(key) {
         return this.paramsMapper(key, "")[0];
-    }
-    appendInputs(ret) {
-        mona_dish_1.Stream.ofAssoc(this.value)
-            .flatMap(([key, item]) => mona_dish_1.Stream.of(...item).map(item => {
-            return { key, item };
-        }))
-            .map(({ key, item }) => {
-            key = this.remapKeyForNamingContainer(key);
-            return { key, item };
-        })
-            .each(({ key, item }) => ret.append(key, item));
     }
 }
 exports.XhrFormData = XhrFormData;
@@ -7779,6 +7867,7 @@ var failSaveExecute = Lang_1.ExtLang.failSaveExecute;
  * a single ajax request into our queue
  * and let the queue do the processing.
  *
+ *
  */
 class XhrRequest {
     /**
@@ -7826,7 +7915,7 @@ class XhrRequest {
         let ignoreErr = failSaveExecute;
         let xhrObject = this.xhrObject;
         let executesArr = () => {
-            return this.requestContext.getIf(Const_1.CTX_PARAM_REQ_PASS_THR, Const_1.P_EXECUTE).get("none").value.split(/\s+/gi);
+            return this.requestContext.getIf(Const_1.CTX_PARAM_REQ_PASS_THR, Const_1.P_EXECUTE).get(Const_1.IDENT_NONE).value.split(/\s+/gi);
         };
         try {
             // encoded we need to decode
@@ -7837,7 +7926,7 @@ class XhrRequest {
             // whatever the formData object delivers
             // the partialIdsArray arr is almost deprecated legacy code where we allowed to send a separate list of partial
             // ids for reduced load and server processing, this will be removed soon, we can handle the same via execute
-            // anyway TODO remove the partial ids array
+            // anyway TODO reimplement the partial ids array, we still do not have it in jsf the way we need it
             let formData = new XhrFormData_1.XhrFormData(this.sourceForm, (0, RequestDataResolver_1.resoveNamingContainerMapper)(this.internalContext), executesArr(), this.partialIdsArray);
             this.contentType = formData.isMultipartRequest ? "undefined" : this.contentType;
             // next step the pass through parameters are merged in for post params

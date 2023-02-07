@@ -1,4 +1,4 @@
-import {ArrayCollector, Config, LazyStream, Stream} from "mona-dish";
+import {ArrayCollector, Config, DQ, LazyStream, Stream} from "mona-dish";
 import {ExtConfig, ExtDomQuery} from "./ExtDomQuery";
 import {EMPTY_STR} from "../core/Const";
 
@@ -7,34 +7,6 @@ import {EMPTY_STR} from "../core/Const";
  * into configs and vice versa
  */
 
-/**
- * merges a list of key value entries into a target config
- * @param target the target receiving the key value entries
- * @param keyValueEntries a list of key value entries divided by =
- * @param paramsMapper a key value remapper
- */
-export function mergeKeyValueEntries(target: Config, keyValueEntries: string[], paramsMapper = (key, value) => [key, value]) {
-
-    function splitToKeyVal(line: string) {
-        return line.split(/=(.*)/gi);
-    }
-
-    function fixKeyWithoutVal(keyVal: string[]) {
-        return keyVal.length < 3 ? [keyVal?.[0] ?? [], keyVal?.[1] ?? []] : keyVal;
-    }
-
-    let toMerge = new ExtConfig({});
-    Stream.of(...keyValueEntries)
-        .map(line => splitToKeyVal(line))
-        //special case of having keys without values
-        .map(keyVal => fixKeyWithoutVal(keyVal))
-        .map(keyVal => paramsMapper(keyVal[0] as string, keyVal[1]))
-        .each(keyVal => {
-            toMerge.append(keyVal[0] as string).value = keyVal?.splice(1)?.join("") ?? "";
-        });
-
-    target.shallowMerge(toMerge);
-}
 
 /**
  * encodes a given form data into a url encoded string
@@ -64,8 +36,31 @@ export function encodeFormData(formData: Config,
  * splits and decodes encoded values into strings containing of key=value
  * @param encoded encoded string
  */
-export function decodeEncodedValues(encoded: string): string[] {
-    return decodeURIComponent(encoded).split(/&/gi)
+export function decodeEncodedValues(encoded: string): Stream<string[]> {
+    return Stream.of(...decodeURIComponent(encoded).split(/&/gi))
         .filter(item => !!(item || '')
-            .replace(/\s+/g, ''));
+            .replace(/\s+/g, ''))
+        .map(line => {
+            let index = line.indexOf("=");
+            if(index == -1) {
+                return [line];
+            }
+            return [line.substring(0, index), line.substring(index+1)];
+        })
+}
+
+
+export function resolveFiles(dataSource: DQ): Stream<[string, File]> {
+    return dataSource
+        .querySelectorAllDeep("input[type='file']")
+        .stream
+        .map(fileInput => [fileInput.name.value || fileInput.id.value, fileInput.filesFromElem(0)])
+        .flatMap(([key, files]) => {
+            return Stream.of(...files).map(file => [key, file])
+        });
+}
+
+
+export function fixKeyWithoutVal(keyVal: any[]) {
+    return keyVal.length < 3 ? [keyVal?.[0] ?? [], keyVal?.[1] ?? []] : keyVal;
 }

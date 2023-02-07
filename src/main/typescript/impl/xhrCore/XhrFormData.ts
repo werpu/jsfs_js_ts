@@ -13,10 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Config, DQ, LazyStream, Stream} from "mona-dish";
-import {$faces, $nsp, EMPTY_STR, IDENT_ALL, IDENT_FORM, P_VIEWSTATE} from "../core/Const";
+import {ArrayCollector, Config, DQ, Stream} from "mona-dish";
+import {$faces, $nsp, EMPTY_STR, IDENT_ALL, IDENT_FORM, IDENT_NONE, P_VIEWSTATE} from "../core/Const";
 import {ExtConfig} from "../util/ExtDomQuery";
-import {decodeEncodedValues, encodeFormData, mergeKeyValueEntries} from "../util/URLCodec";
+import {
+    decodeEncodedValues,
+    encodeFormData,
+    resolveFiles,
+    fixKeyWithoutVal
+} from "../util/FileUtils";
 
 
 type ParamsMapper<V, K> = (key: V, item: K) => [V, K];
@@ -32,7 +37,11 @@ const defaultParamsMapper: ParamsMapper<string, any> = (key, item) => [key, item
  *
  * probably only one needed and one overlay!
  * the entire file input storing probably is redundant now
- * that dom query has been fixed //TODO check this
+ * that dom query has been fixed
+ *
+ * internal storage format
+ * every value is stored as an array
+ * even scalar ones!
  */
 export class XhrFormData extends Config {
     /**
@@ -61,9 +70,9 @@ export class XhrFormData extends Config {
          * Additionally the hidden element jakarta.faces.ViewState
          * Enhancement partial page submit
          */
-        this.encodeSubmittableFields(this, this.dataSource, this.partialIds);
+        this.resolveRequestType(this.dataSource, executes);
+        this.encodeSubmittableFields(this.dataSource, this.partialIds);
         this.applyViewState(this.dataSource);
-        this.resolveRequestType(executes);
     }
 
     /**
@@ -71,29 +80,11 @@ export class XhrFormData extends Config {
      * @param executes the executable dom nodes which need to be processed into the form data, which we can send
      * in our ajax request
      */
-    resolveRequestType(executes?: Array<string>) {
-        if (!executes) {
+    resolveRequestType(rootElement: DQ, executes?: Array<string>) {
+        if (!executes || executes.indexOf(IDENT_NONE) != -1) {
             return;
         }
-        let isMultiPartContainer = (id: string): boolean => {
-            if (id == IDENT_ALL) {
-                let namingContainer = this.remapKeyForNamingContainer("");
-                if (namingContainer.length) {
-                    namingContainer = namingContainer.substring(0, namingContainer.length - 1);
-                    return DQ.byId(namingContainer).isMultipartCandidate();
-                }
-                return DQ.byId(document.body).isMultipartCandidate();
-            } else if (id == IDENT_FORM) {
-                return this.dataSource.isMultipartCandidate(true);
-            } else {
-                const element = DQ.byId(id, true);
-                return element.isMultipartCandidate();
-            }
-        };
-
-        this.isMultipartRequest = LazyStream.of(...executes)
-            .filter(isMultiPartContainer)
-            .first().isPresent();
+        this.isMultipartRequest = rootElement.isMultipartCandidate(true);
     }
 
     /**
@@ -116,7 +107,36 @@ export class XhrFormData extends Config {
      */
     toFormData(): FormData {
         let ret: any = new FormData();
-        this.appendInputs(ret);
+
+        /*
+         * expands key: [item1, item2]
+         * to: [{key: item1}, {key, item2}]
+         */
+        let expandArrayedData = ([key, item]) =>
+            Stream.of(...(item as Array<any>)).map(item => {
+                return {key, item};
+            });
+
+        /*
+         * remaps the incoming {key, value} tuples
+         * to naming container prefixed keys and values
+         */
+        let remapForNamingContainer = ({key, item}) => {
+            key = this.remapKeyForNamingContainer(key);
+            return {key, item}
+        };
+
+        /*
+         * collects everything into a FormData object
+         */
+        let collectFormData = ({key, item}) => {
+            ret.append(key, item)
+        };
+
+        Stream.ofAssoc(this.value)
+            .flatMap(expandArrayedData)
+            .map(remapForNamingContainer)
+            .each(collectFormData)
         return ret;
     }
 
@@ -136,32 +156,29 @@ export class XhrFormData extends Config {
      * @param {Node} parentItem - form element item is nested in
      * @param {Array} partialIds - ids fo PPS
      */
-    public encodeSubmittableFields(targetBuf: Config,
-                                   parentItem: DQ, partialIds ?: string[]) {
+    public encodeSubmittableFields(parentItem: DQ, partialIds ?: string[]) {
         //encoded String
-        let viewStateStr = $faces().getViewState(parentItem.getAsElem(0).value);
+        const viewStateStr = $faces().getViewState(parentItem.getAsElem(0).value);
+
         // we now need to decode it and then merge it into the target buf
         // which hosts already our overrides (aka do not override what is already there(
         // after that we need to deal with form elements on a separate level
-        let target = new ExtConfig({});
-        mergeKeyValueEntries(target, decodeEncodedValues(viewStateStr), this.paramsMapper);
-        this.shallowMerge(target);
+        const keyValueEntries: Stream<string[] | [string, File]> = decodeEncodedValues(viewStateStr);
+        const fileEntries = resolveFiles(parentItem);
+        const concatted = keyValueEntries.concat(fileEntries as any)
+        const formData = new ExtConfig({});
+
+        concatted
+            .map(fixKeyWithoutVal)
+            .map(keyVal => this.paramsMapper(keyVal[0] as string, keyVal[1]))
+            .each((entry) => {
+                formData.append(entry[0]).value = entry[1];
+            });
+
+        this.shallowMerge(formData, true, true);
     }
 
     private remapKeyForNamingContainer(key: string): string {
         return this.paramsMapper(key, "")[0];
-    }
-
-    private appendInputs(ret: any) {
-        Stream.ofAssoc(this.value)
-            .flatMap(([key, item])  =>
-                Stream.of(...(item as Array<any>)).map(item => {
-                    return {key, item};
-            }))
-            .map(({key, item}) => {
-                key = this.remapKeyForNamingContainer(key);
-                return {key, item}
-            })
-            .each(({key, item}) => ret.append(key, item))
     }
 }

@@ -1,6 +1,6 @@
-import {ArrayCollector, Config, DQ, LazyStream, Stream} from "mona-dish";
+import {ArrayCollector, Config, DomQuery, DQ, LazyStream, Stream} from "mona-dish";
 import {ExtConfig, ExtDomQuery} from "./ExtDomQuery";
-import {EMPTY_STR} from "../core/Const";
+import {$faces, EMPTY_STR} from "../core/Const";
 
 /*
  * various routines for encoding and decoding url parameters
@@ -20,13 +20,19 @@ export function encodeFormData(formData: Config,
     if (formData.isAbsent()) {
         return defaultStr;
     }
-    let assocValues = formData.value;
-    let entries = LazyStream.of(...Object.keys(assocValues))
-        .filter(key => assocValues.hasOwnProperty(key))
-        .flatMap(key => Stream.of(...assocValues[key]).map(val => paramsMapper(key, val)))
+    const assocValues = formData.value;
+
+    const expandValueArrAndRename = key => Stream.of(...assocValues[key]).map(val => paramsMapper(key, val));
+    const isPropertyKey = key => assocValues.hasOwnProperty(key);
+    const isNotFile = ([, value]) => !(value instanceof ExtDomQuery.global().File);
+    const mapIntoUrlParam = keyVal => `${encodeURIComponent(keyVal[0])}=${encodeURIComponent(keyVal[1])}`;
+
+    const entries = LazyStream.of(...Object.keys(assocValues))
+        .filter(isPropertyKey)
+        .flatMap(expandValueArrAndRename)
         //we cannot encode file elements that is handled by multipart requests anyway
-        .filter(([, value]) => !(value instanceof ExtDomQuery.global().File))
-        .map(keyVal => `${encodeURIComponent(keyVal[0])}=${encodeURIComponent(keyVal[1])}`)
+        .filter(isNotFile)
+        .map(mapIntoUrlParam)
         .collect(new ArrayCollector());
 
     return entries.join("&")
@@ -37,16 +43,19 @@ export function encodeFormData(formData: Config,
  * @param encoded encoded string
  */
 export function decodeEncodedValues(encoded: string): Stream<string[]> {
-    return Stream.of(...decodeURIComponent(encoded).split(/&/gi))
-        .filter(item => !!(item || '')
-            .replace(/\s+/g, ''))
-        .map(line => {
-            let index = line.indexOf("=");
-            if(index == -1) {
-                return [line];
-            }
-            return [line.substring(0, index), line.substring(index+1)];
-        })
+    const filterBlanks = item => !!(item || '').replace(/\s+/g, '');
+    const splitKeyValuePair = line => {
+        let index = line.indexOf("=");
+        if (index == -1) {
+            return [line];
+        }
+        return [line.substring(0, index), line.substring(index + 1)];
+    };
+
+    let requestParamEntries = decodeURIComponent(encoded).split(/&/gi);
+    return Stream.of(...requestParamEntries)
+        .filter(filterBlanks)
+        .map(splitKeyValuePair)
 }
 
 
@@ -63,4 +72,22 @@ export function resolveFiles(dataSource: DQ): Stream<[string, File]> {
 
 export function fixKeyWithoutVal(keyVal: any[]) {
     return keyVal.length < 3 ? [keyVal?.[0] ?? [], keyVal?.[1] ?? []] : keyVal;
+}
+
+/**
+ * gets all the inputs under the form parentItem
+ * as stream
+ * @param parentItem
+ */
+export function getFormInputsAsStream(parentItem: DomQuery): Stream<string[] | [string, File]> {
+    //encoded String
+    const viewStateStr = $faces().getViewState(parentItem.getAsElem(0).value);
+
+    // we now need to decode it and then merge it into the target buf
+    // which hosts already our overrides (aka do not override what is already there(
+    // after that we need to deal with form elements on a separate level
+    const keyValueEntries: Stream<string[] | [string, File]> = decodeEncodedValues(viewStateStr);
+    const fileEntries = resolveFiles(parentItem);
+    const formInputs = keyValueEntries.concat(fileEntries as any)
+    return formInputs;
 }

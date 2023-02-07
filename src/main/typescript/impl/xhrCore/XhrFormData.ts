@@ -20,12 +20,14 @@ import {
     decodeEncodedValues,
     encodeFormData,
     resolveFiles,
-    fixKeyWithoutVal
+    fixKeyWithoutVal, getFormInputsAsStream
 } from "../util/FileUtils";
 
 
 type ParamsMapper<V, K> = (key: V, item: K) => [V, K];
 const defaultParamsMapper: ParamsMapper<string, any> = (key, item) => [key, item];
+
+
 
 /**
  * A unified form data class
@@ -35,9 +37,6 @@ const defaultParamsMapper: ParamsMapper<string, any> = (key, item) => [key, item
  * due to api constraints on the HTML Form object in IE11
  * and due to the url encoding constraint given by the faces.js spec
  *
- * probably only one needed and one overlay!
- * the entire file input storing probably is redundant now
- * that dom query has been fixed
  *
  * internal storage format
  * every value is stored as an array
@@ -76,11 +75,57 @@ export class XhrFormData extends Config {
     }
 
     /**
+     * @returns a Form data representation, this is needed for file submits
+     */
+    toFormData(): FormData {
+        /*
+         * expands key: [item1, item2]
+         * to: [{key: item1}, {key, item2}]
+         */
+        let expandAssocArray = ([key, item]) =>
+            Stream.of(...(item as Array<any>)).map(item => {
+                return {key, item};
+            });
+
+        /*
+         * remaps the incoming {key, value} tuples
+         * to naming container prefixed keys and values
+         */
+        let remapForNamingContainer = ({key, item}) => {
+            key = this.remapKeyForNamingContainer(key);
+            return {key, item}
+        };
+
+        /*
+         * collects everything into a FormData object
+         */
+        let ret: any = new FormData();
+        let collectFormData = ({key, item}) => {
+            ret.append(key, item)
+        };
+
+        Stream.ofAssoc(this.value)
+            .flatMap(expandAssocArray)
+            .map(remapForNamingContainer)
+            .each(collectFormData)
+        return ret;
+    }
+
+    /**
+     * returns an encoded string representation of our xhr form data
+     *
+     * @param defaultStr optional default value if nothing is there to encode
+     */
+    toString(defaultStr = EMPTY_STR): string {
+        return encodeFormData(this, this.paramsMapper, defaultStr);
+    }
+
+    /**
      * generic post init code, for now, this performs some post assign data post-processing
      * @param executes the executable dom nodes which need to be processed into the form data, which we can send
      * in our ajax request
      */
-    resolveRequestType(rootElement: DQ, executes?: Array<string>) {
+    private resolveRequestType(rootElement: DQ, executes?: Array<string>) {
         if (!executes || executes.indexOf(IDENT_NONE) != -1) {
             return;
         }
@@ -101,81 +146,19 @@ export class XhrFormData extends Config {
         this.appendIf(viewState.isPresent(), this.remapKeyForNamingContainer(viewStateElement.name.value)).value = viewState.value;
     }
 
-
-    /**
-     * @returns a Form data representation, this is needed for file submits
-     */
-    toFormData(): FormData {
-        let ret: any = new FormData();
-
-        /*
-         * expands key: [item1, item2]
-         * to: [{key: item1}, {key, item2}]
-         */
-        let expandArrayedData = ([key, item]) =>
-            Stream.of(...(item as Array<any>)).map(item => {
-                return {key, item};
-            });
-
-        /*
-         * remaps the incoming {key, value} tuples
-         * to naming container prefixed keys and values
-         */
-        let remapForNamingContainer = ({key, item}) => {
-            key = this.remapKeyForNamingContainer(key);
-            return {key, item}
-        };
-
-        /*
-         * collects everything into a FormData object
-         */
-        let collectFormData = ({key, item}) => {
-            ret.append(key, item)
-        };
-
-        Stream.ofAssoc(this.value)
-            .flatMap(expandArrayedData)
-            .map(remapForNamingContainer)
-            .each(collectFormData)
-        return ret;
-    }
-
-    /**
-     * returns an encoded string representation of our xhr form data
-     *
-     * @param defaultStr optional default value if nothing is there to encode
-     */
-    toString(defaultStr = EMPTY_STR): string {
-        return encodeFormData(this, this.paramsMapper, defaultStr);
-    }
-
-
     /**
      * determines fields to submit
      * @param {Object} targetBuf - the target form buffer receiving the data
      * @param {Node} parentItem - form element item is nested in
      * @param {Array} partialIds - ids fo PPS
      */
-    public encodeSubmittableFields(parentItem: DQ, partialIds ?: string[]) {
-        //encoded String
-        const viewStateStr = $faces().getViewState(parentItem.getAsElem(0).value);
+    private encodeSubmittableFields(parentItem: DQ, partialIds ?: string[]) {
 
-        // we now need to decode it and then merge it into the target buf
-        // which hosts already our overrides (aka do not override what is already there(
-        // after that we need to deal with form elements on a separate level
-        const keyValueEntries: Stream<string[] | [string, File]> = decodeEncodedValues(viewStateStr);
-        const fileEntries = resolveFiles(parentItem);
-        const concatted = keyValueEntries.concat(fileEntries as any)
-        const formData = new ExtConfig({});
-
-        concatted
+        const formInputs = getFormInputsAsStream(parentItem);
+        formInputs
             .map(fixKeyWithoutVal)
-            .map(keyVal => this.paramsMapper(keyVal[0] as string, keyVal[1]))
-            .each((entry) => {
-                formData.append(entry[0]).value = entry[1];
-            });
-
-        this.shallowMerge(formData, true, true);
+            .map(([key, value]) => this.paramsMapper(key as string, value))
+            .each(([key, value]) => this.append(key).value = value);
     }
 
     private remapKeyForNamingContainer(key: string): string {

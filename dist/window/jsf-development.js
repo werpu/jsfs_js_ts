@@ -6177,13 +6177,17 @@ function encodeFormData(formData, paramsMapper = (inStr, inVal) => [inStr, inVal
     if (formData.isAbsent()) {
         return defaultStr;
     }
-    let assocValues = formData.value;
-    let entries = mona_dish_1.LazyStream.of(...Object.keys(assocValues))
-        .filter(key => assocValues.hasOwnProperty(key))
-        .flatMap(key => mona_dish_1.Stream.of(...assocValues[key]).map(val => paramsMapper(key, val)))
+    const assocValues = formData.value;
+    const expandValueArrAndRename = key => mona_dish_1.Stream.of(...assocValues[key]).map(val => paramsMapper(key, val));
+    const isPropertyKey = key => assocValues.hasOwnProperty(key);
+    const isNotFile = ([, value]) => !(value instanceof ExtDomQuery_1.ExtDomQuery.global().File);
+    const mapIntoUrlParam = keyVal => `${encodeURIComponent(keyVal[0])}=${encodeURIComponent(keyVal[1])}`;
+    const entries = mona_dish_1.LazyStream.of(...Object.keys(assocValues))
+        .filter(isPropertyKey)
+        .flatMap(expandValueArrAndRename)
         //we cannot encode file elements that is handled by multipart requests anyway
-        .filter(([, value]) => !(value instanceof ExtDomQuery_1.ExtDomQuery.global().File))
-        .map(keyVal => `${encodeURIComponent(keyVal[0])}=${encodeURIComponent(keyVal[1])}`)
+        .filter(isNotFile)
+        .map(mapIntoUrlParam)
         .collect(new mona_dish_1.ArrayCollector());
     return entries.join("&");
 }
@@ -7801,7 +7805,7 @@ class XhrFormData extends mona_dish_1.Config {
      */
     encodeSubmittableFields(parentItem, partialIds) {
         //encoded String
-        let viewStateStr = (0, Const_1.$faces)().getViewState(parentItem.getAsElem(0).value);
+        const viewStateStr = (0, Const_1.$faces)().getViewState(parentItem.getAsElem(0).value);
         // we now need to decode it and then merge it into the target buf
         // which hosts already our overrides (aka do not override what is already there(
         // after that we need to deal with form elements on a separate level

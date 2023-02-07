@@ -23,7 +23,7 @@ import {ErrorData} from "./ErrorData";
 import {EventData} from "./EventData";
 import {ExtLang} from "../util/Lang";
 import {
-    $faces, $nsp,
+    $faces,
     BEGIN,
     COMPLETE,
     CONTENT_TYPE,
@@ -31,10 +31,10 @@ import {
     CTX_PARAM_REQ_PASS_THR,
     ERROR,
     HEAD_FACES_REQ,
-    MALFORMEDXML, NAMED_VIEWROOT,
+    MALFORMEDXML,
     NO_TIMEOUT,
     ON_ERROR,
-    ON_EVENT, P_EXECUTE, P_PARTIAL_SOURCE, P_VIEWSTATE, NAMING_CONTAINER_ID,
+    ON_EVENT, P_EXECUTE,
     REQ_ACCEPT,
     REQ_TYPE_GET,
     REQ_TYPE_POST, SOURCE,
@@ -46,12 +46,10 @@ import {
 import {
     resolveFinalUrl,
     resolveHandlerFunc,
-    resolveViewRootId,
     resoveNamingContainerMapper
 } from "./RequestDataResolver";
 import failSaveExecute = ExtLang.failSaveExecute;
 import {ExtConfig} from "../util/ExtDomQuery";
-import {ResponseProcessor} from "./ResponseProcessor";
 
 /**
  * Faces XHR Request Wrapper
@@ -378,6 +376,4 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         let eventHandler = resolveHandlerFunc(this.requestContext, this.responseContext, ON_ERROR);
         Implementation.sendError(errorData, eventHandler);
     }
-
-
 }

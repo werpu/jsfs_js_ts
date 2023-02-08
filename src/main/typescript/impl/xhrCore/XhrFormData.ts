@@ -18,7 +18,7 @@ import {$nsp, EMPTY_STR, IDENT_NONE, P_VIEWSTATE} from "../core/Const";
 
 import {
     encodeFormData,
-    fixKeyWithoutVal, getFormInputsAsStream
+    fixEmmptyParameters, getFormInputsAsStream
 } from "../util/FileUtils";
 
 
@@ -146,10 +146,13 @@ export class XhrFormData extends Config {
     private encodeSubmittableFields(parentItem: DQ, partialIds ?: string[]) {
 
         const formInputs = getFormInputsAsStream(parentItem);
+        const mergeIntoThis = ([key, value]) => this.append(key).value = value;
+        const namingContainerRemap = ([key, value]) => this.paramsMapper(key as string, value);
+
         formInputs
-            .map(fixKeyWithoutVal)
-            .map(([key, value]) => this.paramsMapper(key as string, value))
-            .each(([key, value]) => this.append(key).value = value);
+            .map(fixEmmptyParameters)
+            .map(namingContainerRemap)
+            .each(mergeIntoThis);
     }
 
     private remapKeyForNamingContainer(key: string): string {

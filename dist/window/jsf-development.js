@@ -6159,7 +6159,7 @@ exports.ExtConfig = ExtConfig;
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.fixKeyWithoutVal = exports.resolveFiles = exports.decodeEncodedValues = exports.encodeFormData = void 0;
+exports.getFormInputsAsStream = exports.fixKeyWithoutVal = exports.resolveFiles = exports.decodeEncodedValues = exports.encodeFormData = void 0;
 const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const ExtDomQuery_1 = __webpack_require__(/*! ./ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
 const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
@@ -6197,16 +6197,18 @@ exports.encodeFormData = encodeFormData;
  * @param encoded encoded string
  */
 function decodeEncodedValues(encoded) {
-    return mona_dish_1.Stream.of(...decodeURIComponent(encoded).split(/&/gi))
-        .filter(item => !!(item || '')
-        .replace(/\s+/g, ''))
-        .map(line => {
+    const filterBlanks = item => !!(item || '').replace(/\s+/g, '');
+    const splitKeyValuePair = line => {
         let index = line.indexOf("=");
         if (index == -1) {
             return [line];
         }
         return [line.substring(0, index), line.substring(index + 1)];
-    });
+    };
+    let requestParamEntries = decodeURIComponent(encoded).split(/&/gi);
+    return mona_dish_1.Stream.of(...requestParamEntries)
+        .filter(filterBlanks)
+        .map(splitKeyValuePair);
 }
 exports.decodeEncodedValues = decodeEncodedValues;
 function resolveFiles(dataSource) {
@@ -6224,6 +6226,23 @@ function fixKeyWithoutVal(keyVal) {
     return keyVal.length < 3 ? [(_a = keyVal === null || keyVal === void 0 ? void 0 : keyVal[0]) !== null && _a !== void 0 ? _a : [], (_b = keyVal === null || keyVal === void 0 ? void 0 : keyVal[1]) !== null && _b !== void 0 ? _b : []] : keyVal;
 }
 exports.fixKeyWithoutVal = fixKeyWithoutVal;
+/**
+ * gets all the inputs under the form parentItem
+ * as stream
+ * @param parentItem
+ */
+function getFormInputsAsStream(parentItem) {
+    //encoded String
+    const viewStateStr = (0, Const_1.$faces)().getViewState(parentItem.getAsElem(0).value);
+    // we now need to decode it and then merge it into the target buf
+    // which hosts already our overrides (aka do not override what is already there(
+    // after that we need to deal with form elements on a separate level
+    const standardInputs = decodeEncodedValues(viewStateStr);
+    const fileInputs = resolveFiles(parentItem);
+    const allInputs = standardInputs.concat(fileInputs);
+    return allInputs;
+}
+exports.getFormInputsAsStream = getFormInputsAsStream;
 
 
 /***/ }),
@@ -7681,7 +7700,6 @@ exports.XhrFormData = void 0;
  */
 const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
-const ExtDomQuery_1 = __webpack_require__(/*! ../util/ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
 const FileUtils_1 = __webpack_require__(/*! ../util/FileUtils */ "./src/main/typescript/impl/util/FileUtils.ts");
 const defaultParamsMapper = (key, item) => [key, item];
 /**
@@ -7692,9 +7710,6 @@ const defaultParamsMapper = (key, item) => [key, item];
  * due to api constraints on the HTML Form object in IE11
  * and due to the url encoding constraint given by the faces.js spec
  *
- * probably only one needed and one overlay!
- * the entire file input storing probably is redundant now
- * that dom query has been fixed
  *
  * internal storage format
  * every value is stored as an array
@@ -7734,6 +7749,46 @@ class XhrFormData extends mona_dish_1.Config {
         this.applyViewState(this.dataSource);
     }
     /**
+     * @returns a Form data representation, this is needed for file submits
+     */
+    toFormData() {
+        /*
+         * expands key: [item1, item2]
+         * to: [{key: item1}, {key, item2}]
+         */
+        let expandAssocArray = ([key, item]) => mona_dish_1.Stream.of(...item).map(item => {
+            return { key, item };
+        });
+        /*
+         * remaps the incoming {key, value} tuples
+         * to naming container prefixed keys and values
+         */
+        let remapForNamingContainer = ({ key, item }) => {
+            key = this.remapKeyForNamingContainer(key);
+            return { key, item };
+        };
+        /*
+         * collects everything into a FormData object
+         */
+        let ret = new FormData();
+        let collectFormData = ({ key, item }) => {
+            ret.append(key, item);
+        };
+        mona_dish_1.Stream.ofAssoc(this.value)
+            .flatMap(expandAssocArray)
+            .map(remapForNamingContainer)
+            .each(collectFormData);
+        return ret;
+    }
+    /**
+     * returns an encoded string representation of our xhr form data
+     *
+     * @param defaultStr optional default value if nothing is there to encode
+     */
+    toString(defaultStr = Const_1.EMPTY_STR) {
+        return (0, FileUtils_1.encodeFormData)(this, this.paramsMapper, defaultStr);
+    }
+    /**
      * generic post init code, for now, this performs some post assign data post-processing
      * @param executes the executable dom nodes which need to be processed into the form data, which we can send
      * in our ajax request
@@ -7758,68 +7813,17 @@ class XhrFormData extends mona_dish_1.Config {
         this.appendIf(viewState.isPresent(), this.remapKeyForNamingContainer(viewStateElement.name.value)).value = viewState.value;
     }
     /**
-     * @returns a Form data representation, this is needed for file submits
-     */
-    toFormData() {
-        let ret = new FormData();
-        /*
-         * expands key: [item1, item2]
-         * to: [{key: item1}, {key, item2}]
-         */
-        let expandArrayedData = ([key, item]) => mona_dish_1.Stream.of(...item).map(item => {
-            return { key, item };
-        });
-        /*
-         * remaps the incoming {key, value} tuples
-         * to naming container prefixed keys and values
-         */
-        let remapForNamingContainer = ({ key, item }) => {
-            key = this.remapKeyForNamingContainer(key);
-            return { key, item };
-        };
-        /*
-         * collects everything into a FormData object
-         */
-        let collectFormData = ({ key, item }) => {
-            ret.append(key, item);
-        };
-        mona_dish_1.Stream.ofAssoc(this.value)
-            .flatMap(expandArrayedData)
-            .map(remapForNamingContainer)
-            .each(collectFormData);
-        return ret;
-    }
-    /**
-     * returns an encoded string representation of our xhr form data
-     *
-     * @param defaultStr optional default value if nothing is there to encode
-     */
-    toString(defaultStr = Const_1.EMPTY_STR) {
-        return (0, FileUtils_1.encodeFormData)(this, this.paramsMapper, defaultStr);
-    }
-    /**
      * determines fields to submit
      * @param {Object} targetBuf - the target form buffer receiving the data
      * @param {Node} parentItem - form element item is nested in
      * @param {Array} partialIds - ids fo PPS
      */
     encodeSubmittableFields(parentItem, partialIds) {
-        //encoded String
-        const viewStateStr = (0, Const_1.$faces)().getViewState(parentItem.getAsElem(0).value);
-        // we now need to decode it and then merge it into the target buf
-        // which hosts already our overrides (aka do not override what is already there(
-        // after that we need to deal with form elements on a separate level
-        const keyValueEntries = (0, FileUtils_1.decodeEncodedValues)(viewStateStr);
-        const fileEntries = (0, FileUtils_1.resolveFiles)(parentItem);
-        const concatted = keyValueEntries.concat(fileEntries);
-        const formData = new ExtDomQuery_1.ExtConfig({});
-        concatted
+        const formInputs = (0, FileUtils_1.getFormInputsAsStream)(parentItem);
+        formInputs
             .map(FileUtils_1.fixKeyWithoutVal)
-            .map(keyVal => this.paramsMapper(keyVal[0], keyVal[1]))
-            .each((entry) => {
-            formData.append(entry[0]).value = entry[1];
-        });
-        this.shallowMerge(formData, true, true);
+            .map(([key, value]) => this.paramsMapper(key, value))
+            .each(([key, value]) => this.append(key).value = value);
     }
     remapKeyForNamingContainer(key) {
         return this.paramsMapper(key, "")[0];

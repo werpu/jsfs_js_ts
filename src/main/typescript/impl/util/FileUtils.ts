@@ -86,8 +86,8 @@ export function getFormInputsAsStream(parentItem: DomQuery): Stream<string[] | [
     // we now need to decode it and then merge it into the target buf
     // which hosts already our overrides (aka do not override what is already there(
     // after that we need to deal with form elements on a separate level
-    const keyValueEntries: Stream<string[] | [string, File]> = decodeEncodedValues(viewStateStr);
-    const fileEntries = resolveFiles(parentItem);
-    const formInputs = keyValueEntries.concat(fileEntries as any)
-    return formInputs;
+    const standardInputs: Stream<string[] | [string, File]> = decodeEncodedValues(viewStateStr);
+    const fileInputs = resolveFiles(parentItem);
+    const allInputs = standardInputs.concat(fileInputs as any)
+    return allInputs;
 }

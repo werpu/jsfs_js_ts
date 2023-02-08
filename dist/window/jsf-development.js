@@ -2917,8 +2917,9 @@ exports.Config = Config;
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.QueryFormStringCollector = exports.QueryFormDataCollector = exports.FormDataCollector = exports.AssocArrayCollector = exports.Run = exports.ArrayAssocArrayCollector = exports.InverseArrayCollector = exports.ArrayCollector = exports.FlatMapStreamDataSource = exports.MappedStreamDataSource = exports.FilteredStreamDatasource = exports.ArrayStreamDataSource = exports.SequenceDataSource = exports.MultiStreamDatasource = exports.ITERATION_STATUS = void 0;
+exports.QueryFormStringCollector = exports.QueryFormDataCollector = exports.FormDataCollector = exports.ConfigCollector = exports.AssocArrayCollector = exports.Run = exports.ArrayAssocArrayCollector = exports.InverseArrayCollector = exports.ArrayCollector = exports.FlatMapStreamDataSource = exports.MappedStreamDataSource = exports.FilteredStreamDatasource = exports.ArrayStreamDataSource = exports.SequenceDataSource = exports.MultiStreamDatasource = exports.ITERATION_STATUS = void 0;
 const Stream_1 = __webpack_require__(/*! ./Stream */ "./node_modules/mona-dish/src/main/typescript/Stream.ts");
+const Monad_1 = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
 /**
  * special status of the datasource location pointer
  * if an access, outside of the possible data boundaries is happening
@@ -3208,7 +3209,7 @@ class FlatMapStreamDataSource {
         var _a;
         //easy access trial
         if ((this === null || this === void 0 ? void 0 : this.activeDataSource) && ((_a = this === null || this === void 0 ? void 0 : this.activeDataSource) === null || _a === void 0 ? void 0 : _a.lookAhead(cnt)) != ITERATION_STATUS.EO_STRM) {
-            //this should coverr 95% of all accesses
+            //this should cover 95% of all cases
             return this === null || this === void 0 ? void 0 : this.activeDataSource.lookAhead(cnt);
         }
         /**
@@ -3230,25 +3231,33 @@ class FlatMapStreamDataSource {
         if (this.activeDataSource) {
             readjustSkip(this.activeDataSource);
         }
-        //the idea is basically to look into the streams subsequentially for a match
+        //the idea is basically to look into the streams sub-sequentially for a match
         //after each stream we have to take into consideration that the skipCnt is
         //reduced by the number of datasets we already have looked into in the previous stream/datasource
-        //unfortunately for now we have to loop into them so we introduce a small o2 here
+        //unfortunately for now we have to loop into them, so we introduce a small o2 here
         for (let dsLoop = 1; true; dsLoop++) {
-            let currDatasource = this.inputDataSource.lookAhead(dsLoop);
+            let datasourceData = this.inputDataSource.lookAhead(dsLoop);
             //we have looped out
-            if (currDatasource === ITERATION_STATUS.EO_STRM) {
+            //no embedded data anymore? we are done, data
+            //can either be a scalar an array or another datasource
+            if (datasourceData === ITERATION_STATUS.EO_STRM) {
                 return ITERATION_STATUS.EO_STRM;
             }
-            let mapped = this.mapFunc(currDatasource);
+            let mappedData = this.mapFunc(datasourceData);
             //it either comes in as datasource or as array
-            let currentDataSource = this.toDatasource(mapped);
+            //both cases must be unified into a datasource
+            let currentDataSource = this.toDatasource(mappedData);
+            //we now run again  a lookahead
             let ret = currentDataSource.lookAhead(cnt);
+            //if the value is found then we are set
             if (ret != ITERATION_STATUS.EO_STRM) {
                 return ret;
             }
-            readjustSkip(currDatasource);
+            //reduce the next lookahead by the number of elements
+            //we are now skipping in the current data source
+            readjustSkip(currentDataSource);
         }
+        return ITERATION_STATUS.EO_STRM;
     }
     toDatasource(mapped) {
         let ds = Array.isArray(mapped) ? new ArrayStreamDataSource(...mapped) : mapped;
@@ -3260,7 +3269,6 @@ class FlatMapStreamDataSource {
         while (!next && this.inputDataSource.hasNext()) {
             let mapped = this.mapFunc(this.inputDataSource.next());
             this.activeDataSource = this.toDatasource(mapped);
-            ;
             next = this.activeDataSource.hasNext();
         }
         return next;
@@ -3358,6 +3366,18 @@ class AssocArrayCollector {
     }
 }
 exports.AssocArrayCollector = AssocArrayCollector;
+/**
+ * A Config collector similar to the FormDFata Collector
+ */
+class ConfigCollector {
+    constructor() {
+        this.finalValue = new Monad_1.Config({});
+    }
+    collect(element) {
+        this.finalValue.append(element.key).value = element.value;
+    }
+}
+exports.ConfigCollector = ConfigCollector;
 /**
  * Form data collector for key value pair streams
  */

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ArrayCollector, Config, DQ, Stream} from "mona-dish";
+import {ArrayCollector, Config, DQ, FormDataCollector, Stream} from "mona-dish";
 import {$faces, $nsp, EMPTY_STR, IDENT_ALL, IDENT_FORM, IDENT_NONE, P_VIEWSTATE} from "../core/Const";
 import {ExtConfig} from "../util/ExtDomQuery";
 import {
@@ -99,16 +99,10 @@ export class XhrFormData extends Config {
         /*
          * collects everything into a FormData object
          */
-        let ret: any = new FormData();
-        let collectFormData = ({key, item}) => {
-            ret.append(key, item)
-        };
-
-        Stream.ofAssoc(this.value)
+        return  Stream.ofAssoc(this.value)
             .flatMap(expandAssocArray)
             .map(remapForNamingContainer)
-            .each(collectFormData)
-        return ret;
+            .collect(new FormDataCollector() as any);
     }
 
     /**

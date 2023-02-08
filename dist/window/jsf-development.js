@@ -2936,6 +2936,13 @@ var ITERATION_STATUS;
     ITERATION_STATUS["EO_STRM"] = "__EO_STRM__";
     ITERATION_STATUS["BEF_STRM"] = "___BEF_STRM__";
 })(ITERATION_STATUS = exports.ITERATION_STATUS || (exports.ITERATION_STATUS = {}));
+function calculateSkips(next_strm) {
+    let pos = 1;
+    while (next_strm.lookAhead(pos) != ITERATION_STATUS.EO_STRM) {
+        pos++;
+    }
+    return --pos;
+}
 class MultiStreamDatasource {
     constructor(first, ...strms) {
         this.first = first;
@@ -2966,33 +2973,22 @@ class MultiStreamDatasource {
         }
         return hasNext ? cnt : -1;
     }
-    lookAhead(cnt) {
-        let posPtr = 1;
-        let strmPos = this.selectedPos;
-        let valueFound = null;
-        if (this.strms[strmPos].lookAhead(cnt) != ITERATION_STATUS.EO_STRM) {
-            //speedup
-            return this.strms[strmPos].lookAhead(cnt);
+    lookAhead(cnt = 1) {
+        //lets clone
+        const strms = this.strms.slice(this.selectedPos);
+        if (!strms.length) {
+            return ITERATION_STATUS.EO_STRM;
         }
-        for (let loop = posPtr; loop <= cnt; loop++) {
-            if (!this.strms[strmPos]) {
-                return ITERATION_STATUS.EO_STRM;
+        const all_strms = [...strms];
+        while (all_strms.length) {
+            let next_strm = all_strms.shift();
+            let lookAhead = next_strm.lookAhead(cnt);
+            if (lookAhead != ITERATION_STATUS.EO_STRM) {
+                return lookAhead;
             }
-            let val = (posPtr > 0) ? this.strms[strmPos].lookAhead(posPtr) : this.strms[strmPos].current();
-            valueFound = val;
-            if (val != ITERATION_STATUS.EO_STRM) {
-                posPtr++;
-            }
-            else {
-                if (strmPos >= this.strms.length) {
-                    return ITERATION_STATUS.EO_STRM;
-                }
-                strmPos++;
-                posPtr = 1;
-                loop--; //empty iteration
-            }
+            cnt = cnt - calculateSkips(next_strm);
         }
-        return valueFound;
+        return ITERATION_STATUS.EO_STRM;
     }
     next() {
         if (this.activeStrm.hasNext()) {
@@ -3207,29 +3203,13 @@ class FlatMapStreamDataSource {
     }
     lookAhead(cnt = 1) {
         var _a;
-        //easy access trial
-        if ((this === null || this === void 0 ? void 0 : this.activeDataSource) && ((_a = this === null || this === void 0 ? void 0 : this.activeDataSource) === null || _a === void 0 ? void 0 : _a.lookAhead(cnt)) != ITERATION_STATUS.EO_STRM) {
+        let lookAhead = (_a = this === null || this === void 0 ? void 0 : this.activeDataSource) === null || _a === void 0 ? void 0 : _a.lookAhead(cnt);
+        if ((this === null || this === void 0 ? void 0 : this.activeDataSource) && lookAhead != ITERATION_STATUS.EO_STRM) {
             //this should cover 95% of all cases
-            return this === null || this === void 0 ? void 0 : this.activeDataSource.lookAhead(cnt);
-        }
-        /**
-         * we only can determine how many elems datasource has by going up
-         * (for now this suffices, however not ideal, we might have to introduce a numElements or so)
-         * @param datasource
-         */
-        function howManyElems(datasource) {
-            let cnt = 1;
-            while (datasource.lookAhead(cnt) !== ITERATION_STATUS.EO_STRM) {
-                cnt++;
-            }
-            return cnt - 1;
-        }
-        function readjustSkip(dataSource) {
-            let skippedElems = (dataSource) ? howManyElems(dataSource) : 0;
-            cnt = cnt - skippedElems;
+            return lookAhead;
         }
         if (this.activeDataSource) {
-            readjustSkip(this.activeDataSource);
+            cnt -= calculateSkips(this.activeDataSource);
         }
         //the idea is basically to look into the streams sub-sequentially for a match
         //after each stream we have to take into consideration that the skipCnt is
@@ -3255,9 +3235,8 @@ class FlatMapStreamDataSource {
             }
             //reduce the next lookahead by the number of elements
             //we are now skipping in the current data source
-            readjustSkip(currentDataSource);
+            cnt -= calculateSkips(currentDataSource);
         }
-        return ITERATION_STATUS.EO_STRM;
     }
     toDatasource(mapped) {
         let ds = Array.isArray(mapped) ? new ArrayStreamDataSource(...mapped) : mapped;
@@ -7790,15 +7769,10 @@ class XhrFormData extends mona_dish_1.Config {
         /*
          * collects everything into a FormData object
          */
-        let ret = new FormData();
-        let collectFormData = ({ key, item }) => {
-            ret.append(key, item);
-        };
-        mona_dish_1.Stream.ofAssoc(this.value)
+        return mona_dish_1.Stream.ofAssoc(this.value)
             .flatMap(expandAssocArray)
             .map(remapForNamingContainer)
-            .each(collectFormData);
-        return ret;
+            .collect(new mona_dish_1.FormDataCollector());
     }
     /**
      * returns an encoded string representation of our xhr form data

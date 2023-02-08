@@ -13,20 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ArrayCollector, Config, DQ, FormDataCollector, Stream} from "mona-dish";
-import {$faces, $nsp, EMPTY_STR, IDENT_ALL, IDENT_FORM, IDENT_NONE, P_VIEWSTATE} from "../core/Const";
-import {ExtConfig} from "../util/ExtDomQuery";
+import {Config, DQ, FormDataCollector, Stream} from "mona-dish";
+import {$nsp, EMPTY_STR, IDENT_NONE, P_VIEWSTATE} from "../core/Const";
+
 import {
-    decodeEncodedValues,
     encodeFormData,
-    resolveFiles,
     fixKeyWithoutVal, getFormInputsAsStream
 } from "../util/FileUtils";
 
 
 type ParamsMapper<V, K> = (key: V, item: K) => [V, K];
 const defaultParamsMapper: ParamsMapper<string, any> = (key, item) => [key, item];
-
 
 
 /**

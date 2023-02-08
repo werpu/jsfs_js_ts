@@ -1,5 +1,5 @@
 import {ArrayCollector, Config, DomQuery, DQ, LazyStream, Stream} from "mona-dish";
-import {ExtConfig, ExtDomQuery} from "./ExtDomQuery";
+import {ExtDomQuery} from "./ExtDomQuery";
 import {$faces, EMPTY_STR} from "../core/Const";
 
 /*
@@ -59,19 +59,37 @@ export function decodeEncodedValues(encoded: string): Stream<string[]> {
 }
 
 
+/**
+ * gets all the input files and their corresponding file objects
+ * @param dataSource
+ */
 export function resolveFiles(dataSource: DQ): Stream<[string, File]> {
+
+    const expandFilesArr = ([key, files]) => Stream.of(...files).map(file => [key, file]);
+    const remapFileInput = fileInput => [fileInput.name.value || fileInput.id.value, fileInput.filesFromElem(0)];
     return dataSource
         .querySelectorAllDeep("input[type='file']")
         .stream
-        .map(fileInput => [fileInput.name.value || fileInput.id.value, fileInput.filesFromElem(0)])
-        .flatMap(([key, files]) => {
-            return Stream.of(...files).map(file => [key, file])
-        });
+        .map(remapFileInput)
+        .flatMap(expandFilesArr);
 }
 
 
-export function fixKeyWithoutVal(keyVal: any[]) {
-    return keyVal.length < 3 ? [keyVal?.[0] ?? [], keyVal?.[1] ?? []] : keyVal;
+export function fixKeyWithoutVal(keyVal: any[]): [string, any] {
+    return (keyVal.length < 3 ? [keyVal?.[0] ?? [], keyVal?.[1] ?? []] : keyVal) as [string, any];
+}
+
+/**
+ * returns the decoded viewState from parentItem
+ * @param parentItem
+ */
+function resolveViewState(parentItem: DomQuery): Stream<string[] | [string, File]> {
+    const viewStateStr = $faces().getViewState(parentItem.getAsElem(0).value);
+
+    // we now need to decode it and then merge it into the target buf
+    // which hosts already our overrides (aka do not override what is already there(
+    // after that we need to deal with form elements on a separate level
+    return decodeEncodedValues(viewStateStr);
 }
 
 /**
@@ -80,14 +98,7 @@ export function fixKeyWithoutVal(keyVal: any[]) {
  * @param parentItem
  */
 export function getFormInputsAsStream(parentItem: DomQuery): Stream<string[] | [string, File]> {
-    //encoded String
-    const viewStateStr = $faces().getViewState(parentItem.getAsElem(0).value);
-
-    // we now need to decode it and then merge it into the target buf
-    // which hosts already our overrides (aka do not override what is already there(
-    // after that we need to deal with form elements on a separate level
-    const standardInputs: Stream<string[] | [string, File]> = decodeEncodedValues(viewStateStr);
+    const standardInputs = resolveViewState(parentItem);
     const fileInputs = resolveFiles(parentItem);
-    const allInputs = standardInputs.concat(fileInputs as any)
-    return allInputs;
+    return  standardInputs.concat(fileInputs as any)
 }

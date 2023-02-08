@@ -120,10 +120,6 @@ describe('javax.ajax.request test suite', () => {
         expect(!!called["func5"]).to.be.false;
 
     });
-
-
-
-
 });
 
 

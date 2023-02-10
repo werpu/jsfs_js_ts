@@ -77,20 +77,20 @@ export class XhrFormData extends Config {
     toFormData(): FormData {
         /*
          * expands key: [item1, item2]
-         * to: [{key: item1}, {key, item2}]
+         * to: [{key: key,  value: item1}, {key: key, value: item2}]
          */
         let expandAssocArray = ([key, item]) =>
-            Stream.of(...(item as Array<any>)).map(item => {
-                return {key, item};
+            Stream.of(...(item as Array<any>)).map(value => {
+                return {key, value};
             });
 
         /*
          * remaps the incoming {key, value} tuples
          * to naming container prefixed keys and values
          */
-        let remapForNamingContainer = ({key, item}) => {
+        let remapForNamingContainer = ({key, value}) => {
             key = this.remapKeyForNamingContainer(key);
-            return {key, item}
+            return {key, value}
         };
 
         /*

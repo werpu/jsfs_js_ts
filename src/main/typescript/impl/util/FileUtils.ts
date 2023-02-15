@@ -81,7 +81,7 @@ export function resolveFiles(dataSource: DQ): [string, File][] {
 }
 
 
-export function fixEmmptyParameters(keyVal: any[]): [string, any] {
+export function fixEmptyParameters(keyVal: any[]): [string, any] {
     return (keyVal.length < 3 ? [keyVal?.[0] ?? [], keyVal?.[1] ?? []] : keyVal) as [string, any];
 }
 

@@ -18,7 +18,7 @@ import {$nsp, EMPTY_STR, IDENT_NONE, P_VIEWSTATE} from "../core/Const";
 
 import {
     encodeFormData,
-    fixEmmptyParameters, getFormInputsAsArr
+    fixEmptyParameters, getFormInputsAsArr
 } from "../util/FileUtils";
 import {ExtLang} from "../util/Lang";
 import ofAssoc = ExtLang.ofAssoc;
@@ -26,9 +26,6 @@ import ofAssoc = ExtLang.ofAssoc;
 
 type ParamsMapper<V, K> = (key: V, item: K) => [V, K];
 const defaultParamsMapper: ParamsMapper<string, any> = (key, item) => [key, item];
-
-
-
 
 /**
  * A unified form data class
@@ -79,7 +76,6 @@ export class XhrFormData extends Config {
      * @returns a Form data representation, this is needed for file submits
      */
     toFormData(): FormData {
-
         /*
            * expands key: [item1, item2]
            * to: [{key: key,  value: item1}, {key: key, value: item2}]
@@ -105,15 +101,13 @@ export class XhrFormData extends Config {
         /*
          * collects everything into a FormData object
          */
-        const ret = new FormData()
-        ofAssoc(this.value)
+        return ofAssoc(this.value)
             .flatMap(expandValueArrays as any)
             .map(remapForNamingContainer as any)
-            .reduce((formData, {key, value}) => {
-                ret.append(key, value);
-            });
-
-        return ret;
+            .reduce((formData: FormData, {key, value}: any) => {
+                formData.append(key, value);
+                return formData;
+            }, new FormData()) as FormData;
     }
 
     /**
@@ -153,20 +147,16 @@ export class XhrFormData extends Config {
 
     /**
      * determines fields to submit
-     * @param {Object} targetBuf - the target form buffer receiving the data
      * @param {Node} parentItem - form element item is nested in
      * @param {Array} partialIds - ids fo PPS
      */
     private encodeSubmittableFields(parentItem: DQ, partialIds ?: string[]) {
 
-        const formInputs = getFormInputsAsArr(parentItem);
-        const mergeIntoThis = ([key, value]) => {
-            this.append(key).value = value;
-        }
+        const mergeIntoThis = ([key, value]) => this.append(key).value = value;
         const namingContainerRemap = ([key, value]) => this.paramsMapper(key as string, value);
 
-        formInputs
-            .map(fixEmmptyParameters)
+        getFormInputsAsArr(parentItem)
+            .map(fixEmptyParameters)
             .map(namingContainerRemap)
             .forEach(mergeIntoThis);
     }

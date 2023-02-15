@@ -6,7 +6,7 @@
   "scripts": {
     "doc": "npx typedoc --tsconfig src/main/typescript/tsconfig-typedoc.json",
     "test": "cross-env TS_NODE_PROJECT=./src/main/typescript/tsconfig.json mocha",
-    "coverage": "cross-env TS_NODE_PROJECT=./src/test/typescript/tsconfig.json nyc --reporter=html --reporter=text mocha",
+    "coverage": "cross-env TS_NODE_PROJECT=./src/main/typescript/tsconfig.json nyc --reporter=html --reporter=text mocha",
     "build-production": "webpack --mode production --env FILE_NAME=jsf  && ts-node ./remap.ts --production",
     "build-development": "webpack --mode development --env FILE_NAME=jsf-development  && ts-node ./remap.ts --development",
     "build": "npm run doc && npm run build-development && npm run build-production",

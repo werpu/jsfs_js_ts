@@ -85,10 +85,10 @@ export module ExtLang {
         installedLocale = installedLocale ?? new Messages();
 
         let msg = installedLocale[key] ?? defaultMessage ?? key;
-
-        Stream.of(...templateParams).each((param, cnt) => {
+        templateParams.forEach((param, cnt) => {
             msg = msg.replace(new RegExp(["\\{", cnt, "\\}"].join(EMPTY_STR), "g"), param);
-        });
+        })
+
 
         return msg;
     }
@@ -203,6 +203,20 @@ export module ExtLang {
     }
 
     /**
+     * expands an associative array into an array of key value tuples
+     * @param value
+     */
+    export function ofAssoc(value: {[key: string]: any}) {
+        return Object.keys(value)
+            .map(key => [key, value[key]]);
+    }
+
+    export function collectAssoc(target: any, item: any) {
+        target[item[0]] = item[1];
+        return target;
+    }
+
+    /**
      * assert that the form exists and throw an exception in the case it does not
      *
      * @param form the form to check for
@@ -212,4 +226,5 @@ export module ExtLang {
             throw makeException(new Error(), null, null, "Impl", "getForm", getMessage("ERR_FORM"));
         }
     }
+
 }

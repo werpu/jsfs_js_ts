@@ -154,6 +154,8 @@ export module Implementation {
     import getMessage = ExtLang.getMessage;
     import getGlobalConfig = ExtLang.getGlobalConfig;
     import assert = Assertions.assert;
+    import ofAssoc = ExtLang.ofAssoc;
+    import collectAssoc = ExtLang.collectAssoc;
 
     let projectStage: string = null;
     let separator: string = null;
@@ -220,12 +222,16 @@ export module Implementation {
         // by passing a boolean as return value into the onElem call
         // we can stop early at the first false, just like the spec requests
 
-        return LazyStream.of(...funcs)
-            .map(func => resolveAndExecute(source, event, func))
-            // we use the return false == stop as an early stop, onElem stops at the first false
-            .onElem((opResult: boolean) => opResult)
-            //last ensures we run until the first false is returned
-            .last().value;
+        let ret;
+        funcs.every(func => {
+            let returnVal = resolveAndExecute(source, event, func);
+            if(returnVal !== false) {
+                ret = returnVal;
+            }
+            return returnVal !== false;
+        });
+        return ret;
+
     }
 
     /**
@@ -752,17 +758,17 @@ export module Implementation {
      * @param {Context} mappedOpts the options to be filtered
      * @deprecated
      */
-    function extractLegacyParams(mappedOpts: Options): Context {
+    function extractLegacyParams(mappedOpts: Options): {[key: string]: any} {
         //we now can use the full code reduction given by our stream api
         //to filter
-        return Stream.ofAssoc(mappedOpts)
-            .filter(item => !(item[0] in BlockFilter))
-            .collect(new AssocArrayCollector());
+        return ofAssoc(mappedOpts)
+            .filter((item => !(item[0] in BlockFilter)))
+            .reduce(collectAssoc, {});
     }
 
     function remapArrayToAssocArr(arrayedParams: [[string, any]] | {[key: string]: any}): {[key: string]: any} {
         if(Array.isArray(arrayedParams)) {
-            return Stream.of(... arrayedParams).collect(new AssocArrayCollector());
+            return arrayedParams.reduce(collectAssoc, {} as any);
         }
         return arrayedParams;
     }

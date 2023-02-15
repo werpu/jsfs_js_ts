@@ -65,6 +65,8 @@ import {
 import {ExtConfig, ExtDomQuery} from "../util/ExtDomQuery";
 import {HiddenInputBuilder} from "../util/HiddenInputBuilder";
 import trim = Lang.trim;
+import {ExtLang} from "../util/Lang";
+import ofAssoc = ExtLang.ofAssoc;
 
 
 /**
@@ -346,15 +348,15 @@ export class ResponseProcessor implements IResponseProcessor {
      * as last lifecycle step, before going into the next request.
      */
     fixViewStates() {
-        Stream.ofAssoc<StateHolder>(this.internalContext.getIf(APPLIED_VST).orElse({}).value)
-            .each(([, value]) => {
+        ofAssoc(this.internalContext.getIf(APPLIED_VST).orElse({}).value)
+            .forEach(([, value]) => {
                 const namingContainerId = this.internalContext.getIf(NAMING_CONTAINER_ID);
                 const namedViewRoot = !!this.internalContext.getIf(NAMED_VIEWROOT).value
                 const affectedForms = this.getContainerForms(namingContainerId)
                     .filter(affectedForm => this.isInExecuteOrRender(affectedForm));
 
                 this.appendViewStateToForms(affectedForms, namedViewRoot, value.value, namingContainerId.orElse("").value);
-            });
+            })
     }
 
 
@@ -364,8 +366,8 @@ export class ResponseProcessor implements IResponseProcessor {
      * is done.
      */
     fixClientWindow() {
-        Stream.ofAssoc<StateHolder>(this.internalContext.getIf(APPLIED_CLIENT_WINDOW).orElse({}).value)
-            .each(([, value]) => {
+       ofAssoc(this.internalContext.getIf(APPLIED_CLIENT_WINDOW).orElse({}).value)
+            .forEach(([, value]) => {
                 const namingContainerId = this.internalContext.getIf(NAMING_CONTAINER_ID);
                 const namedViewRoot = !!this.internalContext.getIf(NAMED_VIEWROOT).value;
                 const affectedForms = this.getContainerForms(namingContainerId)
@@ -522,7 +524,7 @@ export class ResponseProcessor implements IResponseProcessor {
             .orElseLazy(() => this.externalContext.getIf($nsp(P_RENDER)).value)
             .orElse(IDENT_NONE).value.split(/\s+/gi);
         const executeAndRenders = executes.concat(...renders);
-        return LazyStream.of(...executeAndRenders).filter(nameOrId => {
+        return [...executeAndRenders].filter(nameOrId => {
             if ([IDENT_ALL, IDENT_NONE].indexOf(nameOrId) != -1) {
                 return true;
             }
@@ -532,7 +534,7 @@ export class ResponseProcessor implements IResponseProcessor {
             return affectedForm.matchesSelector(NAME_OR_ID) ||
                 affectedForm.querySelectorAll(NAME_OR_ID).isPresent() ||
                 affectedForm.firstParent(NAME_OR_ID).isPresent();
-        }).first().isPresent();
+        }).length > 0;
     }
 
     /**

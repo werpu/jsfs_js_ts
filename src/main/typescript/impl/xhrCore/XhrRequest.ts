@@ -201,13 +201,13 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     }
 
     resolve(data: any) {
-        Stream.of(...this.thenFunctions).reduce((inputVal: any, thenFunc: any) => {
+        this.thenFunctions.reduce((inputVal: any, thenFunc: any) => {
             return thenFunc(inputVal);
-        }, data);
+        }, data)
     }
 
     reject(data: any) {
-        Stream.of(...this.catchFunctions).reduce((inputVal: any, catchFunc: any) => {
+        this.catchFunctions.reduce((inputVal: any, catchFunc: any) => {
             return catchFunc(inputVal);
         }, data);
     }

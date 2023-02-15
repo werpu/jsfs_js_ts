@@ -13,17 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Config, DQ, FormDataCollector, Stream} from "mona-dish";
+import {Config, DQ} from "mona-dish";
 import {$nsp, EMPTY_STR, IDENT_NONE, P_VIEWSTATE} from "../core/Const";
 
 import {
     encodeFormData,
-    fixEmmptyParameters, getFormInputsAsStream
+    fixEmmptyParameters, getFormInputsAsArr
 } from "../util/FileUtils";
+import {ExtLang} from "../util/Lang";
+import ofAssoc = ExtLang.ofAssoc;
 
 
 type ParamsMapper<V, K> = (key: V, item: K) => [V, K];
 const defaultParamsMapper: ParamsMapper<string, any> = (key, item) => [key, item];
+
+
 
 
 /**
@@ -75,14 +79,19 @@ export class XhrFormData extends Config {
      * @returns a Form data representation, this is needed for file submits
      */
     toFormData(): FormData {
+
         /*
-         * expands key: [item1, item2]
-         * to: [{key: key,  value: item1}, {key: key, value: item2}]
-         */
-        let expandAssocArray = ([key, item]) =>
-            Stream.of(...(item as Array<any>)).map(value => {
-                return {key, value};
-            });
+           * expands key: [item1, item2]
+           * to: [{key: key,  value: item1}, {key: key, value: item2}]
+           */
+        let expandValueArrays = ([key, item]) => {
+            if (Array.isArray(item)) {
+                return item.map(value => {
+                    return {key, value}
+                })
+            }
+            return [{key, value: item}]
+        }
 
         /*
          * remaps the incoming {key, value} tuples
@@ -96,10 +105,15 @@ export class XhrFormData extends Config {
         /*
          * collects everything into a FormData object
          */
-        return  Stream.ofAssoc(this.value)
-            .flatMap(expandAssocArray)
-            .map(remapForNamingContainer)
-            .collect(new FormDataCollector() as any);
+        const ret = new FormData()
+        ofAssoc(this.value)
+            .flatMap(expandValueArrays as any)
+            .map(remapForNamingContainer as any)
+            .reduce((formData, {key, value}) => {
+                ret.append(key, value);
+            });
+
+        return ret;
     }
 
     /**
@@ -145,14 +159,16 @@ export class XhrFormData extends Config {
      */
     private encodeSubmittableFields(parentItem: DQ, partialIds ?: string[]) {
 
-        const formInputs = getFormInputsAsStream(parentItem);
-        const mergeIntoThis = ([key, value]) => this.append(key).value = value;
+        const formInputs = getFormInputsAsArr(parentItem);
+        const mergeIntoThis = ([key, value]) => {
+            this.append(key).value = value;
+        }
         const namingContainerRemap = ([key, value]) => this.paramsMapper(key as string, value);
 
         formInputs
             .map(fixEmmptyParameters)
             .map(namingContainerRemap)
-            .each(mergeIntoThis);
+            .forEach(mergeIntoThis);
     }
 
     private remapKeyForNamingContainer(key: string): string {

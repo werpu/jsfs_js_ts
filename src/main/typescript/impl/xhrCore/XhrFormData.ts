@@ -102,8 +102,8 @@ export class XhrFormData extends Config {
          * collects everything into a FormData object
          */
         return ofAssoc(this.value)
-            .flatMap(expandValueArrays as any)
-            .map(remapForNamingContainer as any)
+            .flatMap(expandValueArrays)
+            .map(remapForNamingContainer)
             .reduce((formData: FormData, {key, value}: any) => {
                 formData.append(key, value);
                 return formData;
@@ -121,6 +121,7 @@ export class XhrFormData extends Config {
 
     /**
      * generic post init code, for now, this performs some post assign data post-processing
+     * @param rootElement the root element which knows the request type (usually a form)
      * @param executes the executable dom nodes which need to be processed into the form data, which we can send
      * in our ajax request
      */

@@ -18,9 +18,8 @@ import {IListener} from "./util/IListener";
 import {Response} from "./xhrCore/Response";
 import {XhrRequest} from "./xhrCore/XhrRequest";
 import {AsynchronousQueue} from "./util/AsyncQueue";
-import {AssocArrayCollector, Config, DQ, Lang, LazyStream, Optional, Stream} from "mona-dish";
+import {Config, DQ, Lang, Optional} from "mona-dish";
 import {Assertions} from "./util/Assertions";
-import {XhrFormData} from "./xhrCore/XhrFormData";
 import {ExtConfig, ExtDomQuery} from "./util/ExtDomQuery";
 import {ErrorData} from "./xhrCore/ErrorData";
 import {EventData} from "./xhrCore/EventData";
@@ -506,7 +505,8 @@ export module Implementation {
          * or non-existent. If they exist all of them must be the same
          */
 
-        let formWindowId: Optional<string> = searchRoot.stream.map<string>(getValue).reduce(differenceCheck, INIT);
+        let formWindowId: Optional<string> = Optional.fromNullable(searchRoot.asArray
+            .map<string>(getValue).reduce(differenceCheck, INIT));
 
 
         //if the resulting window id is set on altered then we have an unresolvable problem

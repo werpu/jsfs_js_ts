@@ -16,7 +16,7 @@
 
 import {expect} from 'chai';
 import {describe, it} from 'mocha';
-import {ArrayCollector, DomQuery, DomQueryCollector, Lang, LazyStream} from "mona-dish";
+import {ArrayCollector, DomQuery, DomQueryCollector, Lang} from "mona-dish";
 import trim = Lang.trim;
 import {from} from "rxjs";
 
@@ -298,15 +298,7 @@ describe('DOMQuery tests', function () {
         expect(DomQuery.querySelectorAll("#insertedAfter2").isPresent()).to.be.true;
     });
 
-    it('it must stream', function () {
-        let probe1 = new DomQuery(document).querySelectorAll("div");
-        let coll: Array<any> = probe1.stream.collect(new ArrayCollector());
-        expect(coll.length == 4).to.be.true;
 
-        coll = probe1.lazyStream.collect(new ArrayCollector());
-        expect(coll.length == 4).to.be.true;
-
-    });
 
     it('it must stream to a domquery', function () {
         let probe1 = new DomQuery(document).querySelectorAll("div");
@@ -376,23 +368,23 @@ describe('DOMQuery tests', function () {
         expect(length2 == 8).to.be.true;
 
         let count = DomQuery.byId("embed1").elements
-            .stream.map<number>(item => item.disabled ? 1 : 0)
+            .asArray.map<number>(item => item.disabled ? 1 : 0)
             .reduce((val1, val2) => val1 + val2, 0);
-        expect(count.value).to.eq(1);
+        expect(count).to.eq(1);
 
         DomQuery.byId("embed1").elements
             .stream.filter(item => item.disabled)
             .each(item => item.disabled = false);
 
         count = DomQuery.byId("embed1").elements
-            .stream.map<number>(item => item.disabled ? 1 : 0)
+            .asArray.map<number>(item => item.disabled ? 1 : 0)
             .reduce((val1, val2) => val1 + val2, 0);
-        expect(count.value).to.eq(0);
+        expect(count).to.eq(0);
 
-        count = DomQuery.byId("embed1").elements
-            .stream.map<number>(item => item.attr("checked").isPresent() ? 1 : 0)
+        count = DomQuery.byId("embed1").elements.asArray
+            .map<number>(item => item.attr("checked").isPresent() ? 1 : 0)
             .reduce((val1, val2) => val1 + val2, 0);
-        expect(count.value).to.eq(1);
+        expect(count).to.eq(1);
 
         expect(DomQuery.byId("id_1").inputValue.value == "id_1_val").to.be.true;
         DomQuery.byId("id_1").inputValue.value = "booga";
@@ -529,8 +521,12 @@ describe('DOMQuery tests', function () {
         }
         expect(probe.next()).to.eq(null);
         let probe2 = DomQuery.byTagName("div").limits(2);
-        resArr = LazyStream.ofStreamDataSource(<any>probe2).collect(new ArrayCollector());
-        expect(resArr.length).to.eq(2);
+        resArr = probe2.asArray;
+        let cnt = 0;
+        for(; probe2.hasNext(); cnt++) {
+            probe2.next();
+        }
+        expect(cnt).to.eq(2);
     });
 
     it("it must handle subnodes properly", function () {

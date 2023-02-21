@@ -1,8 +1,6 @@
-import {ArrayCollector, Config, DomQuery, DQ, LazyStream, Stream} from "mona-dish";
+import {Config, DomQuery, DQ} from "mona-dish";
 import {ExtDomQuery} from "./ExtDomQuery";
 import {$faces, EMPTY_STR} from "../core/Const";
-import {ExtLang} from "./Lang";
-import ofAssoc = ExtLang.ofAssoc;
 
 /*
  * various routines for encoding and decoding url parameters

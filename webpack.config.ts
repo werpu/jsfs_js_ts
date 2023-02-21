@@ -51,7 +51,8 @@ function build(env: {[key:string]: string}, argv: {[key:string]: string}) {
             alias: {
                 /*we load the reduced core, because there are some parts we simply do not need*/
                 //"mona-dish": path.resolve(__dirname, "node_modules/mona-dish/dist/js/commonjs/index_core.js")
-                "mona-dish": path.resolve(__dirname, "node_modules/mona-dish/src/main/typescript/index_core.ts")
+                "mona-dish": path.resolve(__dirname, "node_modules/mona-dish/src/main/typescript/index_core.ts"),
+                "mona-dish-full": path.resolve(__dirname, "node_modules/mona-dish/src/main/typescript/index.ts")
             }
         },
         externals: {

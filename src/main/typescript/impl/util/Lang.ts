@@ -15,7 +15,7 @@
  *
  */
 
-import {Lang as LangBase, Config, Optional, DomQuery, DQ, Stream} from "mona-dish";
+import {Lang as LangBase, Config, Optional, DomQuery, DQ} from "mona-dish";
 import {Messages} from "../i18n/Messages";
 import {EMPTY_STR, HTML_TAG_FORM} from "../core/Const";
 import {getEventTarget} from "../xhrCore/RequestDataResolver";

@@ -17,7 +17,6 @@
 import {IListener} from "./util/IListener";
 import {Response} from "./xhrCore/Response";
 import {XhrRequest} from "./xhrCore/XhrRequest";
-import {AsynchronousQueue} from "./util/AsyncQueue";
 import {Config, DQ, Lang, Optional} from "mona-dish";
 import {Assertions} from "./util/Assertions";
 import {ExtConfig, ExtDomQuery} from "./util/ExtDomQuery";
@@ -63,6 +62,7 @@ import {
     resolveTimeout, resolveViewId, resolveViewRootId, resoveNamingContainerMapper
 } from "./xhrCore/RequestDataResolver";
 import {encodeFormData} from "./util/FileUtils";
+import {XhrQueueController} from "./util/XhrQueueController";
 
 /*
  * allowed project stages
@@ -160,7 +160,7 @@ export module Implementation {
     let separator: string = null;
     let eventQueue = [];
     let errorQueue = [];
-    export let requestQueue: AsynchronousQueue<XhrRequest> = null;
+    export let requestQueue: XhrQueueController<XhrRequest> = null;
     /*error reporting threshold*/
     let threshold = "ERROR";
 
@@ -426,7 +426,7 @@ export module Implementation {
             }
         } finally {
             if (clearRequestQueue) {
-                requestQueue.cleanup();
+                requestQueue.clear();
             }
         }
     }
@@ -559,7 +559,7 @@ export module Implementation {
          * adds a new request to our queue for further processing
          */
         addRequestToQueue: function (elem: DQ, form: DQ, reqCtx: ExtConfig, respPassThr: Config, delay = 0, timeout = 0) {
-            requestQueue = requestQueue ?? new AsynchronousQueue<XhrRequest>();
+            requestQueue = requestQueue ?? new XhrQueueController<XhrRequest>();
             requestQueue.enqueue(new XhrRequest(elem, form, reqCtx, respPassThr, [], timeout), delay);
         }
     };

@@ -217,6 +217,47 @@ export module ExtLang {
     }
 
     /**
+     * The active timeout for the "debounce".
+     * Since we only use it in the XhrController
+     * we can use a local module variable here
+     */
+    let activeTimeouts = {};
+
+
+
+
+    /**
+     * a simple debounce function
+     * which waits until a timeout is reached and
+     * if something comes in in between debounces
+     *
+     * @param runnable a runnable which should go under debounce control
+     * @param timeout a timeout for the debounce window
+     */
+    export function debounce(key, runnable, timeout) {
+        function clearActiveTimeout() {
+            clearTimeout(activeTimeouts[key]);
+            delete activeTimeouts[key];
+        }
+
+        if (!!(activeTimeouts?.[key])) {
+            clearActiveTimeout();
+        }
+        if (timeout > 0) {
+            activeTimeouts[key] = setTimeout(() => {
+                try {
+                    runnable();
+                } finally {
+                    clearActiveTimeout();
+                }
+            }, timeout);
+        } else {
+            runnable();
+        }
+    }
+
+
+    /**
      * assert that the form exists and throw an exception in the case it does not
      *
      * @param form the form to check for
@@ -226,5 +267,6 @@ export module ExtLang {
             throw makeException(new Error(), null, null, "Impl", "getForm", getMessage("ERR_FORM"));
         }
     }
+
 
 }

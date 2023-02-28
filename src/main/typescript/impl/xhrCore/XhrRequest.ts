@@ -41,7 +41,7 @@ import {
     STATE_EVT_TIMEOUT,
     STD_ACCEPT,
     URL_ENCODED,
-    VAL_AJAX, IDENT_NONE
+    VAL_AJAX, IDENT_NONE, CTX_PARAM_SRC_FRM_ID, CTX_PARAM_SRC_CTL_ID
 } from "../core/Const";
 import {
     resolveFinalUrl,
@@ -54,6 +54,10 @@ import {ExtConfig} from "../util/ExtDomQuery";
 /**
  * Faces XHR Request Wrapper
  * as AsyncRunnable for our Asynchronous queue
+ * This means from the outside the
+ * xhr request is similar to a Promise in a way
+ * that you can add then and catch and finally callbacks.
+ *
  *
  * The idea is that we basically just enqueue
  * a single ajax request into our queue
@@ -73,7 +77,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
      */
     private catchFunctions: Array<Function> = [];
     private thenFunctions: Array<Function> = [];
-
+    private xhrObject = new XMLHttpRequest();
     /**
      * Required Parameters
      *
@@ -91,15 +95,12 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
      * @param xhrObject optional xhr object which must fulfill the XMLHTTPRequest api, default XMLHttpRequest
      */
     constructor(
-        private source: DQ,
-        private sourceForm: DQ,
         private requestContext: ExtConfig,
         private internalContext: Config,
         private partialIdsArray = [],
         private timeout = NO_TIMEOUT,
         private ajaxType = REQ_TYPE_POST,
-        private contentType = URL_ENCODED,
-        private xhrObject = new XMLHttpRequest()
+        private contentType = URL_ENCODED
     ) {
 
         // we omit promises here because we have to deal with cancel functionality,
@@ -116,6 +117,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
 
         let ignoreErr = failSaveExecute;
         let xhrObject = this.xhrObject;
+        let sourceForm = DQ.byId(this.internalContext.getIf(CTX_PARAM_SRC_FRM_ID).value)
 
         let executesArr = () => {
             return this.requestContext.getIf(CTX_PARAM_REQ_PASS_THR, P_EXECUTE).get(IDENT_NONE).value.split(/\s+/gi);
@@ -131,7 +133,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             // the partialIdsArray arr is almost deprecated legacy code where we allowed to send a separate list of partial
             // ids for reduced load and server processing, this will be removed soon, we can handle the same via execute
             // anyway TODO reimplement the partial ids array, we still do not have it in jsf the way we need it
-            let formData: XhrFormData = new XhrFormData(this.sourceForm, resoveNamingContainerMapper(this.internalContext), executesArr(), this.partialIdsArray);
+            let formData: XhrFormData = new XhrFormData(sourceForm, resoveNamingContainerMapper(this.internalContext), executesArr(), this.partialIdsArray);
 
             this.contentType = formData.isMultipartRequest ? "undefined" : this.contentType;
 
@@ -164,7 +166,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             responseContext.assign(ON_EVENT).value = requestContext.getIf(ON_EVENT).value;
             responseContext.assign(ON_ERROR).value = requestContext.getIf(ON_ERROR).value;
 
-            xhrObject.open(this.ajaxType, resolveFinalUrl(this.sourceForm, formData, this.ajaxType), true);
+            xhrObject.open(this.ajaxType, resolveFinalUrl(sourceForm, formData, this.ajaxType), true);
 
             // adding timeout
             this.timeout ? xhrObject.timeout = this.timeout : null;
@@ -314,7 +316,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             responseText: this.xhrObject?.responseText,
             // we remap the element just in case it gets replaced
             // it will be unremapped
-            source:  this.source.id.value
+            source:  this.internalContext.getIf(CTX_PARAM_SRC_CTL_ID).value
         };
         try {
             this.handleError(errorData, true);

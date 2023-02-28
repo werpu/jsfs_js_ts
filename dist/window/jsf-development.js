@@ -3845,7 +3845,6 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Implementation = void 0;
 const Response_1 = __webpack_require__(/*! ./xhrCore/Response */ "./src/main/typescript/impl/xhrCore/Response.ts");
 const XhrRequest_1 = __webpack_require__(/*! ./xhrCore/XhrRequest */ "./src/main/typescript/impl/xhrCore/XhrRequest.ts");
-const AsyncQueue_1 = __webpack_require__(/*! ./util/AsyncQueue */ "./src/main/typescript/impl/util/AsyncQueue.ts");
 const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const Assertions_1 = __webpack_require__(/*! ./util/Assertions */ "./src/main/typescript/impl/util/Assertions.ts");
 const ExtDomQuery_1 = __webpack_require__(/*! ./util/ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
@@ -3854,6 +3853,7 @@ const Lang_1 = __webpack_require__(/*! ./util/Lang */ "./src/main/typescript/imp
 const Const_1 = __webpack_require__(/*! ./core/Const */ "./src/main/typescript/impl/core/Const.ts");
 const RequestDataResolver_1 = __webpack_require__(/*! ./xhrCore/RequestDataResolver */ "./src/main/typescript/impl/xhrCore/RequestDataResolver.ts");
 const FileUtils_1 = __webpack_require__(/*! ./util/FileUtils */ "./src/main/typescript/impl/util/FileUtils.ts");
+const XhrQueueController_1 = __webpack_require__(/*! ./util/XhrQueueController */ "./src/main/typescript/impl/util/XhrQueueController.ts");
 /*
  * allowed project stages
  */
@@ -4184,7 +4184,7 @@ var Implementation;
         }
         finally {
             if (clearRequestQueue) {
-                Implementation.requestQueue.cleanup();
+                Implementation.requestQueue.clear();
             }
         }
     }
@@ -4306,7 +4306,7 @@ var Implementation;
          * adds a new request to our queue for further processing
          */
         addRequestToQueue: function (elem, form, reqCtx, respPassThr, delay = 0, timeout = 0) {
-            Implementation.requestQueue = Implementation.requestQueue !== null && Implementation.requestQueue !== void 0 ? Implementation.requestQueue : new AsyncQueue_1.AsynchronousQueue();
+            Implementation.requestQueue = Implementation.requestQueue !== null && Implementation.requestQueue !== void 0 ? Implementation.requestQueue : new XhrQueueController_1.XhrQueueController();
             Implementation.requestQueue.enqueue(new XhrRequest_1.XhrRequest(elem, form, reqCtx, respPassThr, [], timeout), delay);
         }
     };
@@ -5262,124 +5262,6 @@ var Assertions;
 
 /***/ }),
 
-/***/ "./src/main/typescript/impl/util/AsyncQueue.ts":
-/*!*****************************************************!*\
-  !*** ./src/main/typescript/impl/util/AsyncQueue.ts ***!
-  \*****************************************************/
-/***/ ((__unused_webpack_module, exports) => {
-
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.AsynchronousQueue = void 0;
-/**
- * Asynchronous queue which starts to work
- * through the callbacks until the queue is empty
- *
- * Every callback must be of async runnable
- * which is sort of an extended promise which has
- * added a dedicated cancel and start point
- *
- * This interface can be used as wrapper contract
- * for normal promises if needed.
- */
-class AsynchronousQueue {
-    constructor() {
-        this.runnableQueue = [];
-    }
-    /**
-     * simple is empty accessor, returns true if queue is empty atm
-     */
-    get isEmpty() {
-        return !this.runnableQueue.length;
-    }
-    /**
-     * enqueues an element and starts the
-     * asynchronous work loop if not already running
-     *
-     * @param element the element to be queued and processed
-     * @param delay possible delay after our usual process or drop if something newer is incoming algorithm
-     */
-    enqueue(element, delay = 0) {
-        if (this.delayTimeout) {
-            clearTimeout(this.delayTimeout);
-            this.delayTimeout = null;
-        }
-        if (delay) {
-            this.delayTimeout = setTimeout(() => {
-                this.appendElement(element);
-            });
-        }
-        else {
-            this.appendElement(element);
-        }
-    }
-    /**
-     * fetches the next element from the queue (first in first out order)
-     */
-    dequeue() {
-        return this.runnableQueue.shift();
-    }
-    /**
-     * clears up all elements from the queue
-     */
-    cleanup() {
-        this.currentlyRunning = null;
-        this.runnableQueue.length = 0;
-    }
-    /**
-     * cancels the currently running element and then cleans up the queue
-     * aka cancel the queue entirely
-     */
-    cancel() {
-        try {
-            if (this.currentlyRunning) {
-                this.currentlyRunning.cancel();
-            }
-        }
-        finally {
-            this.cleanup();
-        }
-    }
-    callForNextElementToProcess() {
-        this.runEntry();
-    }
-    appendElement(element) {
-        //only if the first element is added we start with a trigger
-        //otherwise a process already is running and not finished yet at that
-        //time
-        this.runnableQueue.push(element);
-        if (!this.currentlyRunning) {
-            this.runEntry();
-        }
-    }
-    runEntry() {
-        if (this.isEmpty) {
-            this.currentlyRunning = null;
-            return;
-        }
-        this.currentlyRunning = this.dequeue();
-        this.currentlyRunning
-            .catch((e) => {
-            //in case of an error we always clean up the remaining calls
-            //to allow a clean recovery of the application
-            this.cleanup();
-            throw e;
-        })
-            .then(
-        //the idea is to trigger the next over an event to reduce
-        //the number of recursive calls (stacks might be limited
-        //compared to ram)
-        //naturally give we have a DOM, the DOM is the natural event dispatch system
-        //which we can use, to decouple the calls from a recursive stack call
-        //(the browser engine will take care of that)
-        () => this.callForNextElementToProcess()).start();
-    }
-}
-exports.AsynchronousQueue = AsynchronousQueue;
-
-
-/***/ }),
-
 /***/ "./src/main/typescript/impl/util/ExtDomQuery.ts":
 /*!******************************************************!*\
   !*** ./src/main/typescript/impl/util/ExtDomQuery.ts ***!
@@ -6101,6 +5983,43 @@ var ExtLang;
     }
     ExtLang.collectAssoc = collectAssoc;
     /**
+     * The active timeout for the "debounce".
+     * Since we only use it in the XhrController
+     * we can use a local module variable here
+     */
+    let activeTimeouts = {};
+    /**
+     * a simple debounce function
+     * which waits until a timeout is reached and
+     * if something comes in in between debounces
+     *
+     * @param runnable a runnable which should go under debounce control
+     * @param timeout a timeout for the debounce window
+     */
+    function debounce(key, runnable, timeout) {
+        function clearActiveTimeout() {
+            clearTimeout(activeTimeouts[key]);
+            delete activeTimeouts[key];
+        }
+        if (!!(activeTimeouts === null || activeTimeouts === void 0 ? void 0 : activeTimeouts[key])) {
+            clearActiveTimeout();
+        }
+        if (timeout > 0) {
+            activeTimeouts[key] = setTimeout(() => {
+                try {
+                    runnable();
+                }
+                finally {
+                    clearActiveTimeout();
+                }
+            }, timeout);
+        }
+        else {
+            runnable();
+        }
+    }
+    ExtLang.debounce = debounce;
+    /**
      * assert that the form exists and throw an exception in the case it does not
      *
      * @param form the form to check for
@@ -6111,6 +6030,97 @@ var ExtLang;
         }
     }
 })(ExtLang = exports.ExtLang || (exports.ExtLang = {}));
+
+
+/***/ }),
+
+/***/ "./src/main/typescript/impl/util/XhrQueueController.ts":
+/*!*************************************************************!*\
+  !*** ./src/main/typescript/impl/util/XhrQueueController.ts ***!
+  \*************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.XhrQueueController = void 0;
+const Lang_1 = __webpack_require__(/*! ./Lang */ "./src/main/typescript/impl/util/Lang.ts");
+var debounce = Lang_1.ExtLang.debounce;
+/**
+ * A simple XHR queue controller
+ * following the async op -> next pattern
+ * Faces enforces for the XHR handling
+ */
+class XhrQueueController {
+    constructor() {
+        this.queue = [];
+        this.taskRunning = false;
+    }
+    /**
+     * executes or enqueues an element
+     * @param runnable the runnable (request) to be enqueued
+     * @param timeOut timeout if > 0 which defers the execution
+     * until the debounce window for the timeout is closed.
+     */
+    enqueue(runnable, timeOut = 0) {
+        debounce("xhrQueue", () => {
+            const requestHandler = this.enrichRunnable(runnable);
+            if (!this.taskRunning) {
+                this.signalTaskRunning();
+                requestHandler.start();
+            }
+            else {
+                this.queue.push(requestHandler);
+            }
+        }, timeOut);
+    }
+    /**
+     * trigger the next element in the queue
+     * to be started!
+     */
+    next() {
+        const next = this.queue.shift();
+        this.taskRunning = !this.isEmpty;
+        next === null || next === void 0 ? void 0 : next.start();
+    }
+    /**
+     * clears and resets the queue
+     */
+    clear() {
+        this.queue.length = 0;
+        this.taskRunning = false;
+    }
+    /**
+     * true if queue is empty
+     */
+    get isEmpty() {
+        return !this.queue.length;
+    }
+    /**
+     * Enriches the incoming async asyncRunnable
+     * with the error and next handling
+     * (aka: asyncRunnable is done -> next
+     *                   error -> clear queue
+     * @param asyncRunnable the async runnable which needs enrichment
+     * @private
+     */
+    enrichRunnable(asyncRunnable) {
+        return asyncRunnable
+            .then(() => this.next())
+            .catch((e) => {
+            this.clear();
+            throw e;
+        });
+    }
+    /**
+     * alerts the queue that a task is running
+     *
+     * @private
+     */
+    signalTaskRunning() {
+        this.taskRunning = true;
+    }
+}
+exports.XhrQueueController = XhrQueueController;
 
 
 /***/ }),

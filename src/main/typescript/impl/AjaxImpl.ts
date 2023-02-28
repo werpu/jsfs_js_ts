@@ -560,7 +560,7 @@ export module Implementation {
          */
         addRequestToQueue: function (elem: DQ, form: DQ, reqCtx: ExtConfig, respPassThr: Config, delay = 0, timeout = 0) {
             requestQueue = requestQueue ?? new XhrQueueController<XhrRequest>();
-            requestQueue.enqueue(new XhrRequest(elem, form, reqCtx, respPassThr, [], timeout), delay);
+            requestQueue.enqueue(new XhrRequest(reqCtx, respPassThr, [], timeout), delay);
         }
     };
 

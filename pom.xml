@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.example</groupId>
     <artifactId>jsfs_js_ts</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>4.0</version>
     <name>jsfs_js_ts</name>
     <description>Demo project for Spring Boot</description>
 

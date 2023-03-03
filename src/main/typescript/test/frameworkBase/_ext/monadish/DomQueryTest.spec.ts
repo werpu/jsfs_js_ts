@@ -338,12 +338,8 @@ describe('DOMQuery tests', function () {
 
     it('it must stream - DQ API (dynamically added)', function () {
         let probe1 = new DomQuery(document).querySelectorAll("div");
-        let coll: Array<any> = probe1.stream.collect(new ArrayCollector());
+        let coll: Array<any> = probe1.asArray;
         expect(coll.length == 4).to.be.true;
-
-        coll = probe1.lazyStream.collect(new ArrayCollector());
-        expect(coll.length == 4).to.be.true;
-
     });
 
     it('it must stream to a domquery', function () {

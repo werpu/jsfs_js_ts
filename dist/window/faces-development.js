@@ -5457,6 +5457,7 @@ class ExtDomQuery extends mona_dish_1.DQ {
     * this is done once and only lazily
     */
     get nonce() {
+        var _a;
         //already processed
         let myfacesConfig = new ExtConfig(window.myfaces);
         let nonce = myfacesConfig.getIf("config", "cspMeta", "nonce");
@@ -5471,12 +5472,10 @@ class ExtDomQuery extends mona_dish_1.DQ {
         }
         // fallback if the currentScript method fails, we just search the jsf tags for nonce, this is
         // the last possibility
-        let nonceScript = mona_dish_1.DQ
-            .querySelectorAll("script[src], link[src]")
-            .lazyStream
+        let nonceScript = mona_dish_1.Optional.fromNullable((_a = mona_dish_1.DQ
+            .querySelectorAll("script[src], link[src]").asArray
             .filter((item) => this.extractNonce(item) && item.attr(ATTR_SRC) != null)
-            .filter(item => IS_FACES_SOURCE(item.attr(ATTR_SRC).value))
-            .first();
+            .filter(item => IS_FACES_SOURCE(item.attr(ATTR_SRC).value))) === null || _a === void 0 ? void 0 : _a[0]);
         if (nonceScript.isPresent()) {
             return this.extractNonce(nonceScript.value);
         }
@@ -5491,14 +5490,15 @@ class ExtDomQuery extends mona_dish_1.DQ {
      * @param regExp
      */
     searchJsfJsFor(regExp) {
+        var _a;
         //perfect application for lazy stream
-        return mona_dish_1.DQ.querySelectorAll("script[src], link[src]").lazyStream
+        return mona_dish_1.Optional.fromNullable((_a = mona_dish_1.DQ.querySelectorAll("script[src], link[src]").asArray
             .filter(item => IS_FACES_SOURCE(item.attr(ATTR_SRC).value))
             .map(item => item.attr(ATTR_SRC).value.match(regExp))
             .filter(item => item != null && item.length > 1)
             .map((result) => {
             return decodeURIComponent(result[1]);
-        }).first();
+        })) === null || _a === void 0 ? void 0 : _a[0]);
     }
     globalEval(code, nonce) {
         return new ExtDomQuery(super.globalEval(code, nonce !== null && nonce !== void 0 ? nonce : this.nonce));

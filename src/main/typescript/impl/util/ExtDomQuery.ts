@@ -120,12 +120,10 @@ export class ExtDomQuery extends DQ {
         }
         // fallback if the currentScript method fails, we just search the jsf tags for nonce, this is
         // the last possibility
-        let nonceScript = DQ
-            .querySelectorAll("script[src], link[src]")
-            .lazyStream
+        let nonceScript = Optional.fromNullable(DQ
+            .querySelectorAll("script[src], link[src]").asArray
             .filter((item) => this.extractNonce(item)  && item.attr(ATTR_SRC) != null)
-            .filter(item => IS_FACES_SOURCE(item.attr(ATTR_SRC).value))
-            .first();
+            .filter(item => IS_FACES_SOURCE(item.attr(ATTR_SRC).value))?.[0]);
 
         if (nonceScript.isPresent()) {
             return this.extractNonce(nonceScript.value);
@@ -144,13 +142,13 @@ export class ExtDomQuery extends DQ {
      */
     searchJsfJsFor(regExp: RegExp): Optional<string> {
         //perfect application for lazy stream
-        return DQ.querySelectorAll("script[src], link[src]").lazyStream
+        return Optional.fromNullable(DQ.querySelectorAll("script[src], link[src]").asArray
             .filter(item => IS_FACES_SOURCE(item.attr(ATTR_SRC).value))
             .map(item => item.attr(ATTR_SRC).value.match(regExp))
             .filter(item => item != null && item.length > 1)
             .map((result: string[]) => {
                 return decodeURIComponent(result[1]);
-            }).first();
+            })?.[0]);
     }
 
     globalEval(code: string, nonce ?: string): DQ {

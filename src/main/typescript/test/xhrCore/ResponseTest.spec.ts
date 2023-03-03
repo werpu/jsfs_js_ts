@@ -517,7 +517,6 @@ describe('Tests of the various aspects of the response protocol functionality', 
         </partial-response>`
 
         window.document.body.innerHTML = INNER_HTML_MULIT_VIEW;
-        global["debug4"] = true;
         faces.ajax.request(window.document.getElementById("viewroot_1:submit_1"), null, {
             "javax.faces.behavior.event": "change",
             execute: "submit_1",
@@ -675,7 +674,7 @@ describe('Tests of the various aspects of the response protocol functionality', 
         });
 
         //TODO xhr stubbing, to check if the viewId is prepended in render!
-
+        global["state_1"] = true;
         this.respond(`<?xml version="1.0" encoding="UTF-8"?>
 <partial-response id="viewroot_1">
     <changes>

@@ -3653,7 +3653,7 @@ var faces;
         return AjaxImpl_1.Implementation.getClientWindow(rootNode);
     }
     faces.getClientWindow = getClientWindow;
-    //private helper functions
+    // private helper functions
     function getSeparatorChar() {
         const sep = '#{facesContext.namingContainerSeparatorChar}';
         //We now enable standalone mode, the separator char was not mapped we make a fallback to 2.3 behavior
@@ -3709,7 +3709,7 @@ var faces;
          *     <li> eventData.responseXML: the requestInternal response xml </li>
          * </ul>
          *
-         * @param errorListener error handler must be of the format <i>function errorListener(&lt;errorData&gt;)</i>
+         * @param errorFunc error handler must be of the format <i>function errorListener(&lt;errorData&gt;)</i>
          */
         function addOnError(errorFunc) {
             AjaxImpl_1.Implementation.addOnError(errorFunc);
@@ -3719,7 +3719,7 @@ var faces;
          * Adds a global event listener to the ajax event queue. The event listener must be a function
          * of following format: <i>function eventListener(&lt;eventData&gt;)</i>
          *
-         * @param eventListener event must be of the format <i>function eventListener(&lt;eventData&gt;)</i>
+         * @param eventFunc event must be of the format <i>function eventListener(&lt;eventData&gt;)</i>
          */
         function addOnEvent(eventFunc) {
             AjaxImpl_1.Implementation.addOnEvent(eventFunc);
@@ -3734,7 +3734,7 @@ var faces;
          * if any of the code returns false, the execution
          * is terminated prematurely skipping the rest of the code!
          *
-         * @param {DomNode} source, the callee object
+         * @param {HTMLElement | String} source, the callee object
          * @param {Event} event, the event object of the callee event triggering this function
          * @param funcs ... arbitrary array of functions or strings
          * @returns true if the chain has succeeded false otherwise
@@ -3763,7 +3763,7 @@ var faces;
         push.init = init;
         /**
          * Open the web socket on the given channel.
-         * @param  channel The name of the web socket channel.
+         * @param  socketClientId The name of the web socket channel.
          * @throws  Error is thrown, if the channel is unknown.
          */
         function open(socketClientId) {
@@ -3772,7 +3772,7 @@ var faces;
         push.open = open;
         /**
          * Close the web socket on the given channel.
-         * @param  channel The name of the web socket channel.
+         * @param  socketClientId The id of the web socket client.
          * @throws  Error is thrown, if the channel is unknown.
          */
         function close(socketClientId) {
@@ -3792,8 +3792,8 @@ var myfaces;
      * @param event the event
      * @param eventName event name for java.jakarta.faces.behavior.evemnt
      * @param execute execute list as passed down in faces.ajax.request
-     * @param render
-     * @param options
+     * @param render the render list as string
+     * @param options the options which need to be mered in
      */
     function ab(source, event, eventName, execute, render, options = {}) {
         var _a, _b;
@@ -3810,6 +3810,42 @@ var myfaces;
         ((_b = window === null || window === void 0 ? void 0 : window.faces) !== null && _b !== void 0 ? _b : window.jsf).ajax.request(source, event, options);
     }
     myfaces.ab = ab;
+    const onReadyChain = [];
+    let readyStateListener = null;
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     * Helper function in the myfaces namespace to handle document ready properly for the load case
+     * the ajax case, does not need proper treatment, since it is deferred anyway.
+     * Used by command script as helper function!
+     *
+     * @param executionFunc the function to be executed upon ready
+     */
+    function onDomReady(executionFunc) {
+        if (document.readyState !== "complete") {
+            onReadyChain.push(executionFunc);
+            if (!readyStateListener) {
+                readyStateListener = () => {
+                    window.removeEventListener("DOMContentLoaded", readyStateListener);
+                    readyStateListener = null;
+                    try {
+                        onReadyChain.forEach(func => func());
+                    }
+                    finally {
+                        //done we clear now the ready chain
+                        onReadyChain.length = 0;
+                    }
+                };
+                window.addEventListener("DOMContentLoaded", readyStateListener);
+            }
+        }
+        else {
+            if (readyStateListener) {
+                readyStateListener();
+            }
+            executionFunc();
+        }
+    }
+    myfaces.onDomReady = onDomReady;
     /**
      * legacy oam functions
      */
@@ -3991,7 +4027,7 @@ var Implementation;
     function resolveProjectStateFromURL() {
         /* run through all script tags and try to find the one that includes faces.js */
         const foundStage = ExtDomQuery_1.ExtDomQuery.searchJsfJsFor(/stage=([^&;]*)/).value;
-        return (foundStage in ProjectStages) ? foundStage : null;
+        return (foundStage in ProjectStages) ? foundStage : ProjectStages.Production; // MYFACES-4572: default is production
     }
     Implementation.resolveProjectStateFromURL = resolveProjectStateFromURL;
     /**
@@ -4307,7 +4343,7 @@ var Implementation;
          */
         addRequestToQueue: function (elem, form, reqCtx, respPassThr, delay = 0, timeout = 0) {
             Implementation.requestQueue = Implementation.requestQueue !== null && Implementation.requestQueue !== void 0 ? Implementation.requestQueue : new XhrQueueController_1.XhrQueueController();
-            Implementation.requestQueue.enqueue(new XhrRequest_1.XhrRequest(elem, form, reqCtx, respPassThr, [], timeout), delay);
+            Implementation.requestQueue.enqueue(new XhrRequest_1.XhrRequest(reqCtx, respPassThr, [], timeout), delay);
         }
     };
     //----------------------------------------------- Methods ---------------------------------------------------------------------
@@ -7441,6 +7477,7 @@ exports.XhrFormData = XhrFormData;
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.XhrRequest = void 0;
+const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const AjaxImpl_1 = __webpack_require__(/*! ../AjaxImpl */ "./src/main/typescript/impl/AjaxImpl.ts");
 const XhrFormData_1 = __webpack_require__(/*! ./XhrFormData */ "./src/main/typescript/impl/xhrCore/XhrFormData.ts");
 const ErrorData_1 = __webpack_require__(/*! ./ErrorData */ "./src/main/typescript/impl/xhrCore/ErrorData.ts");
@@ -7452,6 +7489,10 @@ var failSaveExecute = Lang_1.ExtLang.failSaveExecute;
 /**
  * Faces XHR Request Wrapper
  * as AsyncRunnable for our Asynchronous queue
+ * This means from the outside the
+ * xhr request is similar to a Promise in a way
+ * that you can add then and catch and finally callbacks.
+ *
  *
  * The idea is that we basically just enqueue
  * a single ajax request into our queue
@@ -7476,22 +7517,20 @@ class XhrRequest {
      * @param contentType optional content type, default "application/x-www-form-urlencoded"
      * @param xhrObject optional xhr object which must fulfill the XMLHTTPRequest api, default XMLHttpRequest
      */
-    constructor(source, sourceForm, requestContext, internalContext, partialIdsArray = [], timeout = Const_1.NO_TIMEOUT, ajaxType = Const_1.REQ_TYPE_POST, contentType = Const_1.URL_ENCODED, xhrObject = new XMLHttpRequest()) {
-        this.source = source;
-        this.sourceForm = sourceForm;
+    constructor(requestContext, internalContext, partialIdsArray = [], timeout = Const_1.NO_TIMEOUT, ajaxType = Const_1.REQ_TYPE_POST, contentType = Const_1.URL_ENCODED) {
         this.requestContext = requestContext;
         this.internalContext = internalContext;
         this.partialIdsArray = partialIdsArray;
         this.timeout = timeout;
         this.ajaxType = ajaxType;
         this.contentType = contentType;
-        this.xhrObject = xhrObject;
         this.stopProgress = false;
         /**
          * helper support so that we do not have to drag in Promise shims
          */
         this.catchFunctions = [];
         this.thenFunctions = [];
+        this.xhrObject = new XMLHttpRequest();
         // we omit promises here because we have to deal with cancel functionality,
         // and promises to not provide that (yet) instead we have our async queue
         // which uses an api internally, which is very close to promises
@@ -7504,6 +7543,7 @@ class XhrRequest {
     start() {
         let ignoreErr = failSaveExecute;
         let xhrObject = this.xhrObject;
+        let sourceForm = mona_dish_1.DQ.byId(this.internalContext.getIf(Const_1.CTX_PARAM_SRC_FRM_ID).value);
         let executesArr = () => {
             return this.requestContext.getIf(Const_1.CTX_PARAM_REQ_PASS_THR, Const_1.P_EXECUTE).get(Const_1.IDENT_NONE).value.split(/\s+/gi);
         };
@@ -7517,7 +7557,7 @@ class XhrRequest {
             // the partialIdsArray arr is almost deprecated legacy code where we allowed to send a separate list of partial
             // ids for reduced load and server processing, this will be removed soon, we can handle the same via execute
             // anyway TODO reimplement the partial ids array, we still do not have it in jsf the way we need it
-            let formData = new XhrFormData_1.XhrFormData(this.sourceForm, (0, RequestDataResolver_1.resoveNamingContainerMapper)(this.internalContext), executesArr(), this.partialIdsArray);
+            let formData = new XhrFormData_1.XhrFormData(sourceForm, (0, RequestDataResolver_1.resoveNamingContainerMapper)(this.internalContext), executesArr(), this.partialIdsArray);
             this.contentType = formData.isMultipartRequest ? "undefined" : this.contentType;
             // next step the pass through parameters are merged in for post params
             this.requestContext.$nspEnabled = false;
@@ -7543,7 +7583,7 @@ class XhrRequest {
             // per spec the onevent and onerror handlers must be passed through to the response
             responseContext.assign(Const_1.ON_EVENT).value = requestContext.getIf(Const_1.ON_EVENT).value;
             responseContext.assign(Const_1.ON_ERROR).value = requestContext.getIf(Const_1.ON_ERROR).value;
-            xhrObject.open(this.ajaxType, (0, RequestDataResolver_1.resolveFinalUrl)(this.sourceForm, formData, this.ajaxType), true);
+            xhrObject.open(this.ajaxType, (0, RequestDataResolver_1.resolveFinalUrl)(sourceForm, formData, this.ajaxType), true);
             // adding timeout
             this.timeout ? xhrObject.timeout = this.timeout : null;
             // a bug in the xhr stub library prevents the setRequestHeader to be properly executed on fake xhr objects
@@ -7674,7 +7714,7 @@ class XhrRequest {
             responseText: (_a = this.xhrObject) === null || _a === void 0 ? void 0 : _a.responseText,
             // we remap the element just in case it gets replaced
             // it will be unremapped
-            source: this.source.id.value
+            source: this.internalContext.getIf(Const_1.CTX_PARAM_SRC_CTL_ID).value
         };
         try {
             this.handleError(errorData, true);

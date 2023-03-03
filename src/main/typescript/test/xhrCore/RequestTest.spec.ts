@@ -451,9 +451,10 @@ describe('Tests after core when it hits response', function () {
 
         let send = sinon.spy(XMLHttpRequest.prototype, "send");
         let xhrReq = null;
-
+        const oldErr = console.error;
         try {
             let errorCnt = 0;
+
             let element = DomQuery.byId("input_2").getAsElem(0).value;
             faces.ajax.request(element, null, {
                 execute: "input_1",
@@ -474,6 +475,7 @@ describe('Tests after core when it hits response', function () {
                 },
                 onevent: (evt: any) => {
                     if (evt.status == COMPLETE) {
+                        console.error = () => {};
                         throw Error("This error is wanted, ignore the log");
                     }
                 }
@@ -484,9 +486,13 @@ describe('Tests after core when it hits response', function () {
             xhrReq.respond(200, {'Content-Type': 'text/xml'}, STD_XML);
 
         } catch (e) {
+            if(e.message.indexOf("This error is wanted") != -1) {
+                return;
+            }
             console.error(e);
 
         } finally {
+            console.error = oldErr;
             send.restore();
         }
 

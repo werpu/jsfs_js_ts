@@ -1999,7 +1999,7 @@ exports.DQ$ = DomQuery.querySelectorAll;
  * Extended array
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Es2019Array = void 0;
+exports.Es2019Array = exports._Es2019Array = void 0;
 /**
  * Extended array which adds various es 2019 shim functions to the normal array
  * We must remap all array producing functions in order to keep
@@ -2024,27 +2024,27 @@ class Es2019Array_ extends Array {
     }
     map(callbackfn, thisArg) {
         const ret = Array.prototype.map.call(this._another, callbackfn, thisArg);
-        return new exports.Es2019Array(...ret);
+        return new _Es2019Array(...ret);
     }
     concat(...items) {
         const ret = Array.prototype.concat.call(this._another, ...items);
-        return new exports.Es2019Array(...ret);
+        return new _Es2019Array(...ret);
     }
     reverse() {
         const ret = Array.prototype.reverse.call(this._another);
-        return new exports.Es2019Array(...ret);
+        return new _Es2019Array(...ret);
     }
     slice(start, end) {
         const ret = Array.prototype.slice.call(this._another, start, end);
-        return new exports.Es2019Array(...ret);
+        return new _Es2019Array(...ret);
     }
     splice(start, deleteCount) {
         const ret = Array.prototype.splice.call(this._another, start, deleteCount);
-        return new exports.Es2019Array(...ret);
+        return new _Es2019Array(...ret);
     }
     filter(predicate, thisArg) {
         const ret = Array.prototype.filter.call(this._another, predicate, thisArg);
-        return new exports.Es2019Array(...ret);
+        return new _Es2019Array(...ret);
     }
     reduce(callbackfn, initialValue) {
         const ret = Array.prototype.reduce.call(this._another, callbackfn, initialValue);
@@ -2071,7 +2071,7 @@ class Es2019Array_ extends Array {
         arr.forEach(reFlat);
         return new exports.Es2019Array(...res);
     }
-    _flatMap(mapperFunction, noFallback = false) {
+    _flatMap(mapperFunction) {
         let res = this.map(item => mapperFunction(item));
         return this._flatResolve(res);
     }
@@ -2100,8 +2100,16 @@ function _Es2019Array(...data) {
     });
     return proxied;
 }
+exports._Es2019Array = _Es2019Array;
 ;
-exports.Es2019Array = _Es2019Array;
+/**
+ * this is the switch between normal array and our shim
+ * the shim is only provided in case the native browser
+ * does not yet have flatMap support on arrays
+ */
+exports.Es2019Array = (Array.prototype.flatMap) ? function (...data) {
+    return data;
+} : _Es2019Array;
 
 
 /***/ }),

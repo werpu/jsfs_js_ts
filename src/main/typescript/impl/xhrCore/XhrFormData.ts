@@ -151,14 +151,20 @@ export class XhrFormData extends Config {
      * @param {Node} parentItem - form element item is nested in
      * @param {Array} partialIds - ids fo PPS
      */
-    private encodeSubmittableFields(parentItem: DQ, partialIds ?: string[]) {
+    private encodeSubmittableFields(parentItem: DQ, partialIds: string[] = []) {
 
         const mergeIntoThis = ([key, value]) => this.append(key).value = value;
         const namingContainerRemap = ([key, value]) => this.paramsMapper(key as string, value);
 
-        getFormInputsAsArr(parentItem)
+        const remappedPartialIds = partialIds.map(partialId => this.remapKeyForNamingContainer(partialId));
+        const partialIdsFilter = ([key, value]) => (!remappedPartialIds.length || key.indexOf("@") == 0) ? true :
+            remappedPartialIds.indexOf(key) != -1;
+
+        let inputs = getFormInputsAsArr(parentItem);
+        inputs
             .map(fixEmptyParameters)
             .map(namingContainerRemap)
+            .filter(partialIdsFilter)
             .forEach(mergeIntoThis);
     }
 

@@ -53,7 +53,7 @@ import {
     EMPTY_STR,
     CTX_PARAM_MF_INTERNAL,
     NAMED_VIEWROOT,
-    NAMING_CONTAINER_ID
+    NAMING_CONTAINER_ID, CTX_PARAM_PPS, MYFACES_OPTION_PPS
 } from "./core/Const";
 import {
     resolveDefaults,
@@ -91,6 +91,8 @@ enum BlockFilter {
     params = "params"
 }
 
+
+
 /**
  * Core Implementation
  * to distinct between api and impl
@@ -111,12 +113,6 @@ export module Implementation {
 
  a) Monad like structures for querying because this keeps the code denser and adds abstractions
  that always was the strong point of jquery and it still is better in this regard than what ecmascript provides
-
- b) Streams and lazystreams like java has, a pull like construct, ecmascript does not have anything like Lazystreams.
- Another option would have been rxjs but that would have introduced a code dependency and probably more code. We might
- move to RXJS if the need arises however. But for now I would rather stick with my small self grown library which works
- quite well and where I can patch quickly (I have used it in several industrial projects, so it works well
- and is heavily fortified by unit tests (140 testcases as time of writing this))
 
  c) A neutral json like configuration which allows assignments of arbitrary values with reduce code which then can be
  transformed into different data representations
@@ -346,6 +342,9 @@ export module Implementation {
         // won't hurt but for the sake of compatibility we are going to add it
         requestCtx.assign(CTX_PARAM_REQ_PASS_THR, formId).value = formId;
         internalCtx.assign(CTX_PARAM_SRC_CTL_ID).value = elementId;
+        // reintroduction of PPS as per myfaces 2.3 (myfaces.pps = true, only the executes are submitted)
+        internalCtx.assign(CTX_PARAM_PPS).value = extractMyFacesParams(options.value)?.[MYFACES_OPTION_PPS] ?? false;
+
 
         assignClientWindowId(form, requestCtx);
         assignExecute(options, requestCtx, form, elementId);
@@ -560,7 +559,7 @@ export module Implementation {
          */
         addRequestToQueue: function (elem: DQ, form: DQ, reqCtx: ExtConfig, respPassThr: Config, delay = 0, timeout = 0) {
             requestQueue = requestQueue ?? new XhrQueueController<XhrRequest>();
-            requestQueue.enqueue(new XhrRequest(reqCtx, respPassThr, [], timeout), delay);
+            requestQueue.enqueue(new XhrRequest(reqCtx, respPassThr, timeout), delay);
         }
     };
 
@@ -764,6 +763,20 @@ export module Implementation {
         return ofAssoc(mappedOpts)
             .filter((item => !(item[0] in BlockFilter)))
             .reduce(collectAssoc, {});
+    }
+
+    /**
+     * extracts the myfaces config parameters which provide extra functionality
+     * on top of JSF
+     * @param mappedOpts
+     * @private
+     */
+    function extractMyFacesParams(mappedOpts: Options): {[key: string]: any} {
+        //we now can use the full code reduction given by our stream api
+        //to filter
+        return ofAssoc(mappedOpts)
+            .filter((item => (item[0] == "myfaces")))
+            .reduce(collectAssoc, {})?.[MYFACES];
     }
 
     function remapArrayToAssocArr(arrayedParams: [[string, any]] | {[key: string]: any}): {[key: string]: any} {

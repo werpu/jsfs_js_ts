@@ -45,6 +45,29 @@ let issueStdReq = function (element) {
         }
     });
 };
+
+
+let issueStdPPSReq = function (element) {
+    faces.ajax.request(element, null, {
+        execute: "input_1",
+        render: "@form",
+        /*
+        * myfaces is the extension placeholder, atm only pps is used
+        * which was the most useful extension in our legacy codebase
+        */
+        myfaces: {
+            pps: true
+        },
+        /*
+         * params is the spec conform way to pass additional request paramerters
+         */
+        params: {
+            pass1: "pass1",
+            pass2: "pass2"
+        }
+    });
+};
+
 /**
  * specialized tests testing the xhr core behavior when it hits the xmlHttpRequest object
  */
@@ -119,6 +142,9 @@ describe('Tests on the xhr core when it starts to call the request', function ()
                 resultsMap[keyVal[0]] = keyVal[1];
             }
 
+            // normal request, all issuing form must be encoded!
+            expect(!!(resultsMap?.["input_2_text"] ?? false)).to.eq(true);
+            expect(!!(resultsMap?.["input_1"] ?? false)).to.eq(true);
             expect(resultsMap["pass1"]).to.eq("pass1");
             expect(resultsMap["pass2"]).to.eq("pass2");
             expect(!!resultsMap["render"]).to.be.false;
@@ -475,7 +501,8 @@ describe('Tests after core when it hits response', function () {
                 },
                 onevent: (evt: any) => {
                     if (evt.status == COMPLETE) {
-                        console.error = () => {};
+                        console.error = () => {
+                        };
                         throw Error("This error is wanted, ignore the log");
                     }
                 }
@@ -486,7 +513,7 @@ describe('Tests after core when it hits response', function () {
             xhrReq.respond(200, {'Content-Type': 'text/xml'}, STD_XML);
 
         } catch (e) {
-            if(e.message.indexOf("This error is wanted") != -1) {
+            if (e.message.indexOf("This error is wanted") != -1) {
                 return;
             }
             console.error(e);
@@ -561,6 +588,47 @@ describe('Tests after core when it hits response', function () {
             return;
         }
         done("Expecting a client error to be thrown")
+    });
+
+    it("must have a proper working myfaces.pps = true, partial page submit", function (done) {
+        /**
+         * derived from the passthrough test
+         */
+        let send = sinon.spy(XMLHttpRequest.prototype, "send");
+        try {
+            //we only issue input 1
+            let element = DomQuery.byId("input_1").getAsElem(0).value;
+            issueStdPPSReq(element);
+
+            expect(send.called).to.be.true;
+            let argsVal: any = send.args[0][0];
+            let arsArr = argsVal.split("&");
+            let resultsMap = {};
+            for (let val of arsArr) {
+                let keyVal = val.split("=");
+                resultsMap[keyVal[0]] = keyVal[1];
+            }
+
+            expect(resultsMap?.["input_2_text"] ?? false).to.eq(false);
+            expect(!!(resultsMap?.["input_1"] ?? false)).to.eq(true);
+            expect(resultsMap["pass1"]).to.eq("pass1");
+            expect(resultsMap["pass2"]).to.eq("pass2");
+            expect(!!resultsMap["render"]).to.be.false;
+            expect(!!resultsMap["execute"]).to.be.false;
+            expect(P_WINDOW_ID in resultsMap).to.be.false;
+            expect(P_VIEWSTATE in resultsMap).to.be.true;
+            expect(resultsMap[P_AJAX_SOURCE]).to.eq("input_1");
+            expect(resultsMap[P_AJAX]).to.eq("true");
+            expect(resultsMap[P_RENDER]).to.eq("blarg");
+            expect(resultsMap[P_EXECUTE]).to.eq("input_1");
+
+
+            // TODO the request map only has the params and input1_ and input_2 passed no matter now many other values
+            // we might have to add some input elements into the form which are filetered out
+        } finally {
+            send.restore();
+        }
+        done();
     });
 
 

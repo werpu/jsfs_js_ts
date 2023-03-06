@@ -41,7 +41,7 @@ import {
     STATE_EVT_TIMEOUT,
     STD_ACCEPT,
     URL_ENCODED,
-    VAL_AJAX, IDENT_NONE, CTX_PARAM_SRC_FRM_ID, CTX_PARAM_SRC_CTL_ID
+    VAL_AJAX, IDENT_NONE, CTX_PARAM_SRC_FRM_ID, CTX_PARAM_SRC_CTL_ID, CTX_PARAM_PPS
 } from "../core/Const";
 import {
     resolveFinalUrl,
@@ -88,7 +88,6 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
      * Optional Parameters
      *
      * @param internalContext internal context with internal info which is passed through, not used by the user
-     * @param partialIdsArray an optional restricting partial ids array for encoding
      * @param timeout optional xhr timeout
      * @param ajaxType optional request type, default "POST"
      * @param contentType optional content type, default "application/x-www-form-urlencoded"
@@ -97,7 +96,6 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
     constructor(
         private requestContext: ExtConfig,
         private internalContext: Config,
-        private partialIdsArray = [],
         private timeout = NO_TIMEOUT,
         private ajaxType = REQ_TYPE_POST,
         private contentType = URL_ENCODED
@@ -133,7 +131,13 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             // the partialIdsArray arr is almost deprecated legacy code where we allowed to send a separate list of partial
             // ids for reduced load and server processing, this will be removed soon, we can handle the same via execute
             // anyway TODO reimplement the partial ids array, we still do not have it in jsf the way we need it
-            let formData: XhrFormData = new XhrFormData(sourceForm, resoveNamingContainerMapper(this.internalContext), executesArr(), this.partialIdsArray);
+            const executes = executesArr();
+            const partialIdsArray = this.internalContext.getIf(CTX_PARAM_PPS).value === true ? executes : [];
+            let formData: XhrFormData = new XhrFormData(
+                sourceForm,
+                resoveNamingContainerMapper(this.internalContext),
+                executes, partialIdsArray
+            );
 
             this.contentType = formData.isMultipartRequest ? "undefined" : this.contentType;
 

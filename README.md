@@ -32,27 +32,13 @@ where I just ran a set of 20 integration tests on macro scale.
 
 ## Status
 
-ATM I am function in beta bugfixing stage, and the code
-can be tested (final beta stages)
-I probably will make a release at the same time MyFaces 4.0 
-final hits the scene.
-It has been testing in MyFaces Tobago now for a year
-and atm is being integrated into MyFaces as new
-JS/TS codebase.
-
-Addition, for the integration in MyFaces, the api level has been
-uplifted to Jakarta Faces 4.0
-Note, this introduces some breaking changes, jsf jas been replaced with jakarta
-and javax has been replaced by faces
-so javax.faces.request becomes jakarta.faces.request
-
-Note, a shim layer for backwards compatibility has been provided
-you simply just need to load the generated. jsf.js file which goes down to 2.3 compatibility level
-while loading faces.js will provide 4.0 compatibility
-
-For this reason the version now also in the npm package is 4.0.x
-(the pre changes code can still be reached in the 2.3 branch although
-this branch is basically legacy, given we have the SHIM layer doing both)
+We now have a stable version!
+The current stable version (and first stable version is 4.0)
+Why 4.0 and not 1.0?
+The reason for this is, it is faces 4.0 compliant (but also faces 2.3 compliant)
+and also used in MyFaces 4.0.
+In order to avoid version confusion the projects stable version always will be in 
+sync with the Faces implementation level it provides now and in the future.
 
 ### Special info    
 Due to a small api change, if you want to embed the 4.0 version (faces.js)
@@ -181,5 +167,11 @@ Usage *faces-config.xml*
 
 This resource decorator detects automatically a faces*.js file coming from a resource library
 and adjusts the references in the resource accordingly to the request patterns
+
+## Changes since 4.0
+
+* Elimination of Streams in favor of native arrays
+* Providing an internal non intrusive shim for browsers which do not have array map and flapMap
+(older Edge and Chromium versions) - done in mona-dish
 
 

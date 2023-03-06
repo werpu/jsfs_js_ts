@@ -21,7 +21,7 @@
 export const XML_ATTR_NAMED_VIEWROOT = "namedViewRoot";
 export const NAMED_VIEWROOT = "namedViewRoot";
 
-export const P_PARTIAL_SOURCE = "jakarta.faces.source";
+export const P_AJAX_SOURCE = "jakarta.faces.source";
 export const NAMING_CONTAINER_ID = "myfaces.partialId";
 
 export const VIEW_ID = "myfaces.viewId";

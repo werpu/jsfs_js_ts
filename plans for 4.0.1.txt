@@ -1,0 +1,9 @@
+# Brainstorming for 4.0.1
+
+* Eliminate Streams - done, this was the biggest one
+* Reintroduce partial page submit (myfaces.pps?), while never really used
+
+it makes sense because it reduces post load in big form scenarii
+significantly (aka spreadhsheets), the hooks are present but the mechanism
+needs to be reintroduced!
+

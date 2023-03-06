@@ -23,7 +23,7 @@ import {
     COMPLETE, EMPTY_STR,
     P_AJAX,
     P_EXECUTE,
-    P_PARTIAL_SOURCE,
+    P_AJAX_SOURCE,
     P_RENDER,
     P_VIEWSTATE,
     P_WINDOW_ID,
@@ -125,7 +125,7 @@ describe('Tests on the xhr core when it starts to call the request', function ()
             expect(!!resultsMap["execute"]).to.be.false;
             expect(P_WINDOW_ID in resultsMap).to.be.false;
             expect(P_VIEWSTATE in resultsMap).to.be.true;
-            expect(resultsMap[P_PARTIAL_SOURCE]).to.eq("input_2");
+            expect(resultsMap[P_AJAX_SOURCE]).to.eq("input_2");
             expect(resultsMap[P_AJAX]).to.eq("true");
             expect(resultsMap[P_RENDER]).to.eq("blarg");
             expect(resultsMap[P_EXECUTE]).to.eq("input_1%20input_2");
@@ -292,7 +292,7 @@ describe('Tests after core when it hits response', function () {
                         expect(!!lastArg.onError).to.be.false;
                         expect(lastArg.pass1 == "pass1").to.be.true;
                         expect(lastArg.pass2 == "pass2").to.be.true;
-                        expect(!!lastArg[P_PARTIAL_SOURCE]).to.be.true;
+                        expect(!!lastArg[P_AJAX_SOURCE]).to.be.true;
                         expect(!!lastArg[P_AJAX]).to.be.true;
                         expect(!!lastArg[P_EXECUTE]).to.be.true;
                         expect(!!lastArg[P_RENDER]).to.be.true;
@@ -354,7 +354,7 @@ describe('Tests after core when it hits response', function () {
                         expect(!!lastArg.onError).to.be.false;
                         expect(lastArg.pass1 == "pass1").to.be.true;
                         expect(lastArg.pass2 == "pass2").to.be.true;
-                        expect(!!lastArg[P_PARTIAL_SOURCE]).to.be.true;
+                        expect(!!lastArg[P_AJAX_SOURCE]).to.be.true;
                         expect(!!lastArg[P_AJAX]).to.be.true;
                         expect(!!lastArg[P_EXECUTE]).to.be.true;
                         expect(!!lastArg[P_RENDER]).to.be.true;
@@ -417,7 +417,7 @@ describe('Tests after core when it hits response', function () {
                         expect(!!lastArg.onError).to.be.false;
                         expect(lastArg.pass1 == "pass1").to.be.true;
                         expect(lastArg.pass2 == "pass2").to.be.true;
-                        expect(!!lastArg[P_PARTIAL_SOURCE]).to.be.true;
+                        expect(!!lastArg[P_AJAX_SOURCE]).to.be.true;
                         expect(!!lastArg[P_AJAX]).to.be.true;
                         expect(!!lastArg[P_EXECUTE]).to.be.true;
                         expect(!!lastArg[P_RENDER]).to.be.true;

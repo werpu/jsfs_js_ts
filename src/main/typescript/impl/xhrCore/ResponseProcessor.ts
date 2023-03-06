@@ -46,7 +46,7 @@ import {
     ON_EVENT,
     P_CLIENT_WINDOW,
     P_EXECUTE,
-    P_PARTIAL_SOURCE,
+    P_AJAX_SOURCE,
     P_RENDER,
     P_RENDER_OVERRIDE,
     P_VIEWSTATE,
@@ -176,7 +176,7 @@ export class ResponseProcessor implements IResponseProcessor {
          */
 
         const mergedErrorData = new ExtConfig({});
-        mergedErrorData.assign(SOURCE).value = this.externalContext.getIf(P_PARTIAL_SOURCE).get(0).value;
+        mergedErrorData.assign(SOURCE).value = this.externalContext.getIf(P_AJAX_SOURCE).get(0).value;
         mergedErrorData.assign(ERROR_NAME).value = node.querySelectorAll(ERROR_NAME).textContent(EMPTY_STR);
         mergedErrorData.assign(ERROR_MESSAGE).value = node.querySelectorAll(ERROR_MESSAGE).cDATAAsString;
 

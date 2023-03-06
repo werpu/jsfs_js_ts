@@ -40,7 +40,7 @@ import {
     P_CLIENT_WINDOW,
     P_EVT,
     P_EXECUTE,
-    P_PARTIAL_SOURCE,
+    P_AJAX_SOURCE,
     P_RENDER,
     P_RESET_VALUES,
     P_WINDOW_ID,
@@ -319,7 +319,7 @@ export module Implementation {
         /**
          * binding contract the jakarta.faces.source must be set
          */
-        requestCtx.assign(CTX_PARAM_REQ_PASS_THR, P_PARTIAL_SOURCE).value = elementId;
+        requestCtx.assign(CTX_PARAM_REQ_PASS_THR, P_AJAX_SOURCE).value = elementId;
 
         /**
          * jakarta.faces.partial.ajax must be set to true

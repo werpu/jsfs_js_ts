@@ -65,11 +65,6 @@ it can be used (check the dist directory for builds, I consider
 stable enough for testing, or your own builds)
 
 
-## build
-
-Make sure python 3.x is installed (needed by some build dependencies)
-
-
 ### General build 
 
 run 

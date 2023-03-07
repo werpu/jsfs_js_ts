@@ -117,7 +117,6 @@ export class XhrRequest extends AsyncRunnable<XMLHttpRequest> {
             // whatever the formData object delivers
             // the partialIdsArray arr is almost deprecated legacy code where we allowed to send a separate list of partial
             // ids for reduced load and server processing, this will be removed soon, we can handle the same via execute
-            // anyway TODO reimplement the partial ids array, we still do not have it in jsf the way we need it
             const executes = executesArr();
             const partialIdsArray = this.internalContext.getIf(CTX_PARAM_PPS).value === true ? executes : [];
             const formData: XhrFormData = new XhrFormData(

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {AsyncRunnable} from "../util/AsyncRunnable";
+import {AsyncRunnable, IAsyncRunnable} from "../util/AsyncRunnable";
 import {Config, DQ} from "mona-dish";
 import {Implementation} from "../AjaxImpl";
 
@@ -66,32 +66,23 @@ import {ExtConfig} from "../util/ExtDomQuery";
  *
  */
 
-export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
+export class XhrRequest extends AsyncRunnable<XMLHttpRequest> {
 
     private responseContext: Config;
 
     private stopProgress = false;
 
-    /**
-     * helper support so that we do not have to drag in Promise shims
-     */
-    private catchFunctions: Array<Function> = [];
-    private thenFunctions: Array<Function> = [];
+
     private xhrObject = new XMLHttpRequest();
     /**
      * Required Parameters
      *
-     * @param source the issuing element
-     * @param sourceForm the form which is related to the issuing element
      * @param requestContext the request context with all pass through values
-     *
-     * Optional Parameters
-     *
      * @param internalContext internal context with internal info which is passed through, not used by the user
+     * Optional Parameters
      * @param timeout optional xhr timeout
      * @param ajaxType optional request type, default "POST"
      * @param contentType optional content type, default "application/x-www-form-urlencoded"
-     * @param xhrObject optional xhr object which must fulfill the XMLHTTPRequest api, default XMLHttpRequest
      */
     constructor(
         private requestContext: ExtConfig,
@@ -100,18 +91,14 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         private ajaxType = REQ_TYPE_POST,
         private contentType = URL_ENCODED
     ) {
-
+        super();
         // we omit promises here because we have to deal with cancel functionality,
         // and promises to not provide that (yet) instead we have our async queue
         // which uses an api internally, which is very close to promises
-        this.registerXhrCallbacks((data: any) => {
-            this.resolve(data)
-        }, (data: any) => {
-            this.reject(data)
-        });
+        this.registerXhrCallbacks((data: any) => this.resolve(data), (data: any) => this.reject(data));
     }
 
-    start(): AsyncRunnable<XMLHttpRequest> {
+    start(): IAsyncRunnable<XMLHttpRequest> {
 
         let ignoreErr = failSaveExecute;
         let xhrObject = this.xhrObject;
@@ -133,7 +120,7 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             // anyway TODO reimplement the partial ids array, we still do not have it in jsf the way we need it
             const executes = executesArr();
             const partialIdsArray = this.internalContext.getIf(CTX_PARAM_PPS).value === true ? executes : [];
-            let formData: XhrFormData = new XhrFormData(
+            const formData: XhrFormData = new XhrFormData(
                 sourceForm,
                 resoveNamingContainerMapper(this.internalContext),
                 executes, partialIdsArray
@@ -143,8 +130,8 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
 
             // next step the pass through parameters are merged in for post params
             this.requestContext.$nspEnabled = false;
-            let requestContext = this.requestContext;
-            let requestPassThroughParams = requestContext.getIf(CTX_PARAM_REQ_PASS_THR) as ExtConfig;
+            const requestContext = this.requestContext;
+            const requestPassThroughParams = requestContext.getIf(CTX_PARAM_REQ_PASS_THR) as ExtConfig;
 
             // we are turning off here the jsf, faces remapping because we are now dealing with
             // pass-through parameters
@@ -155,6 +142,9 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
             try {
                 formData.shallowMerge(requestPassThroughParams, true, true);
             } finally {
+                // unfortunately as long as we support
+                // both namespaces we have to keep manual control
+                // on the key renaming before doing ops like deep copy
                 this.requestContext.$nspEnabled = true;
                 requestPassThroughParams.$nspEnabled = true;
             }
@@ -200,40 +190,15 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
 
     cancel() {
         try {
+            // this causes onError to be called where the error
+            // handling takes over
             this.xhrObject.abort();
         } catch (e) {
             this.handleError(e);
         }
     }
 
-    resolve(data: any) {
-        this.thenFunctions.reduce((inputVal: any, thenFunc: any) => {
-            return thenFunc(inputVal);
-        }, data)
-    }
 
-    reject(data: any) {
-        this.catchFunctions.reduce((inputVal: any, catchFunc: any) => {
-            return catchFunc(inputVal);
-        }, data);
-    }
-
-    catch(func: (data: any) => any): AsyncRunnable<XMLHttpRequest> {
-        this.catchFunctions.push(func);
-        return this;
-    }
-
-    finally(func: () => void): AsyncRunnable<XMLHttpRequest> {
-        // no ie11 support we probably are going to revert to shims for that one
-        this.catchFunctions.push(func);
-        this.thenFunctions.push(func);
-        return this;
-    }
-
-    then(func: (data: any) => any): AsyncRunnable<XMLHttpRequest> {
-        this.thenFunctions.push(func);
-        return this;
-    }
 
     /**
      * attaches the internal event and processing
@@ -259,13 +224,17 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         };
         xhrObject.onerror = (errorData: any) => {
 
-            // some browsers trigger an error when cancelling a request internally
+            // some browsers trigger an error when cancelling a request internally, or when
+            // cancel is called from outside
             // in this case we simply ignore the request and clear up the queue, because
             // it is not safe anymore to proceed with the current queue
             // This bypasses a Safari issue where it keeps requests hanging after page unload
             // and then triggers a cancel error on then instead of just stopping
             // and clearing the code
             if(this.isCancelledResponse(this.xhrObject)) {
+                /*
+                 * this triggers the catch chain and after that finally
+                 */
                 reject();
                 this.stopProgress = true;
                 return;
@@ -337,11 +306,17 @@ export class XhrRequest implements AsyncRunnable<XMLHttpRequest> {
         if (this.stopProgress) {
             return;
         }
+        /**
+         * now call the then chain
+         */
         resolve(data);
     }
 
     private onError(errorData: any,  reject: Consumer<any>) {
         this.handleError(errorData);
+        /*
+         * this triggers the catch chain and after that finally
+         */
         reject();
     }
 

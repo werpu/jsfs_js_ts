@@ -51,7 +51,6 @@ import {
     VIEW_ID,
     $faces,
     EMPTY_STR,
-    CTX_PARAM_MF_INTERNAL,
     NAMED_VIEWROOT,
     NAMING_CONTAINER_ID, CTX_PARAM_PPS, MYFACES_OPTION_PPS
 } from "./core/Const";
@@ -112,7 +111,7 @@ export module Implementation {
  it provides following
 
  a) Monad like structures for querying because this keeps the code denser and adds abstractions
- that always was the strong point of jquery and it still is better in this regard than what ecmascript provides
+ that always was the strong point of jQuery, and it still is better in this regard than what ecmascript provides
 
  c) A neutral json like configuration which allows assignments of arbitrary values with reduce code which then can be
  transformed into different data representations
@@ -213,7 +212,7 @@ export module Implementation {
      * @param funcs
      */
     export function chain(source: any, event: Event, ...funcs: EvalFuncs): boolean {
-        // we can use our lazy stream each functionality to run our chain here..
+        // we can use our lazy stream each functionality to run our chain here.
         // by passing a boolean as return value into the onElem call
         // we can stop early at the first false, just like the spec requests
 
@@ -276,7 +275,7 @@ export module Implementation {
 
         requestCtx.assignIf(!!windowId, P_WINDOW_ID).value = windowId;
 
-        // old non spec behavior will be removed after it is clear whether the removal breaks any code
+        // old non - spec behavior will be removed after it is clear whether the removal breaks any code
         requestCtx.assign(CTX_PARAM_REQ_PASS_THR).value = extractLegacyParams(options.value);
 
         // spec conform behavior, all passthrough params must be under "passthrough
@@ -308,7 +307,7 @@ export module Implementation {
         requestCtx.assign(ON_ERROR).value = options.value?.onerror;
 
         /**
-         * lets drag the myfaces config params also in
+         * Fetch the myfaces config params
          */
         requestCtx.assign(MYFACES).value = options.value?.myfaces;
 
@@ -668,7 +667,7 @@ export module Implementation {
          * can deal with them either prefixed ir not
          * also resolves the absolute id case (it was assumed the server does this, but
          * apparently the RI does not, so we have to follow the RI behavior here)
-         * @param componentIdToTransform the componentId which needs post processing
+         * @param componentIdToTransform the componentId which needs post-processing
          */
         const remapNamingContainer = componentIdToTransform => {
             // pattern :<anything> must be prepended by viewRoot if there is one,
@@ -682,7 +681,7 @@ export module Implementation {
             const hasLeadingSep = componentIdToTransform.indexOf(SEP) === 0;
             const isAbsolutSearchExpr = hasLeadingSep || (rootNamingContainerId.length
                 && componentIdToTransform.indexOf(rootNamingContainerPrefix) == 0);
-            let finalIdentifier = "";
+            let finalIdentifier: string;
             if (isAbsolutSearchExpr) {
                 //we cut off the leading sep if there is one
                 componentIdToTransform = hasLeadingSep ? componentIdToTransform.substring(1) : componentIdToTransform;
@@ -701,14 +700,14 @@ export module Implementation {
                     [rootNamingContainerPrefix, componentIdToTransform].join(EMPTY_STR) :
                     [nearestNamingContainerPrefix,  componentIdToTransform].join(EMPTY_STR);
             }
-            // We need to double check because we have scenarios where we have a naming container
+            // We need to double-check because we have scenarios where we have a naming container
             // and no prepend (aka tobago testcase "must handle ':' in IDs properly", scenario 3,
             // in this case we return the component id, and be happy
             // we can roll a dom check here
             return (!!document.getElementById(finalIdentifier)) ? finalIdentifier : componentIdToTransform;
         };
 
-        // in this case we do not use lazy stream because it wont bring any code reduction
+        // in this case we do not use lazy stream because it won´t bring any code reduction
         // or speedup
         for (let cnt = 0; cnt < iterValues.length; cnt++) {
             //avoid doubles
@@ -750,12 +749,11 @@ export module Implementation {
      * the values required for params-through are processed in the ajax request
      *
      * Note this is a bug carried over from the old implementation
-     * the spec conform behavior is to use params for passthrough values
+     * the spec conform behavior is to use params for pass - through values
      * this will be removed soon, after it is cleared up whether removing
      * it breaks any legacy code
      *
      * @param {Context} mappedOpts the options to be filtered
-     * @deprecated
      */
     function extractLegacyParams(mappedOpts: Options): {[key: string]: any} {
         //we now can use the full code reduction given by our stream api

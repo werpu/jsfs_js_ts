@@ -155,7 +155,7 @@ export class XhrRequest extends AsyncRunnable<XMLHttpRequest> {
 
             responseContext.assign(CTX_PARAM_MF_INTERNAL).value = this.internalContext.value;
 
-            // per spec the onevent and onerror handlers must be passed through to the response
+            // per spec the onEvent and onError handlers must be passed through to the response
             responseContext.assign(ON_EVENT).value = requestContext.getIf(ON_EVENT).value;
             responseContext.assign(ON_ERROR).value = requestContext.getIf(ON_ERROR).value;
 
@@ -286,8 +286,6 @@ export class XhrRequest extends AsyncRunnable<XMLHttpRequest> {
             status: MALFORMEDXML,
             responseCode: 200,
             responseText: this.xhrObject?.responseText,
-            // we remap the element just in case it gets replaced
-            // it will be unremapped
             source:  this.internalContext.getIf(CTX_PARAM_SRC_CTL_ID).value
         };
         try {

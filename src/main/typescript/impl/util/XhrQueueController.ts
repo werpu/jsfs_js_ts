@@ -36,8 +36,8 @@ export class XhrQueueController<T extends AsyncRunnable<any>> {
      * to be started!
      */
     next() {
+        this.updateTaskRunning();
         const next = this.queue.shift();
-        this.taskRunning = !this.isEmpty;
         next?.start();
     }
 
@@ -46,7 +46,7 @@ export class XhrQueueController<T extends AsyncRunnable<any>> {
      */
     clear() {
         this.queue.length = 0;
-        this.taskRunning = false;
+        this.updateTaskRunning();
     }
 
     /**
@@ -80,5 +80,13 @@ export class XhrQueueController<T extends AsyncRunnable<any>> {
      */
     private signalTaskRunning() {
         this.taskRunning = true;
+    }
+
+    /**
+     * updates the task running status according to the current queue
+     * @private
+     */
+    private updateTaskRunning() {
+        this.taskRunning = !this.isEmpty;
     }
 }

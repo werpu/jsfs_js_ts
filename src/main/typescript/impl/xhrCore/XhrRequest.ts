@@ -151,7 +151,7 @@ export class XhrRequest extends AsyncRunnable<XMLHttpRequest> {
             this.responseContext = requestPassThroughParams.deepCopy;
 
             // we have to shift the internal passthroughs around to build up our response context
-            let responseContext = this.responseContext;
+            const responseContext = this.responseContext;
 
             responseContext.assign(CTX_PARAM_MF_INTERNAL).value = this.internalContext.value;
 
@@ -207,7 +207,7 @@ export class XhrRequest extends AsyncRunnable<XMLHttpRequest> {
      * @param reject
      */
     private registerXhrCallbacks(resolve: Consumer<any>, reject: Consumer<any>) {
-        let xhrObject = this.xhrObject;
+        const xhrObject = this.xhrObject;
 
         xhrObject.onabort = () => {
             this.onAbort(reject);
@@ -281,7 +281,7 @@ export class XhrRequest extends AsyncRunnable<XMLHttpRequest> {
 
     private handleMalFormedXML(resolve: Function) {
         this.stopProgress = true;
-        let errorData = {
+        const errorData = {
             type: ERROR,
             status: MALFORMEDXML,
             responseCode: 200,
@@ -320,7 +320,7 @@ export class XhrRequest extends AsyncRunnable<XMLHttpRequest> {
     }
 
     private sendRequest(formData: XhrFormData) {
-        let isPost = this.ajaxType != REQ_TYPE_GET;
+        const isPost = this.ajaxType != REQ_TYPE_GET;
         if (formData.isMultipartRequest) {
             // in case of a multipart request we send in a formData object as body
             this.xhrObject.send((isPost) ? formData.toFormData() : null);
@@ -334,7 +334,7 @@ export class XhrRequest extends AsyncRunnable<XMLHttpRequest> {
      * other helpers
      */
     private sendEvent(evtType: string) {
-        let eventData = EventData.createFromRequest(this.xhrObject, this.requestContext, evtType);
+        const eventData = EventData.createFromRequest(this.xhrObject, this.requestContext, evtType);
         try {
             // User code error, we might cover
             // this in onError, but also we cannot swallow it.
@@ -346,14 +346,15 @@ export class XhrRequest extends AsyncRunnable<XMLHttpRequest> {
         } catch (e) {
             e.source = e?.source ?? this.requestContext.getIf(SOURCE).value;
             this.handleError(e);
+
             throw e;
         }
     }
 
     private handleError(exception, responseFormatError: boolean = false) {
-        let errorData = (responseFormatError) ? ErrorData.fromHttpConnection(exception.source, exception.type, exception.status, exception.responseText, exception.responseCode, exception.status) : ErrorData.fromClient(exception);
+        const errorData = (responseFormatError) ? ErrorData.fromHttpConnection(exception.source, exception.type, exception.status, exception.responseText, exception.responseCode, exception.status) : ErrorData.fromClient(exception);
+        const eventHandler = resolveHandlerFunc(this.requestContext, this.responseContext, ON_ERROR);
 
-        let eventHandler = resolveHandlerFunc(this.requestContext, this.responseContext, ON_ERROR);
         Implementation.sendError(errorData, eventHandler);
     }
 }

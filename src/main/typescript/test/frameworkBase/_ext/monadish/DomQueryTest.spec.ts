@@ -17,7 +17,7 @@
 import {expect} from 'chai';
 import {describe, it} from 'mocha';
 import {from} from "rxjs";
-import {ArrayCollector, DomQuery, DomQueryCollector, Lang, LazyStream, Stream} from "mona-dish";
+import {ArrayCollector, Config, DomQuery, DomQueryCollector, Lang, LazyStream, Stream} from "mona-dish";
 import {tobagoSheetWithHeader} from "./markups/tobago-with-header";
 import {tobagoSheetWithoutHeader} from "./markups/tobago-without-header";
 
@@ -505,7 +505,7 @@ describe('DOMQuery tests', function () {
         DomQuery.byId("id_3").inputValue.value = "hello world";
         expect(DomQuery.byId("id_3").inputValue.value).to.eq("hello world");
 
-        let cfg = DomQuery.querySelectorAll("form").elements.encodeFormElement();
+        let cfg = new Config(DomQuery.querySelectorAll("form").elements.encodeFormElement());
         expect(cfg.getIf("id_1").value[0]).to.eq("booga");
         expect(cfg.getIf("id_2").value[0]).to.eq("id_2_val");
         expect(cfg.getIf("id_3").value[0]).to.eq("hello world");

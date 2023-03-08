@@ -542,7 +542,7 @@ export module Implementation {
         let formElements = element.deepElements.encodeFormElement()
 
         // encode them! (file inputs are handled differently and are not part of the viewstate)
-        return encodeFormData(formElements, resoveNamingContainerMapper(dummyContext));
+        return encodeFormData(new ExtConfig(formElements), resoveNamingContainerMapper(dummyContext));
     }
 
     /**

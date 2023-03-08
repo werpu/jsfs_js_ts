@@ -2,6 +2,266 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
+/***/ "./node_modules/mona-dish/src/main/typescript/AssocArray.ts":
+/*!******************************************************************!*\
+  !*** ./node_modules/mona-dish/src/main/typescript/AssocArray.ts ***!
+  \******************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+/*!
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.shallowMerge = exports.simpleShallowMerge = exports.deepCopy = exports.buildPath = exports.assignIf = exports.append = exports.assign = void 0;
+const Es2019Array_1 = __webpack_require__(/*! ./Es2019Array */ "./node_modules/mona-dish/src/main/typescript/Es2019Array.ts");
+/**
+ * A nop as assign functionality (aka ignore assign)
+ */
+const IGNORE_ASSIGN = new (class {
+    set value(value) {
+    }
+})();
+/**
+ * uses the known pattern from config
+ * assign(target, key1, key2, key3).value = value;
+ * @param target
+ * @param keys
+ */
+function assign(target, ...accessPath) {
+    if (accessPath.length < 1) {
+        return IGNORE_ASSIGN;
+    }
+    const lastPathItem = buildPath(target, ...accessPath);
+    let assigner = new (class {
+        set value(value) {
+            lastPathItem.target[lastPathItem.key] = value;
+        }
+    })();
+    return assigner;
+}
+exports.assign = assign;
+function append(target, ...accessPath) {
+    if (accessPath.length < 1) {
+        return IGNORE_ASSIGN;
+    }
+    const lastPathItem = buildPath(target, ...accessPath);
+    let appender = new (class {
+        set value(value) {
+            if (!Array.isArray(value)) {
+                value = [value];
+            }
+            if (!lastPathItem.target[lastPathItem.key]) {
+                lastPathItem.target[lastPathItem.key] = value;
+            }
+            else {
+                if (!Array.isArray(lastPathItem.target[lastPathItem.key])) {
+                    lastPathItem.target[lastPathItem.key] = [lastPathItem.target[lastPathItem.key]];
+                }
+                lastPathItem.target[lastPathItem.key].push(...value);
+            }
+        }
+    })();
+    return appender;
+}
+exports.append = append;
+/**
+ * uses the known pattern from config
+ * assign(target, key1, key2, key3).value = value;
+ * @param target
+ * @param keys
+ */
+function assignIf(condition, target, ...accessPath) {
+    if (accessPath.length < 1) {
+        return IGNORE_ASSIGN;
+    }
+    return assign(target, ...accessPath);
+}
+exports.assignIf = assignIf;
+function keyVal(key) {
+    let start = key.indexOf("[");
+    if (start >= 0) {
+        return key.substring(0, start);
+    }
+    else {
+        return key;
+    }
+}
+function arrayIndex(key) {
+    let start = key.indexOf("[");
+    let end = key.indexOf("]");
+    if (start >= 0 && end > 0 && start < end) {
+        return parseInt(key.substring(start + 1, end));
+    }
+    else {
+        return -1;
+    }
+}
+function isArrayPos(currKey, arrPos) {
+    return currKey === "" && arrPos >= 0;
+}
+function isNoArray(arrPos) {
+    return arrPos == -1;
+}
+function alloc(arr, length, defaultVal = {}) {
+    let toAdd = [];
+    toAdd.length = length;
+    toAdd[length - 1] = defaultVal;
+    arr.push(...toAdd);
+}
+/**
+ * builds up a path, only done if no data is present!
+ * @param target
+ * @param accessPath
+ * @returns the last assignable entry
+ */
+function buildPath(target, ...accessPath) {
+    accessPath = accessPath.flatMap(path => path.split("["))
+        .map(path => path.indexOf("]") != -1 ? "[" + path : path);
+    //we now have a pattern of having the array accessors always in separate items
+    let parentPtr = target;
+    let parKeyArrPos = null;
+    let currKey = null;
+    let arrPos = -1;
+    for (let cnt = 0; cnt < accessPath.length; cnt++) {
+        currKey = keyVal(accessPath[cnt]);
+        arrPos = arrayIndex(accessPath[cnt]);
+        //it now is either key or arrPos
+        if (arrPos != -1) {
+            //case root(array)[5] -> root must be array and allocate 5 elements
+            //case root.item[5] root.item must be array and of 5 elements
+            if (!Array.isArray(parentPtr)) {
+                throw Error("Associative array referenced as index array in path reference");
+            }
+            //we need to look ahead for proper allocation
+            //not end reached
+            let nextArrPos = -1;
+            if (cnt < accessPath.length - 1) {
+                nextArrPos = arrayIndex(accessPath[cnt + 1]);
+            }
+            let dataPresent = 'undefined' != typeof (parentPtr === null || parentPtr === void 0 ? void 0 : parentPtr[arrPos]);
+            //no data present check here is needed, because alloc only reserves if not present
+            alloc(parentPtr, arrPos + 1, nextArrPos != -1 ? [] : {});
+            parKeyArrPos = arrPos;
+            //we now go to the reserved element
+            if (cnt == accessPath.length - 1) {
+                parentPtr[arrPos] = (dataPresent) ? parentPtr[arrPos] : null;
+            }
+            else {
+                parentPtr = parentPtr[arrPos];
+            }
+        }
+        else {
+            if (Array.isArray(parentPtr)) {
+                throw Error("Index array referenced as associative array in path reference");
+            }
+            //again look ahead whether the next value is an array or assoc array
+            let nextArrPos = -1;
+            if (cnt < accessPath.length - 1) {
+                nextArrPos = arrayIndex(accessPath[cnt + 1]);
+            }
+            parKeyArrPos = currKey;
+            let dataPresent = 'undefined' != typeof (parentPtr === null || parentPtr === void 0 ? void 0 : parentPtr[currKey]);
+            if (cnt == accessPath.length - 1) {
+                if (!dataPresent) {
+                    parentPtr[currKey] = null;
+                }
+            }
+            else {
+                if (!dataPresent) {
+                    parentPtr[currKey] = nextArrPos == -1 ? {} : [];
+                }
+                parentPtr = parentPtr[currKey];
+            }
+        }
+    }
+    return { target: parentPtr, key: parKeyArrPos };
+}
+exports.buildPath = buildPath;
+function deepCopy(fromAssoc) {
+    return JSON.parse(JSON.stringify(fromAssoc));
+}
+exports.deepCopy = deepCopy;
+/**
+ * simple left to right merge
+ *
+ * @param assocArrays
+ */
+function simpleShallowMerge(...assocArrays) {
+    return shallowMerge(true, false, ...assocArrays);
+}
+exports.simpleShallowMerge = simpleShallowMerge;
+/**
+ * Shallow merge as in config
+ *
+ * @param overwrite
+ * @param withAppend
+ * @param assocArrays
+ */
+function shallowMerge(overwrite = true, withAppend = false, ...assocArrays) {
+    let target = {};
+    assocArrays.map(arr => {
+        return { arr, keys: Object.keys(arr) };
+    }).forEach(({ arr, keys }) => {
+        keys.forEach(key => {
+            if (overwrite || !(target === null || target === void 0 ? void 0 : target[key])) {
+                if (!withAppend) {
+                    target[key] = arr[key];
+                }
+                else {
+                    if (Array.isArray(arr[key])) {
+                        if ('undefined' == typeof (target === null || target === void 0 ? void 0 : target[key])) {
+                            target[key] = new Es2019Array_1.Es2019Array(...arr[key]);
+                        }
+                        else if (!Array.isArray(target[key])) {
+                            let oldVal = target[key];
+                            target[key] = new Es2019Array_1.Es2019Array(...[]);
+                            target[key].push(oldVal);
+                            target[key].push(...arr[key]);
+                        }
+                        else {
+                            target[key].push(...arr[key]);
+                        }
+                        //new Es2019Array(...arr[key]).forEach(item => this.append(key).value = item);
+                    }
+                    else {
+                        if ('undefined' == typeof (target === null || target === void 0 ? void 0 : target[key])) {
+                            target[key] = arr[key];
+                        }
+                        else if (!Array.isArray(target[key])) {
+                            let oldVal = target[key];
+                            target[key] = new Es2019Array_1.Es2019Array(...[]);
+                            target[key].push(oldVal);
+                            target[key].push(arr[key]);
+                        }
+                        else {
+                            target[key].push(arr[key]);
+                        }
+                    }
+                }
+            }
+        });
+    });
+    return target;
+}
+exports.shallowMerge = shallowMerge;
+
+
+/***/ }),
+
 /***/ "./node_modules/mona-dish/src/main/typescript/DomQuery.ts":
 /*!****************************************************************!*\
   !*** ./node_modules/mona-dish/src/main/typescript/DomQuery.ts ***!
@@ -45,6 +305,7 @@ var trim = Lang_1.Lang.trim;
 var isString = Lang_1.Lang.isString;
 var eqi = Lang_1.Lang.equalsIgnoreCase;
 var objToArray = Lang_1.Lang.objToArray;
+const AssocArray_1 = __webpack_require__(/*! ./AssocArray */ "./node_modules/mona-dish/src/main/typescript/AssocArray.ts");
 /**
  *
  *        // - submit checkboxes and radio inputs only if checked
@@ -1375,11 +1636,10 @@ class DomQuery {
      */
     fireEvent(eventName, options = {}) {
         // merge with last one having the highest priority
-        let finalOptions = new Monad_1.Config({
+        let finalOptions = {
             bubbles: true, cancelable: true
-        });
-        finalOptions.shallowMerge(new Monad_1.Config(options));
-        finalOptions = JSON.parse(finalOptions.toJson());
+        };
+        finalOptions = (0, AssocArray_1.simpleShallowMerge)(finalOptions, options);
         this.eachElem((node) => {
             let doc;
             if (node.ownerDocument) {
@@ -1470,14 +1730,14 @@ class DomQuery {
      * @param toMerge optional config which can be merged in
      * @return a copy pf
      */
-    encodeFormElement(toMerge = new Monad_1.Config({})) {
+    encodeFormElement(toMerge = {}) {
         // browser behavior no element name no encoding (normal submit fails in that case)
         // https:// issues.apache.org/jira/browse/MYFACES-2847
         if (this.name.isAbsent()) {
             return;
         }
         // let´s keep it side-effects free
-        let target = toMerge.shallowCopy;
+        let target = (0, AssocArray_1.simpleShallowMerge)(toMerge);
         this.each((element) => {
             var _a, _b;
             if (element.name.isAbsent()) { // no name, no encoding
@@ -1512,7 +1772,7 @@ class DomQuery {
                             // let subBuf = [];
                             if (selectElem.options[u].selected) {
                                 let elementOption = selectElem.options[u];
-                                target.append(name).value = (elementOption.getAttribute("value") != null) ?
+                                (0, AssocArray_1.append)(target, name).value = (elementOption.getAttribute("value") != null) ?
                                     elementOption.value : elementOption.text;
                             }
                         }
@@ -1532,14 +1792,14 @@ class DomQuery {
                     let filesArr = uploadedFiles !== null && uploadedFiles !== void 0 ? uploadedFiles : [];
                     if (filesArr === null || filesArr === void 0 ? void 0 : filesArr.length) { //files can be empty but set
                         // xhr level2, single multiple must be passes as they are
-                        target.assign(name).value = Array.from(filesArr);
+                        (0, AssocArray_1.assign)(target, name).value = Array.from(filesArr);
                     }
                     else {
                         if (!!uploadedFiles) { //we skip empty file elements i
                             return;
                         }
                         //checkboxes etc.. need to be appended
-                        target.append(name).value = element.inputValue.value;
+                        (0, AssocArray_1.append)(target, name).value = element.inputValue.value;
                     }
                 }
             }
@@ -2962,11 +3222,10 @@ class Config extends Optional {
         let parentVal = this.getClass().fromNullable(null);
         let parentPos = -1;
         let alloc = function (arr, length) {
-            let length1 = arr.length;
-            let length2 = length1 + length;
-            for (let cnt = length1; cnt < length2; cnt++) {
-                arr.push({});
-            }
+            let toAdd = [];
+            toAdd.length = length;
+            toAdd[length - 1] = {};
+            arr.push(...toAdd);
         };
         for (let cnt = 0; cnt < accessPath.length; cnt++) {
             let currKey = this.keyVal(accessPath[cnt]);
@@ -3572,7 +3831,7 @@ exports.XQ = XMLQuery;
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.XQ = exports.XMLQuery = exports.ValueEmbedder = exports.Optional = exports.Monad = exports.CONFIG_ANY = exports.CONFIG_VALUE = exports.Config = exports.Lang = exports.DQ$ = exports.DQ = exports.DomQueryCollector = exports.ElementAttribute = exports.DomQuery = void 0;
+exports.shallowMerge = exports.simpleShallowMerge = exports.append = exports.assignIf = exports.assign = exports.XQ = exports.XMLQuery = exports.ValueEmbedder = exports.Optional = exports.Monad = exports.CONFIG_ANY = exports.CONFIG_VALUE = exports.Config = exports.Lang = exports.DQ$ = exports.DQ = exports.DomQueryCollector = exports.ElementAttribute = exports.DomQuery = void 0;
 /*!
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -3609,6 +3868,12 @@ Object.defineProperty(exports, "ValueEmbedder", ({ enumerable: true, get: functi
 var XmlQuery_1 = __webpack_require__(/*! ./XmlQuery */ "./node_modules/mona-dish/src/main/typescript/XmlQuery.ts");
 Object.defineProperty(exports, "XMLQuery", ({ enumerable: true, get: function () { return XmlQuery_1.XMLQuery; } }));
 Object.defineProperty(exports, "XQ", ({ enumerable: true, get: function () { return XmlQuery_1.XQ; } }));
+var AssocArray_1 = __webpack_require__(/*! ./AssocArray */ "./node_modules/mona-dish/src/main/typescript/AssocArray.ts");
+Object.defineProperty(exports, "assign", ({ enumerable: true, get: function () { return AssocArray_1.assign; } }));
+Object.defineProperty(exports, "assignIf", ({ enumerable: true, get: function () { return AssocArray_1.assignIf; } }));
+Object.defineProperty(exports, "append", ({ enumerable: true, get: function () { return AssocArray_1.append; } }));
+Object.defineProperty(exports, "simpleShallowMerge", ({ enumerable: true, get: function () { return AssocArray_1.simpleShallowMerge; } }));
+Object.defineProperty(exports, "shallowMerge", ({ enumerable: true, get: function () { return AssocArray_1.shallowMerge; } }));
 
 
 /***/ }),
@@ -4000,13 +4265,7 @@ var Implementation;
      it provides following
     
      a) Monad like structures for querying because this keeps the code denser and adds abstractions
-     that always was the strong point of jquery and it still is better in this regard than what ecmascript provides
-    
-     b) Streams and lazystreams like java has, a pull like construct, ecmascript does not have anything like Lazystreams.
-     Another option would have been rxjs but that would have introduced a code dependency and probably more code. We might
-     move to RXJS if the need arises however. But for now I would rather stick with my small self grown library which works
-     quite well and where I can patch quickly (I have used it in several industrial projects, so it works well
-     and is heavily fortified by unit tests (140 testcases as time of writing this))
+     that always was the strong point of jQuery, and it still is better in this regard than what ecmascript provides
     
      c) A neutral json like configuration which allows assignments of arbitrary values with reduce code which then can be
      transformed into different data representations
@@ -4101,7 +4360,7 @@ var Implementation;
      * @param funcs
      */
     function chain(source, event, ...funcs) {
-        // we can use our lazy stream each functionality to run our chain here..
+        // we can use our lazy stream each functionality to run our chain here.
         // by passing a boolean as return value into the onElem call
         // we can stop early at the first false, just like the spec requests
         let ret;
@@ -4134,7 +4393,7 @@ var Implementation;
      * b) passThrough handling with a map copy with a filter map block map
      */
     function request(el, event, opts) {
-        var _a, _b, _c;
+        var _a, _b, _c, _d, _e;
         const { options, elem, elementId, windowId, isResetValues } = (0, RequestDataResolver_1.resolveDefaults)(event, opts, el);
         const requestCtx = new ExtDomQuery_1.ExtConfig({});
         const internalCtx = new ExtDomQuery_1.ExtConfig({});
@@ -4152,7 +4411,7 @@ var Implementation;
         const delay = (0, RequestDataResolver_1.resolveDelay)(options);
         const timeout = (0, RequestDataResolver_1.resolveTimeout)(options);
         requestCtx.assignIf(!!windowId, Const_1.P_WINDOW_ID).value = windowId;
-        // old non spec behavior will be removed after it is clear whether the removal breaks any code
+        // old non - spec behavior will be removed after it is clear whether the removal breaks any code
         requestCtx.assign(Const_1.CTX_PARAM_REQ_PASS_THR).value = extractLegacyParams(options.value);
         // spec conform behavior, all passthrough params must be under "passthrough
         const params = remapArrayToAssocArr(options.getIf(Const_1.CTX_OPTIONS_PARAMS).orElse({}).value);
@@ -4178,13 +4437,13 @@ var Implementation;
         requestCtx.assign(Const_1.ON_EVENT).value = (_a = options.value) === null || _a === void 0 ? void 0 : _a.onevent;
         requestCtx.assign(Const_1.ON_ERROR).value = (_b = options.value) === null || _b === void 0 ? void 0 : _b.onerror;
         /**
-         * lets drag the myfaces config params also in
+         * Fetch the myfaces config params
          */
         requestCtx.assign(Const_1.MYFACES).value = (_c = options.value) === null || _c === void 0 ? void 0 : _c.myfaces;
         /**
          * binding contract the jakarta.faces.source must be set
          */
-        requestCtx.assign(Const_1.CTX_PARAM_REQ_PASS_THR, Const_1.P_PARTIAL_SOURCE).value = elementId;
+        requestCtx.assign(Const_1.CTX_PARAM_REQ_PASS_THR, Const_1.P_AJAX_SOURCE).value = elementId;
         /**
          * jakarta.faces.partial.ajax must be set to true
          */
@@ -4207,6 +4466,8 @@ var Implementation;
         // won't hurt but for the sake of compatibility we are going to add it
         requestCtx.assign(Const_1.CTX_PARAM_REQ_PASS_THR, formId).value = formId;
         internalCtx.assign(Const_1.CTX_PARAM_SRC_CTL_ID).value = elementId;
+        // reintroduction of PPS as per myfaces 2.3 (myfaces.pps = true, only the executes are submitted)
+        internalCtx.assign(Const_1.CTX_PARAM_PPS).value = (_e = (_d = extractMyFacesParams(options.value)) === null || _d === void 0 ? void 0 : _d[Const_1.MYFACES_OPTION_PPS]) !== null && _e !== void 0 ? _e : false;
         assignClientWindowId(form, requestCtx);
         assignExecute(options, requestCtx, form, elementId);
         assignRender(options, requestCtx, form, elementId);
@@ -4390,7 +4651,7 @@ var Implementation;
         // fetch all non file input form elements
         let formElements = element.deepElements.encodeFormElement();
         // encode them! (file inputs are handled differently and are not part of the viewstate)
-        return (0, FileUtils_1.encodeFormData)(formElements, (0, RequestDataResolver_1.resoveNamingContainerMapper)(dummyContext));
+        return (0, FileUtils_1.encodeFormData)(new ExtDomQuery_1.ExtConfig(formElements), (0, RequestDataResolver_1.resoveNamingContainerMapper)(dummyContext));
     }
     Implementation.getViewState = getViewState;
     /**
@@ -4406,7 +4667,7 @@ var Implementation;
          */
         addRequestToQueue: function (elem, form, reqCtx, respPassThr, delay = 0, timeout = 0) {
             Implementation.requestQueue = Implementation.requestQueue !== null && Implementation.requestQueue !== void 0 ? Implementation.requestQueue : new XhrQueueController_1.XhrQueueController();
-            Implementation.requestQueue.enqueue(new XhrRequest_1.XhrRequest(reqCtx, respPassThr, [], timeout), delay);
+            Implementation.requestQueue.enqueue(new XhrRequest_1.XhrRequest(reqCtx, respPassThr, timeout), delay);
         }
     };
     //----------------------------------------------- Methods ---------------------------------------------------------------------
@@ -4506,7 +4767,7 @@ var Implementation;
          * can deal with them either prefixed ir not
          * also resolves the absolute id case (it was assumed the server does this, but
          * apparently the RI does not, so we have to follow the RI behavior here)
-         * @param componentIdToTransform the componentId which needs post processing
+         * @param componentIdToTransform the componentId which needs post-processing
          */
         const remapNamingContainer = componentIdToTransform => {
             // pattern :<anything> must be prepended by viewRoot if there is one,
@@ -4520,7 +4781,7 @@ var Implementation;
             const hasLeadingSep = componentIdToTransform.indexOf(SEP) === 0;
             const isAbsolutSearchExpr = hasLeadingSep || (rootNamingContainerId.length
                 && componentIdToTransform.indexOf(rootNamingContainerPrefix) == 0);
-            let finalIdentifier = "";
+            let finalIdentifier;
             if (isAbsolutSearchExpr) {
                 //we cut off the leading sep if there is one
                 componentIdToTransform = hasLeadingSep ? componentIdToTransform.substring(1) : componentIdToTransform;
@@ -4539,13 +4800,13 @@ var Implementation;
                     [rootNamingContainerPrefix, componentIdToTransform].join(Const_1.EMPTY_STR) :
                     [nearestNamingContainerPrefix, componentIdToTransform].join(Const_1.EMPTY_STR);
             }
-            // We need to double check because we have scenarios where we have a naming container
+            // We need to double-check because we have scenarios where we have a naming container
             // and no prepend (aka tobago testcase "must handle ':' in IDs properly", scenario 3,
             // in this case we return the component id, and be happy
             // we can roll a dom check here
             return (!!document.getElementById(finalIdentifier)) ? finalIdentifier : componentIdToTransform;
         };
-        // in this case we do not use lazy stream because it wont bring any code reduction
+        // in this case we do not use lazy stream because it won´t bring any code reduction
         // or speedup
         for (let cnt = 0; cnt < iterValues.length; cnt++) {
             //avoid doubles
@@ -4585,12 +4846,11 @@ var Implementation;
      * the values required for params-through are processed in the ajax request
      *
      * Note this is a bug carried over from the old implementation
-     * the spec conform behavior is to use params for passthrough values
+     * the spec conform behavior is to use params for pass - through values
      * this will be removed soon, after it is cleared up whether removing
      * it breaks any legacy code
      *
      * @param {Context} mappedOpts the options to be filtered
-     * @deprecated
      */
     function extractLegacyParams(mappedOpts) {
         //we now can use the full code reduction given by our stream api
@@ -4598,6 +4858,20 @@ var Implementation;
         return ofAssoc(mappedOpts)
             .filter((item => !(item[0] in BlockFilter)))
             .reduce(collectAssoc, {});
+    }
+    /**
+     * extracts the myfaces config parameters which provide extra functionality
+     * on top of JSF
+     * @param mappedOpts
+     * @private
+     */
+    function extractMyFacesParams(mappedOpts) {
+        var _a;
+        //we now can use the full code reduction given by our stream api
+        //to filter
+        return (_a = ofAssoc(mappedOpts)
+            .filter((item => (item[0] == "myfaces")))
+            .reduce(collectAssoc, {})) === null || _a === void 0 ? void 0 : _a[Const_1.MYFACES];
     }
     function remapArrayToAssocArr(arrayedParams) {
         if (Array.isArray(arrayedParams)) {
@@ -4929,16 +5203,16 @@ var PushImpl;
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.CTX_OPTIONS_PARAMS = exports.TIMEOUT_EVENT = exports.CLIENT_ERROR = exports.SERVER_ERROR = exports.MALFORMEDXML = exports.EMPTY_RESPONSE = exports.HTTPERROR = exports.RESPONSE_XML = exports.RESPONSE_TEXT = exports.ERROR_MESSAGE = exports.ERROR_NAME = exports.STATUS = exports.SOURCE = exports.SUCCESS = exports.COMPLETE = exports.BEGIN = exports.ON_EVENT = exports.ON_ERROR = exports.EVENT = exports.ERROR = exports.WINDOW_ID = exports.CTX_PARAM_RENDER = exports.P_BEHAVIOR_EVENT = exports.P_WINDOW_ID = exports.P_RESET_VALUES = exports.P_EVT = exports.P_RENDER_OVERRIDE = exports.P_RENDER = exports.P_EXECUTE = exports.P_AJAX = exports.IDENT_FORM = exports.IDENT_THIS = exports.IDENT_NONE = exports.IDENT_ALL = exports.HTML_CLIENT_WINDOW = exports.HTML_VIEWSTATE = exports.EMPTY_MAP = exports.EMPTY_STR = exports.EMPTY_FUNC = exports.P_RESOURCE = exports.P_VIEWBODY = exports.P_VIEWHEAD = exports.P_VIEWROOT = exports.P_CLIENT_WINDOW = exports.P_VIEWSTATE = exports.VIEW_ID = exports.NAMING_CONTAINER_ID = exports.P_PARTIAL_SOURCE = exports.NAMED_VIEWROOT = exports.XML_ATTR_NAMED_VIEWROOT = void 0;
-exports.XML_TAG_AFTER = exports.XML_TAG_BEFORE = exports.XML_TAG_REDIRECT = exports.XML_TAG_EXTENSION = exports.XML_TAG_ATTRIBUTES = exports.XML_TAG_ERROR = exports.XML_TAG_EVAL = exports.XML_TAG_INSERT = exports.XML_TAG_DELETE = exports.XML_TAG_UPDATE = exports.XML_TAG_CHANGES = exports.XML_TAG_PARTIAL_RESP = exports.ATTR_ID = exports.ATTR_VALUE = exports.ATTR_NAME = exports.ATTR_URL = exports.ERR_NO_PARTIAL_RESPONSE = exports.PHASE_PROCESS_RESPONSE = exports.SEL_RESPONSE_XML = exports.SEL_CLIENT_WINDOW_ELEM = exports.SEL_VIEWSTATE_ELEM = exports.HTML_TAG_STYLE = exports.HTML_TAG_SCRIPT = exports.HTML_TAG_LINK = exports.HTML_TAG_BODY = exports.HTML_TAG_FORM = exports.HTML_TAG_HEAD = exports.STD_ACCEPT = exports.NO_TIMEOUT = exports.MULTIPART = exports.URL_ENCODED = exports.STATE_EVT_COMPLETE = exports.STATE_EVT_TIMEOUT = exports.STATE_EVT_BEGIN = exports.REQ_TYPE_POST = exports.REQ_TYPE_GET = exports.ENCODED_URL = exports.VAL_AJAX = exports.REQ_ACCEPT = exports.HEAD_FACES_REQ = exports.CONTENT_TYPE = exports.CTX_PARAM_REQ_PASS_THR = exports.CTX_PARAM_SRC_CTL_ID = exports.CTX_PARAM_SRC_FRM_ID = exports.CTX_PARAM_MF_INTERNAL = exports.CTX_OPTIONS_EXECUTE = exports.CTX_OPTIONS_RESET = exports.CTX_OPTIONS_TIMEOUT = exports.DELAY_NONE = exports.CTX_OPTIONS_DELAY = void 0;
-exports.$nsp = exports.$faces = exports.UNKNOWN = exports.MAX_RECONNECT_ATTEMPTS = exports.RECONNECT_INTERVAL = exports.APPLIED_CLIENT_WINDOW = exports.APPLIED_VST = exports.REASON_EXPIRED = exports.MF_NONE = exports.MYFACES = exports.DEFERRED_HEAD_INSERTS = exports.UPDATE_ELEMS = exports.UPDATE_FORMS = exports.XML_TAG_ATTR = void 0;
+exports.CTX_OPTIONS_PARAMS = exports.TIMEOUT_EVENT = exports.CLIENT_ERROR = exports.SERVER_ERROR = exports.MALFORMEDXML = exports.EMPTY_RESPONSE = exports.HTTPERROR = exports.RESPONSE_XML = exports.RESPONSE_TEXT = exports.ERROR_MESSAGE = exports.ERROR_NAME = exports.STATUS = exports.SOURCE = exports.SUCCESS = exports.COMPLETE = exports.BEGIN = exports.ON_EVENT = exports.ON_ERROR = exports.EVENT = exports.ERROR = exports.WINDOW_ID = exports.CTX_PARAM_RENDER = exports.P_BEHAVIOR_EVENT = exports.P_WINDOW_ID = exports.P_RESET_VALUES = exports.P_EVT = exports.P_RENDER_OVERRIDE = exports.P_RENDER = exports.P_EXECUTE = exports.P_AJAX = exports.IDENT_FORM = exports.IDENT_THIS = exports.IDENT_NONE = exports.IDENT_ALL = exports.HTML_CLIENT_WINDOW = exports.HTML_VIEWSTATE = exports.EMPTY_MAP = exports.EMPTY_STR = exports.EMPTY_FUNC = exports.P_RESOURCE = exports.P_VIEWBODY = exports.P_VIEWHEAD = exports.P_VIEWROOT = exports.P_CLIENT_WINDOW = exports.P_VIEWSTATE = exports.VIEW_ID = exports.NAMING_CONTAINER_ID = exports.P_AJAX_SOURCE = exports.NAMED_VIEWROOT = exports.XML_ATTR_NAMED_VIEWROOT = void 0;
+exports.XML_TAG_REDIRECT = exports.XML_TAG_EXTENSION = exports.XML_TAG_ATTRIBUTES = exports.XML_TAG_ERROR = exports.XML_TAG_EVAL = exports.XML_TAG_INSERT = exports.XML_TAG_DELETE = exports.XML_TAG_UPDATE = exports.XML_TAG_CHANGES = exports.XML_TAG_PARTIAL_RESP = exports.ATTR_ID = exports.ATTR_VALUE = exports.ATTR_NAME = exports.ATTR_URL = exports.MYFACES_OPTION_PPS = exports.ERR_NO_PARTIAL_RESPONSE = exports.PHASE_PROCESS_RESPONSE = exports.SEL_RESPONSE_XML = exports.SEL_CLIENT_WINDOW_ELEM = exports.SEL_VIEWSTATE_ELEM = exports.HTML_TAG_STYLE = exports.HTML_TAG_SCRIPT = exports.HTML_TAG_LINK = exports.HTML_TAG_BODY = exports.HTML_TAG_FORM = exports.HTML_TAG_HEAD = exports.STD_ACCEPT = exports.NO_TIMEOUT = exports.MULTIPART = exports.URL_ENCODED = exports.STATE_EVT_COMPLETE = exports.STATE_EVT_TIMEOUT = exports.STATE_EVT_BEGIN = exports.REQ_TYPE_POST = exports.REQ_TYPE_GET = exports.ENCODED_URL = exports.VAL_AJAX = exports.REQ_ACCEPT = exports.HEAD_FACES_REQ = exports.CONTENT_TYPE = exports.CTX_PARAM_PPS = exports.CTX_PARAM_REQ_PASS_THR = exports.CTX_PARAM_SRC_CTL_ID = exports.CTX_PARAM_SRC_FRM_ID = exports.CTX_PARAM_MF_INTERNAL = exports.CTX_OPTIONS_EXECUTE = exports.CTX_OPTIONS_RESET = exports.CTX_OPTIONS_TIMEOUT = exports.DELAY_NONE = exports.CTX_OPTIONS_DELAY = void 0;
+exports.$nsp = exports.$faces = exports.UNKNOWN = exports.MAX_RECONNECT_ATTEMPTS = exports.RECONNECT_INTERVAL = exports.APPLIED_CLIENT_WINDOW = exports.APPLIED_VST = exports.REASON_EXPIRED = exports.MF_NONE = exports.MYFACES = exports.DEFERRED_HEAD_INSERTS = exports.UPDATE_ELEMS = exports.UPDATE_FORMS = exports.XML_TAG_ATTR = exports.XML_TAG_AFTER = exports.XML_TAG_BEFORE = void 0;
 /*
  * [export const] constants
  */
 exports.XML_ATTR_NAMED_VIEWROOT = "namedViewRoot";
 exports.NAMED_VIEWROOT = "namedViewRoot";
-exports.P_PARTIAL_SOURCE = "jakarta.faces.source";
-exports.NAMING_CONTAINER_ID = "myfaces.partialId";
+exports.P_AJAX_SOURCE = "jakarta.faces.source";
+exports.NAMING_CONTAINER_ID = "myfaces.NamingContainerId";
 exports.VIEW_ID = "myfaces.viewId";
 exports.P_VIEWSTATE = "jakarta.faces.ViewState";
 exports.P_CLIENT_WINDOW = "jakarta.faces.ClientWindow";
@@ -5001,6 +5275,7 @@ exports.CTX_PARAM_MF_INTERNAL = "myfaces.internal";
 exports.CTX_PARAM_SRC_FRM_ID = "myfaces.source.formId";
 exports.CTX_PARAM_SRC_CTL_ID = "myfaces.source.controlId";
 exports.CTX_PARAM_REQ_PASS_THR = "myfaces.request.passThrough";
+exports.CTX_PARAM_PPS = "myfaces.request.pps";
 exports.CONTENT_TYPE = "Content-Type";
 exports.HEAD_FACES_REQ = "Faces-Request";
 exports.REQ_ACCEPT = "Accept";
@@ -5026,6 +5301,7 @@ exports.SEL_CLIENT_WINDOW_ELEM = "[name='" + exports.P_CLIENT_WINDOW + "']";
 exports.SEL_RESPONSE_XML = "responseXML";
 exports.PHASE_PROCESS_RESPONSE = "processResponse";
 exports.ERR_NO_PARTIAL_RESPONSE = "Partial response not set";
+exports.MYFACES_OPTION_PPS = "pps";
 exports.ATTR_URL = "url";
 exports.ATTR_NAME = "name";
 exports.ATTR_VALUE = "value";
@@ -5357,6 +5633,93 @@ var Assertions;
     }
     Assertions.assertDelay = assertDelay;
 })(Assertions = exports.Assertions || (exports.Assertions = {}));
+
+
+/***/ }),
+
+/***/ "./src/main/typescript/impl/util/AsyncRunnable.ts":
+/*!********************************************************!*\
+  !*** ./src/main/typescript/impl/util/AsyncRunnable.ts ***!
+  \********************************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+
+/*! Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AsyncRunnable = void 0;
+/**
+ * pretty much the same as cancellable Promise, but given
+ * we do not have that on browser level yet this is sort
+ * of a non - intrusive Shim!
+ */
+class AsyncRunnable {
+    constructor() {
+        /**
+         * helper support so that we do not have to drag in Promise shims
+         */
+        this.catchFunctions = [];
+        this.thenFunctions = [];
+    }
+    /**
+     * resolve handler function which calls the then chain
+     * and after that finally
+     * @param data
+     */
+    resolve(data) {
+        this.thenFunctions.reduce((inputVal, thenFunc) => {
+            return thenFunc(inputVal);
+        }, data);
+    }
+    /**
+     * reject handler function which triggers the catch chain
+     * @param data
+     */
+    reject(data) {
+        this.catchFunctions.reduce((inputVal, catchFunc) => {
+            return catchFunc(inputVal);
+        }, data);
+    }
+    /**
+     * register a catch functor
+     * @param func the functor for the catch monad
+     */
+    catch(func) {
+        this.catchFunctions.push(func);
+        return this;
+    }
+    /**
+     * registers a finally functor
+     * @param func the functor for the finally handling chanin
+     */
+    finally(func) {
+        // no ie11 support we probably are going to revert to shims for that one
+        this.catchFunctions.push(func);
+        this.thenFunctions.push(func);
+        return this;
+    }
+    /**
+     * @param func then functor similar to promise
+     */
+    then(func) {
+        this.thenFunctions.push(func);
+        return this;
+    }
+}
+exports.AsyncRunnable = AsyncRunnable;
 
 
 /***/ }),
@@ -6181,8 +6544,8 @@ class XhrQueueController {
      * to be started!
      */
     next() {
+        this.updateTaskRunning();
         const next = this.queue.shift();
-        this.taskRunning = !this.isEmpty;
         next === null || next === void 0 ? void 0 : next.start();
     }
     /**
@@ -6190,7 +6553,7 @@ class XhrQueueController {
      */
     clear() {
         this.queue.length = 0;
-        this.taskRunning = false;
+        this.updateTaskRunning();
     }
     /**
      * true if queue is empty
@@ -6207,12 +6570,20 @@ class XhrQueueController {
      * @private
      */
     enrichRunnable(asyncRunnable) {
-        return asyncRunnable
-            .then(() => this.next())
-            .catch((e) => {
-            this.clear();
-            throw e;
-        });
+        /**
+         * we can use the Promise pattern asyncrunnable uses
+         * to trigger queue control callbacks of next element
+         * and clear the queue (theoretically this
+         * would work with any promise)
+         */
+        try {
+            return asyncRunnable
+                .then(() => this.next())
+                .catch((e) => this.handleError(e));
+        }
+        catch (e) {
+            this.handleError(e);
+        }
     }
     /**
      * alerts the queue that a task is running
@@ -6221,6 +6592,23 @@ class XhrQueueController {
      */
     signalTaskRunning() {
         this.taskRunning = true;
+    }
+    /**
+     * updates the task running status according to the current queue
+     * @private
+     */
+    updateTaskRunning() {
+        this.taskRunning = !this.isEmpty;
+    }
+    /**
+     * standard error handling
+     * we clear the queue and then bomb out
+     * @param e
+     * @private
+     */
+    handleError(e) {
+        this.clear();
+        throw e;
     }
 }
 exports.XhrQueueController = XhrQueueController;
@@ -6353,8 +6741,8 @@ class EventData {
         eventData.type = Const_1.EVENT;
         eventData.status = name;
         let sourceId = context.getIf(Const_1.SOURCE)
-            .orElseLazy(() => context.getIf(Const_1.P_PARTIAL_SOURCE).value)
-            .orElseLazy(() => context.getIf(Const_1.CTX_PARAM_REQ_PASS_THR, Const_1.P_PARTIAL_SOURCE).value)
+            .orElseLazy(() => context.getIf(Const_1.P_AJAX_SOURCE).value)
+            .orElseLazy(() => context.getIf(Const_1.CTX_PARAM_REQ_PASS_THR, Const_1.P_AJAX_SOURCE).value)
             .value;
         if (sourceId) {
             eventData.source = mona_dish_1.DQ.byId(sourceId, true).first().value.value;
@@ -7010,7 +7398,7 @@ class ResponseProcessor {
          * <error>
          */
         const mergedErrorData = new ExtDomQuery_1.ExtConfig({});
-        mergedErrorData.assign(Const_1.SOURCE).value = this.externalContext.getIf(Const_1.P_PARTIAL_SOURCE).get(0).value;
+        mergedErrorData.assign(Const_1.SOURCE).value = this.externalContext.getIf(Const_1.P_AJAX_SOURCE).get(0).value;
         mergedErrorData.assign(Const_1.ERROR_NAME).value = node.querySelectorAll(Const_1.ERROR_NAME).textContent(Const_1.EMPTY_STR);
         mergedErrorData.assign(Const_1.ERROR_MESSAGE).value = node.querySelectorAll(Const_1.ERROR_MESSAGE).cDATAAsString;
         const hasResponseXML = this.internalContext.get(Const_1.RESPONSE_XML).isPresent();
@@ -7503,12 +7891,17 @@ class XhrFormData extends mona_dish_1.Config {
      * @param {Node} parentItem - form element item is nested in
      * @param {Array} partialIds - ids fo PPS
      */
-    encodeSubmittableFields(parentItem, partialIds) {
+    encodeSubmittableFields(parentItem, partialIds = []) {
         const mergeIntoThis = ([key, value]) => this.append(key).value = value;
         const namingContainerRemap = ([key, value]) => this.paramsMapper(key, value);
-        (0, FileUtils_1.getFormInputsAsArr)(parentItem)
+        const remappedPartialIds = partialIds.map(partialId => this.remapKeyForNamingContainer(partialId));
+        const partialIdsFilter = ([key, value]) => (!remappedPartialIds.length || key.indexOf("@") == 0) ? true :
+            remappedPartialIds.indexOf(key) != -1;
+        let inputs = (0, FileUtils_1.getFormInputsAsArr)(parentItem);
+        inputs
             .map(FileUtils_1.fixEmptyParameters)
             .map(namingContainerRemap)
+            .filter(partialIdsFilter)
             .forEach(mergeIntoThis);
     }
     remapKeyForNamingContainer(key) {
@@ -7544,6 +7937,7 @@ exports.XhrFormData = XhrFormData;
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.XhrRequest = void 0;
+const AsyncRunnable_1 = __webpack_require__(/*! ../util/AsyncRunnable */ "./src/main/typescript/impl/util/AsyncRunnable.ts");
 const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const AjaxImpl_1 = __webpack_require__(/*! ../AjaxImpl */ "./src/main/typescript/impl/AjaxImpl.ts");
 const XhrFormData_1 = __webpack_require__(/*! ./XhrFormData */ "./src/main/typescript/impl/xhrCore/XhrFormData.ts");
@@ -7567,45 +7961,30 @@ var failSaveExecute = Lang_1.ExtLang.failSaveExecute;
  *
  *
  */
-class XhrRequest {
+class XhrRequest extends AsyncRunnable_1.AsyncRunnable {
     /**
      * Required Parameters
      *
-     * @param source the issuing element
-     * @param sourceForm the form which is related to the issuing element
      * @param requestContext the request context with all pass through values
-     *
-     * Optional Parameters
-     *
      * @param internalContext internal context with internal info which is passed through, not used by the user
-     * @param partialIdsArray an optional restricting partial ids array for encoding
+     * Optional Parameters
      * @param timeout optional xhr timeout
      * @param ajaxType optional request type, default "POST"
      * @param contentType optional content type, default "application/x-www-form-urlencoded"
-     * @param xhrObject optional xhr object which must fulfill the XMLHTTPRequest api, default XMLHttpRequest
      */
-    constructor(requestContext, internalContext, partialIdsArray = [], timeout = Const_1.NO_TIMEOUT, ajaxType = Const_1.REQ_TYPE_POST, contentType = Const_1.URL_ENCODED) {
+    constructor(requestContext, internalContext, timeout = Const_1.NO_TIMEOUT, ajaxType = Const_1.REQ_TYPE_POST, contentType = Const_1.URL_ENCODED) {
+        super();
         this.requestContext = requestContext;
         this.internalContext = internalContext;
-        this.partialIdsArray = partialIdsArray;
         this.timeout = timeout;
         this.ajaxType = ajaxType;
         this.contentType = contentType;
         this.stopProgress = false;
-        /**
-         * helper support so that we do not have to drag in Promise shims
-         */
-        this.catchFunctions = [];
-        this.thenFunctions = [];
         this.xhrObject = new XMLHttpRequest();
         // we omit promises here because we have to deal with cancel functionality,
         // and promises to not provide that (yet) instead we have our async queue
         // which uses an api internally, which is very close to promises
-        this.registerXhrCallbacks((data) => {
-            this.resolve(data);
-        }, (data) => {
-            this.reject(data);
-        });
+        this.registerXhrCallbacks((data) => this.resolve(data), (data) => this.reject(data));
     }
     start() {
         let ignoreErr = failSaveExecute;
@@ -7623,13 +8002,14 @@ class XhrRequest {
             // whatever the formData object delivers
             // the partialIdsArray arr is almost deprecated legacy code where we allowed to send a separate list of partial
             // ids for reduced load and server processing, this will be removed soon, we can handle the same via execute
-            // anyway TODO reimplement the partial ids array, we still do not have it in jsf the way we need it
-            let formData = new XhrFormData_1.XhrFormData(sourceForm, (0, RequestDataResolver_1.resoveNamingContainerMapper)(this.internalContext), executesArr(), this.partialIdsArray);
+            const executes = executesArr();
+            const partialIdsArray = this.internalContext.getIf(Const_1.CTX_PARAM_PPS).value === true ? executes : [];
+            const formData = new XhrFormData_1.XhrFormData(sourceForm, (0, RequestDataResolver_1.resoveNamingContainerMapper)(this.internalContext), executes, partialIdsArray);
             this.contentType = formData.isMultipartRequest ? "undefined" : this.contentType;
             // next step the pass through parameters are merged in for post params
             this.requestContext.$nspEnabled = false;
-            let requestContext = this.requestContext;
-            let requestPassThroughParams = requestContext.getIf(Const_1.CTX_PARAM_REQ_PASS_THR);
+            const requestContext = this.requestContext;
+            const requestPassThroughParams = requestContext.getIf(Const_1.CTX_PARAM_REQ_PASS_THR);
             // we are turning off here the jsf, faces remapping because we are now dealing with
             // pass-through parameters
             requestPassThroughParams.$nspEnabled = false;
@@ -7640,14 +8020,17 @@ class XhrRequest {
                 formData.shallowMerge(requestPassThroughParams, true, true);
             }
             finally {
+                // unfortunately as long as we support
+                // both namespaces we have to keep manual control
+                // on the key renaming before doing ops like deep copy
                 this.requestContext.$nspEnabled = true;
                 requestPassThroughParams.$nspEnabled = true;
             }
             this.responseContext = requestPassThroughParams.deepCopy;
             // we have to shift the internal passthroughs around to build up our response context
-            let responseContext = this.responseContext;
+            const responseContext = this.responseContext;
             responseContext.assign(Const_1.CTX_PARAM_MF_INTERNAL).value = this.internalContext.value;
-            // per spec the onevent and onerror handlers must be passed through to the response
+            // per spec the onEvent and onError handlers must be passed through to the response
             responseContext.assign(Const_1.ON_EVENT).value = requestContext.getIf(Const_1.ON_EVENT).value;
             responseContext.assign(Const_1.ON_ERROR).value = requestContext.getIf(Const_1.ON_ERROR).value;
             xhrObject.open(this.ajaxType, (0, RequestDataResolver_1.resolveFinalUrl)(sourceForm, formData, this.ajaxType), true);
@@ -7675,35 +8058,13 @@ class XhrRequest {
     }
     cancel() {
         try {
+            // this causes onError to be called where the error
+            // handling takes over
             this.xhrObject.abort();
         }
         catch (e) {
             this.handleError(e);
         }
-    }
-    resolve(data) {
-        this.thenFunctions.reduce((inputVal, thenFunc) => {
-            return thenFunc(inputVal);
-        }, data);
-    }
-    reject(data) {
-        this.catchFunctions.reduce((inputVal, catchFunc) => {
-            return catchFunc(inputVal);
-        }, data);
-    }
-    catch(func) {
-        this.catchFunctions.push(func);
-        return this;
-    }
-    finally(func) {
-        // no ie11 support we probably are going to revert to shims for that one
-        this.catchFunctions.push(func);
-        this.thenFunctions.push(func);
-        return this;
-    }
-    then(func) {
-        this.thenFunctions.push(func);
-        return this;
     }
     /**
      * attaches the internal event and processing
@@ -7713,7 +8074,7 @@ class XhrRequest {
      * @param reject
      */
     registerXhrCallbacks(resolve, reject) {
-        let xhrObject = this.xhrObject;
+        const xhrObject = this.xhrObject;
         xhrObject.onabort = () => {
             this.onAbort(reject);
         };
@@ -7727,13 +8088,17 @@ class XhrRequest {
             this.onDone(this.xhrObject, resolve);
         };
         xhrObject.onerror = (errorData) => {
-            // some browsers trigger an error when cancelling a request internally
+            // some browsers trigger an error when cancelling a request internally, or when
+            // cancel is called from outside
             // in this case we simply ignore the request and clear up the queue, because
             // it is not safe anymore to proceed with the current queue
             // This bypasses a Safari issue where it keeps requests hanging after page unload
             // and then triggers a cancel error on then instead of just stopping
             // and clearing the code
             if (this.isCancelledResponse(this.xhrObject)) {
+                /*
+                 * this triggers the catch chain and after that finally
+                 */
                 reject();
                 this.stopProgress = true;
                 return;
@@ -7774,13 +8139,11 @@ class XhrRequest {
     handleMalFormedXML(resolve) {
         var _a;
         this.stopProgress = true;
-        let errorData = {
+        const errorData = {
             type: Const_1.ERROR,
             status: Const_1.MALFORMEDXML,
             responseCode: 200,
             responseText: (_a = this.xhrObject) === null || _a === void 0 ? void 0 : _a.responseText,
-            // we remap the element just in case it gets replaced
-            // it will be unremapped
             source: this.internalContext.getIf(Const_1.CTX_PARAM_SRC_CTL_ID).value
         };
         try {
@@ -7798,14 +8161,20 @@ class XhrRequest {
         if (this.stopProgress) {
             return;
         }
+        /**
+         * now call the then chain
+         */
         resolve(data);
     }
     onError(errorData, reject) {
         this.handleError(errorData);
+        /*
+         * this triggers the catch chain and after that finally
+         */
         reject();
     }
     sendRequest(formData) {
-        let isPost = this.ajaxType != Const_1.REQ_TYPE_GET;
+        const isPost = this.ajaxType != Const_1.REQ_TYPE_GET;
         if (formData.isMultipartRequest) {
             // in case of a multipart request we send in a formData object as body
             this.xhrObject.send((isPost) ? formData.toFormData() : null);
@@ -7820,7 +8189,7 @@ class XhrRequest {
      */
     sendEvent(evtType) {
         var _a;
-        let eventData = EventData_1.EventData.createFromRequest(this.xhrObject, this.requestContext, evtType);
+        const eventData = EventData_1.EventData.createFromRequest(this.xhrObject, this.requestContext, evtType);
         try {
             // User code error, we might cover
             // this in onError, but also we cannot swallow it.
@@ -7836,8 +8205,8 @@ class XhrRequest {
         }
     }
     handleError(exception, responseFormatError = false) {
-        let errorData = (responseFormatError) ? ErrorData_1.ErrorData.fromHttpConnection(exception.source, exception.type, exception.status, exception.responseText, exception.responseCode, exception.status) : ErrorData_1.ErrorData.fromClient(exception);
-        let eventHandler = (0, RequestDataResolver_1.resolveHandlerFunc)(this.requestContext, this.responseContext, Const_1.ON_ERROR);
+        const errorData = (responseFormatError) ? ErrorData_1.ErrorData.fromHttpConnection(exception.source, exception.type, exception.status, exception.responseText, exception.responseCode, exception.status) : ErrorData_1.ErrorData.fromClient(exception);
+        const eventHandler = (0, RequestDataResolver_1.resolveHandlerFunc)(this.requestContext, this.responseContext, Const_1.ON_ERROR);
         AjaxImpl_1.Implementation.sendError(errorData, eventHandler);
     }
 }

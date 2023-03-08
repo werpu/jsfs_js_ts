@@ -26,15 +26,22 @@
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.shallowMerge = exports.simpleShallowMerge = exports.deepCopy = exports.buildPath = exports.assignIf = exports.append = exports.assign = void 0;
+exports.shallowMerge = exports.simpleShallowMerge = exports.deepCopy = exports.buildPath = exports.resolve = exports.appendIf = exports.assignIf = exports.append = exports.assign = void 0;
 const Es2019Array_1 = __webpack_require__(/*! ./Es2019Array */ "./node_modules/mona-dish/src/main/typescript/Es2019Array.ts");
 /**
  * A nop as assign functionality (aka ignore assign)
  */
-const IGNORE_ASSIGN = new (class {
+class IgnoreAssign {
+    constructor(parent) {
+        this.parent = parent;
+    }
     set value(value) {
     }
-})();
+    get value() {
+        return this.parent;
+    }
+}
+;
 /**
  * uses the known pattern from config
  * assign(target, key1, key2, key3).value = value;
@@ -43,12 +50,15 @@ const IGNORE_ASSIGN = new (class {
  */
 function assign(target, ...accessPath) {
     if (accessPath.length < 1) {
-        return IGNORE_ASSIGN;
+        return new IgnoreAssign(target);
     }
     const lastPathItem = buildPath(target, ...accessPath);
     let assigner = new (class {
         set value(value) {
             lastPathItem.target[lastPathItem.key] = value;
+        }
+        get value() {
+            return lastPathItem.target[lastPathItem.key];
         }
     })();
     return assigner;
@@ -56,7 +66,7 @@ function assign(target, ...accessPath) {
 exports.assign = assign;
 function append(target, ...accessPath) {
     if (accessPath.length < 1) {
-        return IGNORE_ASSIGN;
+        return new IgnoreAssign(target);
     }
     const lastPathItem = buildPath(target, ...accessPath);
     let appender = new (class {
@@ -85,12 +95,41 @@ exports.append = append;
  * @param keys
  */
 function assignIf(condition, target, ...accessPath) {
-    if (accessPath.length < 1) {
-        return IGNORE_ASSIGN;
+    if ((!condition) || accessPath.length < 1) {
+        return new IgnoreAssign(target);
     }
     return assign(target, ...accessPath);
 }
 exports.assignIf = assignIf;
+/**
+ * uses the known pattern from config
+ * assign(target, key1, key2, key3).value = value;
+ * @param target
+ * @param keys
+ */
+function appendIf(condition, target, ...accessPath) {
+    if ((!condition) || accessPath.length < 1) {
+        return new IgnoreAssign(target);
+    }
+    return append(target, ...accessPath);
+}
+exports.appendIf = appendIf;
+function resolve(target, ...accessPath) {
+    let ret = null;
+    accessPath = flattenAccessPath(accessPath);
+    let currPtr = target;
+    for (let cnt = 0; cnt < accessPath.length; cnt++) {
+        let accessKeyIndex = accessPath[cnt];
+        accessKeyIndex = arrayIndex(accessKeyIndex) != -1 ? arrayIndex(accessKeyIndex) : accessKeyIndex;
+        currPtr = currPtr === null || currPtr === void 0 ? void 0 : currPtr[accessKeyIndex];
+        if ('undefined' == typeof currPtr) {
+            return null;
+        }
+        ret = currPtr;
+    }
+    return currPtr;
+}
+exports.resolve = resolve;
 function keyVal(key) {
     let start = key.indexOf("[");
     if (start >= 0) {
@@ -122,6 +161,11 @@ function alloc(arr, length, defaultVal = {}) {
     toAdd[length - 1] = defaultVal;
     arr.push(...toAdd);
 }
+function flattenAccessPath(accessPath) {
+    return accessPath.flatMap(path => path.split("["))
+        .map(path => path.indexOf("]") != -1 ? "[" + path : path)
+        .filter(path => path != "");
+}
 /**
  * builds up a path, only done if no data is present!
  * @param target
@@ -129,8 +173,7 @@ function alloc(arr, length, defaultVal = {}) {
  * @returns the last assignable entry
  */
 function buildPath(target, ...accessPath) {
-    accessPath = accessPath.flatMap(path => path.split("["))
-        .map(path => path.indexOf("]") != -1 ? "[" + path : path);
+    accessPath = flattenAccessPath(accessPath);
     //we now have a pattern of having the array accessors always in separate items
     let parentPtr = target;
     let parKeyArrPos = null;
@@ -217,39 +260,26 @@ function shallowMerge(overwrite = true, withAppend = false, ...assocArrays) {
         return { arr, keys: Object.keys(arr) };
     }).forEach(({ arr, keys }) => {
         keys.forEach(key => {
+            let toAssign = arr[key];
+            if (!Array.isArray(toAssign) && withAppend) {
+                toAssign = new Es2019Array_1.Es2019Array(...[toAssign]);
+            }
             if (overwrite || !(target === null || target === void 0 ? void 0 : target[key])) {
                 if (!withAppend) {
                     target[key] = arr[key];
                 }
                 else {
-                    if (Array.isArray(arr[key])) {
-                        if ('undefined' == typeof (target === null || target === void 0 ? void 0 : target[key])) {
-                            target[key] = new Es2019Array_1.Es2019Array(...arr[key]);
-                        }
-                        else if (!Array.isArray(target[key])) {
-                            let oldVal = target[key];
-                            target[key] = new Es2019Array_1.Es2019Array(...[]);
-                            target[key].push(oldVal);
-                            target[key].push(...arr[key]);
-                        }
-                        else {
-                            target[key].push(...arr[key]);
-                        }
-                        //new Es2019Array(...arr[key]).forEach(item => this.append(key).value = item);
+                    if ('undefined' == typeof (target === null || target === void 0 ? void 0 : target[key])) {
+                        target[key] = toAssign;
+                    }
+                    else if (!Array.isArray(target[key])) {
+                        let oldVal = target[key];
+                        target[key] = new Es2019Array_1.Es2019Array(...[]);
+                        target[key].push(oldVal);
+                        target[key].push(...toAssign);
                     }
                     else {
-                        if ('undefined' == typeof (target === null || target === void 0 ? void 0 : target[key])) {
-                            target[key] = arr[key];
-                        }
-                        else if (!Array.isArray(target[key])) {
-                            let oldVal = target[key];
-                            target[key] = new Es2019Array_1.Es2019Array(...[]);
-                            target[key].push(oldVal);
-                            target[key].push(arr[key]);
-                        }
-                        else {
-                            target[key].push(arr[key]);
-                        }
+                        target[key].push(...toAssign);
                     }
                 }
             }
@@ -258,6 +288,250 @@ function shallowMerge(overwrite = true, withAppend = false, ...assocArrays) {
     return target;
 }
 exports.shallowMerge = shallowMerge;
+
+
+/***/ }),
+
+/***/ "./node_modules/mona-dish/src/main/typescript/Config.ts":
+/*!**************************************************************!*\
+  !*** ./node_modules/mona-dish/src/main/typescript/Config.ts ***!
+  \**************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Config = exports.CONFIG_ANY = exports.CONFIG_VALUE = void 0;
+const Es2019Array_1 = __webpack_require__(/*! ./Es2019Array */ "./node_modules/mona-dish/src/main/typescript/Es2019Array.ts");
+const Monad_1 = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
+const Lang_1 = __webpack_require__(/*! ./Lang */ "./node_modules/mona-dish/src/main/typescript/Lang.ts");
+var objAssign = Lang_1.Lang.objAssign;
+const AssocArray_1 = __webpack_require__(/*! ./AssocArray */ "./node_modules/mona-dish/src/main/typescript/AssocArray.ts");
+/**
+ * specialized value embedder
+ * for our Configuration
+ */
+class ConfigEntry extends Monad_1.ValueEmbedder {
+    constructor(rootElem, key, arrPos) {
+        super(rootElem, key);
+        this.arrPos = arrPos !== null && arrPos !== void 0 ? arrPos : -1;
+    }
+    get value() {
+        if (this.key == "" && this.arrPos >= 0) {
+            return this._value[this.arrPos];
+        }
+        else if (this.key && this.arrPos >= 0) {
+            return this._value[this.key][this.arrPos];
+        }
+        return this._value[this.key];
+    }
+    set value(val) {
+        if (this.key == "" && this.arrPos >= 0) {
+            this._value[this.arrPos] = val;
+            return;
+        }
+        else if (this.key && this.arrPos >= 0) {
+            this._value[this.key][this.arrPos] = val;
+            return;
+        }
+        this._value[this.key] = val;
+    }
+}
+/*default value for absent*/
+ConfigEntry.absent = ConfigEntry.fromNullable(null);
+exports.CONFIG_VALUE = "__END_POINT__";
+exports.CONFIG_ANY = "__ANY_POINT__";
+/**
+ * Config, basically an optional wrapper for a json structure
+ * (not Side - effect free, since we can alter the internal config state
+ * without generating a new config), not sure if we should make it side - effect free
+ * since this would swallow a lot of performance and ram
+ */
+class Config extends Monad_1.Optional {
+    constructor(root, configDef) {
+        super(root);
+        this.configDef = configDef;
+    }
+    /**
+     * shallow copy getter, copies only the first level, references the deeper nodes
+     * in a shared manner
+     */
+    get shallowCopy() {
+        return this.shallowCopy$();
+    }
+    shallowCopy$() {
+        let ret = new Config({});
+        ret.shallowMerge(this.value);
+        return ret;
+    }
+    /**
+     * deep copy, copies all config nodes
+     */
+    get deepCopy() {
+        return this.deepCopy$();
+    }
+    deepCopy$() {
+        return new Config(objAssign({}, this.value));
+    }
+    /**
+     * creates a config from an initial value or null
+     * @param value
+     */
+    static fromNullable(value) {
+        return new Config(value);
+    }
+    /**
+     * simple merge for the root configs
+     */
+    shallowMerge(other, overwrite = true, withAppend = false) {
+        //shallow merge must be mutable so we have to remap
+        let newThis = (0, AssocArray_1.shallowMerge)(overwrite, withAppend, this.value, other.value);
+        if (Array.isArray(this._value)) {
+            this._value.length = 0;
+            this._value.push(...newThis);
+        }
+        else {
+            Object.getOwnPropertyNames(this._value).forEach(key => delete this._value[key]);
+            Object.getOwnPropertyNames(newThis).forEach(key => this._value[key] = newThis[key]);
+        }
+    }
+    /**
+     * assigns a single value as array, or appends it
+     * to an existing value mapping a single value to array
+     *
+     *
+     * usage myConfig.append("foobaz").value = "newValue"
+     *       myConfig.append("foobaz").value = "newValue2"
+     *
+     * resulting in myConfig.foobaz == ["newValue, newValue2"]
+     *
+     * @param {string[]} accessPath
+     */
+    append(...accessPath) {
+        return (0, AssocArray_1.append)(this._value, ...accessPath);
+    }
+    /**
+     * appends to an existing entry (or extends into an array and appends)
+     * if the condition is met
+     * @param {boolean} condition
+     * @param {string[]} accessPath
+     */
+    appendIf(condition, ...accessPath) {
+        return (0, AssocArray_1.appendIf)(condition, this._value, ...accessPath);
+    }
+    /**
+     * assigns a new value on the given access path
+     * @param accessPath
+     */
+    assign(...accessPath) {
+        return (0, AssocArray_1.assign)(this.value, ...accessPath);
+    }
+    /**
+     * assign a value if the condition is set to true, otherwise skip it
+     *
+     * @param condition the condition, the access accessPath into the config
+     * @param accessPath
+     */
+    assignIf(condition, ...accessPath) {
+        return (0, AssocArray_1.assignIf)(condition, this._value, ...accessPath);
+    }
+    /**
+     * get if the access path is present (get is reserved as getter with a default, on the current path)
+     * TODO will be renamed to something more meaningful and deprecated, the name is ambiguous
+     * @param accessPath the access path
+     */
+    getIf(...accessPath) {
+        this.assertAccessPath(...accessPath);
+        return this.getClass().fromNullable((0, AssocArray_1.resolve)(this.value, ...accessPath));
+    }
+    /**
+     * gets the current node and if none is present returns a config with a default value
+     * @param defaultVal
+     */
+    get(defaultVal) {
+        return this.getClass().fromNullable(super.get(defaultVal).value);
+    }
+    //empties the current config entry
+    delete(key) {
+        if (key in this.value) {
+            delete this.value[key];
+        }
+        return this;
+    }
+    /**
+     * converts the entire config into a json object
+     */
+    toJson() {
+        return JSON.stringify(this.value);
+    }
+    getClass() {
+        return Config;
+    }
+    setVal(val) {
+        this._value = val;
+    }
+    /**
+     * asserts the access path for a semi typed access
+     * @param accessPath
+     * @private
+     */
+    assertAccessPath(...accessPath) {
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+        accessPath = this.preprocessKeys(...accessPath);
+        if (!this.configDef) {
+            //untyped
+            return;
+        }
+        const ERR_ACCESS_PATH = "Access Path to config invalid";
+        let currAccessPos = Monad_1.Optional.fromNullable(Object.keys(this.configDef).map(key => {
+            let ret = {};
+            ret[key] = this.configDef[key];
+            return ret;
+        }));
+        for (let cnt = 0; cnt < accessPath.length; cnt++) {
+            let currKey = this.keyVal(accessPath[cnt]);
+            let arrPos = this.arrayIndex(accessPath[cnt]);
+            //key index
+            if (this.isArray(arrPos)) {
+                if (currKey != "") {
+                    currAccessPos = Array.isArray(currAccessPos.value) ?
+                        Monad_1.Optional.fromNullable((_b = (_a = new Es2019Array_1.Es2019Array(...currAccessPos.value)
+                            .find(item => {
+                            var _a;
+                            return !!((_a = item === null || item === void 0 ? void 0 : item[currKey]) !== null && _a !== void 0 ? _a : false);
+                        })) === null || _a === void 0 ? void 0 : _a[currKey]) === null || _b === void 0 ? void 0 : _b[arrPos]) :
+                        Monad_1.Optional.fromNullable((_e = (_d = (_c = currAccessPos.value) === null || _c === void 0 ? void 0 : _c[currKey]) === null || _d === void 0 ? void 0 : _d[arrPos]) !== null && _e !== void 0 ? _e : null);
+                }
+                else {
+                    currAccessPos = (Array.isArray(currAccessPos.value)) ?
+                        Monad_1.Optional.fromNullable((_f = currAccessPos.value) === null || _f === void 0 ? void 0 : _f[arrPos]) : Monad_1.Optional.absent;
+                }
+                //we noe store either the current array or the filtered look ahead to go further
+            }
+            else {
+                //we now have an array and go further with a singular key
+                currAccessPos = (Array.isArray(currAccessPos.value)) ? Monad_1.Optional.fromNullable((_g = new Es2019Array_1.Es2019Array(...currAccessPos.value)
+                    .find(item => {
+                    var _a;
+                    return !!((_a = item === null || item === void 0 ? void 0 : item[currKey]) !== null && _a !== void 0 ? _a : false);
+                })) === null || _g === void 0 ? void 0 : _g[currKey]) :
+                    Monad_1.Optional.fromNullable((_j = (_h = currAccessPos.value) === null || _h === void 0 ? void 0 : _h[currKey]) !== null && _j !== void 0 ? _j : null);
+            }
+            if (!currAccessPos.isPresent()) {
+                throw Error(ERR_ACCESS_PATH);
+            }
+            if (currAccessPos.value == exports.CONFIG_ANY) {
+                return;
+            }
+        }
+    }
+    isNoArray(arrPos) {
+        return arrPos == -1;
+    }
+    isArray(arrPos) {
+        return !this.isNoArray(arrPos);
+    }
+}
+exports.Config = Config;
 
 
 /***/ }),
@@ -2637,15 +2911,8 @@ var Lang;
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Config = exports.CONFIG_ANY = exports.CONFIG_VALUE = exports.ValueEmbedder = exports.Optional = exports.Monad = void 0;
-/**
- * A module which keeps  basic monad like definitions in place
- * Useful if you need the functions in another library to keep its dependencies down
- */
-/*IMonad definitions*/
-const Lang_1 = __webpack_require__(/*! ./Lang */ "./node_modules/mona-dish/src/main/typescript/Lang.ts");
+exports.ValueEmbedder = exports.Optional = exports.Monad = void 0;
 const Es2019Array_1 = __webpack_require__(/*! ./Es2019Array */ "./node_modules/mona-dish/src/main/typescript/Es2019Array.ts");
-var objAssign = Lang_1.Lang.objAssign;
 /**
  * Implementation of a monad
  * (Side - effect free), no write allowed directly on the monads
@@ -2955,324 +3222,6 @@ class ValueEmbedder extends Optional {
 exports.ValueEmbedder = ValueEmbedder;
 /*default value for absent*/
 ValueEmbedder.absent = ValueEmbedder.fromNullable(null);
-/**
- * specialized value embedder
- * for our Configuration
- */
-class ConfigEntry extends ValueEmbedder {
-    constructor(rootElem, key, arrPos) {
-        super(rootElem, key);
-        this.arrPos = arrPos !== null && arrPos !== void 0 ? arrPos : -1;
-    }
-    get value() {
-        if (this.key == "" && this.arrPos >= 0) {
-            return this._value[this.arrPos];
-        }
-        else if (this.key && this.arrPos >= 0) {
-            return this._value[this.key][this.arrPos];
-        }
-        return this._value[this.key];
-    }
-    set value(val) {
-        if (this.key == "" && this.arrPos >= 0) {
-            this._value[this.arrPos] = val;
-            return;
-        }
-        else if (this.key && this.arrPos >= 0) {
-            this._value[this.key][this.arrPos] = val;
-            return;
-        }
-        this._value[this.key] = val;
-    }
-}
-/*default value for absent*/
-ConfigEntry.absent = ConfigEntry.fromNullable(null);
-exports.CONFIG_VALUE = "__END_POINT__";
-exports.CONFIG_ANY = "__ANY_POINT__";
-/**
- * Config, basically an optional wrapper for a json structure
- * (not Side - effect free, since we can alter the internal config state
- * without generating a new config), not sure if we should make it side - effect free
- * since this would swallow a lot of performance and ram
- */
-class Config extends Optional {
-    constructor(root, configDef) {
-        super(root);
-        this.configDef = configDef;
-    }
-    /**
-     * shallow copy getter, copies only the first level, references the deeper nodes
-     * in a shared manner
-     */
-    get shallowCopy() {
-        return this.shallowCopy$();
-    }
-    shallowCopy$() {
-        let ret = new Config({});
-        ret.shallowMerge(this.value);
-        return ret;
-    }
-    /**
-     * deep copy, copies all config nodes
-     */
-    get deepCopy() {
-        return this.deepCopy$();
-    }
-    deepCopy$() {
-        return new Config(objAssign({}, this.value));
-    }
-    /**
-     * creates a config from an initial value or null
-     * @param value
-     */
-    static fromNullable(value) {
-        return new Config(value);
-    }
-    /**
-     * simple merge for the root configs
-     */
-    shallowMerge(other, overwrite = true, withAppend = false) {
-        for (let key in other.value) {
-            if ('undefined' == typeof key || null == key) {
-                continue;
-            }
-            if (overwrite || !(key in this.value)) {
-                if (!withAppend) {
-                    this.assign(key).value = other.getIf(key).value;
-                }
-                else {
-                    if (Array.isArray(other.getIf(key).value)) {
-                        new Es2019Array_1.Es2019Array(...other.getIf(key).value).forEach(item => this.append(key).value = item);
-                    }
-                    else {
-                        this.append(key).value = other.getIf(key).value;
-                    }
-                }
-            }
-        }
-    }
-    /**
-     * assigns a single value as array, or appends it
-     * to an existing value mapping a single value to array
-     *
-     *
-     * usage myConfig.append("foobaz").value = "newValue"
-     *       myConfig.append("foobaz").value = "newValue2"
-     *
-     * resulting in myConfig.foobaz == ["newValue, newValue2"]
-     *
-     * @param {string[]} accessPath
-     */
-    append(...accessPath) {
-        let noKeys = accessPath.length < 1;
-        if (noKeys) {
-            return;
-        }
-        this.assertAccessPath(...accessPath);
-        let lastKey = accessPath[accessPath.length - 1];
-        let pathExists = this.getIf(...accessPath).isPresent();
-        this.buildPath(...accessPath);
-        let finalKeyArrPos = this.arrayIndex(lastKey);
-        if (finalKeyArrPos > -1) {
-            throw Error("Append only possible on non array properties, use assign on indexed data");
-        }
-        let value = this.getIf(...accessPath).value;
-        if (!Array.isArray(value)) {
-            value = this.assign(...accessPath).value = [value];
-        }
-        if (pathExists) {
-            value.push({});
-        }
-        finalKeyArrPos = value.length - 1;
-        return new ConfigEntry(accessPath.length == 1 ? this.value : this.getIf.apply(this, accessPath.slice(0, accessPath.length - 1)).value, lastKey, finalKeyArrPos);
-    }
-    /**
-     * appends to an existing entry (or extends into an array and appends)
-     * if the condition is met
-     * @param {boolean} condition
-     * @param {string[]} accessPath
-     */
-    appendIf(condition, ...accessPath) {
-        if (!condition) {
-            return { value: null };
-        }
-        return this.append(...accessPath);
-    }
-    /**
-     * assigns a new value on the given access path
-     * @param accessPath
-     */
-    assign(...accessPath) {
-        if (accessPath.length < 1) {
-            return;
-        }
-        this.assertAccessPath(...accessPath);
-        this.buildPath(...accessPath);
-        let currKey = this.keyVal(accessPath[accessPath.length - 1]);
-        let arrPos = this.arrayIndex(accessPath[accessPath.length - 1]);
-        return new ConfigEntry(accessPath.length == 1 ? this.value : this.getIf.apply(this, accessPath.slice(0, accessPath.length - 1)).value, currKey, arrPos);
-    }
-    /**
-     * assign a value if the condition is set to true, otherwise skip it
-     *
-     * @param condition the condition, the access accessPath into the config
-     * @param accessPath
-     */
-    assignIf(condition, ...accessPath) {
-        return condition ? this.assign(...accessPath) : { value: null };
-    }
-    /**
-     * get if the access path is present (get is reserved as getter with a default, on the current path)
-     * TODO will be renamed to something more meaningful and deprecated, the name is ambiguous
-     * @param accessPath the access path
-     */
-    getIf(...accessPath) {
-        this.assertAccessPath(...accessPath);
-        return this.getClass().fromNullable(super.getIf.apply(this, accessPath).value);
-    }
-    /**
-     * gets the current node and if none is present returns a config with a default value
-     * @param defaultVal
-     */
-    get(defaultVal) {
-        return this.getClass().fromNullable(super.get(defaultVal).value);
-    }
-    //empties the current config entry
-    delete(key) {
-        if (key in this.value) {
-            delete this.value[key];
-        }
-        return this;
-    }
-    /**
-     * converts the entire config into a json object
-     */
-    toJson() {
-        return JSON.stringify(this.value);
-    }
-    getClass() {
-        return Config;
-    }
-    setVal(val) {
-        this._value = val;
-    }
-    /**
-     * asserts the access path for a semi typed access
-      * @param accessPath
-     * @private
-     */
-    assertAccessPath(...accessPath) {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
-        accessPath = this.preprocessKeys(...accessPath);
-        if (!this.configDef) {
-            //untyped
-            return;
-        }
-        const ERR_ACCESS_PATH = "Access Path to config invalid";
-        let currAccessPos = Optional.fromNullable(Object.keys(this.configDef).map(key => {
-            let ret = {};
-            ret[key] = this.configDef[key];
-            return ret;
-        }));
-        for (let cnt = 0; cnt < accessPath.length; cnt++) {
-            let currKey = this.keyVal(accessPath[cnt]);
-            let arrPos = this.arrayIndex(accessPath[cnt]);
-            //key index
-            if (this.isArray(arrPos)) {
-                if (currKey != "") {
-                    currAccessPos = Array.isArray(currAccessPos.value) ?
-                        Optional.fromNullable((_b = (_a = new Es2019Array_1.Es2019Array(...currAccessPos.value)
-                            .find(item => {
-                            var _a;
-                            return !!((_a = item === null || item === void 0 ? void 0 : item[currKey]) !== null && _a !== void 0 ? _a : false);
-                        })) === null || _a === void 0 ? void 0 : _a[currKey]) === null || _b === void 0 ? void 0 : _b[arrPos]) :
-                        Optional.fromNullable((_e = (_d = (_c = currAccessPos.value) === null || _c === void 0 ? void 0 : _c[currKey]) === null || _d === void 0 ? void 0 : _d[arrPos]) !== null && _e !== void 0 ? _e : null);
-                }
-                else {
-                    currAccessPos = (Array.isArray(currAccessPos.value)) ?
-                        Optional.fromNullable((_f = currAccessPos.value) === null || _f === void 0 ? void 0 : _f[arrPos]) : Optional.absent;
-                }
-                //we noe store either the current array or the filtered look ahead to go further
-            }
-            else {
-                //we now have an array and go further with a singular key
-                currAccessPos = (Array.isArray(currAccessPos.value)) ? Optional.fromNullable((_g = new Es2019Array_1.Es2019Array(...currAccessPos.value)
-                    .find(item => {
-                    var _a;
-                    return !!((_a = item === null || item === void 0 ? void 0 : item[currKey]) !== null && _a !== void 0 ? _a : false);
-                })) === null || _g === void 0 ? void 0 : _g[currKey]) :
-                    Optional.fromNullable((_j = (_h = currAccessPos.value) === null || _h === void 0 ? void 0 : _h[currKey]) !== null && _j !== void 0 ? _j : null);
-            }
-            if (!currAccessPos.isPresent()) {
-                throw Error(ERR_ACCESS_PATH);
-            }
-            if (currAccessPos.value == exports.CONFIG_ANY) {
-                return;
-            }
-        }
-    }
-    /**
-     * builds the config path
-     *
-     * @param accessPath a sequential array of accessPath containing either a key name or an array reference name[<index>]
-     */
-    buildPath(...accessPath) {
-        accessPath = this.preprocessKeys(...accessPath);
-        let val = this;
-        let parentVal = this.getClass().fromNullable(null);
-        let parentPos = -1;
-        let alloc = function (arr, length) {
-            let toAdd = [];
-            toAdd.length = length;
-            toAdd[length - 1] = {};
-            arr.push(...toAdd);
-        };
-        for (let cnt = 0; cnt < accessPath.length; cnt++) {
-            let currKey = this.keyVal(accessPath[cnt]);
-            let arrPos = this.arrayIndex(accessPath[cnt]);
-            if (this.isArrayPos(currKey, arrPos)) {
-                val.setVal((val.value instanceof Array) ? val.value : []);
-                alloc(val.value, arrPos + 1);
-                if (parentPos >= 0) {
-                    parentVal.value[parentPos] = val.value;
-                }
-                parentVal = val;
-                parentPos = arrPos;
-                val = this.getClass().fromNullable(val.value[arrPos]);
-                continue;
-            }
-            let tempVal = val.getIf(currKey);
-            if (this.isNoArray(arrPos)) {
-                if (tempVal.isAbsent()) {
-                    tempVal = this.getClass().fromNullable(val.value[currKey] = {});
-                }
-                else {
-                    val = tempVal;
-                }
-            }
-            else {
-                let arr = (tempVal.value instanceof Array) ? tempVal.value : [];
-                alloc(arr, arrPos + 1);
-                val.value[currKey] = arr;
-                tempVal = this.getClass().fromNullable(arr[arrPos]);
-            }
-            parentVal = val;
-            parentPos = arrPos;
-            val = tempVal;
-        }
-        return this;
-    }
-    isNoArray(arrPos) {
-        return arrPos == -1;
-    }
-    isArray(arrPos) {
-        return !this.isNoArray(arrPos);
-    }
-    isArrayPos(currKey, arrPos) {
-        return currKey === "" && arrPos >= 0;
-    }
-}
-exports.Config = Config;
 
 
 /***/ }),
@@ -3302,8 +3251,8 @@ exports.Config = Config;
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ArrayCollector = exports.QueryFormStringCollector = exports.QueryFormDataCollector = exports.FormDataCollector = exports.ConfigCollector = exports.AssocArrayCollector = exports.Run = exports.ArrayAssocArrayCollector = exports.InverseArrayCollector = exports.ShimArrayCollector = exports.MappedStreamDataSource = exports.FilteredStreamDatasource = exports.ArrayStreamDataSource = exports.SequenceDataSource = exports.MultiStreamDatasource = exports.calculateSkips = exports.ITERATION_STATUS = void 0;
-const Monad_1 = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
 const Es2019Array_1 = __webpack_require__(/*! ./Es2019Array */ "./node_modules/mona-dish/src/main/typescript/Es2019Array.ts");
+const Config_1 = __webpack_require__(/*! ./Config */ "./node_modules/mona-dish/src/main/typescript/Config.ts");
 /**
  * special status of the datasource location pointer
  * if an access, outside - of the possible data boundaries is happening
@@ -3656,7 +3605,7 @@ exports.AssocArrayCollector = AssocArrayCollector;
  */
 class ConfigCollector {
     constructor() {
-        this.finalValue = new Monad_1.Config({});
+        this.finalValue = new Config_1.Config({});
     }
     collect(element) {
         this.finalValue.append(element.key).value = element.value;
@@ -3827,11 +3776,34 @@ exports.XQ = XMLQuery;
 /*!******************************************************************!*\
   !*** ./node_modules/mona-dish/src/main/typescript/index_core.ts ***!
   \******************************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.shallowMerge = exports.simpleShallowMerge = exports.append = exports.assignIf = exports.assign = exports.XQ = exports.XMLQuery = exports.ValueEmbedder = exports.Optional = exports.Monad = exports.CONFIG_ANY = exports.CONFIG_VALUE = exports.Config = exports.Lang = exports.DQ$ = exports.DQ = exports.DomQueryCollector = exports.ElementAttribute = exports.DomQuery = void 0;
+exports.Assoc = exports.CONFIG_VALUE = exports.CONFIG_ANY = exports.Config = exports.shallowMerge = exports.simpleShallowMerge = exports.append = exports.assignIf = exports.assign = exports.XQ = exports.XMLQuery = exports.ValueEmbedder = exports.Optional = exports.Monad = exports.Lang = exports.DQ$ = exports.DQ = exports.DomQueryCollector = exports.ElementAttribute = exports.DomQuery = void 0;
 /*!
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -3859,9 +3831,6 @@ Object.defineProperty(exports, "DQ$", ({ enumerable: true, get: function () { re
 var Lang_1 = __webpack_require__(/*! ./Lang */ "./node_modules/mona-dish/src/main/typescript/Lang.ts");
 Object.defineProperty(exports, "Lang", ({ enumerable: true, get: function () { return Lang_1.Lang; } }));
 var Monad_1 = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
-Object.defineProperty(exports, "Config", ({ enumerable: true, get: function () { return Monad_1.Config; } }));
-Object.defineProperty(exports, "CONFIG_VALUE", ({ enumerable: true, get: function () { return Monad_1.CONFIG_VALUE; } }));
-Object.defineProperty(exports, "CONFIG_ANY", ({ enumerable: true, get: function () { return Monad_1.CONFIG_ANY; } }));
 Object.defineProperty(exports, "Monad", ({ enumerable: true, get: function () { return Monad_1.Monad; } }));
 Object.defineProperty(exports, "Optional", ({ enumerable: true, get: function () { return Monad_1.Optional; } }));
 Object.defineProperty(exports, "ValueEmbedder", ({ enumerable: true, get: function () { return Monad_1.ValueEmbedder; } }));
@@ -3874,6 +3843,13 @@ Object.defineProperty(exports, "assignIf", ({ enumerable: true, get: function ()
 Object.defineProperty(exports, "append", ({ enumerable: true, get: function () { return AssocArray_1.append; } }));
 Object.defineProperty(exports, "simpleShallowMerge", ({ enumerable: true, get: function () { return AssocArray_1.simpleShallowMerge; } }));
 Object.defineProperty(exports, "shallowMerge", ({ enumerable: true, get: function () { return AssocArray_1.shallowMerge; } }));
+var Config_1 = __webpack_require__(/*! ./Config */ "./node_modules/mona-dish/src/main/typescript/Config.ts");
+Object.defineProperty(exports, "Config", ({ enumerable: true, get: function () { return Config_1.Config; } }));
+var Config_2 = __webpack_require__(/*! ./Config */ "./node_modules/mona-dish/src/main/typescript/Config.ts");
+Object.defineProperty(exports, "CONFIG_ANY", ({ enumerable: true, get: function () { return Config_2.CONFIG_ANY; } }));
+var Config_3 = __webpack_require__(/*! ./Config */ "./node_modules/mona-dish/src/main/typescript/Config.ts");
+Object.defineProperty(exports, "CONFIG_VALUE", ({ enumerable: true, get: function () { return Config_3.CONFIG_VALUE; } }));
+exports.Assoc = __importStar(__webpack_require__(/*! ./AssocArray */ "./node_modules/mona-dish/src/main/typescript/AssocArray.ts"));
 
 
 /***/ }),

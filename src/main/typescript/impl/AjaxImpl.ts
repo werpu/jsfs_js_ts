@@ -18,7 +18,7 @@ import {IListener} from "./util/IListener";
 import {Response} from "./xhrCore/Response";
 import {XhrRequest} from "./xhrCore/XhrRequest";
 import {AsynchronousQueue} from "./util/AsyncQueue";
-import {AssocArrayCollector, Config, DomQuery, DQ, DQ$, Lang, LazyStream, Optional, Stream} from "mona-dish";
+import {AssocArrayCollector, Config, DQ, DQ$, Lang, LazyStream, Optional, Stream} from "mona-dish";
 import {Assertions} from "./util/Assertions";
 import {ExtConfig, ExtDomQuery} from "./util/ExtDomQuery";
 import {ErrorData} from "./xhrCore/ErrorData";
@@ -54,7 +54,8 @@ import {
     EMPTY_STR,
     CTX_PARAM_MF_INTERNAL,
     NAMED_VIEWROOT,
-    NAMING_CONTAINER_ID, $nsp
+    NAMING_CONTAINER_ID,
+    $nsp
 } from "./core/Const";
 import {
     resolveDefaults,

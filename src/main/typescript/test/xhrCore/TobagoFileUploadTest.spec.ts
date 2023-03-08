@@ -74,7 +74,7 @@ describe('Tests on the xhr core when it starts to call the request', function ()
             actionElement,
             event,
             {
-              "javax.faces.behavior.event": "change",
+              "jakarta.faces.behavior.event": "change",
               execute: 'page:fileAjax',
               render: null
             });
@@ -91,10 +91,10 @@ describe('Tests on the xhr core when it starts to call the request', function ()
       let formData: FormData = request.requestBody;
       expect(formData.get("page::lastFocusId")).to.eq("");
       expect(formData.get("org.apache.myfaces.tobago.webapp.Secret")).to.eq("secretValue");
-      expect(formData.get("javax.faces.ViewState")).to.eq("viewStateValue");
-      expect(formData.get("javax.faces.RenderKitId")).to.eq("tobago");
-      expect(formData.get("javax.faces.ClientWindow")).to.eq("clientWindowValue");
-      expect(formData.get("javax.faces.behavior.event")).to.eq("change");
+      expect(formData.get("jakarta.faces.ViewState")).to.eq("viewStateValue");
+      expect(formData.get("jakarta.faces.RenderKitId")).to.eq("tobago");
+      expect(formData.get("jakarta.faces.ClientWindow")).to.eq("clientWindowValue");
+      expect(formData.get("jakarta.faces.behavior.event")).to.eq("change");
       expect(formData.get("jakarta.faces.partial.event")).to.eq("change");
       expect(formData.get("jakarta.faces.source")).to.eq("page:fileAjax");
       expect(formData.get("jakarta.faces.partial.ajax")).to.eq("true");

@@ -37,13 +37,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DQ$ = exports.DQ = exports.DomQueryCollector = exports.DomQuery = exports.Style = exports.ElementAttribute = void 0;
 const Monad_1 = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
+const Stream_1 = __webpack_require__(/*! ./Stream */ "./node_modules/mona-dish/src/main/typescript/Stream.ts");
 const SourcesCollectors_1 = __webpack_require__(/*! ./SourcesCollectors */ "./node_modules/mona-dish/src/main/typescript/SourcesCollectors.ts");
 const Lang_1 = __webpack_require__(/*! ./Lang */ "./node_modules/mona-dish/src/main/typescript/Lang.ts");
-const Global_1 = __webpack_require__(/*! ./Global */ "./node_modules/mona-dish/src/main/typescript/Global.ts");
-const Es2019Array_1 = __webpack_require__(/*! ./Es2019Array */ "./node_modules/mona-dish/src/main/typescript/Es2019Array.ts");
 var trim = Lang_1.Lang.trim;
 var isString = Lang_1.Lang.isString;
 var eqi = Lang_1.Lang.equalsIgnoreCase;
+const Global_1 = __webpack_require__(/*! ./Global */ "./node_modules/mona-dish/src/main/typescript/Global.ts");
 var objToArray = Lang_1.Lang.objToArray;
 /**
  *
@@ -271,12 +271,6 @@ class DomQuery {
     get global() {
         return Global_1._global$;
     }
-    get stream() {
-        throw Error("Not implemented, include Stream.ts for this to work");
-    }
-    get lazyStream() {
-        throw Error("Not implemented, include Stream.ts for this to work");
-    }
     /**
      * returns the id of the first element
      */
@@ -353,7 +347,7 @@ class DomQuery {
         this.id.value = value;
     }
     get checked() {
-        return new Es2019Array_1.Es2019Array(...this.values).every(el => !!el.checked);
+        return Stream_1.Stream.of(...this.values).allMatch(el => !!el.checked);
     }
     set checked(newChecked) {
         this.eachElem(el => el.checked = newChecked);
@@ -411,41 +405,58 @@ class DomQuery {
         });
         return new DomQuery(...childNodeArr);
     }
+    /**
+     * binding into stream
+     */
+    get stream() {
+        return new Stream_1.Stream(...this.asArray);
+    }
+    /**
+     * fetches a lazy stream representation
+     * lazy should be applied if you have some filters etc.
+     * in between, this can reduce the number of post filter operations
+     * and ram usage
+     * significantly because the operations are done lazily and stop
+     * once they hit a dead end.
+     */
+    get lazyStream() {
+        return Stream_1.LazyStream.of(...this.asArray);
+    }
     get asArray() {
         // filter not supported by IE11
-        let items = new Es2019Array_1.Es2019Array(...this.rootNode).filter(item => {
+        return [].concat(Stream_1.LazyStream.of(...this.rootNode).filter(item => {
             return item != null;
-        }).map(item => {
+        })
+            .map(item => {
             return DomQuery.byId(item);
-        });
-        return items;
+        }).collect(new SourcesCollectors_1.ArrayCollector()));
     }
     get offsetWidth() {
-        return new Es2019Array_1.Es2019Array(...this.rootNode)
+        return Stream_1.LazyStream.of(...this.rootNode)
             .filter(item => item != null)
             .map(elem => elem.offsetWidth)
-            .reduce((accumulate, incoming) => accumulate + incoming, 0);
+            .reduce((accumulate, incoming) => accumulate + incoming, 0).value;
     }
     get offsetHeight() {
-        return new Es2019Array_1.Es2019Array(...this.rootNode)
+        return Stream_1.LazyStream.of(...this.rootNode)
             .filter(item => item != null)
             .map(elem => elem.offsetHeight)
-            .reduce((accumulate, incoming) => accumulate + incoming, 0);
+            .reduce((accumulate, incoming) => accumulate + incoming, 0).value;
     }
     get offsetLeft() {
-        return new Es2019Array_1.Es2019Array(...this.rootNode)
+        return Stream_1.LazyStream.of(...this.rootNode)
             .filter(item => item != null)
             .map(elem => elem.offsetLeft)
-            .reduce((accumulate, incoming) => accumulate + incoming, 0);
+            .reduce((accumulate, incoming) => accumulate + incoming, 0).value;
     }
     get offsetTop() {
-        return new Es2019Array_1.Es2019Array(this.rootNode)
+        return Stream_1.LazyStream.of(...this.rootNode)
             .filter(item => item != null)
             .map(elem => elem.offsetTop)
-            .reduce((accumulate, incoming) => accumulate + incoming, 0);
+            .reduce((accumulate, incoming) => accumulate + incoming, 0).value;
     }
     get asNodeArray() {
-        return new Es2019Array_1.Es2019Array(...this.rootNode.filter(item => item != null));
+        return [].concat(Stream_1.Stream.of(...this.rootNode).filter(item => item != null).collect(new SourcesCollectors_1.ArrayCollector()));
     }
     static querySelectorAllDeep(selector) {
         return new DomQuery(document).querySelectorAllDeep(selector);
@@ -509,10 +520,10 @@ class DomQuery {
         const doc = document.implementation.createHTMLDocument("");
         markup = trim(markup);
         let lowerMarkup = markup.toLowerCase();
-        if (lowerMarkup.search(/<!doctype[^\w\-]+/gi) != -1 ||
-            lowerMarkup.search(/<html[^\w\-]+/gi) != -1 ||
-            lowerMarkup.search(/<head[^\w\-]+/gi) != -1 ||
-            lowerMarkup.search(/<body[^\w\-]+/gi) != -1) {
+        if (lowerMarkup.search(/\<\!doctype[^\w\-]+/gi) != -1 ||
+            lowerMarkup.search(/\<html[^\w\-]+/gi) != -1 ||
+            lowerMarkup.search(/\<head[^\w\-]+/gi) != -1 ||
+            lowerMarkup.search(/\<body[^\w\-]+/gi) != -1) {
             doc.documentElement.innerHTML = markup;
             return new DomQuery(doc.documentElement);
         }
@@ -644,9 +655,10 @@ class DomQuery {
     byId(id, includeRoot) {
         let res = [];
         if (includeRoot) {
-            res = res.concat(...new Es2019Array_1.Es2019Array(...((this === null || this === void 0 ? void 0 : this.rootNode) || []))
-                .filter(((item) => id == item.id))
-                .map(item => new DomQuery(item)));
+            res = res.concat(Stream_1.LazyStream.of(...((this === null || this === void 0 ? void 0 : this.rootNode) || []))
+                .filter(item => id == item.id)
+                .map(item => new DomQuery(item))
+                .collect(new SourcesCollectors_1.ArrayCollector()));
         }
         // for some strange kind of reason the # selector fails
         // on hidden elements we use the attributes match selector
@@ -657,9 +669,10 @@ class DomQuery {
     byIdDeep(id, includeRoot) {
         let res = [];
         if (includeRoot) {
-            res = res.concat(new Es2019Array_1.Es2019Array(...((this === null || this === void 0 ? void 0 : this.rootNode) || []))
+            res = res.concat(Stream_1.LazyStream.of(...((this === null || this === void 0 ? void 0 : this.rootNode) || []))
                 .filter(item => id == item.id)
-                .map(item => new DomQuery(item)));
+                .map(item => new DomQuery(item))
+                .collect(new SourcesCollectors_1.ArrayCollector()));
         }
         let subItems = this.querySelectorAllDeep(`[id="${id}"]`);
         if (subItems.length) {
@@ -677,9 +690,10 @@ class DomQuery {
         var _a;
         let res = [];
         if (includeRoot) {
-            res = new Es2019Array_1.Es2019Array(...((_a = this === null || this === void 0 ? void 0 : this.rootNode) !== null && _a !== void 0 ? _a : []))
+            res = Stream_1.LazyStream.of(...((_a = this === null || this === void 0 ? void 0 : this.rootNode) !== null && _a !== void 0 ? _a : []))
                 .filter(element => (element === null || element === void 0 ? void 0 : element.tagName) == tagName)
-                .reduce((reduction, item) => reduction.concat([item]), res);
+                .reduce((reduction, item) => reduction.concat([item]), res)
+                .orElse(res).value;
         }
         (deep) ? res.push(this.querySelectorAllDeep(tagName)) : res.push(this.querySelectorAll(tagName));
         return new DomQuery(...res);
@@ -812,8 +826,11 @@ class DomQuery {
      * @param selector
      */
     matchesSelector(selector) {
-        return this.asArray
-            .some(item => this._mozMatchesSelector(item.getAsElem(0).value, selector));
+        const ret = this.lazyStream
+            .map(item => this._mozMatchesSelector(item.getAsElem(0).value, selector))
+            .filter(match => match)
+            .first();
+        return ret.isPresent();
     }
     /**
      * easy node traversal, you can pass
@@ -854,8 +871,8 @@ class DomQuery {
         return this;
     }
     each(func) {
-        new Es2019Array_1.Es2019Array(...this.rootNode)
-            .forEach((item, cnt) => {
+        Stream_1.Stream.of(...this.rootNode)
+            .each((item, cnt) => {
             // we could use a filter, but for the best performance we don´t
             if (item == null) {
                 return;
@@ -1207,7 +1224,7 @@ class DomQuery {
                 // scripts before we run the 'include' command
                 // this.globalEval(finalScripts.join("\n"));
                 let joinedScripts = [];
-                new Es2019Array_1.Es2019Array(...scriptsToProcess).forEach(item => {
+                Stream_1.Stream.of(...scriptsToProcess).each(item => {
                     if (!item.nonce) {
                         joinedScripts.push(item.evalText);
                     }
@@ -1293,10 +1310,10 @@ class DomQuery {
         try {
             let scriptElements = new DomQuery(this.filterSelector("script"), this.querySelectorAll("script"));
             // script execution order by relative pos in their dom tree
-            scriptElements.asArray
-                .flatMap(item => [...item.values])
+            scriptElements.stream
+                .flatMap(item => Stream_1.Stream.of(...item.values))
                 .sort((node1, node2) => node1.compareDocumentPosition(node2) - 3) // preceding 2, following == 4)
-                .forEach(item => execScript(item));
+                .each(item => execScript(item));
             evalCollectedScripts(finalScripts);
         }
         catch (e) {
@@ -1339,20 +1356,19 @@ class DomQuery {
             else if (tagName && eqi(tagName, "style")) {
                 let innerText = _toReplace.innerHTML.replace(/\s+/gi, "");
                 let styles = head.querySelectorAll("style");
-                let filteredStyles = styles.asArray.filter(style => {
+                styles = styles.stream.filter(style => {
                     return style.innerHTML.replace(/\s+/gi, "") == innerText;
-                });
-                styles = new DomQuery(...filteredStyles);
+                }).collect(new DomQueryCollector());
                 if (!styles.length) { //already present
                     head.append(_toReplace);
                 }
             }
         };
         const scriptElements = new DomQuery(this.filterSelector("link, style"), this.querySelectorAll("link, style"));
-        scriptElements.asArray
-            .flatMap(item => [...item.values])
+        scriptElements.stream
+            .flatMap(item => Stream_1.Stream.of(...item.values))
             .sort((node1, node2) => node1.compareDocumentPosition(node2) - 3)
-            .forEach(item => execCss(item));
+            .each(item => execCss(item));
         return this;
     }
     /**
@@ -1375,11 +1391,9 @@ class DomQuery {
      */
     fireEvent(eventName, options = {}) {
         // merge with last one having the highest priority
-        let finalOptions = new Monad_1.Config({
+        let finalOptions = Stream_1.Stream.ofAssoc({
             bubbles: true, cancelable: true
-        });
-        finalOptions.shallowMerge(new Monad_1.Config(options));
-        finalOptions = JSON.parse(finalOptions.toJson());
+        }).concat(Stream_1.Stream.ofAssoc(options)).collect(new SourcesCollectors_1.AssocArrayCollector());
         this.eachElem((node) => {
             let doc;
             if (node.ownerDocument) {
@@ -1430,13 +1444,15 @@ class DomQuery {
                 // IE-old school style, you can drop this if you don't need to support IE8 and lower
                 let event = doc.createEventObject();
                 event.synthetic = true; // allow detection of synthetic events
-                Object.keys(finalOptions).forEach(key => event[key] = finalOptions[key]);
+                Stream_1.Stream.ofAssoc(finalOptions).each(([key, value]) => {
+                    event[key] = value;
+                });
                 node.fireEvent("on" + eventName, event);
             }
         });
     }
     textContent(joinString = "") {
-        return this.asArray
+        return this.stream
             .map((value) => {
             let item = value.getAsElem(0).orElseLazy(() => {
                 return {
@@ -1445,10 +1461,10 @@ class DomQuery {
             }).value;
             return item.textContent || "";
         })
-            .reduce((text1, text2) => [text1, joinString, text2].join(""), "");
+            .reduce((text1, text2) => [text1, joinString, text2].join(""), "").value;
     }
     innerText(joinString = "") {
-        return this.asArray
+        return this.stream
             .map((value) => {
             let item = value.getAsElem(0).orElseLazy(() => {
                 return {
@@ -1457,9 +1473,7 @@ class DomQuery {
             }).value;
             return item.innerText || "";
         })
-            .reduce((text1, text2) => {
-            return [text1, text2].join(joinString);
-        }, "");
+            .reduce((text1, text2) => [text1, text2].join(joinString), "").value;
     }
     /**
      * encodes all input elements properly into respective
@@ -1548,27 +1562,16 @@ class DomQuery {
     }
     get cDATAAsString() {
         let TYPE_CDATA_BLOCK = 4;
-        let res = this.asArray
-            .flatMap(item => {
-            return item.childNodes.asArray;
-        })
-            .filter(item => {
+        let res = this.lazyStream.flatMap(item => {
+            return item.childNodes.stream;
+        }).filter(item => {
             var _a, _b;
             return ((_b = (_a = item === null || item === void 0 ? void 0 : item.value) === null || _a === void 0 ? void 0 : _a.value) === null || _b === void 0 ? void 0 : _b.nodeType) == TYPE_CDATA_BLOCK;
-        })
-            .reduce((reduced, item) => {
+        }).reduce((reduced, item) => {
             var _a, _b, _c;
             reduced.push((_c = (_b = (_a = item === null || item === void 0 ? void 0 : item.value) === null || _a === void 0 ? void 0 : _a.value) === null || _b === void 0 ? void 0 : _b.data) !== null && _c !== void 0 ? _c : "");
             return reduced;
-        }, []);
-        /*let res: any = this.lazyStream.flatMap(item => {
-            return item.childNodes.stream
-        }).filter(item => {
-            return item?.value?.value?.nodeType == TYPE_CDATA_BLOCK;
-        }).reduce((reduced: Array<any>, item: DomQuery) => {
-            reduced.push((<any>item?.value?.value)?.data ?? "");
-            return reduced;
-        }, []).value;*/
+        }, []).value;
         // response may contain several blocks
         return res.join("");
     }
@@ -1725,18 +1728,17 @@ class DomQuery {
      * @param filterDoubles filter out possible double elements (aka same markup)
      */
     concat(toAttach, filterDoubles = true) {
-        let domQueries = this.asArray;
-        const ret = new DomQuery(...domQueries.concat(toAttach.asArray));
+        const ret = this.lazyStream.concat(toAttach.lazyStream).collect(new DomQueryCollector());
         // we now filter the doubles out
         if (!filterDoubles) {
             return ret;
         }
         let idx = {}; // ie11 does not support sets, we have to fake it
-        return new DomQuery(...ret.asArray.filter(node => {
+        return ret.lazyStream.filter(node => {
             const notFound = !(idx === null || idx === void 0 ? void 0 : idx[node.value.value.outerHTML]);
             idx[node.value.value.outerHTML] = true;
             return notFound;
-        }));
+        }).collect(new DomQueryCollector());
     }
     append(elem) {
         this.each(item => elem.appendTo(item));
@@ -1771,7 +1773,7 @@ class DomQuery {
                 continue;
             }
             let res = this.rootNode[cnt].querySelectorAll(selector);
-            nodes = nodes.concat(...objToArray(res));
+            nodes = nodes.concat(objToArray(res));
         }
         return new DomQuery(...nodes);
     }
@@ -1988,132 +1990,6 @@ exports.DQ$ = DomQuery.querySelectorAll;
 
 /***/ }),
 
-/***/ "./node_modules/mona-dish/src/main/typescript/Es2019Array.ts":
-/*!*******************************************************************!*\
-  !*** ./node_modules/mona-dish/src/main/typescript/Es2019Array.ts ***!
-  \*******************************************************************/
-/***/ ((__unused_webpack_module, exports) => {
-
-
-/**
- * Extended array
- */
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Es2019Array = exports._Es2019Array = void 0;
-/**
- * Extended array which adds various es 2019 shim functions to the normal array
- * We must remap all array producing functions in order to keep
- * the delegation active, once we are in!
- */
-class Es2019Array_ extends Array {
-    constructor(...another) {
-        super(...another);
-        if (another._another) {
-            this._another = another._another;
-        }
-        else {
-            this._another = another;
-        }
-        //for testing it definitely runs into this branch because we are on es5 level
-        //if (!(<any>Array.prototype).flatMap) {
-        this.flatMap = (flatMapFun) => this._flatMap(flatMapFun);
-        //}
-        //if (!(<any>Array.prototype).flat) {
-        this.flat = (flatLevel = 1) => this._flat(flatLevel);
-        //}
-    }
-    map(callbackfn, thisArg) {
-        const ret = Array.prototype.map.call(this._another, callbackfn, thisArg);
-        return new _Es2019Array(...ret);
-    }
-    concat(...items) {
-        const ret = Array.prototype.concat.call(this._another, ...items);
-        return new _Es2019Array(...ret);
-    }
-    reverse() {
-        const ret = Array.prototype.reverse.call(this._another);
-        return new _Es2019Array(...ret);
-    }
-    slice(start, end) {
-        const ret = Array.prototype.slice.call(this._another, start, end);
-        return new _Es2019Array(...ret);
-    }
-    splice(start, deleteCount) {
-        const ret = Array.prototype.splice.call(this._another, start, deleteCount);
-        return new _Es2019Array(...ret);
-    }
-    filter(predicate, thisArg) {
-        const ret = Array.prototype.filter.call(this._another, predicate, thisArg);
-        return new _Es2019Array(...ret);
-    }
-    reduce(callbackfn, initialValue) {
-        const ret = Array.prototype.reduce.call(this._another, callbackfn, initialValue);
-        return ret;
-    }
-    /*reduceRight(callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: T[]) => T, initialValue: T): T {
-        const ret = Array.prototype.reduceRight.call(callbackfn, initialValue);
-        return ret;
-    }*/
-    _flat(flatDepth = 1) {
-        return this._flatResolve(this._another, flatDepth);
-    }
-    _flatResolve(arr, flatDepth = 1) {
-        //recursion break
-        if (flatDepth == 0) {
-            return arr;
-        }
-        let res = [];
-        let reFlat = item => {
-            item = Array.isArray(item) ? item : [item];
-            let mapped = this._flatResolve(item, flatDepth - 1);
-            res = res.concat(mapped);
-        };
-        arr.forEach(reFlat);
-        return new exports.Es2019Array(...res);
-    }
-    _flatMap(mapperFunction) {
-        let res = this.map(item => mapperFunction(item));
-        return this._flatResolve(res);
-    }
-}
-//let _Es2019Array = function<T>(...data: T[]) {};
-//let oldProto = Es2019Array.prototype;
-function _Es2019Array(...data) {
-    let ret = new Es2019Array_(...data);
-    let proxied = new Proxy(ret, {
-        get(target, p, receiver) {
-            if ("symbol" == typeof p) {
-                return target._another[p];
-            }
-            if (!isNaN(parseInt(p))) {
-                return target._another[p];
-            }
-            else {
-                return target[p];
-            }
-        },
-        set(target, property, value) {
-            target[property] = value;
-            target._another[property] = value;
-            return true;
-        }
-    });
-    return proxied;
-}
-exports._Es2019Array = _Es2019Array;
-;
-/**
- * this is the switch between normal array and our shim
- * the shim is only provided in case the native browser
- * does not yet have flatMap support on arrays
- */
-exports.Es2019Array = (Array.prototype.flatMap) ? function (...data) {
-    return data;
-} : _Es2019Array;
-
-
-/***/ }),
-
 /***/ "./node_modules/mona-dish/src/main/typescript/Global.ts":
 /*!**************************************************************!*\
   !*** ./node_modules/mona-dish/src/main/typescript/Global.ts ***!
@@ -2187,7 +2063,6 @@ exports._global$ = _global$;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Lang = void 0;
 const Monad_1 = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
-const Es2019Array_1 = __webpack_require__(/*! ./Es2019Array */ "./node_modules/mona-dish/src/main/typescript/Es2019Array.ts");
 /**
  * Lang helpers crossported from the apache myfaces project
  */
@@ -2195,7 +2070,7 @@ var Lang;
 (function (Lang) {
     //should be in lang, but for now here to avoid recursive imports, not sure if typescript still has a problem with those
     /**
-     * helper function to safely resolve anything
+     * helper function to savely resolve anything
      * this is not an elvis operator, it resolves
      * a value without exception in a tree and if
      * it is not resolvable then an optional of
@@ -2221,12 +2096,6 @@ var Lang;
         }
     }
     Lang.saveResolve = saveResolve;
-    /**
-     * lazy resolve... aka the function is called on resolve and a default value also
-     * is a producing function (called only if the original producer does not produce any result)
-     * @param resolverProducer the producer for the resolve
-     * @param defaultValue the default value producer function
-     */
     function saveResolveLazy(resolverProducer, defaultValue = null) {
         try {
             let result = resolverProducer();
@@ -2281,11 +2150,11 @@ var Lang;
         //special condition array delivered no offset no pack
         if (obj instanceof Array && !offset && !pack)
             return obj;
-        return new Es2019Array_1.Es2019Array(...pack.concat(Array.prototype.slice.call(obj, offset)));
+        return pack.concat(Array.prototype.slice.call(obj, offset));
     }
     Lang.objToArray = objToArray;
     /**
-     * equalsIgnoreCase, case-insensitive comparison of two strings
+     * equalsIgnoreCase, case insensitive comparison of two strings
      *
      * @param source
      * @param destination
@@ -2308,7 +2177,7 @@ var Lang;
     }
     Lang.assertType = assertType;
     /**
-     * Back ported from Dojo
+     * Backported from dojo
      * a failsafe string determination method
      * (since in javascript String != "" typeof alone fails!)
      * @param it {|Object|} the object to be checked for being a string
@@ -2320,10 +2189,6 @@ var Lang;
         return !!arguments.length && it != null && (typeof it == "string" || it instanceof String); // Boolean
     }
     Lang.isString = isString;
-    /**
-     * Back-ported, a failsafe determination code for checking whether an object is a function
-     * @param it the object to check for being a function
-     */
     function isFunc(it) {
         return it instanceof Function || typeof it === "function";
     }
@@ -2379,16 +2244,17 @@ var Lang;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Config = exports.CONFIG_ANY = exports.CONFIG_VALUE = exports.ValueEmbedder = exports.Optional = exports.Monad = void 0;
 /**
- * A module which keeps  basic monad like definitions in place
+ * A module which keeps  basic monadish like definitions in place without any sidedependencies to other modules.
  * Useful if you need the functions in another library to keep its dependencies down
  */
 /*IMonad definitions*/
 const Lang_1 = __webpack_require__(/*! ./Lang */ "./node_modules/mona-dish/src/main/typescript/Lang.ts");
-const Es2019Array_1 = __webpack_require__(/*! ./Es2019Array */ "./node_modules/mona-dish/src/main/typescript/Es2019Array.ts");
+const SourcesCollectors_1 = __webpack_require__(/*! ./SourcesCollectors */ "./node_modules/mona-dish/src/main/typescript/SourcesCollectors.ts");
+const Stream_1 = __webpack_require__(/*! ./Stream */ "./node_modules/mona-dish/src/main/typescript/Stream.ts");
 var objAssign = Lang_1.Lang.objAssign;
 /**
  * Implementation of a monad
- * (Side - effect free), no write allowed directly on the monads
+ * (Sideffect free), no write allowed directly on the monads
  * value state
  */
 class Monad {
@@ -2400,7 +2266,7 @@ class Monad {
     }
     map(fn) {
         if (!fn) {
-            fn = (inVal) => inVal;
+            fn = (inval) => inval;
         }
         let result = fn(this.value);
         return new Monad(result);
@@ -2417,7 +2283,7 @@ exports.Monad = Monad;
 /**
  * optional implementation, an optional is basically an implementation of a Monad with additional syntactic
  * sugar on top
- * (Side - effect free, since value assignment is not allowed)
+ * (Sideeffect free, since value assignment is not allowed)
  * */
 class Optional extends Monad {
     constructor(value) {
@@ -2477,8 +2343,8 @@ class Optional extends Monad {
         }
     }
     /*
-     * we need to implement it to fulfill the contract, although it is used only internally
-     * all values are flattened when accessed anyway, so there is no need to call this method
+     * we need to implement it to fullfill the contract, although it is used only internally
+     * all values are flattened when accessed anyway, so there is no need to call this methiod
      */
     flatMap(fn) {
         let val = super.flatMap(fn);
@@ -2489,7 +2355,7 @@ class Optional extends Monad {
     }
     /*
      * elvis operation, take care, if you use this you lose typesafety and refactoring
-     * capabilities, unfortunately typescript does not allow to have its own elvis operator
+     * capabilites, unfortunately typesceript does not allow to have its own elvis operator
      * this is some syntactic sugar however which is quite useful*/
     getIf(...key) {
         key = this.preprocessKeys(...key);
@@ -2524,7 +2390,8 @@ class Optional extends Monad {
                 currentPos = this.getClass().fromNullable(currentPos.value[arrPos]);
             }
         }
-        return currentPos;
+        let retVal = currentPos;
+        return retVal;
     }
     /**
      * simple match, if the first order function call returns
@@ -2560,7 +2427,7 @@ class Optional extends Monad {
      * by having a getClass operation we can avoid direct calls into the constructor or
      * static methods and do not have to implement several methods which rely on the type
      * of "this"
-     * @returns the type of Optional
+     * @returns {Monadish.Optional}
      */
     getClass() {
         return Optional;
@@ -2621,9 +2488,9 @@ class Optional extends Monad {
         }
     }
     preprocessKeys(...keys) {
-        return new Es2019Array_1.Es2019Array(...keys)
+        return Stream_1.Stream.of(...keys)
             .flatMap(item => {
-            return new Es2019Array_1.Es2019Array(...item.split(/]\s*\[/gi))
+            return Stream_1.Stream.of(...item.split(/\]\s*\[/gi))
                 .map(item => {
                 item = item.replace(/^\s+|\s+$/g, "");
                 if (item.indexOf("[") == -1 && item.indexOf("]") != -1) {
@@ -2634,16 +2501,17 @@ class Optional extends Monad {
                 }
                 return item;
             });
-        });
+        })
+            .collect(new SourcesCollectors_1.ArrayCollector());
     }
 }
 exports.Optional = Optional;
 /*default value for absent*/
 Optional.absent = Optional.fromNullable(null);
-// --------------------- From here onwards we break out the side effect free limits ------------
+// --------------------- From here onwards we break out the sideffects free limits ------------
 /**
  * ValueEmbedder is the writeable version
- * of optional, it basically is a wrapper
+ * of optional, it basically is a wrappber
  * around a construct which has a state
  * and can be written to.
  *
@@ -2683,7 +2551,7 @@ class ValueEmbedder extends Optional {
      * by having a getClass operation we can avoid direct calls into the constructor or
      * static methods and do not have to implement several methods which rely on the type
      * of "this"
-     * @returns ValueEmbedder
+     * @returns {Monadish.Optional}
      */
     getClass() {
         return ValueEmbedder;
@@ -2729,11 +2597,12 @@ class ConfigEntry extends ValueEmbedder {
 ConfigEntry.absent = ConfigEntry.fromNullable(null);
 exports.CONFIG_VALUE = "__END_POINT__";
 exports.CONFIG_ANY = "__ANY_POINT__";
+const ALL_VALUES = "*";
 /**
  * Config, basically an optional wrapper for a json structure
- * (not Side - effect free, since we can alter the internal config state
- * without generating a new config), not sure if we should make it side - effect free
- * since this would swallow a lot of performance and ram
+ * (not sideeffect free, since we can alter the internal config state
+ * without generating a new config), not sure if we should make it sideffect free
+ * since this would swallow a lot of performane and ram
  */
 class Config extends Optional {
     constructor(root, configDef) {
@@ -2748,9 +2617,7 @@ class Config extends Optional {
         return this.shallowCopy$();
     }
     shallowCopy$() {
-        let ret = new Config({});
-        ret.shallowMerge(this.value);
-        return ret;
+        return new Config(Stream_1.Stream.ofAssoc(this.value).collect(new SourcesCollectors_1.AssocArrayCollector()));
     }
     /**
      * deep copy, copies all config nodes
@@ -2782,7 +2649,7 @@ class Config extends Optional {
                 }
                 else {
                     if (Array.isArray(other.getIf(key).value)) {
-                        new Es2019Array_1.Es2019Array(...other.getIf(key).value).forEach(item => this.append(key).value = item);
+                        Stream_1.Stream.of(...other.getIf(key).value).each(item => this.append(key).value = item);
                     }
                     else {
                         this.append(key).value = other.getIf(key).value;
@@ -2810,6 +2677,7 @@ class Config extends Optional {
         }
         this.assertAccessPath(...accessPath);
         let lastKey = accessPath[accessPath.length - 1];
+        let currKey, finalKey = this.keyVal(lastKey);
         let pathExists = this.getIf(...accessPath).isPresent();
         this.buildPath(...accessPath);
         let finalKeyArrPos = this.arrayIndex(lastKey);
@@ -2824,7 +2692,8 @@ class Config extends Optional {
             value.push({});
         }
         finalKeyArrPos = value.length - 1;
-        return new ConfigEntry(accessPath.length == 1 ? this.value : this.getIf.apply(this, accessPath.slice(0, accessPath.length - 1)).value, lastKey, finalKeyArrPos);
+        let retVal = new ConfigEntry(accessPath.length == 1 ? this.value : this.getIf.apply(this, accessPath.slice(0, accessPath.length - 1)).value, lastKey, finalKeyArrPos);
+        return retVal;
     }
     /**
      * appends to an existing entry (or extends into an array and appends)
@@ -2839,7 +2708,7 @@ class Config extends Optional {
         return this.append(...accessPath);
     }
     /**
-     * assigns a new value on the given access path
+     * assings an new value on the given access path
      * @param accessPath
      */
     assign(...accessPath) {
@@ -2850,7 +2719,8 @@ class Config extends Optional {
         this.buildPath(...accessPath);
         let currKey = this.keyVal(accessPath[accessPath.length - 1]);
         let arrPos = this.arrayIndex(accessPath[accessPath.length - 1]);
-        return new ConfigEntry(accessPath.length == 1 ? this.value : this.getIf.apply(this, accessPath.slice(0, accessPath.length - 1)).value, currKey, arrPos);
+        let retVal = new ConfigEntry(accessPath.length == 1 ? this.value : this.getIf.apply(this, accessPath.slice(0, accessPath.length - 1)).value, currKey, arrPos);
+        return retVal;
     }
     /**
      * assign a value if the condition is set to true, otherwise skip it
@@ -2863,7 +2733,7 @@ class Config extends Optional {
     }
     /**
      * get if the access path is present (get is reserved as getter with a default, on the current path)
-     * TODO will be renamed to something more meaningful and deprecated, the name is ambiguous
+     * TODO will be renamed to something more meaningful and deprecated, the name is ambigous
      * @param accessPath the access path
      */
     getIf(...accessPath) {
@@ -2890,6 +2760,12 @@ class Config extends Optional {
     toJson() {
         return JSON.stringify(this.value);
     }
+    /**
+     * returns the first config level as streeam
+     */
+    get stream() {
+        return Stream_1.Stream.of(...Object.keys(this.value)).map(key => [key, this.value[key]]);
+    }
     getClass() {
         return Config;
     }
@@ -2897,56 +2773,55 @@ class Config extends Optional {
         this._value = val;
     }
     /**
-     * asserts the access path for a semi typed access
+     * asserts the access path for a semy typed access
       * @param accessPath
      * @private
      */
     assertAccessPath(...accessPath) {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+        var _a, _b;
         accessPath = this.preprocessKeys(...accessPath);
         if (!this.configDef) {
             //untyped
             return;
         }
+        let currAccessPos = null;
         const ERR_ACCESS_PATH = "Access Path to config invalid";
-        let currAccessPos = Optional.fromNullable(Object.keys(this.configDef).map(key => {
-            let ret = {};
-            ret[key] = this.configDef[key];
-            return ret;
-        }));
+        const ABSENT = "__ABSENT__";
+        currAccessPos = this.configDef;
         for (let cnt = 0; cnt < accessPath.length; cnt++) {
             let currKey = this.keyVal(accessPath[cnt]);
             let arrPos = this.arrayIndex(accessPath[cnt]);
             //key index
             if (this.isArray(arrPos)) {
                 if (currKey != "") {
-                    currAccessPos = Array.isArray(currAccessPos.value) ?
-                        Optional.fromNullable((_b = (_a = new Es2019Array_1.Es2019Array(...currAccessPos.value)
-                            .find(item => {
-                            var _a;
-                            return !!((_a = item === null || item === void 0 ? void 0 : item[currKey]) !== null && _a !== void 0 ? _a : false);
-                        })) === null || _a === void 0 ? void 0 : _a[currKey]) === null || _b === void 0 ? void 0 : _b[arrPos]) :
-                        Optional.fromNullable((_e = (_d = (_c = currAccessPos.value) === null || _c === void 0 ? void 0 : _c[currKey]) === null || _d === void 0 ? void 0 : _d[arrPos]) !== null && _e !== void 0 ? _e : null);
+                    currAccessPos = (Array.isArray(currAccessPos)) ?
+                        Stream_1.Stream.of(...currAccessPos)
+                            .filter(item => { var _a; return !!((_a = item === null || item === void 0 ? void 0 : item[currKey]) !== null && _a !== void 0 ? _a : false); })
+                            .map(item => item === null || item === void 0 ? void 0 : item[currKey]).first() :
+                        Optional.fromNullable((_a = currAccessPos === null || currAccessPos === void 0 ? void 0 : currAccessPos[currKey]) !== null && _a !== void 0 ? _a : null);
                 }
                 else {
-                    currAccessPos = (Array.isArray(currAccessPos.value)) ?
-                        Optional.fromNullable((_f = currAccessPos.value) === null || _f === void 0 ? void 0 : _f[arrPos]) : Optional.absent;
+                    currAccessPos = (Array.isArray(currAccessPos)) ?
+                        Stream_1.Stream.of(...currAccessPos)
+                            .filter(item => Array.isArray(item))
+                            .flatMap(item => Stream_1.Stream.of(...item)).first() : Optional.absent;
                 }
                 //we noe store either the current array or the filtered look ahead to go further
             }
             else {
                 //we now have an array and go further with a singular key
-                currAccessPos = (Array.isArray(currAccessPos.value)) ? Optional.fromNullable((_g = new Es2019Array_1.Es2019Array(...currAccessPos.value)
-                    .find(item => {
-                    var _a;
-                    return !!((_a = item === null || item === void 0 ? void 0 : item[currKey]) !== null && _a !== void 0 ? _a : false);
-                })) === null || _g === void 0 ? void 0 : _g[currKey]) :
-                    Optional.fromNullable((_j = (_h = currAccessPos.value) === null || _h === void 0 ? void 0 : _h[currKey]) !== null && _j !== void 0 ? _j : null);
+                currAccessPos = (Array.isArray(currAccessPos)) ? Stream_1.Stream.of(...currAccessPos)
+                    .filter(item => { var _a; return !!((_a = item === null || item === void 0 ? void 0 : item[currKey]) !== null && _a !== void 0 ? _a : false); })
+                    .map(item => item === null || item === void 0 ? void 0 : item[currKey])
+                    .first() :
+                    Optional.fromNullable((_b = currAccessPos === null || currAccessPos === void 0 ? void 0 : currAccessPos[currKey]) !== null && _b !== void 0 ? _b : null);
             }
             if (!currAccessPos.isPresent()) {
                 throw Error(ERR_ACCESS_PATH);
             }
-            if (currAccessPos.value == exports.CONFIG_ANY) {
+            currAccessPos = currAccessPos.value;
+            //no further testing needed, from this point onwards we are on our own
+            if (currAccessPos == exports.CONFIG_ANY) {
                 return;
             }
         }
@@ -3042,17 +2917,17 @@ exports.Config = Config;
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ArrayCollector = exports.QueryFormStringCollector = exports.QueryFormDataCollector = exports.FormDataCollector = exports.ConfigCollector = exports.AssocArrayCollector = exports.Run = exports.ArrayAssocArrayCollector = exports.InverseArrayCollector = exports.ShimArrayCollector = exports.MappedStreamDataSource = exports.FilteredStreamDatasource = exports.ArrayStreamDataSource = exports.SequenceDataSource = exports.MultiStreamDatasource = exports.calculateSkips = exports.ITERATION_STATUS = void 0;
+exports.QueryFormStringCollector = exports.QueryFormDataCollector = exports.FormDataCollector = exports.ConfigCollector = exports.AssocArrayCollector = exports.Run = exports.ArrayAssocArrayCollector = exports.InverseArrayCollector = exports.ArrayCollector = exports.FlatMapStreamDataSource = exports.MappedStreamDataSource = exports.FilteredStreamDatasource = exports.ArrayStreamDataSource = exports.SequenceDataSource = exports.MultiStreamDatasource = exports.ITERATION_STATUS = void 0;
+const Stream_1 = __webpack_require__(/*! ./Stream */ "./node_modules/mona-dish/src/main/typescript/Stream.ts");
 const Monad_1 = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
-const Es2019Array_1 = __webpack_require__(/*! ./Es2019Array */ "./node_modules/mona-dish/src/main/typescript/Es2019Array.ts");
 /**
  * special status of the datasource location pointer
- * if an access, outside - of the possible data boundaries is happening
+ * if an access, outside of the possible data boundaries is happening
  * (example for instance current without a first next call, or next
  * which goes over the last possible dataset), an iteration status return
  * value is returned marking this boundary instead of a classical element
  *
- * Note this is only internally used but must be implemented to fulfill
+ * Note this is only internally used but must be implemented to fullfill
  * internal contracts, the end user will never see those values if he uses
  * streams!
  */
@@ -3068,11 +2943,6 @@ function calculateSkips(next_strm) {
     }
     return --pos;
 }
-exports.calculateSkips = calculateSkips;
-/**
- * A data source which combines multiple streams sequentially into one
- * (this is used internally by  flatmap, but also can be used externally)
- */
 class MultiStreamDatasource {
     constructor(first, ...strms) {
         this.first = first;
@@ -3174,7 +3044,7 @@ class SequenceDataSource {
 }
 exports.SequenceDataSource = SequenceDataSource;
 /**
- * implementation of a datasource on top of a standard array
+ * implementation of iteratable on top of array
  */
 class ArrayStreamDataSource {
     constructor(...value) {
@@ -3261,15 +3131,6 @@ class FilteredStreamDatasource {
         this._current = found;
         return found;
     }
-    /**
-     * looks ahead cnt without changing the internal data "pointers" of the data source
-     * (this is mostly needed by LazyStreams, because they do not know by definition their
-     * boundaries)
-     *
-     * @param cnt the elements to look ahead
-     * @return either the element or ITERATION_STATUS.EO_STRM if we hit the end of the stream before
-     * finding the "cnt" element
-     */
     lookAhead(cnt = 1) {
         var _a;
         let lookupVal;
@@ -3321,12 +3182,104 @@ class MappedStreamDataSource {
 }
 exports.MappedStreamDataSource = MappedStreamDataSource;
 /**
+ * Same for flatmap to deal with element -> stream mappings
+ */
+class FlatMapStreamDataSource {
+    constructor(func, parent) {
+        this.walkedDataSources = [];
+        this._currPos = 0;
+        this.mapFunc = func;
+        this.inputDataSource = parent;
+    }
+    hasNext() {
+        return this.resolveActiveHasNext() || this.resolveNextHasNext();
+    }
+    resolveActiveHasNext() {
+        let next = false;
+        if (this.activeDataSource) {
+            next = this.activeDataSource.hasNext();
+        }
+        return next;
+    }
+    lookAhead(cnt = 1) {
+        var _a;
+        let lookAhead = (_a = this === null || this === void 0 ? void 0 : this.activeDataSource) === null || _a === void 0 ? void 0 : _a.lookAhead(cnt);
+        if ((this === null || this === void 0 ? void 0 : this.activeDataSource) && lookAhead != ITERATION_STATUS.EO_STRM) {
+            //this should cover 95% of all cases
+            return lookAhead;
+        }
+        if (this.activeDataSource) {
+            cnt -= calculateSkips(this.activeDataSource);
+        }
+        //the idea is basically to look into the streams sub-sequentially for a match
+        //after each stream we have to take into consideration that the skipCnt is
+        //reduced by the number of datasets we already have looked into in the previous stream/datasource
+        //unfortunately for now we have to loop into them, so we introduce a small o2 here
+        for (let dsLoop = 1; true; dsLoop++) {
+            let datasourceData = this.inputDataSource.lookAhead(dsLoop);
+            //we have looped out
+            //no embedded data anymore? we are done, data
+            //can either be a scalar an array or another datasource
+            if (datasourceData === ITERATION_STATUS.EO_STRM) {
+                return ITERATION_STATUS.EO_STRM;
+            }
+            let mappedData = this.mapFunc(datasourceData);
+            //it either comes in as datasource or as array
+            //both cases must be unified into a datasource
+            let currentDataSource = this.toDatasource(mappedData);
+            //we now run again  a lookahead
+            let ret = currentDataSource.lookAhead(cnt);
+            //if the value is found then we are set
+            if (ret != ITERATION_STATUS.EO_STRM) {
+                return ret;
+            }
+            //reduce the next lookahead by the number of elements
+            //we are now skipping in the current data source
+            cnt -= calculateSkips(currentDataSource);
+        }
+    }
+    toDatasource(mapped) {
+        let ds = Array.isArray(mapped) ? new ArrayStreamDataSource(...mapped) : mapped;
+        this.walkedDataSources.push(ds);
+        return ds;
+    }
+    resolveNextHasNext() {
+        let next = false;
+        while (!next && this.inputDataSource.hasNext()) {
+            let mapped = this.mapFunc(this.inputDataSource.next());
+            this.activeDataSource = this.toDatasource(mapped);
+            next = this.activeDataSource.hasNext();
+        }
+        return next;
+    }
+    next() {
+        if (this.hasNext()) {
+            this._currPos++;
+            return this.activeDataSource.next();
+        }
+    }
+    reset() {
+        this.inputDataSource.reset();
+        this.walkedDataSources.forEach(ds => ds.reset());
+        this.walkedDataSources = [];
+        this._currPos = 0;
+        this.activeDataSource = null;
+    }
+    current() {
+        if (!this.activeDataSource) {
+            this.hasNext();
+        }
+        return this.activeDataSource.current();
+    }
+}
+exports.FlatMapStreamDataSource = FlatMapStreamDataSource;
+/**
  * For the time being we only need one collector
  * a collector which collects a stream back into arrays
  */
-class ShimArrayCollector {
+class ArrayCollector {
     constructor() {
-        this.data = new Es2019Array_1.Es2019Array(...[]);
+        this.data = [];
     }
     collect(element) {
         this.data.push(element);
@@ -3335,7 +3288,7 @@ class ShimArrayCollector {
         return this.data;
     }
 }
-exports.ShimArrayCollector = ShimArrayCollector;
+exports.ArrayCollector = ArrayCollector;
 /**
  * collects the values as inverse array
  */
@@ -3445,28 +3398,462 @@ class QueryFormStringCollector {
         }
     }
     get finalValue() {
-        return new Es2019Array_1.Es2019Array(...this.formData)
+        return Stream_1.Stream.of(...this.formData)
             .map(keyVal => keyVal.join("="))
-            .reduce((item1, item2) => [item1, item2].join("&"));
+            .reduce((item1, item2) => [item1, item2].join("&"))
+            .orElse("").value;
     }
 }
 exports.QueryFormStringCollector = QueryFormStringCollector;
-/**
- * For the time being we only need one collector
- * a collector which collects a stream back into arrays
+
+
+/***/ }),
+
+/***/ "./node_modules/mona-dish/src/main/typescript/Stream.ts":
+/*!**************************************************************!*\
+  !*** ./node_modules/mona-dish/src/main/typescript/Stream.ts ***!
+  \**************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+/*!
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-class ArrayCollector {
-    constructor() {
-        this.data = [];
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.LazyStream = exports.Stream = void 0;
+/*
+ * A small stream implementation
+ */
+const Monad_1 = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
+const SourcesCollectors_1 = __webpack_require__(/*! ./SourcesCollectors */ "./node_modules/mona-dish/src/main/typescript/SourcesCollectors.ts");
+/**
+ * A simple typescript based reimplementation of streams
+ *
+ * This is the early eval version
+ * for a lazy eval version check, LazyStream, which is api compatible
+ * to this implementation, however with the benefit of being able
+ * to provide infinite data sources and generic data providers, the downside
+ * is, it might be a tad slower in some situations
+ */
+class Stream {
+    constructor(...value) {
+        this._limits = -1;
+        this.pos = -1;
+        this.value = value;
     }
-    collect(element) {
-        this.data.push(element);
+    static of(...data) {
+        return new Stream(...data);
     }
-    get finalValue() {
-        return this.data;
+    static ofAssoc(data) {
+        return this.of(...Object.keys(data)).map(key => [key, data[key]]);
+    }
+    static ofDataSource(dataSource) {
+        let value = [];
+        while (dataSource.hasNext()) {
+            value.push(dataSource.next());
+        }
+        return new Stream(...value);
+    }
+    current() {
+        if (this.pos == -1) {
+            return SourcesCollectors_1.ITERATION_STATUS.BEF_STRM;
+        }
+        if (this.pos >= this.value.length) {
+            return SourcesCollectors_1.ITERATION_STATUS.EO_STRM;
+        }
+        return this.value[this.pos];
+    }
+    limits(end) {
+        this._limits = end;
+        return this;
+    }
+    /**
+     * concat for streams, so that you can concat two streams together
+     * @param toAppend
+     */
+    concat(...toAppend) {
+        let toConcat = [this].concat(toAppend);
+        return Stream.of(...toConcat).flatMap(item => item);
+    }
+    onElem(fn) {
+        for (let cnt = 0; cnt < this.value.length && (this._limits == -1 || cnt < this._limits); cnt++) {
+            if (fn(this.value[cnt], cnt) === false) {
+                break;
+            }
+        }
+        return this;
+    }
+    each(fn) {
+        this.onElem(fn);
+        this.reset();
+    }
+    map(fn) {
+        if (!fn) {
+            fn = (inval) => inval;
+        }
+        let res = [];
+        this.each((item) => {
+            res.push(fn(item));
+        });
+        return new Stream(...res);
+    }
+    /*
+     * we need to implement it to fullfill the contract, although it is used only internally
+     * all values are flattened when accessed anyway, so there is no need to call this methiod
+     */
+    flatMap(fn) {
+        let ret = [];
+        this.each(item => {
+            let strmR = fn(item);
+            ret = Array.isArray(strmR) ? ret.concat(strmR) : ret.concat(strmR.value);
+        });
+        return Stream.of(...ret);
+    }
+    filter(fn) {
+        let res = [];
+        this.each((data) => {
+            if (fn(data)) {
+                res.push(data);
+            }
+        });
+        return new Stream(...res);
+    }
+    reduce(fn, startVal = null) {
+        let offset = startVal != null ? 0 : 1;
+        let val1 = startVal != null ? startVal : this.value.length ? this.value[0] : null;
+        for (let cnt = offset; cnt < this.value.length && (this._limits == -1 || cnt < this._limits); cnt++) {
+            val1 = fn(val1, this.value[cnt]);
+        }
+        this.reset();
+        return Monad_1.Optional.fromNullable(val1);
+    }
+    first() {
+        this.reset();
+        return this.value && this.value.length ? Monad_1.Optional.fromNullable(this.value[0]) : Monad_1.Optional.absent;
+    }
+    last() {
+        //could be done via reduce, but is faster this way
+        let length = this._limits > 0 ? Math.min(this._limits, this.value.length) : this.value.length;
+        this.reset();
+        return Monad_1.Optional.fromNullable(length ? this.value[length - 1] : null);
+    }
+    anyMatch(fn) {
+        for (let cnt = 0; cnt < this.value.length && (this._limits == -1 || cnt < this._limits); cnt++) {
+            if (fn(this.value[cnt])) {
+                return true;
+            }
+        }
+        this.reset();
+        return false;
+    }
+    allMatch(fn) {
+        if (!this.value.length) {
+            return false;
+        }
+        let matches = 0;
+        for (let cnt = 0; cnt < this.value.length; cnt++) {
+            if (fn(this.value[cnt])) {
+                matches++;
+            }
+        }
+        this.reset();
+        return matches == this.value.length;
+    }
+    noneMatch(fn) {
+        let matches = 0;
+        for (let cnt = 0; cnt < this.value.length; cnt++) {
+            if (!fn(this.value[cnt])) {
+                matches++;
+            }
+        }
+        this.reset();
+        return matches == this.value.length;
+    }
+    sort(comparator) {
+        let newArr = this.value.slice().sort(comparator);
+        return Stream.of(...newArr);
+    }
+    collect(collector) {
+        this.each(data => collector.collect(data));
+        this.reset();
+        return collector.finalValue;
+    }
+    //-- internally exposed methods needed for the interconnectivity
+    hasNext() {
+        let isLimitsReached = this._limits != -1 && this.pos >= this._limits - 1;
+        let isEndOfArray = this.pos >= this.value.length - 1;
+        return !(isLimitsReached || isEndOfArray);
+    }
+    next() {
+        if (!this.hasNext()) {
+            return null;
+        }
+        this.pos++;
+        return this.value[this.pos];
+    }
+    lookAhead(cnt = 1) {
+        if ((this.pos + cnt) >= this.value.length) {
+            return SourcesCollectors_1.ITERATION_STATUS.EO_STRM;
+        }
+        return this.value[this.pos + cnt];
+    }
+    [Symbol.iterator]() {
+        return {
+            next: () => {
+                let done = !this.hasNext();
+                let val = this.next();
+                return {
+                    done: done,
+                    value: val
+                };
+            }
+        };
+    }
+    /*get observable(): Observable<T> {
+        return from(this);
+    }*/
+    reset() {
+        this.pos = -1;
     }
 }
-exports.ArrayCollector = ArrayCollector;
+exports.Stream = Stream;
+/**
+ * Lazy implementation of a Stream
+ * The idea is to connect the intermediate
+ * streams as datasources like a linked list
+ * with reverse referencing and for special
+ * operations like filtering flatmapping
+ * have intermediate datasources in the list
+ * with specialized functions.
+ *
+ * Sort of a modified pipe valve pattern
+ * the streams are the pipes the intermediate
+ * data sources are the valves
+ *
+ * We then can use passed in functions to control
+ * the flow in the valves
+ *
+ * That way we can have a lazy evaluating stream
+ *
+ * So if an endpoint requests data
+ * a callback trace goes back the stream list
+ * which triggers an operation upwards
+ * which sends data down the drain which then is processed
+ * and filtered until one element hits the endpoint.
+ *
+ * That is repeated, until all elements are processed
+ * or an internal limit is hit.
+ *
+ */
+class LazyStream {
+    static of(...values) {
+        return new LazyStream(new SourcesCollectors_1.ArrayStreamDataSource(...values));
+    }
+    static ofAssoc(data) {
+        return this.of(...Object.keys(data)).map(key => [key, data[key]]);
+    }
+    static ofStreamDataSource(value) {
+        return new LazyStream(value);
+    }
+    constructor(parent) {
+        this._limits = -1;
+        /*
+         * needed to have the limits check working
+         * we need to keep track of the current position
+         * in the stream
+         */
+        this.pos = -1;
+        this.dataSource = parent;
+    }
+    hasNext() {
+        if (this.isOverLimits()) {
+            return false;
+        }
+        return this.dataSource.hasNext();
+    }
+    next() {
+        let next = this.dataSource.next();
+        // @ts-ignore
+        this.pos++;
+        return next;
+    }
+    lookAhead(cnt = 1) {
+        return this.dataSource.lookAhead(cnt);
+    }
+    current() {
+        return this.dataSource.current();
+    }
+    reset() {
+        this.dataSource.reset();
+        this.pos = -1;
+        this._limits = -1;
+    }
+    /**
+     * concat for streams, so that you can concat two streams together
+     * @param toAppend
+     */
+    concat(...toAppend) {
+        //this.dataSource =  new MultiStreamDatasource<T>(this, ... toAppend);
+        //return this;
+        return LazyStream.ofStreamDataSource(new SourcesCollectors_1.MultiStreamDatasource(this, toAppend));
+        //return LazyStream.of(<IStream<T>>this, ...toAppend).flatMap(item => item);
+    }
+    nextFilter(fn) {
+        if (this.hasNext()) {
+            let newVal = this.next();
+            if (!fn(newVal)) {
+                return this.nextFilter(fn);
+            }
+            return newVal;
+        }
+        return null;
+    }
+    limits(max) {
+        this._limits = max;
+        return this;
+    }
+    //main stream methods
+    collect(collector) {
+        while (this.hasNext()) {
+            let t = this.next();
+            collector.collect(t);
+        }
+        this.reset();
+        return collector.finalValue;
+    }
+    onElem(fn) {
+        return new LazyStream(new SourcesCollectors_1.MappedStreamDataSource((el) => {
+            if (fn(el, this.pos) === false) {
+                this.stop();
+            }
+            return el;
+        }, this));
+    }
+    filter(fn) {
+        return new LazyStream(new SourcesCollectors_1.FilteredStreamDatasource(fn, this));
+    }
+    map(fn) {
+        return new LazyStream(new SourcesCollectors_1.MappedStreamDataSource(fn, this));
+    }
+    flatMap(fn) {
+        return new LazyStream(new SourcesCollectors_1.FlatMapStreamDataSource(fn, this));
+    }
+    //endpoint
+    each(fn) {
+        while (this.hasNext()) {
+            if (fn(this.next()) === false) {
+                this.stop();
+            }
+        }
+        this.reset();
+    }
+    reduce(fn, startVal = null) {
+        if (!this.hasNext()) {
+            return Monad_1.Optional.absent;
+        }
+        let value1;
+        let value2 = null;
+        if (startVal != null) {
+            value1 = startVal;
+            value2 = this.next();
+        }
+        else {
+            value1 = this.next();
+            if (!this.hasNext()) {
+                return Monad_1.Optional.fromNullable(value1);
+            }
+            value2 = this.next();
+        }
+        value1 = fn(value1, value2);
+        while (this.hasNext()) {
+            value2 = this.next();
+            value1 = fn(value1, value2);
+        }
+        this.reset();
+        return Monad_1.Optional.fromNullable(value1);
+    }
+    last() {
+        if (!this.hasNext()) {
+            return Monad_1.Optional.absent;
+        }
+        return this.reduce((el1, el2) => el2);
+    }
+    first() {
+        this.reset();
+        if (!this.hasNext()) {
+            return Monad_1.Optional.absent;
+        }
+        return Monad_1.Optional.fromNullable(this.next());
+    }
+    anyMatch(fn) {
+        while (this.hasNext()) {
+            if (fn(this.next())) {
+                return true;
+            }
+        }
+        return false;
+    }
+    allMatch(fn) {
+        while (this.hasNext()) {
+            if (!fn(this.next())) {
+                return false;
+            }
+        }
+        return true;
+    }
+    noneMatch(fn) {
+        while (this.hasNext()) {
+            if (fn(this.next())) {
+                return false;
+            }
+        }
+        return true;
+    }
+    sort(comparator) {
+        let arr = this.collect(new SourcesCollectors_1.ArrayCollector());
+        arr = arr.sort(comparator);
+        return LazyStream.of(...arr);
+    }
+    get value() {
+        return this.collect(new SourcesCollectors_1.ArrayCollector());
+    }
+    [Symbol.iterator]() {
+        return {
+            next: () => {
+                let done = !this.hasNext();
+                let val = this.next();
+                return {
+                    done: done,
+                    value: val
+                };
+            }
+        };
+    }
+    /*get observable(): Observable<T> {
+        return from(this);
+    }*/
+    stop() {
+        this.pos = this._limits + 1000000000;
+        this._limits = 0;
+    }
+    isOverLimits() {
+        return this._limits != -1 && this.pos >= this._limits - 1;
+    }
+}
+exports.LazyStream = LazyStream;
 
 
 /***/ }),
@@ -3572,7 +3959,7 @@ exports.XQ = XMLQuery;
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.XQ = exports.XMLQuery = exports.ValueEmbedder = exports.Optional = exports.Monad = exports.CONFIG_ANY = exports.CONFIG_VALUE = exports.Config = exports.Lang = exports.DQ$ = exports.DQ = exports.DomQueryCollector = exports.ElementAttribute = exports.DomQuery = void 0;
+exports.QueryFormDataCollector = exports.FormDataCollector = exports.AssocArrayCollector = exports.ArrayCollector = exports.QueryFormStringCollector = exports.SequenceDataSource = exports.FlatMapStreamDataSource = exports.FilteredStreamDatasource = exports.MappedStreamDataSource = exports.ArrayStreamDataSource = exports.LazyStream = exports.Stream = exports.XQ = exports.XMLQuery = exports.ValueEmbedder = exports.Optional = exports.Monad = exports.CONFIG_ANY = exports.CONFIG_VALUE = exports.Config = exports.Lang = exports.DQ$ = exports.DQ = exports.DomQueryCollector = exports.ElementAttribute = exports.DomQuery = void 0;
 /*!
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -3609,6 +3996,20 @@ Object.defineProperty(exports, "ValueEmbedder", ({ enumerable: true, get: functi
 var XmlQuery_1 = __webpack_require__(/*! ./XmlQuery */ "./node_modules/mona-dish/src/main/typescript/XmlQuery.ts");
 Object.defineProperty(exports, "XMLQuery", ({ enumerable: true, get: function () { return XmlQuery_1.XMLQuery; } }));
 Object.defineProperty(exports, "XQ", ({ enumerable: true, get: function () { return XmlQuery_1.XQ; } }));
+var Stream_1 = __webpack_require__(/*! ./Stream */ "./node_modules/mona-dish/src/main/typescript/Stream.ts");
+Object.defineProperty(exports, "Stream", ({ enumerable: true, get: function () { return Stream_1.Stream; } }));
+Object.defineProperty(exports, "LazyStream", ({ enumerable: true, get: function () { return Stream_1.LazyStream; } }));
+var SourcesCollectors_1 = __webpack_require__(/*! ./SourcesCollectors */ "./node_modules/mona-dish/src/main/typescript/SourcesCollectors.ts");
+Object.defineProperty(exports, "ArrayStreamDataSource", ({ enumerable: true, get: function () { return SourcesCollectors_1.ArrayStreamDataSource; } }));
+Object.defineProperty(exports, "MappedStreamDataSource", ({ enumerable: true, get: function () { return SourcesCollectors_1.MappedStreamDataSource; } }));
+Object.defineProperty(exports, "FilteredStreamDatasource", ({ enumerable: true, get: function () { return SourcesCollectors_1.FilteredStreamDatasource; } }));
+Object.defineProperty(exports, "FlatMapStreamDataSource", ({ enumerable: true, get: function () { return SourcesCollectors_1.FlatMapStreamDataSource; } }));
+Object.defineProperty(exports, "SequenceDataSource", ({ enumerable: true, get: function () { return SourcesCollectors_1.SequenceDataSource; } }));
+Object.defineProperty(exports, "QueryFormStringCollector", ({ enumerable: true, get: function () { return SourcesCollectors_1.QueryFormStringCollector; } }));
+Object.defineProperty(exports, "ArrayCollector", ({ enumerable: true, get: function () { return SourcesCollectors_1.ArrayCollector; } }));
+Object.defineProperty(exports, "AssocArrayCollector", ({ enumerable: true, get: function () { return SourcesCollectors_1.AssocArrayCollector; } }));
+Object.defineProperty(exports, "FormDataCollector", ({ enumerable: true, get: function () { return SourcesCollectors_1.FormDataCollector; } }));
+Object.defineProperty(exports, "QueryFormDataCollector", ({ enumerable: true, get: function () { return SourcesCollectors_1.QueryFormDataCollector; } }));
 
 
 /***/ }),
@@ -4322,11 +4723,26 @@ var Implementation;
         /*
          * the search root for the dom element search
          */
-        let searchRoot = new mona_dish_1.DQ(node || document.body).querySelectorAll(`form input [name='${Const_1.P_CLIENT_WINDOW}']`);
+        let searchRoot = ((node) ? mona_dish_1.DQ.byId(node) : (0, mona_dish_1.DQ$)("form"));
+        let inputs = searchRoot
+            .filterSelector(`input[name='${(0, Const_1.$nsp)(Const_1.P_CLIENT_WINDOW)}']`)
+            .orElseLazy(() => searchRoot.querySelectorAll(`input[name='${(0, Const_1.$nsp)(Const_1.P_CLIENT_WINDOW)}']`));
         /*
-         * lazy helper to fetch the window id from the window url
+         * lazy helper to fetch the window id from the included faces.js
          */
-        let fetchWindowIdFromUrl = () => ExtDomQuery_1.ExtDomQuery.searchJsfJsFor(/jfwid=([^&;]*)/).orElse(null).value;
+        let fetchWindowIdFromJSFJS = () => ExtDomQuery_1.ExtDomQuery.searchJsfJsFor(/jfwid=([^&;]*)/).orElse(null).value;
+        /*
+         * fetch window id from the url
+         */
+        let fetchWindowIdFromURL = function () {
+            const href = window.location.href, windowId = "jfwid";
+            const regex = new RegExp("[\\?&]" + windowId + "=([^&#\\;]*)");
+            const results = regex.exec(href);
+            //initial trial over the url and a regexp
+            if (results != null)
+                return results[1];
+            return null;
+        };
         /*
          * functional double check based on stream reduction
          * the values should be identical or on INIT value which is a premise to
@@ -4349,19 +4765,19 @@ var Implementation;
          *
          * @param item
          */
-        let getValue = (item) => item.attr("value").value;
+        let getValue = (item) => item.val;
         /*
          * fetch the window id from the forms
          * window ids must be present in all forms
          * or non-existent. If they exist all of them must be the same
          */
-        let formWindowId = searchRoot.stream.map(getValue).reduce(differenceCheck, INIT);
+        let formWindowId = inputs.stream.map(getValue).reduce(differenceCheck, INIT);
         //if the resulting window id is set on altered then we have an unresolvable problem
         assert(ALTERED != formWindowId.value, "Multiple different windowIds found in document");
         /*
          * return the window id or null
          */
-        return formWindowId.value != INIT ? formWindowId.value : fetchWindowIdFromUrl();
+        return formWindowId.value != INIT ? formWindowId.value : (fetchWindowIdFromURL() || fetchWindowIdFromJSFJS());
     }
     Implementation.getClientWindow = getClientWindow;
     /**

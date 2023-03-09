@@ -18,7 +18,7 @@ import {describe, it} from "mocha";
 import * as sinon from "sinon";
 import {expect} from "chai";
 import {StandardInits} from "../frameworkBase/_ext/shared/StandardInits";
-import {DomQuery} from "mona-dish";
+import {_Es2019Array, DomQuery} from "mona-dish";
 import {
     COMPLETE, EMPTY_STR,
     P_AJAX,
@@ -72,7 +72,7 @@ let issueStdPPSReq = function (element) {
  * specialized tests testing the xhr core behavior when it hits the xmlHttpRequest object
  */
 describe('Tests on the xhr core when it starts to call the request', function () {
-
+    let oldFlatMap = null;
     beforeEach(async function () {
 
         let waitForResult = defaultMyFaces();
@@ -88,6 +88,9 @@ describe('Tests on the xhr core when it starts to call the request', function ()
             window.XMLHttpRequest = this.xhr;
 
             this.jsfAjaxResponse = sinon.spy((<any>global).faces.ajax, "response");
+            oldFlatMap =Array.prototype["flatMap"];
+            window["Es2019Array"] = _Es2019Array;
+            delete Array.prototype["flatMap"];
 
             this.closeIt = () => {
                 (<any>global).XMLHttpRequest = window.XMLHttpRequest = this.xhr.restore();
@@ -100,6 +103,10 @@ describe('Tests on the xhr core when it starts to call the request', function ()
 
     afterEach(function () {
         this.closeIt();
+        if(oldFlatMap) {
+            Array.prototype["flatMap"] = oldFlatMap;
+            oldFlatMap = null;
+        }
     });
 
     it('must have the standard parameters all in', function (done) {

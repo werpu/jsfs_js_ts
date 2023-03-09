@@ -523,16 +523,16 @@ export module Implementation {
          * or non-existent. If they exist all of them must be the same
          */
 
-        let formWindowId: Optional<string> = inputs.stream.map(getValue).reduce(differenceCheck, INIT);
+        let formWindowId: string = inputs.asArray.map(getValue).reduce(differenceCheck, INIT);
 
 
         //if the resulting window id is set on altered then we have an unresolvable problem
-        assert(ALTERED != formWindowId.value, "Multiple different windowIds found in document");
+        assert(ALTERED != formWindowId, "Multiple different windowIds found in document");
 
         /*
          * return the window id or null
          */
-        return formWindowId.value != INIT ? formWindowId.value : (fetchWindowIdFromURL() || fetchWindowIdFromJSFJS());
+        return formWindowId != INIT ? formWindowId : (fetchWindowIdFromURL() || fetchWindowIdFromJSFJS());
     }
 
     /**

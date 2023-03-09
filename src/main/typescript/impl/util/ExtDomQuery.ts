@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Config, IValueHolder, Optional, DomQuery, DQ} from "mona-dish";
+import {Config, IValueHolder, Optional, DomQuery, DQ, Es2019Array} from "mona-dish";
 import {$nsp, P_WINDOW_ID} from "../core/Const";
 
 
@@ -330,6 +330,6 @@ export class ExtConfig extends  Config {
         if(!this.$nspEnabled) {
             return accessPath;
         }
-        return [...accessPath].map(key => $nsp(key));
+        return new Es2019Array(...accessPath).map(key => $nsp(key));
     }
 }

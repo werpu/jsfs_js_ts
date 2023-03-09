@@ -19,6 +19,7 @@ import {Lang as LangBase, Config, Optional, DomQuery, DQ} from "mona-dish";
 import {Messages} from "../i18n/Messages";
 import {EMPTY_STR, HTML_TAG_FORM} from "../core/Const";
 import {getEventTarget} from "../xhrCore/RequestDataResolver";
+import {Es2019Array} from "mona-dish";
 
 
 export module ExtLang {
@@ -207,7 +208,7 @@ export module ExtLang {
      * @param value
      */
     export function ofAssoc(value: {[key: string]: any}) {
-        return Object.keys(value)
+        return new Es2019Array(...Object.keys(value))
             .map(key => [key, value[key]]);
     }
 

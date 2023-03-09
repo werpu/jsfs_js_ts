@@ -3803,7 +3803,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Assoc = exports.CONFIG_VALUE = exports.CONFIG_ANY = exports.Config = exports.shallowMerge = exports.simpleShallowMerge = exports.append = exports.assignIf = exports.assign = exports.XQ = exports.XMLQuery = exports.ValueEmbedder = exports.Optional = exports.Monad = exports.Lang = exports.DQ$ = exports.DQ = exports.DomQueryCollector = exports.ElementAttribute = exports.DomQuery = void 0;
+exports._Es2019Array = exports.Es2019Array = exports.Assoc = exports.CONFIG_VALUE = exports.CONFIG_ANY = exports.Config = exports.shallowMerge = exports.simpleShallowMerge = exports.append = exports.assignIf = exports.assign = exports.XQ = exports.XMLQuery = exports.ValueEmbedder = exports.Optional = exports.Monad = exports.Lang = exports.DQ$ = exports.DQ = exports.DomQueryCollector = exports.ElementAttribute = exports.DomQuery = void 0;
 /*!
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -3850,6 +3850,9 @@ Object.defineProperty(exports, "CONFIG_ANY", ({ enumerable: true, get: function 
 var Config_3 = __webpack_require__(/*! ./Config */ "./node_modules/mona-dish/src/main/typescript/Config.ts");
 Object.defineProperty(exports, "CONFIG_VALUE", ({ enumerable: true, get: function () { return Config_3.CONFIG_VALUE; } }));
 exports.Assoc = __importStar(__webpack_require__(/*! ./AssocArray */ "./node_modules/mona-dish/src/main/typescript/AssocArray.ts"));
+var Es2019Array_1 = __webpack_require__(/*! ./Es2019Array */ "./node_modules/mona-dish/src/main/typescript/Es2019Array.ts");
+Object.defineProperty(exports, "Es2019Array", ({ enumerable: true, get: function () { return Es2019Array_1.Es2019Array; } }));
+Object.defineProperty(exports, "_Es2019Array", ({ enumerable: true, get: function () { return Es2019Array_1._Es2019Array; } }));
 
 
 /***/ }),
@@ -4608,13 +4611,13 @@ var Implementation;
          * window ids must be present in all forms
          * or non-existent. If they exist all of them must be the same
          */
-        let formWindowId = inputs.stream.map(getValue).reduce(differenceCheck, INIT);
+        let formWindowId = inputs.asArray.map(getValue).reduce(differenceCheck, INIT);
         //if the resulting window id is set on altered then we have an unresolvable problem
-        assert(ALTERED != formWindowId.value, "Multiple different windowIds found in document");
+        assert(ALTERED != formWindowId, "Multiple different windowIds found in document");
         /*
          * return the window id or null
          */
-        return formWindowId.value != INIT ? formWindowId.value : (fetchWindowIdFromURL() || fetchWindowIdFromJSFJS());
+        return formWindowId != INIT ? formWindowId : (fetchWindowIdFromURL() || fetchWindowIdFromJSFJS());
     }
     Implementation.getClientWindow = getClientWindow;
     /**
@@ -6017,7 +6020,7 @@ class ExtConfig extends mona_dish_1.Config {
         if (!this.$nspEnabled) {
             return accessPath;
         }
-        return [...accessPath].map(key => (0, Const_1.$nsp)(key));
+        return new mona_dish_1.Es2019Array(...accessPath).map(key => (0, Const_1.$nsp)(key));
     }
 }
 exports.ExtConfig = ExtConfig;
@@ -6034,6 +6037,7 @@ exports.ExtConfig = ExtConfig;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getFormInputsAsArr = exports.fixEmptyParameters = exports.resolveFiles = exports.decodeEncodedValues = exports.encodeFormData = void 0;
+const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const ExtDomQuery_1 = __webpack_require__(/*! ./ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
 const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 /*
@@ -6055,7 +6059,7 @@ function encodeFormData(formData, paramsMapper = (inStr, inVal) => [inStr, inVal
     const isPropertyKey = key => assocValues.hasOwnProperty(key);
     const isNotFile = ([, value]) => !(value instanceof ExtDomQuery_1.ExtDomQuery.global().File);
     const mapIntoUrlParam = keyVal => `${encodeURIComponent(keyVal[0])}=${encodeURIComponent(keyVal[1])}`;
-    return Object.keys(assocValues)
+    return new mona_dish_1.Es2019Array(...Object.keys(assocValues))
         .filter(isPropertyKey)
         .flatMap(expandValueArrAndRename)
         .filter(isNotFile)
@@ -6252,6 +6256,7 @@ const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-di
 const Messages_1 = __webpack_require__(/*! ../i18n/Messages */ "./src/main/typescript/impl/i18n/Messages.ts");
 const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 const RequestDataResolver_1 = __webpack_require__(/*! ../xhrCore/RequestDataResolver */ "./src/main/typescript/impl/xhrCore/RequestDataResolver.ts");
+const mona_dish_2 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 var ExtLang;
 (function (ExtLang) {
     let installedLocale;
@@ -6428,7 +6433,7 @@ var ExtLang;
      * @param value
      */
     function ofAssoc(value) {
-        return Object.keys(value)
+        return new mona_dish_2.Es2019Array(...Object.keys(value))
             .map(key => [key, value[key]]);
     }
     ExtLang.ofAssoc = ofAssoc;
@@ -7760,6 +7765,7 @@ const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/
 const FileUtils_1 = __webpack_require__(/*! ../util/FileUtils */ "./src/main/typescript/impl/util/FileUtils.ts");
 const Lang_1 = __webpack_require__(/*! ../util/Lang */ "./src/main/typescript/impl/util/Lang.ts");
 var ofAssoc = Lang_1.ExtLang.ofAssoc;
+const mona_dish_2 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const defaultParamsMapper = (key, item) => [key, item];
 /**
  * A unified form data class
@@ -7817,7 +7823,7 @@ class XhrFormData extends mona_dish_1.Config {
            */
         let expandValueArrays = ([key, item]) => {
             if (Array.isArray(item)) {
-                return item.map(value => {
+                return new mona_dish_2.Es2019Array(...item).map(value => {
                     return { key, value };
                 });
             }

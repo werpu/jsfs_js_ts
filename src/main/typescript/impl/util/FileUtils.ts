@@ -1,4 +1,4 @@
-import {Config, DomQuery, DQ} from "mona-dish";
+import {Config, DomQuery, DQ, Es2019Array} from "mona-dish";
 import {ExtDomQuery} from "./ExtDomQuery";
 import {$faces, EMPTY_STR} from "../core/Const";
 
@@ -27,7 +27,7 @@ export function encodeFormData(formData: Config,
     const isNotFile = ([, value]) => !(value instanceof ExtDomQuery.global().File);
     const mapIntoUrlParam = keyVal => `${encodeURIComponent(keyVal[0])}=${encodeURIComponent(keyVal[1])}`;
 
-    return Object.keys(assocValues)
+    return new Es2019Array(...Object.keys(assocValues))
         .filter(isPropertyKey)
         .flatMap(expandValueArrAndRename)
         .filter(isNotFile)

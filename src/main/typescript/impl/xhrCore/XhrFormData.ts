@@ -22,6 +22,7 @@ import {
 } from "../util/FileUtils";
 import {ExtLang} from "../util/Lang";
 import ofAssoc = ExtLang.ofAssoc;
+import {Es2019Array} from "mona-dish";
 
 
 type ParamsMapper<V, K> = (key: V, item: K) => [V, K];
@@ -82,7 +83,7 @@ export class XhrFormData extends Config {
            */
         let expandValueArrays = ([key, item]) => {
             if (Array.isArray(item)) {
-                return item.map(value => {
+                return new Es2019Array(...item).map(value => {
                     return {key, value}
                 })
             }

@@ -18,7 +18,7 @@ import {describe, it} from "mocha";
 import * as sinon from "sinon";
 import {expect} from "chai";
 import {StandardInits} from "../frameworkBase/_ext/shared/StandardInits";
-import {DomQuery, DQ$, Stream} from "mona-dish";
+import {_Es2019Array, DomQuery, DQ$, Stream} from "mona-dish";
 import {
     $nsp,
     COMPLETE,
@@ -50,6 +50,7 @@ let issueStdReq = function (element) {
 };
 
 describe('Namespacing tests', function () {
+    let oldFlatMap = null;
     beforeEach(async function () {
 
         let waitForResult = defaultMyFacesNamespaces();
@@ -65,6 +66,9 @@ describe('Namespacing tests', function () {
             window.XMLHttpRequest = this.xhr;
 
             this.jsfAjaxResponse = sinon.spy((<any>global).faces.ajax, "response");
+            oldFlatMap =Array.prototype["flatMap"];
+            window["Es2019Array"] = _Es2019Array;
+            delete Array.prototype["flatMap"];
 
             this.closeIt = () => {
                 (<any>global).XMLHttpRequest = window.XMLHttpRequest = this.xhr.restore();
@@ -77,6 +81,10 @@ describe('Namespacing tests', function () {
 
     afterEach(function () {
         this.closeIt();
+        if(oldFlatMap) {
+            Array.prototype["flatMap"] = oldFlatMap;
+            oldFlatMap = null;
+        }
     });
 
     it('must send the element identifiers properly encoded', function () {

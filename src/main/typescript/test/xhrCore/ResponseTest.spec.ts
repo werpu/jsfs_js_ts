@@ -21,7 +21,7 @@ import * as sinon from "sinon";
 
 import {XmlResponses} from "../frameworkBase/_ext/shared/XmlResponses";
 import {expect} from "chai";
-import {DomQuery, DQ, DQ$} from "mona-dish";
+import {_Es2019Array, DomQuery, DQ, DQ$} from "mona-dish";
 import protocolPage = StandardInits.protocolPage;
 
 
@@ -35,7 +35,7 @@ declare var Implementation: any;
  * we do not need to go through the entire ajax cycle for that.
  */
 describe('Tests of the various aspects of the response protocol functionality', function () {
-
+    let oldFlatMap = null;
     beforeEach(async function () {
         let waitForResult = protocolPage();
         return waitForResult.then((close) => {
@@ -55,6 +55,9 @@ describe('Tests of the various aspects of the response protocol functionality', 
             };
             (<any>global).XMLHttpRequest = this.xhr;
             window.XMLHttpRequest = this.xhr;
+            oldFlatMap =Array.prototype["flatMap"];
+            window["Es2019Array"] = _Es2019Array;
+            delete Array.prototype["flatMap"];
 
             this.closeIt = () => {
                 (<any>global).XMLHttpRequest = window.XMLHttpRequest = this.xhr.restore();
@@ -66,6 +69,10 @@ describe('Tests of the various aspects of the response protocol functionality', 
 
     afterEach(function () {
         this.closeIt();
+        if(oldFlatMap) {
+            Array.prototype["flatMap"] = oldFlatMap;
+            oldFlatMap = null;
+        }
     });
 
     it("must have a simple field updated as well as the viewstate", function (done) {

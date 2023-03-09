@@ -162,7 +162,7 @@ function alloc(arr, length, defaultVal = {}) {
     arr.push(...toAdd);
 }
 function flattenAccessPath(accessPath) {
-    return accessPath.flatMap(path => path.split("["))
+    return new Es2019Array_1.Es2019Array(...accessPath).flatMap(path => path.split("["))
         .map(path => path.indexOf("]") != -1 ? "[" + path : path)
         .filter(path => path != "");
 }
@@ -256,7 +256,7 @@ exports.simpleShallowMerge = simpleShallowMerge;
  */
 function shallowMerge(overwrite = true, withAppend = false, ...assocArrays) {
     let target = {};
-    assocArrays.map(arr => {
+    new Es2019Array_1.Es2019Array(...assocArrays).map(arr => {
         return { arr, keys: Object.keys(arr) };
     }).forEach(({ arr, keys }) => {
         keys.forEach(key => {
@@ -6128,7 +6128,7 @@ function resolveViewState(parentItem) {
 function getFormInputsAsArr(parentItem) {
     const standardInputs = resolveViewState(parentItem);
     const fileInputs = resolveFiles(parentItem);
-    return standardInputs.concat(...fileInputs);
+    return standardInputs.concat(fileInputs);
 }
 exports.getFormInputsAsArr = getFormInputsAsArr;
 
@@ -7340,8 +7340,8 @@ class ResponseProcessor {
         const nodesToAdd = (shadowHead.tagName.value === "HEAD") ? shadowHead.childNodes : shadowHead;
         // this is stored for "post" processing
         // after the rest of the "physical build up", head before body
-        const scriptElements = nodesToAdd.stream
-            .filter(item => scriptTags.indexOf(item.tagName.orElse("").value) != -1).collect(new mona_dish_1.DomQueryCollector());
+        const scriptElements = new mona_dish_1.DomQuery(...nodesToAdd.asArray
+            .filter(item => scriptTags.indexOf(item.tagName.orElse("").value) != -1));
         this.addToHeadDeferred(scriptElements);
     }
     addToHeadDeferred(newElements) {

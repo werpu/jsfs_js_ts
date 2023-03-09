@@ -18,22 +18,19 @@ import {describe, it} from "mocha";
 import * as sinon from "sinon";
 import {expect} from "chai";
 import {StandardInits} from "../frameworkBase/_ext/shared/StandardInits";
-import {_Es2019Array, DomQuery, DQ$, Stream} from "mona-dish";
+import {_Es2019Array, DQ$} from "mona-dish";
 import {
-    $nsp,
-    COMPLETE,
     P_AJAX,
     P_EXECUTE,
     P_AJAX_SOURCE,
     P_RENDER,
     P_VIEWSTATE,
-    P_WINDOW_ID,
-    SUCCESS
+    P_WINDOW_ID
 } from "../../impl/core/Const";
-import defaultMyFaces = StandardInits.defaultMyFaces;
-import STD_XML = StandardInits.STD_XML;
 import defaultMyFacesNamespaces = StandardInits.defaultMyFacesNamespaces;
 import {escape} from "querystring";
+import {ExtLang} from "../../impl/util/Lang";
+import ofAssoc = ExtLang.ofAssoc;
 
 declare var faces: any;
 declare var Implementation: any;
@@ -190,13 +187,13 @@ describe('Namespacing tests', function () {
             expect(!!resultsMap["render"]).to.be.false;
             expect(!!resultsMap["execute"]).to.be.false;
 
-            let hasWindowdId = Stream.ofAssoc(resultsMap).filter(data => data[0].indexOf(P_WINDOW_ID) != -1).first().isPresent();
-            let hasViewState = Stream.ofAssoc(resultsMap).filter(data => data[0].indexOf(P_VIEWSTATE) != -1).first().isPresent();
+            let hasWindowdId = ofAssoc(resultsMap).filter(data => data[0].indexOf(P_WINDOW_ID) != -1)?.[0];
+            let hasViewState = ofAssoc(resultsMap).filter(data => data[0].indexOf(P_VIEWSTATE) != -1)?.[0];
 
-            expect(hasWindowdId).to.be.false;
-            expect(hasViewState).to.be.true;
+            expect(!!hasWindowdId).to.be.false;
+            expect(!!hasViewState).to.be.true;
 
-            let viewState = Stream.ofAssoc(resultsMap).filter(data => data[0].indexOf(P_VIEWSTATE) != -1).map(item => item[1]).first().value;
+            let viewState = ofAssoc(resultsMap).filter(data => data[0].indexOf(P_VIEWSTATE) != -1).map(item => item[1])?.[0];
 
             expect(viewState).to.eq("booga");
             expect(resultsMap[NAMING_CONTAINER_PREF + P_AJAX_SOURCE]).to.eq("jd_0:input_2");

@@ -24,7 +24,7 @@ import {
     COMPLETE,
     P_AJAX,
     P_EXECUTE,
-    P_PARTIAL_SOURCE,
+    P_AJAX_SOURCE,
     P_RENDER,
     P_VIEWSTATE,
     P_WINDOW_ID,
@@ -107,7 +107,7 @@ describe('Namespacing tests', function () {
             expect(!!resultsMap["execute"]).to.be.false;
             expect(P_WINDOW_ID in resultsMap).to.be.false;
             expect(P_VIEWSTATE in resultsMap).to.be.true;
-            expect(resultsMap[P_PARTIAL_SOURCE]).to.eq(escape("jd_0:input_2"));
+            expect(resultsMap[P_AJAX_SOURCE]).to.eq(escape("jd_0:input_2"));
             expect(resultsMap[P_AJAX]).to.eq("true");
             expect(resultsMap[P_RENDER]).to.eq(escape("jd_0:blarg jd_0:input_2"));
             expect(resultsMap[P_EXECUTE]).to.eq(escape("jd_0:input_1 jd_0:input_2"));
@@ -143,7 +143,7 @@ describe('Namespacing tests', function () {
             expect(!!resultsMap["execute"]).to.be.false;
             expect(P_WINDOW_ID in resultsMap).to.be.false;
             expect(P_VIEWSTATE in resultsMap).to.be.true;
-            expect(resultsMap[P_PARTIAL_SOURCE]).to.eq(escape("jd_0:input_2"));
+            expect(resultsMap[P_AJAX_SOURCE]).to.eq(escape("jd_0:input_2"));
             expect(resultsMap[P_AJAX]).to.eq("true");
             expect(resultsMap[P_RENDER]).to.eq(escape("jd_0:blarg jd_0:input_2"));
             expect(resultsMap[P_EXECUTE]).to.eq(escape("jd_0:input_1 jd_0:input_2"));
@@ -191,7 +191,7 @@ describe('Namespacing tests', function () {
             let viewState = Stream.ofAssoc(resultsMap).filter(data => data[0].indexOf(P_VIEWSTATE) != -1).map(item => item[1]).first().value;
 
             expect(viewState).to.eq("booga");
-            expect(resultsMap[NAMING_CONTAINER_PREF + P_PARTIAL_SOURCE]).to.eq("jd_0:input_2");
+            expect(resultsMap[NAMING_CONTAINER_PREF + P_AJAX_SOURCE]).to.eq("jd_0:input_2");
             expect(resultsMap[NAMING_CONTAINER_PREF + P_AJAX]).to.eq("true");
             expect(resultsMap[NAMING_CONTAINER_PREF + P_RENDER]).to.eq("jd_0:blarg jd_0:input_2");
             expect(resultsMap[NAMING_CONTAINER_PREF + P_EXECUTE]).to.eq("jd_0:input_1 jd_0:input_2");

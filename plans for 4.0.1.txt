@@ -1,0 +1,8 @@
+# Brainstorming for 4.0.1
+
+* Eliminate Streams - done, this was the biggest one
+* Reintroduce partial page submit (myfaces.pps?), while never really used - done, pps=true is reintroduced
+reducing the commit load onto execute!
+
+queue size reduction... not really needed, there never was a usecase for it
+

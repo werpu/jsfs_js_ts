@@ -2,6 +2,540 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
+/***/ "./node_modules/mona-dish/src/main/typescript/AssocArray.ts":
+/*!******************************************************************!*\
+  !*** ./node_modules/mona-dish/src/main/typescript/AssocArray.ts ***!
+  \******************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+/*!
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.shallowMerge = exports.simpleShallowMerge = exports.deepCopy = exports.buildPath = exports.resolve = exports.appendIf = exports.assignIf = exports.append = exports.assign = void 0;
+const Es2019Array_1 = __webpack_require__(/*! ./Es2019Array */ "./node_modules/mona-dish/src/main/typescript/Es2019Array.ts");
+/**
+ * A nop as assign functionality (aka ignore assign)
+ */
+class IgnoreAssign {
+    constructor(parent) {
+        this.parent = parent;
+    }
+    set value(value) {
+    }
+    get value() {
+        return this.parent;
+    }
+}
+;
+/**
+ * uses the known pattern from config
+ * assign(target, key1, key2, key3).value = value;
+ * @param target
+ * @param keys
+ */
+function assign(target, ...accessPath) {
+    if (accessPath.length < 1) {
+        return new IgnoreAssign(target);
+    }
+    const lastPathItem = buildPath(target, ...accessPath);
+    let assigner = new (class {
+        set value(value) {
+            lastPathItem.target[lastPathItem.key] = value;
+        }
+        get value() {
+            return lastPathItem.target[lastPathItem.key];
+        }
+    })();
+    return assigner;
+}
+exports.assign = assign;
+function append(target, ...accessPath) {
+    if (accessPath.length < 1) {
+        return new IgnoreAssign(target);
+    }
+    const lastPathItem = buildPath(target, ...accessPath);
+    let appender = new (class {
+        set value(value) {
+            if (!Array.isArray(value)) {
+                value = [value];
+            }
+            if (!lastPathItem.target[lastPathItem.key]) {
+                lastPathItem.target[lastPathItem.key] = value;
+            }
+            else {
+                if (!Array.isArray(lastPathItem.target[lastPathItem.key])) {
+                    lastPathItem.target[lastPathItem.key] = [lastPathItem.target[lastPathItem.key]];
+                }
+                lastPathItem.target[lastPathItem.key].push(...value);
+            }
+        }
+    })();
+    return appender;
+}
+exports.append = append;
+/**
+ * uses the known pattern from config
+ * assign(target, key1, key2, key3).value = value;
+ * @param target
+ * @param keys
+ */
+function assignIf(condition, target, ...accessPath) {
+    if ((!condition) || accessPath.length < 1) {
+        return new IgnoreAssign(target);
+    }
+    return assign(target, ...accessPath);
+}
+exports.assignIf = assignIf;
+/**
+ * uses the known pattern from config
+ * assign(target, key1, key2, key3).value = value;
+ * @param target
+ * @param keys
+ */
+function appendIf(condition, target, ...accessPath) {
+    if ((!condition) || accessPath.length < 1) {
+        return new IgnoreAssign(target);
+    }
+    return append(target, ...accessPath);
+}
+exports.appendIf = appendIf;
+function resolve(target, ...accessPath) {
+    let ret = null;
+    accessPath = flattenAccessPath(accessPath);
+    let currPtr = target;
+    for (let cnt = 0; cnt < accessPath.length; cnt++) {
+        let accessKeyIndex = accessPath[cnt];
+        accessKeyIndex = arrayIndex(accessKeyIndex) != -1 ? arrayIndex(accessKeyIndex) : accessKeyIndex;
+        currPtr = currPtr === null || currPtr === void 0 ? void 0 : currPtr[accessKeyIndex];
+        if ('undefined' == typeof currPtr) {
+            return null;
+        }
+        ret = currPtr;
+    }
+    return currPtr;
+}
+exports.resolve = resolve;
+function keyVal(key) {
+    let start = key.indexOf("[");
+    if (start >= 0) {
+        return key.substring(0, start);
+    }
+    else {
+        return key;
+    }
+}
+function arrayIndex(key) {
+    let start = key.indexOf("[");
+    let end = key.indexOf("]");
+    if (start >= 0 && end > 0 && start < end) {
+        return parseInt(key.substring(start + 1, end));
+    }
+    else {
+        return -1;
+    }
+}
+function isArrayPos(currKey, arrPos) {
+    return currKey === "" && arrPos >= 0;
+}
+function isNoArray(arrPos) {
+    return arrPos == -1;
+}
+function alloc(arr, length, defaultVal = {}) {
+    let toAdd = [];
+    toAdd.length = length;
+    toAdd[length - 1] = defaultVal;
+    arr.push(...toAdd);
+}
+function flattenAccessPath(accessPath) {
+    return accessPath.flatMap(path => path.split("["))
+        .map(path => path.indexOf("]") != -1 ? "[" + path : path)
+        .filter(path => path != "");
+}
+/**
+ * builds up a path, only done if no data is present!
+ * @param target
+ * @param accessPath
+ * @returns the last assignable entry
+ */
+function buildPath(target, ...accessPath) {
+    accessPath = flattenAccessPath(accessPath);
+    //we now have a pattern of having the array accessors always in separate items
+    let parentPtr = target;
+    let parKeyArrPos = null;
+    let currKey = null;
+    let arrPos = -1;
+    for (let cnt = 0; cnt < accessPath.length; cnt++) {
+        currKey = keyVal(accessPath[cnt]);
+        arrPos = arrayIndex(accessPath[cnt]);
+        //it now is either key or arrPos
+        if (arrPos != -1) {
+            //case root(array)[5] -> root must be array and allocate 5 elements
+            //case root.item[5] root.item must be array and of 5 elements
+            if (!Array.isArray(parentPtr)) {
+                throw Error("Associative array referenced as index array in path reference");
+            }
+            //we need to look ahead for proper allocation
+            //not end reached
+            let nextArrPos = -1;
+            if (cnt < accessPath.length - 1) {
+                nextArrPos = arrayIndex(accessPath[cnt + 1]);
+            }
+            let dataPresent = 'undefined' != typeof (parentPtr === null || parentPtr === void 0 ? void 0 : parentPtr[arrPos]);
+            //no data present check here is needed, because alloc only reserves if not present
+            alloc(parentPtr, arrPos + 1, nextArrPos != -1 ? [] : {});
+            parKeyArrPos = arrPos;
+            //we now go to the reserved element
+            if (cnt == accessPath.length - 1) {
+                parentPtr[arrPos] = (dataPresent) ? parentPtr[arrPos] : null;
+            }
+            else {
+                parentPtr = parentPtr[arrPos];
+            }
+        }
+        else {
+            if (Array.isArray(parentPtr)) {
+                throw Error("Index array referenced as associative array in path reference");
+            }
+            //again look ahead whether the next value is an array or assoc array
+            let nextArrPos = -1;
+            if (cnt < accessPath.length - 1) {
+                nextArrPos = arrayIndex(accessPath[cnt + 1]);
+            }
+            parKeyArrPos = currKey;
+            let dataPresent = 'undefined' != typeof (parentPtr === null || parentPtr === void 0 ? void 0 : parentPtr[currKey]);
+            if (cnt == accessPath.length - 1) {
+                if (!dataPresent) {
+                    parentPtr[currKey] = null;
+                }
+            }
+            else {
+                if (!dataPresent) {
+                    parentPtr[currKey] = nextArrPos == -1 ? {} : [];
+                }
+                parentPtr = parentPtr[currKey];
+            }
+        }
+    }
+    return { target: parentPtr, key: parKeyArrPos };
+}
+exports.buildPath = buildPath;
+function deepCopy(fromAssoc) {
+    return JSON.parse(JSON.stringify(fromAssoc));
+}
+exports.deepCopy = deepCopy;
+/**
+ * simple left to right merge
+ *
+ * @param assocArrays
+ */
+function simpleShallowMerge(...assocArrays) {
+    return shallowMerge(true, false, ...assocArrays);
+}
+exports.simpleShallowMerge = simpleShallowMerge;
+/**
+ * Shallow merge as in config
+ *
+ * @param overwrite
+ * @param withAppend
+ * @param assocArrays
+ */
+function shallowMerge(overwrite = true, withAppend = false, ...assocArrays) {
+    let target = {};
+    assocArrays.map(arr => {
+        return { arr, keys: Object.keys(arr) };
+    }).forEach(({ arr, keys }) => {
+        keys.forEach(key => {
+            let toAssign = arr[key];
+            if (!Array.isArray(toAssign) && withAppend) {
+                toAssign = new Es2019Array_1.Es2019Array(...[toAssign]);
+            }
+            if (overwrite || !(target === null || target === void 0 ? void 0 : target[key])) {
+                if (!withAppend) {
+                    target[key] = arr[key];
+                }
+                else {
+                    if ('undefined' == typeof (target === null || target === void 0 ? void 0 : target[key])) {
+                        target[key] = toAssign;
+                    }
+                    else if (!Array.isArray(target[key])) {
+                        let oldVal = target[key];
+                        target[key] = new Es2019Array_1.Es2019Array(...[]);
+                        target[key].push(oldVal);
+                        target[key].push(...toAssign);
+                    }
+                    else {
+                        target[key].push(...toAssign);
+                    }
+                }
+            }
+        });
+    });
+    return target;
+}
+exports.shallowMerge = shallowMerge;
+
+
+/***/ }),
+
+/***/ "./node_modules/mona-dish/src/main/typescript/Config.ts":
+/*!**************************************************************!*\
+  !*** ./node_modules/mona-dish/src/main/typescript/Config.ts ***!
+  \**************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Config = exports.CONFIG_ANY = exports.CONFIG_VALUE = void 0;
+const Es2019Array_1 = __webpack_require__(/*! ./Es2019Array */ "./node_modules/mona-dish/src/main/typescript/Es2019Array.ts");
+const Monad_1 = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
+const Lang_1 = __webpack_require__(/*! ./Lang */ "./node_modules/mona-dish/src/main/typescript/Lang.ts");
+var objAssign = Lang_1.Lang.objAssign;
+const AssocArray_1 = __webpack_require__(/*! ./AssocArray */ "./node_modules/mona-dish/src/main/typescript/AssocArray.ts");
+/**
+ * specialized value embedder
+ * for our Configuration
+ */
+class ConfigEntry extends Monad_1.ValueEmbedder {
+    constructor(rootElem, key, arrPos) {
+        super(rootElem, key);
+        this.arrPos = arrPos !== null && arrPos !== void 0 ? arrPos : -1;
+    }
+    get value() {
+        if (this.key == "" && this.arrPos >= 0) {
+            return this._value[this.arrPos];
+        }
+        else if (this.key && this.arrPos >= 0) {
+            return this._value[this.key][this.arrPos];
+        }
+        return this._value[this.key];
+    }
+    set value(val) {
+        if (this.key == "" && this.arrPos >= 0) {
+            this._value[this.arrPos] = val;
+            return;
+        }
+        else if (this.key && this.arrPos >= 0) {
+            this._value[this.key][this.arrPos] = val;
+            return;
+        }
+        this._value[this.key] = val;
+    }
+}
+/*default value for absent*/
+ConfigEntry.absent = ConfigEntry.fromNullable(null);
+exports.CONFIG_VALUE = "__END_POINT__";
+exports.CONFIG_ANY = "__ANY_POINT__";
+/**
+ * Config, basically an optional wrapper for a json structure
+ * (not Side - effect free, since we can alter the internal config state
+ * without generating a new config), not sure if we should make it side - effect free
+ * since this would swallow a lot of performance and ram
+ */
+class Config extends Monad_1.Optional {
+    constructor(root, configDef) {
+        super(root);
+        this.configDef = configDef;
+    }
+    /**
+     * shallow copy getter, copies only the first level, references the deeper nodes
+     * in a shared manner
+     */
+    get shallowCopy() {
+        return this.shallowCopy$();
+    }
+    shallowCopy$() {
+        let ret = new Config({});
+        ret.shallowMerge(this.value);
+        return ret;
+    }
+    /**
+     * deep copy, copies all config nodes
+     */
+    get deepCopy() {
+        return this.deepCopy$();
+    }
+    deepCopy$() {
+        return new Config(objAssign({}, this.value));
+    }
+    /**
+     * creates a config from an initial value or null
+     * @param value
+     */
+    static fromNullable(value) {
+        return new Config(value);
+    }
+    /**
+     * simple merge for the root configs
+     */
+    shallowMerge(other, overwrite = true, withAppend = false) {
+        //shallow merge must be mutable so we have to remap
+        let newThis = (0, AssocArray_1.shallowMerge)(overwrite, withAppend, this.value, other.value);
+        if (Array.isArray(this._value)) {
+            this._value.length = 0;
+            this._value.push(...newThis);
+        }
+        else {
+            Object.getOwnPropertyNames(this._value).forEach(key => delete this._value[key]);
+            Object.getOwnPropertyNames(newThis).forEach(key => this._value[key] = newThis[key]);
+        }
+    }
+    /**
+     * assigns a single value as array, or appends it
+     * to an existing value mapping a single value to array
+     *
+     *
+     * usage myConfig.append("foobaz").value = "newValue"
+     *       myConfig.append("foobaz").value = "newValue2"
+     *
+     * resulting in myConfig.foobaz == ["newValue, newValue2"]
+     *
+     * @param {string[]} accessPath
+     */
+    append(...accessPath) {
+        return (0, AssocArray_1.append)(this._value, ...accessPath);
+    }
+    /**
+     * appends to an existing entry (or extends into an array and appends)
+     * if the condition is met
+     * @param {boolean} condition
+     * @param {string[]} accessPath
+     */
+    appendIf(condition, ...accessPath) {
+        return (0, AssocArray_1.appendIf)(condition, this._value, ...accessPath);
+    }
+    /**
+     * assigns a new value on the given access path
+     * @param accessPath
+     */
+    assign(...accessPath) {
+        return (0, AssocArray_1.assign)(this.value, ...accessPath);
+    }
+    /**
+     * assign a value if the condition is set to true, otherwise skip it
+     *
+     * @param condition the condition, the access accessPath into the config
+     * @param accessPath
+     */
+    assignIf(condition, ...accessPath) {
+        return (0, AssocArray_1.assignIf)(condition, this._value, ...accessPath);
+    }
+    /**
+     * get if the access path is present (get is reserved as getter with a default, on the current path)
+     * TODO will be renamed to something more meaningful and deprecated, the name is ambiguous
+     * @param accessPath the access path
+     */
+    getIf(...accessPath) {
+        this.assertAccessPath(...accessPath);
+        return this.getClass().fromNullable((0, AssocArray_1.resolve)(this.value, ...accessPath));
+    }
+    /**
+     * gets the current node and if none is present returns a config with a default value
+     * @param defaultVal
+     */
+    get(defaultVal) {
+        return this.getClass().fromNullable(super.get(defaultVal).value);
+    }
+    //empties the current config entry
+    delete(key) {
+        if (key in this.value) {
+            delete this.value[key];
+        }
+        return this;
+    }
+    /**
+     * converts the entire config into a json object
+     */
+    toJson() {
+        return JSON.stringify(this.value);
+    }
+    getClass() {
+        return Config;
+    }
+    setVal(val) {
+        this._value = val;
+    }
+    /**
+     * asserts the access path for a semi typed access
+     * @param accessPath
+     * @private
+     */
+    assertAccessPath(...accessPath) {
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+        accessPath = this.preprocessKeys(...accessPath);
+        if (!this.configDef) {
+            //untyped
+            return;
+        }
+        const ERR_ACCESS_PATH = "Access Path to config invalid";
+        let currAccessPos = Monad_1.Optional.fromNullable(Object.keys(this.configDef).map(key => {
+            let ret = {};
+            ret[key] = this.configDef[key];
+            return ret;
+        }));
+        for (let cnt = 0; cnt < accessPath.length; cnt++) {
+            let currKey = this.keyVal(accessPath[cnt]);
+            let arrPos = this.arrayIndex(accessPath[cnt]);
+            //key index
+            if (this.isArray(arrPos)) {
+                if (currKey != "") {
+                    currAccessPos = Array.isArray(currAccessPos.value) ?
+                        Monad_1.Optional.fromNullable((_b = (_a = new Es2019Array_1.Es2019Array(...currAccessPos.value)
+                            .find(item => {
+                            var _a;
+                            return !!((_a = item === null || item === void 0 ? void 0 : item[currKey]) !== null && _a !== void 0 ? _a : false);
+                        })) === null || _a === void 0 ? void 0 : _a[currKey]) === null || _b === void 0 ? void 0 : _b[arrPos]) :
+                        Monad_1.Optional.fromNullable((_e = (_d = (_c = currAccessPos.value) === null || _c === void 0 ? void 0 : _c[currKey]) === null || _d === void 0 ? void 0 : _d[arrPos]) !== null && _e !== void 0 ? _e : null);
+                }
+                else {
+                    currAccessPos = (Array.isArray(currAccessPos.value)) ?
+                        Monad_1.Optional.fromNullable((_f = currAccessPos.value) === null || _f === void 0 ? void 0 : _f[arrPos]) : Monad_1.Optional.absent;
+                }
+                //we noe store either the current array or the filtered look ahead to go further
+            }
+            else {
+                //we now have an array and go further with a singular key
+                currAccessPos = (Array.isArray(currAccessPos.value)) ? Monad_1.Optional.fromNullable((_g = new Es2019Array_1.Es2019Array(...currAccessPos.value)
+                    .find(item => {
+                    var _a;
+                    return !!((_a = item === null || item === void 0 ? void 0 : item[currKey]) !== null && _a !== void 0 ? _a : false);
+                })) === null || _g === void 0 ? void 0 : _g[currKey]) :
+                    Monad_1.Optional.fromNullable((_j = (_h = currAccessPos.value) === null || _h === void 0 ? void 0 : _h[currKey]) !== null && _j !== void 0 ? _j : null);
+            }
+            if (!currAccessPos.isPresent()) {
+                throw Error(ERR_ACCESS_PATH);
+            }
+            if (currAccessPos.value == exports.CONFIG_ANY) {
+                return;
+            }
+        }
+    }
+    isNoArray(arrPos) {
+        return arrPos == -1;
+    }
+    isArray(arrPos) {
+        return !this.isNoArray(arrPos);
+    }
+}
+exports.Config = Config;
+
+
+/***/ }),
+
 /***/ "./node_modules/mona-dish/src/main/typescript/DomQuery.ts":
 /*!****************************************************************!*\
   !*** ./node_modules/mona-dish/src/main/typescript/DomQuery.ts ***!
@@ -37,14 +571,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DQ$ = exports.DQ = exports.DomQueryCollector = exports.DomQuery = exports.Style = exports.ElementAttribute = void 0;
 const Monad_1 = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
-const Stream_1 = __webpack_require__(/*! ./Stream */ "./node_modules/mona-dish/src/main/typescript/Stream.ts");
 const SourcesCollectors_1 = __webpack_require__(/*! ./SourcesCollectors */ "./node_modules/mona-dish/src/main/typescript/SourcesCollectors.ts");
 const Lang_1 = __webpack_require__(/*! ./Lang */ "./node_modules/mona-dish/src/main/typescript/Lang.ts");
+const Global_1 = __webpack_require__(/*! ./Global */ "./node_modules/mona-dish/src/main/typescript/Global.ts");
+const Es2019Array_1 = __webpack_require__(/*! ./Es2019Array */ "./node_modules/mona-dish/src/main/typescript/Es2019Array.ts");
 var trim = Lang_1.Lang.trim;
 var isString = Lang_1.Lang.isString;
 var eqi = Lang_1.Lang.equalsIgnoreCase;
-const Global_1 = __webpack_require__(/*! ./Global */ "./node_modules/mona-dish/src/main/typescript/Global.ts");
 var objToArray = Lang_1.Lang.objToArray;
+const AssocArray_1 = __webpack_require__(/*! ./AssocArray */ "./node_modules/mona-dish/src/main/typescript/AssocArray.ts");
 /**
  *
  *        // - submit checkboxes and radio inputs only if checked
@@ -271,6 +806,12 @@ class DomQuery {
     get global() {
         return Global_1._global$;
     }
+    get stream() {
+        throw Error("Not implemented, include Stream.ts for this to work");
+    }
+    get lazyStream() {
+        throw Error("Not implemented, include Stream.ts for this to work");
+    }
     /**
      * returns the id of the first element
      */
@@ -347,7 +888,7 @@ class DomQuery {
         this.id.value = value;
     }
     get checked() {
-        return Stream_1.Stream.of(...this.values).allMatch(el => !!el.checked);
+        return new Es2019Array_1.Es2019Array(...this.values).every(el => !!el.checked);
     }
     set checked(newChecked) {
         this.eachElem(el => el.checked = newChecked);
@@ -405,58 +946,41 @@ class DomQuery {
         });
         return new DomQuery(...childNodeArr);
     }
-    /**
-     * binding into stream
-     */
-    get stream() {
-        return new Stream_1.Stream(...this.asArray);
-    }
-    /**
-     * fetches a lazy stream representation
-     * lazy should be applied if you have some filters etc.
-     * in between, this can reduce the number of post filter operations
-     * and ram usage
-     * significantly because the operations are done lazily and stop
-     * once they hit a dead end.
-     */
-    get lazyStream() {
-        return Stream_1.LazyStream.of(...this.asArray);
-    }
     get asArray() {
         // filter not supported by IE11
-        return [].concat(Stream_1.LazyStream.of(...this.rootNode).filter(item => {
+        let items = new Es2019Array_1.Es2019Array(...this.rootNode).filter(item => {
             return item != null;
-        })
-            .map(item => {
+        }).map(item => {
             return DomQuery.byId(item);
-        }).collect(new SourcesCollectors_1.ArrayCollector()));
+        });
+        return items;
     }
     get offsetWidth() {
-        return Stream_1.LazyStream.of(...this.rootNode)
+        return new Es2019Array_1.Es2019Array(...this.rootNode)
             .filter(item => item != null)
             .map(elem => elem.offsetWidth)
-            .reduce((accumulate, incoming) => accumulate + incoming, 0).value;
+            .reduce((accumulate, incoming) => accumulate + incoming, 0);
     }
     get offsetHeight() {
-        return Stream_1.LazyStream.of(...this.rootNode)
+        return new Es2019Array_1.Es2019Array(...this.rootNode)
             .filter(item => item != null)
             .map(elem => elem.offsetHeight)
-            .reduce((accumulate, incoming) => accumulate + incoming, 0).value;
+            .reduce((accumulate, incoming) => accumulate + incoming, 0);
     }
     get offsetLeft() {
-        return Stream_1.LazyStream.of(...this.rootNode)
+        return new Es2019Array_1.Es2019Array(...this.rootNode)
             .filter(item => item != null)
             .map(elem => elem.offsetLeft)
-            .reduce((accumulate, incoming) => accumulate + incoming, 0).value;
+            .reduce((accumulate, incoming) => accumulate + incoming, 0);
     }
     get offsetTop() {
-        return Stream_1.LazyStream.of(...this.rootNode)
+        return new Es2019Array_1.Es2019Array(this.rootNode)
             .filter(item => item != null)
             .map(elem => elem.offsetTop)
-            .reduce((accumulate, incoming) => accumulate + incoming, 0).value;
+            .reduce((accumulate, incoming) => accumulate + incoming, 0);
     }
     get asNodeArray() {
-        return [].concat(Stream_1.Stream.of(...this.rootNode).filter(item => item != null).collect(new SourcesCollectors_1.ArrayCollector()));
+        return new Es2019Array_1.Es2019Array(...this.rootNode.filter(item => item != null));
     }
     static querySelectorAllDeep(selector) {
         return new DomQuery(document).querySelectorAllDeep(selector);
@@ -520,10 +1044,10 @@ class DomQuery {
         const doc = document.implementation.createHTMLDocument("");
         markup = trim(markup);
         let lowerMarkup = markup.toLowerCase();
-        if (lowerMarkup.search(/\<\!doctype[^\w\-]+/gi) != -1 ||
-            lowerMarkup.search(/\<html[^\w\-]+/gi) != -1 ||
-            lowerMarkup.search(/\<head[^\w\-]+/gi) != -1 ||
-            lowerMarkup.search(/\<body[^\w\-]+/gi) != -1) {
+        if (lowerMarkup.search(/<!doctype[^\w\-]+/gi) != -1 ||
+            lowerMarkup.search(/<html[^\w\-]+/gi) != -1 ||
+            lowerMarkup.search(/<head[^\w\-]+/gi) != -1 ||
+            lowerMarkup.search(/<body[^\w\-]+/gi) != -1) {
             doc.documentElement.innerHTML = markup;
             return new DomQuery(doc.documentElement);
         }
@@ -655,10 +1179,9 @@ class DomQuery {
     byId(id, includeRoot) {
         let res = [];
         if (includeRoot) {
-            res = res.concat(Stream_1.LazyStream.of(...((this === null || this === void 0 ? void 0 : this.rootNode) || []))
-                .filter(item => id == item.id)
-                .map(item => new DomQuery(item))
-                .collect(new SourcesCollectors_1.ArrayCollector()));
+            res = res.concat(...new Es2019Array_1.Es2019Array(...((this === null || this === void 0 ? void 0 : this.rootNode) || []))
+                .filter(((item) => id == item.id))
+                .map(item => new DomQuery(item)));
         }
         // for some strange kind of reason the # selector fails
         // on hidden elements we use the attributes match selector
@@ -669,10 +1192,9 @@ class DomQuery {
     byIdDeep(id, includeRoot) {
         let res = [];
         if (includeRoot) {
-            res = res.concat(Stream_1.LazyStream.of(...((this === null || this === void 0 ? void 0 : this.rootNode) || []))
+            res = res.concat(new Es2019Array_1.Es2019Array(...((this === null || this === void 0 ? void 0 : this.rootNode) || []))
                 .filter(item => id == item.id)
-                .map(item => new DomQuery(item))
-                .collect(new SourcesCollectors_1.ArrayCollector()));
+                .map(item => new DomQuery(item)));
         }
         let subItems = this.querySelectorAllDeep(`[id="${id}"]`);
         if (subItems.length) {
@@ -690,10 +1212,9 @@ class DomQuery {
         var _a;
         let res = [];
         if (includeRoot) {
-            res = Stream_1.LazyStream.of(...((_a = this === null || this === void 0 ? void 0 : this.rootNode) !== null && _a !== void 0 ? _a : []))
+            res = new Es2019Array_1.Es2019Array(...((_a = this === null || this === void 0 ? void 0 : this.rootNode) !== null && _a !== void 0 ? _a : []))
                 .filter(element => (element === null || element === void 0 ? void 0 : element.tagName) == tagName)
-                .reduce((reduction, item) => reduction.concat([item]), res)
-                .orElse(res).value;
+                .reduce((reduction, item) => reduction.concat([item]), res);
         }
         (deep) ? res.push(this.querySelectorAllDeep(tagName)) : res.push(this.querySelectorAll(tagName));
         return new DomQuery(...res);
@@ -826,11 +1347,8 @@ class DomQuery {
      * @param selector
      */
     matchesSelector(selector) {
-        const ret = this.lazyStream
-            .map(item => this._mozMatchesSelector(item.getAsElem(0).value, selector))
-            .filter(match => match)
-            .first();
-        return ret.isPresent();
+        return this.asArray
+            .some(item => this._mozMatchesSelector(item.getAsElem(0).value, selector));
     }
     /**
      * easy node traversal, you can pass
@@ -871,8 +1389,8 @@ class DomQuery {
         return this;
     }
     each(func) {
-        Stream_1.Stream.of(...this.rootNode)
-            .each((item, cnt) => {
+        new Es2019Array_1.Es2019Array(...this.rootNode)
+            .forEach((item, cnt) => {
             // we could use a filter, but for the best performance we don´t
             if (item == null) {
                 return;
@@ -1224,7 +1742,7 @@ class DomQuery {
                 // scripts before we run the 'include' command
                 // this.globalEval(finalScripts.join("\n"));
                 let joinedScripts = [];
-                Stream_1.Stream.of(...scriptsToProcess).each(item => {
+                new Es2019Array_1.Es2019Array(...scriptsToProcess).forEach(item => {
                     if (!item.nonce) {
                         joinedScripts.push(item.evalText);
                     }
@@ -1310,10 +1828,10 @@ class DomQuery {
         try {
             let scriptElements = new DomQuery(this.filterSelector("script"), this.querySelectorAll("script"));
             // script execution order by relative pos in their dom tree
-            scriptElements.stream
-                .flatMap(item => Stream_1.Stream.of(...item.values))
+            scriptElements.asArray
+                .flatMap(item => [...item.values])
                 .sort((node1, node2) => node1.compareDocumentPosition(node2) - 3) // preceding 2, following == 4)
-                .each(item => execScript(item));
+                .forEach(item => execScript(item));
             evalCollectedScripts(finalScripts);
         }
         catch (e) {
@@ -1356,19 +1874,20 @@ class DomQuery {
             else if (tagName && eqi(tagName, "style")) {
                 let innerText = _toReplace.innerHTML.replace(/\s+/gi, "");
                 let styles = head.querySelectorAll("style");
-                styles = styles.stream.filter(style => {
+                let filteredStyles = styles.asArray.filter(style => {
                     return style.innerHTML.replace(/\s+/gi, "") == innerText;
-                }).collect(new DomQueryCollector());
+                });
+                styles = new DomQuery(...filteredStyles);
                 if (!styles.length) { //already present
                     head.append(_toReplace);
                 }
             }
         };
         const scriptElements = new DomQuery(this.filterSelector("link, style"), this.querySelectorAll("link, style"));
-        scriptElements.stream
-            .flatMap(item => Stream_1.Stream.of(...item.values))
+        scriptElements.asArray
+            .flatMap(item => [...item.values])
             .sort((node1, node2) => node1.compareDocumentPosition(node2) - 3)
-            .each(item => execCss(item));
+            .forEach(item => execCss(item));
         return this;
     }
     /**
@@ -1391,9 +1910,10 @@ class DomQuery {
      */
     fireEvent(eventName, options = {}) {
         // merge with last one having the highest priority
-        let finalOptions = Stream_1.Stream.ofAssoc({
+        let finalOptions = {
             bubbles: true, cancelable: true
-        }).concat(Stream_1.Stream.ofAssoc(options)).collect(new SourcesCollectors_1.AssocArrayCollector());
+        };
+        finalOptions = (0, AssocArray_1.simpleShallowMerge)(finalOptions, options);
         this.eachElem((node) => {
             let doc;
             if (node.ownerDocument) {
@@ -1444,15 +1964,13 @@ class DomQuery {
                 // IE-old school style, you can drop this if you don't need to support IE8 and lower
                 let event = doc.createEventObject();
                 event.synthetic = true; // allow detection of synthetic events
-                Stream_1.Stream.ofAssoc(finalOptions).each(([key, value]) => {
-                    event[key] = value;
-                });
+                Object.keys(finalOptions).forEach(key => event[key] = finalOptions[key]);
                 node.fireEvent("on" + eventName, event);
             }
         });
     }
     textContent(joinString = "") {
-        return this.stream
+        return this.asArray
             .map((value) => {
             let item = value.getAsElem(0).orElseLazy(() => {
                 return {
@@ -1461,10 +1979,10 @@ class DomQuery {
             }).value;
             return item.textContent || "";
         })
-            .reduce((text1, text2) => [text1, joinString, text2].join(""), "").value;
+            .reduce((text1, text2) => [text1, joinString, text2].join(""), "");
     }
     innerText(joinString = "") {
-        return this.stream
+        return this.asArray
             .map((value) => {
             let item = value.getAsElem(0).orElseLazy(() => {
                 return {
@@ -1473,7 +1991,9 @@ class DomQuery {
             }).value;
             return item.innerText || "";
         })
-            .reduce((text1, text2) => [text1, text2].join(joinString), "").value;
+            .reduce((text1, text2) => {
+            return [text1, text2].join(joinString);
+        }, "");
     }
     /**
      * encodes all input elements properly into respective
@@ -1484,14 +2004,14 @@ class DomQuery {
      * @param toMerge optional config which can be merged in
      * @return a copy pf
      */
-    encodeFormElement(toMerge = new Monad_1.Config({})) {
+    encodeFormElement(toMerge = {}) {
         // browser behavior no element name no encoding (normal submit fails in that case)
         // https:// issues.apache.org/jira/browse/MYFACES-2847
         if (this.name.isAbsent()) {
             return;
         }
         // let´s keep it side-effects free
-        let target = toMerge.shallowCopy;
+        let target = (0, AssocArray_1.simpleShallowMerge)(toMerge);
         this.each((element) => {
             var _a, _b;
             if (element.name.isAbsent()) { // no name, no encoding
@@ -1526,7 +2046,7 @@ class DomQuery {
                             // let subBuf = [];
                             if (selectElem.options[u].selected) {
                                 let elementOption = selectElem.options[u];
-                                target.append(name).value = (elementOption.getAttribute("value") != null) ?
+                                (0, AssocArray_1.append)(target, name).value = (elementOption.getAttribute("value") != null) ?
                                     elementOption.value : elementOption.text;
                             }
                         }
@@ -1546,14 +2066,14 @@ class DomQuery {
                     let filesArr = uploadedFiles !== null && uploadedFiles !== void 0 ? uploadedFiles : [];
                     if (filesArr === null || filesArr === void 0 ? void 0 : filesArr.length) { //files can be empty but set
                         // xhr level2, single multiple must be passes as they are
-                        target.assign(name).value = Array.from(filesArr);
+                        (0, AssocArray_1.assign)(target, name).value = Array.from(filesArr);
                     }
                     else {
                         if (!!uploadedFiles) { //we skip empty file elements i
                             return;
                         }
                         //checkboxes etc.. need to be appended
-                        target.append(name).value = element.inputValue.value;
+                        (0, AssocArray_1.append)(target, name).value = element.inputValue.value;
                     }
                 }
             }
@@ -1562,16 +2082,27 @@ class DomQuery {
     }
     get cDATAAsString() {
         let TYPE_CDATA_BLOCK = 4;
-        let res = this.lazyStream.flatMap(item => {
-            return item.childNodes.stream;
-        }).filter(item => {
+        let res = this.asArray
+            .flatMap(item => {
+            return item.childNodes.asArray;
+        })
+            .filter(item => {
             var _a, _b;
             return ((_b = (_a = item === null || item === void 0 ? void 0 : item.value) === null || _a === void 0 ? void 0 : _a.value) === null || _b === void 0 ? void 0 : _b.nodeType) == TYPE_CDATA_BLOCK;
-        }).reduce((reduced, item) => {
+        })
+            .reduce((reduced, item) => {
             var _a, _b, _c;
             reduced.push((_c = (_b = (_a = item === null || item === void 0 ? void 0 : item.value) === null || _a === void 0 ? void 0 : _a.value) === null || _b === void 0 ? void 0 : _b.data) !== null && _c !== void 0 ? _c : "");
             return reduced;
-        }, []).value;
+        }, []);
+        /*let res: any = this.lazyStream.flatMap(item => {
+            return item.childNodes.stream
+        }).filter(item => {
+            return item?.value?.value?.nodeType == TYPE_CDATA_BLOCK;
+        }).reduce((reduced: Array<any>, item: DomQuery) => {
+            reduced.push((<any>item?.value?.value)?.data ?? "");
+            return reduced;
+        }, []).value;*/
         // response may contain several blocks
         return res.join("");
     }
@@ -1728,17 +2259,18 @@ class DomQuery {
      * @param filterDoubles filter out possible double elements (aka same markup)
      */
     concat(toAttach, filterDoubles = true) {
-        const ret = this.lazyStream.concat(toAttach.lazyStream).collect(new DomQueryCollector());
+        let domQueries = this.asArray;
+        const ret = new DomQuery(...domQueries.concat(toAttach.asArray));
         // we now filter the doubles out
         if (!filterDoubles) {
             return ret;
         }
         let idx = {}; // ie11 does not support sets, we have to fake it
-        return ret.lazyStream.filter(node => {
+        return new DomQuery(...ret.asArray.filter(node => {
             const notFound = !(idx === null || idx === void 0 ? void 0 : idx[node.value.value.outerHTML]);
             idx[node.value.value.outerHTML] = true;
             return notFound;
-        }).collect(new DomQueryCollector());
+        }));
     }
     append(elem) {
         this.each(item => elem.appendTo(item));
@@ -1773,7 +2305,7 @@ class DomQuery {
                 continue;
             }
             let res = this.rootNode[cnt].querySelectorAll(selector);
-            nodes = nodes.concat(objToArray(res));
+            nodes = nodes.concat(...objToArray(res));
         }
         return new DomQuery(...nodes);
     }
@@ -1990,6 +2522,132 @@ exports.DQ$ = DomQuery.querySelectorAll;
 
 /***/ }),
 
+/***/ "./node_modules/mona-dish/src/main/typescript/Es2019Array.ts":
+/*!*******************************************************************!*\
+  !*** ./node_modules/mona-dish/src/main/typescript/Es2019Array.ts ***!
+  \*******************************************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+
+/**
+ * Extended array
+ */
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Es2019Array = exports._Es2019Array = void 0;
+/**
+ * Extended array which adds various es 2019 shim functions to the normal array
+ * We must remap all array producing functions in order to keep
+ * the delegation active, once we are in!
+ */
+class Es2019Array_ extends Array {
+    constructor(...another) {
+        super(...another);
+        if (another._another) {
+            this._another = another._another;
+        }
+        else {
+            this._another = another;
+        }
+        //for testing it definitely runs into this branch because we are on es5 level
+        //if (!(<any>Array.prototype).flatMap) {
+        this.flatMap = (flatMapFun) => this._flatMap(flatMapFun);
+        //}
+        //if (!(<any>Array.prototype).flat) {
+        this.flat = (flatLevel = 1) => this._flat(flatLevel);
+        //}
+    }
+    map(callbackfn, thisArg) {
+        const ret = Array.prototype.map.call(this._another, callbackfn, thisArg);
+        return new _Es2019Array(...ret);
+    }
+    concat(...items) {
+        const ret = Array.prototype.concat.call(this._another, ...items);
+        return new _Es2019Array(...ret);
+    }
+    reverse() {
+        const ret = Array.prototype.reverse.call(this._another);
+        return new _Es2019Array(...ret);
+    }
+    slice(start, end) {
+        const ret = Array.prototype.slice.call(this._another, start, end);
+        return new _Es2019Array(...ret);
+    }
+    splice(start, deleteCount) {
+        const ret = Array.prototype.splice.call(this._another, start, deleteCount);
+        return new _Es2019Array(...ret);
+    }
+    filter(predicate, thisArg) {
+        const ret = Array.prototype.filter.call(this._another, predicate, thisArg);
+        return new _Es2019Array(...ret);
+    }
+    reduce(callbackfn, initialValue) {
+        const ret = Array.prototype.reduce.call(this._another, callbackfn, initialValue);
+        return ret;
+    }
+    /*reduceRight(callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: T[]) => T, initialValue: T): T {
+        const ret = Array.prototype.reduceRight.call(callbackfn, initialValue);
+        return ret;
+    }*/
+    _flat(flatDepth = 1) {
+        return this._flatResolve(this._another, flatDepth);
+    }
+    _flatResolve(arr, flatDepth = 1) {
+        //recursion break
+        if (flatDepth == 0) {
+            return arr;
+        }
+        let res = [];
+        let reFlat = item => {
+            item = Array.isArray(item) ? item : [item];
+            let mapped = this._flatResolve(item, flatDepth - 1);
+            res = res.concat(mapped);
+        };
+        arr.forEach(reFlat);
+        return new exports.Es2019Array(...res);
+    }
+    _flatMap(mapperFunction) {
+        let res = this.map(item => mapperFunction(item));
+        return this._flatResolve(res);
+    }
+}
+//let _Es2019Array = function<T>(...data: T[]) {};
+//let oldProto = Es2019Array.prototype;
+function _Es2019Array(...data) {
+    let ret = new Es2019Array_(...data);
+    let proxied = new Proxy(ret, {
+        get(target, p, receiver) {
+            if ("symbol" == typeof p) {
+                return target._another[p];
+            }
+            if (!isNaN(parseInt(p))) {
+                return target._another[p];
+            }
+            else {
+                return target[p];
+            }
+        },
+        set(target, property, value) {
+            target[property] = value;
+            target._another[property] = value;
+            return true;
+        }
+    });
+    return proxied;
+}
+exports._Es2019Array = _Es2019Array;
+;
+/**
+ * this is the switch between normal array and our shim
+ * the shim is only provided in case the native browser
+ * does not yet have flatMap support on arrays
+ */
+exports.Es2019Array = (Array.prototype.flatMap) ? function (...data) {
+    return data;
+} : _Es2019Array;
+
+
+/***/ }),
+
 /***/ "./node_modules/mona-dish/src/main/typescript/Global.ts":
 /*!**************************************************************!*\
   !*** ./node_modules/mona-dish/src/main/typescript/Global.ts ***!
@@ -2063,6 +2721,7 @@ exports._global$ = _global$;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Lang = void 0;
 const Monad_1 = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
+const Es2019Array_1 = __webpack_require__(/*! ./Es2019Array */ "./node_modules/mona-dish/src/main/typescript/Es2019Array.ts");
 /**
  * Lang helpers crossported from the apache myfaces project
  */
@@ -2070,7 +2729,7 @@ var Lang;
 (function (Lang) {
     //should be in lang, but for now here to avoid recursive imports, not sure if typescript still has a problem with those
     /**
-     * helper function to savely resolve anything
+     * helper function to safely resolve anything
      * this is not an elvis operator, it resolves
      * a value without exception in a tree and if
      * it is not resolvable then an optional of
@@ -2096,6 +2755,12 @@ var Lang;
         }
     }
     Lang.saveResolve = saveResolve;
+    /**
+     * lazy resolve... aka the function is called on resolve and a default value also
+     * is a producing function (called only if the original producer does not produce any result)
+     * @param resolverProducer the producer for the resolve
+     * @param defaultValue the default value producer function
+     */
     function saveResolveLazy(resolverProducer, defaultValue = null) {
         try {
             let result = resolverProducer();
@@ -2150,11 +2815,11 @@ var Lang;
         //special condition array delivered no offset no pack
         if (obj instanceof Array && !offset && !pack)
             return obj;
-        return pack.concat(Array.prototype.slice.call(obj, offset));
+        return new Es2019Array_1.Es2019Array(...pack.concat(Array.prototype.slice.call(obj, offset)));
     }
     Lang.objToArray = objToArray;
     /**
-     * equalsIgnoreCase, case insensitive comparison of two strings
+     * equalsIgnoreCase, case-insensitive comparison of two strings
      *
      * @param source
      * @param destination
@@ -2177,7 +2842,7 @@ var Lang;
     }
     Lang.assertType = assertType;
     /**
-     * Backported from dojo
+     * Back ported from Dojo
      * a failsafe string determination method
      * (since in javascript String != "" typeof alone fails!)
      * @param it {|Object|} the object to be checked for being a string
@@ -2189,6 +2854,10 @@ var Lang;
         return !!arguments.length && it != null && (typeof it == "string" || it instanceof String); // Boolean
     }
     Lang.isString = isString;
+    /**
+     * Back-ported, a failsafe determination code for checking whether an object is a function
+     * @param it the object to check for being a function
+     */
     function isFunc(it) {
         return it instanceof Function || typeof it === "function";
     }
@@ -2242,19 +2911,11 @@ var Lang;
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Config = exports.CONFIG_ANY = exports.CONFIG_VALUE = exports.ValueEmbedder = exports.Optional = exports.Monad = void 0;
-/**
- * A module which keeps  basic monadish like definitions in place without any sidedependencies to other modules.
- * Useful if you need the functions in another library to keep its dependencies down
- */
-/*IMonad definitions*/
-const Lang_1 = __webpack_require__(/*! ./Lang */ "./node_modules/mona-dish/src/main/typescript/Lang.ts");
-const SourcesCollectors_1 = __webpack_require__(/*! ./SourcesCollectors */ "./node_modules/mona-dish/src/main/typescript/SourcesCollectors.ts");
-const Stream_1 = __webpack_require__(/*! ./Stream */ "./node_modules/mona-dish/src/main/typescript/Stream.ts");
-var objAssign = Lang_1.Lang.objAssign;
+exports.ValueEmbedder = exports.Optional = exports.Monad = void 0;
+const Es2019Array_1 = __webpack_require__(/*! ./Es2019Array */ "./node_modules/mona-dish/src/main/typescript/Es2019Array.ts");
 /**
  * Implementation of a monad
- * (Sideffect free), no write allowed directly on the monads
+ * (Side - effect free), no write allowed directly on the monads
  * value state
  */
 class Monad {
@@ -2266,7 +2927,7 @@ class Monad {
     }
     map(fn) {
         if (!fn) {
-            fn = (inval) => inval;
+            fn = (inVal) => inVal;
         }
         let result = fn(this.value);
         return new Monad(result);
@@ -2283,7 +2944,7 @@ exports.Monad = Monad;
 /**
  * optional implementation, an optional is basically an implementation of a Monad with additional syntactic
  * sugar on top
- * (Sideeffect free, since value assignment is not allowed)
+ * (Side - effect free, since value assignment is not allowed)
  * */
 class Optional extends Monad {
     constructor(value) {
@@ -2343,8 +3004,8 @@ class Optional extends Monad {
         }
     }
     /*
-     * we need to implement it to fullfill the contract, although it is used only internally
-     * all values are flattened when accessed anyway, so there is no need to call this methiod
+     * we need to implement it to fulfill the contract, although it is used only internally
+     * all values are flattened when accessed anyway, so there is no need to call this method
      */
     flatMap(fn) {
         let val = super.flatMap(fn);
@@ -2355,7 +3016,7 @@ class Optional extends Monad {
     }
     /*
      * elvis operation, take care, if you use this you lose typesafety and refactoring
-     * capabilites, unfortunately typesceript does not allow to have its own elvis operator
+     * capabilities, unfortunately typescript does not allow to have its own elvis operator
      * this is some syntactic sugar however which is quite useful*/
     getIf(...key) {
         key = this.preprocessKeys(...key);
@@ -2390,8 +3051,7 @@ class Optional extends Monad {
                 currentPos = this.getClass().fromNullable(currentPos.value[arrPos]);
             }
         }
-        let retVal = currentPos;
-        return retVal;
+        return currentPos;
     }
     /**
      * simple match, if the first order function call returns
@@ -2427,7 +3087,7 @@ class Optional extends Monad {
      * by having a getClass operation we can avoid direct calls into the constructor or
      * static methods and do not have to implement several methods which rely on the type
      * of "this"
-     * @returns {Monadish.Optional}
+     * @returns the type of Optional
      */
     getClass() {
         return Optional;
@@ -2488,9 +3148,9 @@ class Optional extends Monad {
         }
     }
     preprocessKeys(...keys) {
-        return Stream_1.Stream.of(...keys)
+        return new Es2019Array_1.Es2019Array(...keys)
             .flatMap(item => {
-            return Stream_1.Stream.of(...item.split(/\]\s*\[/gi))
+            return new Es2019Array_1.Es2019Array(...item.split(/]\s*\[/gi))
                 .map(item => {
                 item = item.replace(/^\s+|\s+$/g, "");
                 if (item.indexOf("[") == -1 && item.indexOf("]") != -1) {
@@ -2501,17 +3161,16 @@ class Optional extends Monad {
                 }
                 return item;
             });
-        })
-            .collect(new SourcesCollectors_1.ArrayCollector());
+        });
     }
 }
 exports.Optional = Optional;
 /*default value for absent*/
 Optional.absent = Optional.fromNullable(null);
-// --------------------- From here onwards we break out the sideffects free limits ------------
+// --------------------- From here onwards we break out the side effect free limits ------------
 /**
  * ValueEmbedder is the writeable version
- * of optional, it basically is a wrappber
+ * of optional, it basically is a wrapper
  * around a construct which has a state
  * and can be written to.
  *
@@ -2551,7 +3210,7 @@ class ValueEmbedder extends Optional {
      * by having a getClass operation we can avoid direct calls into the constructor or
      * static methods and do not have to implement several methods which rely on the type
      * of "this"
-     * @returns {Monadish.Optional}
+     * @returns ValueEmbedder
      */
     getClass() {
         return ValueEmbedder;
@@ -2563,332 +3222,6 @@ class ValueEmbedder extends Optional {
 exports.ValueEmbedder = ValueEmbedder;
 /*default value for absent*/
 ValueEmbedder.absent = ValueEmbedder.fromNullable(null);
-/**
- * specialized value embedder
- * for our Configuration
- */
-class ConfigEntry extends ValueEmbedder {
-    constructor(rootElem, key, arrPos) {
-        super(rootElem, key);
-        this.arrPos = arrPos !== null && arrPos !== void 0 ? arrPos : -1;
-    }
-    get value() {
-        if (this.key == "" && this.arrPos >= 0) {
-            return this._value[this.arrPos];
-        }
-        else if (this.key && this.arrPos >= 0) {
-            return this._value[this.key][this.arrPos];
-        }
-        return this._value[this.key];
-    }
-    set value(val) {
-        if (this.key == "" && this.arrPos >= 0) {
-            this._value[this.arrPos] = val;
-            return;
-        }
-        else if (this.key && this.arrPos >= 0) {
-            this._value[this.key][this.arrPos] = val;
-            return;
-        }
-        this._value[this.key] = val;
-    }
-}
-/*default value for absent*/
-ConfigEntry.absent = ConfigEntry.fromNullable(null);
-exports.CONFIG_VALUE = "__END_POINT__";
-exports.CONFIG_ANY = "__ANY_POINT__";
-const ALL_VALUES = "*";
-/**
- * Config, basically an optional wrapper for a json structure
- * (not sideeffect free, since we can alter the internal config state
- * without generating a new config), not sure if we should make it sideffect free
- * since this would swallow a lot of performane and ram
- */
-class Config extends Optional {
-    constructor(root, configDef) {
-        super(root);
-        this.configDef = configDef;
-    }
-    /**
-     * shallow copy getter, copies only the first level, references the deeper nodes
-     * in a shared manner
-     */
-    get shallowCopy() {
-        return this.shallowCopy$();
-    }
-    shallowCopy$() {
-        return new Config(Stream_1.Stream.ofAssoc(this.value).collect(new SourcesCollectors_1.AssocArrayCollector()));
-    }
-    /**
-     * deep copy, copies all config nodes
-     */
-    get deepCopy() {
-        return this.deepCopy$();
-    }
-    deepCopy$() {
-        return new Config(objAssign({}, this.value));
-    }
-    /**
-     * creates a config from an initial value or null
-     * @param value
-     */
-    static fromNullable(value) {
-        return new Config(value);
-    }
-    /**
-     * simple merge for the root configs
-     */
-    shallowMerge(other, overwrite = true, withAppend = false) {
-        for (let key in other.value) {
-            if ('undefined' == typeof key || null == key) {
-                continue;
-            }
-            if (overwrite || !(key in this.value)) {
-                if (!withAppend) {
-                    this.assign(key).value = other.getIf(key).value;
-                }
-                else {
-                    if (Array.isArray(other.getIf(key).value)) {
-                        Stream_1.Stream.of(...other.getIf(key).value).each(item => this.append(key).value = item);
-                    }
-                    else {
-                        this.append(key).value = other.getIf(key).value;
-                    }
-                }
-            }
-        }
-    }
-    /**
-     * assigns a single value as array, or appends it
-     * to an existing value mapping a single value to array
-     *
-     *
-     * usage myConfig.append("foobaz").value = "newValue"
-     *       myConfig.append("foobaz").value = "newValue2"
-     *
-     * resulting in myConfig.foobaz == ["newValue, newValue2"]
-     *
-     * @param {string[]} accessPath
-     */
-    append(...accessPath) {
-        let noKeys = accessPath.length < 1;
-        if (noKeys) {
-            return;
-        }
-        this.assertAccessPath(...accessPath);
-        let lastKey = accessPath[accessPath.length - 1];
-        let currKey, finalKey = this.keyVal(lastKey);
-        let pathExists = this.getIf(...accessPath).isPresent();
-        this.buildPath(...accessPath);
-        let finalKeyArrPos = this.arrayIndex(lastKey);
-        if (finalKeyArrPos > -1) {
-            throw Error("Append only possible on non array properties, use assign on indexed data");
-        }
-        let value = this.getIf(...accessPath).value;
-        if (!Array.isArray(value)) {
-            value = this.assign(...accessPath).value = [value];
-        }
-        if (pathExists) {
-            value.push({});
-        }
-        finalKeyArrPos = value.length - 1;
-        let retVal = new ConfigEntry(accessPath.length == 1 ? this.value : this.getIf.apply(this, accessPath.slice(0, accessPath.length - 1)).value, lastKey, finalKeyArrPos);
-        return retVal;
-    }
-    /**
-     * appends to an existing entry (or extends into an array and appends)
-     * if the condition is met
-     * @param {boolean} condition
-     * @param {string[]} accessPath
-     */
-    appendIf(condition, ...accessPath) {
-        if (!condition) {
-            return { value: null };
-        }
-        return this.append(...accessPath);
-    }
-    /**
-     * assings an new value on the given access path
-     * @param accessPath
-     */
-    assign(...accessPath) {
-        if (accessPath.length < 1) {
-            return;
-        }
-        this.assertAccessPath(...accessPath);
-        this.buildPath(...accessPath);
-        let currKey = this.keyVal(accessPath[accessPath.length - 1]);
-        let arrPos = this.arrayIndex(accessPath[accessPath.length - 1]);
-        let retVal = new ConfigEntry(accessPath.length == 1 ? this.value : this.getIf.apply(this, accessPath.slice(0, accessPath.length - 1)).value, currKey, arrPos);
-        return retVal;
-    }
-    /**
-     * assign a value if the condition is set to true, otherwise skip it
-     *
-     * @param condition the condition, the access accessPath into the config
-     * @param accessPath
-     */
-    assignIf(condition, ...accessPath) {
-        return condition ? this.assign(...accessPath) : { value: null };
-    }
-    /**
-     * get if the access path is present (get is reserved as getter with a default, on the current path)
-     * TODO will be renamed to something more meaningful and deprecated, the name is ambigous
-     * @param accessPath the access path
-     */
-    getIf(...accessPath) {
-        this.assertAccessPath(...accessPath);
-        return this.getClass().fromNullable(super.getIf.apply(this, accessPath).value);
-    }
-    /**
-     * gets the current node and if none is present returns a config with a default value
-     * @param defaultVal
-     */
-    get(defaultVal) {
-        return this.getClass().fromNullable(super.get(defaultVal).value);
-    }
-    //empties the current config entry
-    delete(key) {
-        if (key in this.value) {
-            delete this.value[key];
-        }
-        return this;
-    }
-    /**
-     * converts the entire config into a json object
-     */
-    toJson() {
-        return JSON.stringify(this.value);
-    }
-    /**
-     * returns the first config level as streeam
-     */
-    get stream() {
-        return Stream_1.Stream.of(...Object.keys(this.value)).map(key => [key, this.value[key]]);
-    }
-    getClass() {
-        return Config;
-    }
-    setVal(val) {
-        this._value = val;
-    }
-    /**
-     * asserts the access path for a semy typed access
-      * @param accessPath
-     * @private
-     */
-    assertAccessPath(...accessPath) {
-        var _a, _b;
-        accessPath = this.preprocessKeys(...accessPath);
-        if (!this.configDef) {
-            //untyped
-            return;
-        }
-        let currAccessPos = null;
-        const ERR_ACCESS_PATH = "Access Path to config invalid";
-        const ABSENT = "__ABSENT__";
-        currAccessPos = this.configDef;
-        for (let cnt = 0; cnt < accessPath.length; cnt++) {
-            let currKey = this.keyVal(accessPath[cnt]);
-            let arrPos = this.arrayIndex(accessPath[cnt]);
-            //key index
-            if (this.isArray(arrPos)) {
-                if (currKey != "") {
-                    currAccessPos = (Array.isArray(currAccessPos)) ?
-                        Stream_1.Stream.of(...currAccessPos)
-                            .filter(item => { var _a; return !!((_a = item === null || item === void 0 ? void 0 : item[currKey]) !== null && _a !== void 0 ? _a : false); })
-                            .map(item => item === null || item === void 0 ? void 0 : item[currKey]).first() :
-                        Optional.fromNullable((_a = currAccessPos === null || currAccessPos === void 0 ? void 0 : currAccessPos[currKey]) !== null && _a !== void 0 ? _a : null);
-                }
-                else {
-                    currAccessPos = (Array.isArray(currAccessPos)) ?
-                        Stream_1.Stream.of(...currAccessPos)
-                            .filter(item => Array.isArray(item))
-                            .flatMap(item => Stream_1.Stream.of(...item)).first() : Optional.absent;
-                }
-                //we noe store either the current array or the filtered look ahead to go further
-            }
-            else {
-                //we now have an array and go further with a singular key
-                currAccessPos = (Array.isArray(currAccessPos)) ? Stream_1.Stream.of(...currAccessPos)
-                    .filter(item => { var _a; return !!((_a = item === null || item === void 0 ? void 0 : item[currKey]) !== null && _a !== void 0 ? _a : false); })
-                    .map(item => item === null || item === void 0 ? void 0 : item[currKey])
-                    .first() :
-                    Optional.fromNullable((_b = currAccessPos === null || currAccessPos === void 0 ? void 0 : currAccessPos[currKey]) !== null && _b !== void 0 ? _b : null);
-            }
-            if (!currAccessPos.isPresent()) {
-                throw Error(ERR_ACCESS_PATH);
-            }
-            currAccessPos = currAccessPos.value;
-            //no further testing needed, from this point onwards we are on our own
-            if (currAccessPos == exports.CONFIG_ANY) {
-                return;
-            }
-        }
-    }
-    /**
-     * builds the config path
-     *
-     * @param accessPath a sequential array of accessPath containing either a key name or an array reference name[<index>]
-     */
-    buildPath(...accessPath) {
-        accessPath = this.preprocessKeys(...accessPath);
-        let val = this;
-        let parentVal = this.getClass().fromNullable(null);
-        let parentPos = -1;
-        let alloc = function (arr, length) {
-            let length1 = arr.length;
-            let length2 = length1 + length;
-            for (let cnt = length1; cnt < length2; cnt++) {
-                arr.push({});
-            }
-        };
-        for (let cnt = 0; cnt < accessPath.length; cnt++) {
-            let currKey = this.keyVal(accessPath[cnt]);
-            let arrPos = this.arrayIndex(accessPath[cnt]);
-            if (this.isArrayPos(currKey, arrPos)) {
-                val.setVal((val.value instanceof Array) ? val.value : []);
-                alloc(val.value, arrPos + 1);
-                if (parentPos >= 0) {
-                    parentVal.value[parentPos] = val.value;
-                }
-                parentVal = val;
-                parentPos = arrPos;
-                val = this.getClass().fromNullable(val.value[arrPos]);
-                continue;
-            }
-            let tempVal = val.getIf(currKey);
-            if (this.isNoArray(arrPos)) {
-                if (tempVal.isAbsent()) {
-                    tempVal = this.getClass().fromNullable(val.value[currKey] = {});
-                }
-                else {
-                    val = tempVal;
-                }
-            }
-            else {
-                let arr = (tempVal.value instanceof Array) ? tempVal.value : [];
-                alloc(arr, arrPos + 1);
-                val.value[currKey] = arr;
-                tempVal = this.getClass().fromNullable(arr[arrPos]);
-            }
-            parentVal = val;
-            parentPos = arrPos;
-            val = tempVal;
-        }
-        return this;
-    }
-    isNoArray(arrPos) {
-        return arrPos == -1;
-    }
-    isArray(arrPos) {
-        return !this.isNoArray(arrPos);
-    }
-    isArrayPos(currKey, arrPos) {
-        return currKey === "" && arrPos >= 0;
-    }
-}
-exports.Config = Config;
 
 
 /***/ }),
@@ -2917,17 +3250,17 @@ exports.Config = Config;
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.QueryFormStringCollector = exports.QueryFormDataCollector = exports.FormDataCollector = exports.ConfigCollector = exports.AssocArrayCollector = exports.Run = exports.ArrayAssocArrayCollector = exports.InverseArrayCollector = exports.ArrayCollector = exports.FlatMapStreamDataSource = exports.MappedStreamDataSource = exports.FilteredStreamDatasource = exports.ArrayStreamDataSource = exports.SequenceDataSource = exports.MultiStreamDatasource = exports.ITERATION_STATUS = void 0;
-const Stream_1 = __webpack_require__(/*! ./Stream */ "./node_modules/mona-dish/src/main/typescript/Stream.ts");
-const Monad_1 = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
+exports.ArrayCollector = exports.QueryFormStringCollector = exports.QueryFormDataCollector = exports.FormDataCollector = exports.ConfigCollector = exports.AssocArrayCollector = exports.Run = exports.ArrayAssocArrayCollector = exports.InverseArrayCollector = exports.ShimArrayCollector = exports.MappedStreamDataSource = exports.FilteredStreamDatasource = exports.ArrayStreamDataSource = exports.SequenceDataSource = exports.MultiStreamDatasource = exports.calculateSkips = exports.ITERATION_STATUS = void 0;
+const Es2019Array_1 = __webpack_require__(/*! ./Es2019Array */ "./node_modules/mona-dish/src/main/typescript/Es2019Array.ts");
+const Config_1 = __webpack_require__(/*! ./Config */ "./node_modules/mona-dish/src/main/typescript/Config.ts");
 /**
  * special status of the datasource location pointer
- * if an access, outside of the possible data boundaries is happening
+ * if an access, outside - of the possible data boundaries is happening
  * (example for instance current without a first next call, or next
  * which goes over the last possible dataset), an iteration status return
  * value is returned marking this boundary instead of a classical element
  *
- * Note this is only internally used but must be implemented to fullfill
+ * Note this is only internally used but must be implemented to fulfill
  * internal contracts, the end user will never see those values if he uses
  * streams!
  */
@@ -2943,6 +3276,11 @@ function calculateSkips(next_strm) {
     }
     return --pos;
 }
+exports.calculateSkips = calculateSkips;
+/**
+ * A data source which combines multiple streams sequentially into one
+ * (this is used internally by  flatmap, but also can be used externally)
+ */
 class MultiStreamDatasource {
     constructor(first, ...strms) {
         this.first = first;
@@ -3044,7 +3382,7 @@ class SequenceDataSource {
 }
 exports.SequenceDataSource = SequenceDataSource;
 /**
- * implementation of iteratable on top of array
+ * implementation of a datasource on top of a standard array
  */
 class ArrayStreamDataSource {
     constructor(...value) {
@@ -3131,6 +3469,15 @@ class FilteredStreamDatasource {
         this._current = found;
         return found;
     }
+    /**
+     * looks ahead cnt without changing the internal data "pointers" of the data source
+     * (this is mostly needed by LazyStreams, because they do not know by definition their
+     * boundaries)
+     *
+     * @param cnt the elements to look ahead
+     * @return either the element or ITERATION_STATUS.EO_STRM if we hit the end of the stream before
+     * finding the "cnt" element
+     */
     lookAhead(cnt = 1) {
         var _a;
         let lookupVal;
@@ -3182,104 +3529,12 @@ class MappedStreamDataSource {
 }
 exports.MappedStreamDataSource = MappedStreamDataSource;
 /**
- * Same for flatmap to deal with element -> stream mappings
- */
-class FlatMapStreamDataSource {
-    constructor(func, parent) {
-        this.walkedDataSources = [];
-        this._currPos = 0;
-        this.mapFunc = func;
-        this.inputDataSource = parent;
-    }
-    hasNext() {
-        return this.resolveActiveHasNext() || this.resolveNextHasNext();
-    }
-    resolveActiveHasNext() {
-        let next = false;
-        if (this.activeDataSource) {
-            next = this.activeDataSource.hasNext();
-        }
-        return next;
-    }
-    lookAhead(cnt = 1) {
-        var _a;
-        let lookAhead = (_a = this === null || this === void 0 ? void 0 : this.activeDataSource) === null || _a === void 0 ? void 0 : _a.lookAhead(cnt);
-        if ((this === null || this === void 0 ? void 0 : this.activeDataSource) && lookAhead != ITERATION_STATUS.EO_STRM) {
-            //this should cover 95% of all cases
-            return lookAhead;
-        }
-        if (this.activeDataSource) {
-            cnt -= calculateSkips(this.activeDataSource);
-        }
-        //the idea is basically to look into the streams sub-sequentially for a match
-        //after each stream we have to take into consideration that the skipCnt is
-        //reduced by the number of datasets we already have looked into in the previous stream/datasource
-        //unfortunately for now we have to loop into them, so we introduce a small o2 here
-        for (let dsLoop = 1; true; dsLoop++) {
-            let datasourceData = this.inputDataSource.lookAhead(dsLoop);
-            //we have looped out
-            //no embedded data anymore? we are done, data
-            //can either be a scalar an array or another datasource
-            if (datasourceData === ITERATION_STATUS.EO_STRM) {
-                return ITERATION_STATUS.EO_STRM;
-            }
-            let mappedData = this.mapFunc(datasourceData);
-            //it either comes in as datasource or as array
-            //both cases must be unified into a datasource
-            let currentDataSource = this.toDatasource(mappedData);
-            //we now run again  a lookahead
-            let ret = currentDataSource.lookAhead(cnt);
-            //if the value is found then we are set
-            if (ret != ITERATION_STATUS.EO_STRM) {
-                return ret;
-            }
-            //reduce the next lookahead by the number of elements
-            //we are now skipping in the current data source
-            cnt -= calculateSkips(currentDataSource);
-        }
-    }
-    toDatasource(mapped) {
-        let ds = Array.isArray(mapped) ? new ArrayStreamDataSource(...mapped) : mapped;
-        this.walkedDataSources.push(ds);
-        return ds;
-    }
-    resolveNextHasNext() {
-        let next = false;
-        while (!next && this.inputDataSource.hasNext()) {
-            let mapped = this.mapFunc(this.inputDataSource.next());
-            this.activeDataSource = this.toDatasource(mapped);
-            next = this.activeDataSource.hasNext();
-        }
-        return next;
-    }
-    next() {
-        if (this.hasNext()) {
-            this._currPos++;
-            return this.activeDataSource.next();
-        }
-    }
-    reset() {
-        this.inputDataSource.reset();
-        this.walkedDataSources.forEach(ds => ds.reset());
-        this.walkedDataSources = [];
-        this._currPos = 0;
-        this.activeDataSource = null;
-    }
-    current() {
-        if (!this.activeDataSource) {
-            this.hasNext();
-        }
-        return this.activeDataSource.current();
-    }
-}
-exports.FlatMapStreamDataSource = FlatMapStreamDataSource;
-/**
  * For the time being we only need one collector
  * a collector which collects a stream back into arrays
  */
-class ArrayCollector {
+class ShimArrayCollector {
     constructor() {
-        this.data = [];
+        this.data = new Es2019Array_1.Es2019Array(...[]);
     }
     collect(element) {
         this.data.push(element);
@@ -3288,7 +3543,7 @@ class ArrayCollector {
         return this.data;
     }
 }
-exports.ArrayCollector = ArrayCollector;
+exports.ShimArrayCollector = ShimArrayCollector;
 /**
  * collects the values as inverse array
  */
@@ -3350,7 +3605,7 @@ exports.AssocArrayCollector = AssocArrayCollector;
  */
 class ConfigCollector {
     constructor() {
-        this.finalValue = new Monad_1.Config({});
+        this.finalValue = new Config_1.Config({});
     }
     collect(element) {
         this.finalValue.append(element.key).value = element.value;
@@ -3398,462 +3653,28 @@ class QueryFormStringCollector {
         }
     }
     get finalValue() {
-        return Stream_1.Stream.of(...this.formData)
+        return new Es2019Array_1.Es2019Array(...this.formData)
             .map(keyVal => keyVal.join("="))
-            .reduce((item1, item2) => [item1, item2].join("&"))
-            .orElse("").value;
+            .reduce((item1, item2) => [item1, item2].join("&"));
     }
 }
 exports.QueryFormStringCollector = QueryFormStringCollector;
-
-
-/***/ }),
-
-/***/ "./node_modules/mona-dish/src/main/typescript/Stream.ts":
-/*!**************************************************************!*\
-  !*** ./node_modules/mona-dish/src/main/typescript/Stream.ts ***!
-  \**************************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-
-/*!
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to you under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.LazyStream = exports.Stream = void 0;
-/*
- * A small stream implementation
- */
-const Monad_1 = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
-const SourcesCollectors_1 = __webpack_require__(/*! ./SourcesCollectors */ "./node_modules/mona-dish/src/main/typescript/SourcesCollectors.ts");
 /**
- * A simple typescript based reimplementation of streams
- *
- * This is the early eval version
- * for a lazy eval version check, LazyStream, which is api compatible
- * to this implementation, however with the benefit of being able
- * to provide infinite data sources and generic data providers, the downside
- * is, it might be a tad slower in some situations
+ * For the time being we only need one collector
+ * a collector which collects a stream back into arrays
  */
-class Stream {
-    constructor(...value) {
-        this._limits = -1;
-        this.pos = -1;
-        this.value = value;
+class ArrayCollector {
+    constructor() {
+        this.data = [];
     }
-    static of(...data) {
-        return new Stream(...data);
+    collect(element) {
+        this.data.push(element);
     }
-    static ofAssoc(data) {
-        return this.of(...Object.keys(data)).map(key => [key, data[key]]);
-    }
-    static ofDataSource(dataSource) {
-        let value = [];
-        while (dataSource.hasNext()) {
-            value.push(dataSource.next());
-        }
-        return new Stream(...value);
-    }
-    current() {
-        if (this.pos == -1) {
-            return SourcesCollectors_1.ITERATION_STATUS.BEF_STRM;
-        }
-        if (this.pos >= this.value.length) {
-            return SourcesCollectors_1.ITERATION_STATUS.EO_STRM;
-        }
-        return this.value[this.pos];
-    }
-    limits(end) {
-        this._limits = end;
-        return this;
-    }
-    /**
-     * concat for streams, so that you can concat two streams together
-     * @param toAppend
-     */
-    concat(...toAppend) {
-        let toConcat = [this].concat(toAppend);
-        return Stream.of(...toConcat).flatMap(item => item);
-    }
-    onElem(fn) {
-        for (let cnt = 0; cnt < this.value.length && (this._limits == -1 || cnt < this._limits); cnt++) {
-            if (fn(this.value[cnt], cnt) === false) {
-                break;
-            }
-        }
-        return this;
-    }
-    each(fn) {
-        this.onElem(fn);
-        this.reset();
-    }
-    map(fn) {
-        if (!fn) {
-            fn = (inval) => inval;
-        }
-        let res = [];
-        this.each((item) => {
-            res.push(fn(item));
-        });
-        return new Stream(...res);
-    }
-    /*
-     * we need to implement it to fullfill the contract, although it is used only internally
-     * all values are flattened when accessed anyway, so there is no need to call this methiod
-     */
-    flatMap(fn) {
-        let ret = [];
-        this.each(item => {
-            let strmR = fn(item);
-            ret = Array.isArray(strmR) ? ret.concat(strmR) : ret.concat(strmR.value);
-        });
-        return Stream.of(...ret);
-    }
-    filter(fn) {
-        let res = [];
-        this.each((data) => {
-            if (fn(data)) {
-                res.push(data);
-            }
-        });
-        return new Stream(...res);
-    }
-    reduce(fn, startVal = null) {
-        let offset = startVal != null ? 0 : 1;
-        let val1 = startVal != null ? startVal : this.value.length ? this.value[0] : null;
-        for (let cnt = offset; cnt < this.value.length && (this._limits == -1 || cnt < this._limits); cnt++) {
-            val1 = fn(val1, this.value[cnt]);
-        }
-        this.reset();
-        return Monad_1.Optional.fromNullable(val1);
-    }
-    first() {
-        this.reset();
-        return this.value && this.value.length ? Monad_1.Optional.fromNullable(this.value[0]) : Monad_1.Optional.absent;
-    }
-    last() {
-        //could be done via reduce, but is faster this way
-        let length = this._limits > 0 ? Math.min(this._limits, this.value.length) : this.value.length;
-        this.reset();
-        return Monad_1.Optional.fromNullable(length ? this.value[length - 1] : null);
-    }
-    anyMatch(fn) {
-        for (let cnt = 0; cnt < this.value.length && (this._limits == -1 || cnt < this._limits); cnt++) {
-            if (fn(this.value[cnt])) {
-                return true;
-            }
-        }
-        this.reset();
-        return false;
-    }
-    allMatch(fn) {
-        if (!this.value.length) {
-            return false;
-        }
-        let matches = 0;
-        for (let cnt = 0; cnt < this.value.length; cnt++) {
-            if (fn(this.value[cnt])) {
-                matches++;
-            }
-        }
-        this.reset();
-        return matches == this.value.length;
-    }
-    noneMatch(fn) {
-        let matches = 0;
-        for (let cnt = 0; cnt < this.value.length; cnt++) {
-            if (!fn(this.value[cnt])) {
-                matches++;
-            }
-        }
-        this.reset();
-        return matches == this.value.length;
-    }
-    sort(comparator) {
-        let newArr = this.value.slice().sort(comparator);
-        return Stream.of(...newArr);
-    }
-    collect(collector) {
-        this.each(data => collector.collect(data));
-        this.reset();
-        return collector.finalValue;
-    }
-    //-- internally exposed methods needed for the interconnectivity
-    hasNext() {
-        let isLimitsReached = this._limits != -1 && this.pos >= this._limits - 1;
-        let isEndOfArray = this.pos >= this.value.length - 1;
-        return !(isLimitsReached || isEndOfArray);
-    }
-    next() {
-        if (!this.hasNext()) {
-            return null;
-        }
-        this.pos++;
-        return this.value[this.pos];
-    }
-    lookAhead(cnt = 1) {
-        if ((this.pos + cnt) >= this.value.length) {
-            return SourcesCollectors_1.ITERATION_STATUS.EO_STRM;
-        }
-        return this.value[this.pos + cnt];
-    }
-    [Symbol.iterator]() {
-        return {
-            next: () => {
-                let done = !this.hasNext();
-                let val = this.next();
-                return {
-                    done: done,
-                    value: val
-                };
-            }
-        };
-    }
-    /*get observable(): Observable<T> {
-        return from(this);
-    }*/
-    reset() {
-        this.pos = -1;
+    get finalValue() {
+        return this.data;
     }
 }
-exports.Stream = Stream;
-/**
- * Lazy implementation of a Stream
- * The idea is to connect the intermediate
- * streams as datasources like a linked list
- * with reverse referencing and for special
- * operations like filtering flatmapping
- * have intermediate datasources in the list
- * with specialized functions.
- *
- * Sort of a modified pipe valve pattern
- * the streams are the pipes the intermediate
- * data sources are the valves
- *
- * We then can use passed in functions to control
- * the flow in the valves
- *
- * That way we can have a lazy evaluating stream
- *
- * So if an endpoint requests data
- * a callback trace goes back the stream list
- * which triggers an operation upwards
- * which sends data down the drain which then is processed
- * and filtered until one element hits the endpoint.
- *
- * That is repeated, until all elements are processed
- * or an internal limit is hit.
- *
- */
-class LazyStream {
-    static of(...values) {
-        return new LazyStream(new SourcesCollectors_1.ArrayStreamDataSource(...values));
-    }
-    static ofAssoc(data) {
-        return this.of(...Object.keys(data)).map(key => [key, data[key]]);
-    }
-    static ofStreamDataSource(value) {
-        return new LazyStream(value);
-    }
-    constructor(parent) {
-        this._limits = -1;
-        /*
-         * needed to have the limits check working
-         * we need to keep track of the current position
-         * in the stream
-         */
-        this.pos = -1;
-        this.dataSource = parent;
-    }
-    hasNext() {
-        if (this.isOverLimits()) {
-            return false;
-        }
-        return this.dataSource.hasNext();
-    }
-    next() {
-        let next = this.dataSource.next();
-        // @ts-ignore
-        this.pos++;
-        return next;
-    }
-    lookAhead(cnt = 1) {
-        return this.dataSource.lookAhead(cnt);
-    }
-    current() {
-        return this.dataSource.current();
-    }
-    reset() {
-        this.dataSource.reset();
-        this.pos = -1;
-        this._limits = -1;
-    }
-    /**
-     * concat for streams, so that you can concat two streams together
-     * @param toAppend
-     */
-    concat(...toAppend) {
-        //this.dataSource =  new MultiStreamDatasource<T>(this, ... toAppend);
-        //return this;
-        return LazyStream.ofStreamDataSource(new SourcesCollectors_1.MultiStreamDatasource(this, toAppend));
-        //return LazyStream.of(<IStream<T>>this, ...toAppend).flatMap(item => item);
-    }
-    nextFilter(fn) {
-        if (this.hasNext()) {
-            let newVal = this.next();
-            if (!fn(newVal)) {
-                return this.nextFilter(fn);
-            }
-            return newVal;
-        }
-        return null;
-    }
-    limits(max) {
-        this._limits = max;
-        return this;
-    }
-    //main stream methods
-    collect(collector) {
-        while (this.hasNext()) {
-            let t = this.next();
-            collector.collect(t);
-        }
-        this.reset();
-        return collector.finalValue;
-    }
-    onElem(fn) {
-        return new LazyStream(new SourcesCollectors_1.MappedStreamDataSource((el) => {
-            if (fn(el, this.pos) === false) {
-                this.stop();
-            }
-            return el;
-        }, this));
-    }
-    filter(fn) {
-        return new LazyStream(new SourcesCollectors_1.FilteredStreamDatasource(fn, this));
-    }
-    map(fn) {
-        return new LazyStream(new SourcesCollectors_1.MappedStreamDataSource(fn, this));
-    }
-    flatMap(fn) {
-        return new LazyStream(new SourcesCollectors_1.FlatMapStreamDataSource(fn, this));
-    }
-    //endpoint
-    each(fn) {
-        while (this.hasNext()) {
-            if (fn(this.next()) === false) {
-                this.stop();
-            }
-        }
-        this.reset();
-    }
-    reduce(fn, startVal = null) {
-        if (!this.hasNext()) {
-            return Monad_1.Optional.absent;
-        }
-        let value1;
-        let value2 = null;
-        if (startVal != null) {
-            value1 = startVal;
-            value2 = this.next();
-        }
-        else {
-            value1 = this.next();
-            if (!this.hasNext()) {
-                return Monad_1.Optional.fromNullable(value1);
-            }
-            value2 = this.next();
-        }
-        value1 = fn(value1, value2);
-        while (this.hasNext()) {
-            value2 = this.next();
-            value1 = fn(value1, value2);
-        }
-        this.reset();
-        return Monad_1.Optional.fromNullable(value1);
-    }
-    last() {
-        if (!this.hasNext()) {
-            return Monad_1.Optional.absent;
-        }
-        return this.reduce((el1, el2) => el2);
-    }
-    first() {
-        this.reset();
-        if (!this.hasNext()) {
-            return Monad_1.Optional.absent;
-        }
-        return Monad_1.Optional.fromNullable(this.next());
-    }
-    anyMatch(fn) {
-        while (this.hasNext()) {
-            if (fn(this.next())) {
-                return true;
-            }
-        }
-        return false;
-    }
-    allMatch(fn) {
-        while (this.hasNext()) {
-            if (!fn(this.next())) {
-                return false;
-            }
-        }
-        return true;
-    }
-    noneMatch(fn) {
-        while (this.hasNext()) {
-            if (fn(this.next())) {
-                return false;
-            }
-        }
-        return true;
-    }
-    sort(comparator) {
-        let arr = this.collect(new SourcesCollectors_1.ArrayCollector());
-        arr = arr.sort(comparator);
-        return LazyStream.of(...arr);
-    }
-    get value() {
-        return this.collect(new SourcesCollectors_1.ArrayCollector());
-    }
-    [Symbol.iterator]() {
-        return {
-            next: () => {
-                let done = !this.hasNext();
-                let val = this.next();
-                return {
-                    done: done,
-                    value: val
-                };
-            }
-        };
-    }
-    /*get observable(): Observable<T> {
-        return from(this);
-    }*/
-    stop() {
-        this.pos = this._limits + 1000000000;
-        this._limits = 0;
-    }
-    isOverLimits() {
-        return this._limits != -1 && this.pos >= this._limits - 1;
-    }
-}
-exports.LazyStream = LazyStream;
+exports.ArrayCollector = ArrayCollector;
 
 
 /***/ }),
@@ -3955,11 +3776,34 @@ exports.XQ = XMLQuery;
 /*!******************************************************************!*\
   !*** ./node_modules/mona-dish/src/main/typescript/index_core.ts ***!
   \******************************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.QueryFormDataCollector = exports.FormDataCollector = exports.AssocArrayCollector = exports.ArrayCollector = exports.QueryFormStringCollector = exports.SequenceDataSource = exports.FlatMapStreamDataSource = exports.FilteredStreamDatasource = exports.MappedStreamDataSource = exports.ArrayStreamDataSource = exports.LazyStream = exports.Stream = exports.XQ = exports.XMLQuery = exports.ValueEmbedder = exports.Optional = exports.Monad = exports.CONFIG_ANY = exports.CONFIG_VALUE = exports.Config = exports.Lang = exports.DQ$ = exports.DQ = exports.DomQueryCollector = exports.ElementAttribute = exports.DomQuery = void 0;
+exports.Assoc = exports.CONFIG_VALUE = exports.CONFIG_ANY = exports.Config = exports.shallowMerge = exports.simpleShallowMerge = exports.append = exports.assignIf = exports.assign = exports.XQ = exports.XMLQuery = exports.ValueEmbedder = exports.Optional = exports.Monad = exports.Lang = exports.DQ$ = exports.DQ = exports.DomQueryCollector = exports.ElementAttribute = exports.DomQuery = void 0;
 /*!
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -3987,29 +3831,25 @@ Object.defineProperty(exports, "DQ$", ({ enumerable: true, get: function () { re
 var Lang_1 = __webpack_require__(/*! ./Lang */ "./node_modules/mona-dish/src/main/typescript/Lang.ts");
 Object.defineProperty(exports, "Lang", ({ enumerable: true, get: function () { return Lang_1.Lang; } }));
 var Monad_1 = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
-Object.defineProperty(exports, "Config", ({ enumerable: true, get: function () { return Monad_1.Config; } }));
-Object.defineProperty(exports, "CONFIG_VALUE", ({ enumerable: true, get: function () { return Monad_1.CONFIG_VALUE; } }));
-Object.defineProperty(exports, "CONFIG_ANY", ({ enumerable: true, get: function () { return Monad_1.CONFIG_ANY; } }));
 Object.defineProperty(exports, "Monad", ({ enumerable: true, get: function () { return Monad_1.Monad; } }));
 Object.defineProperty(exports, "Optional", ({ enumerable: true, get: function () { return Monad_1.Optional; } }));
 Object.defineProperty(exports, "ValueEmbedder", ({ enumerable: true, get: function () { return Monad_1.ValueEmbedder; } }));
 var XmlQuery_1 = __webpack_require__(/*! ./XmlQuery */ "./node_modules/mona-dish/src/main/typescript/XmlQuery.ts");
 Object.defineProperty(exports, "XMLQuery", ({ enumerable: true, get: function () { return XmlQuery_1.XMLQuery; } }));
 Object.defineProperty(exports, "XQ", ({ enumerable: true, get: function () { return XmlQuery_1.XQ; } }));
-var Stream_1 = __webpack_require__(/*! ./Stream */ "./node_modules/mona-dish/src/main/typescript/Stream.ts");
-Object.defineProperty(exports, "Stream", ({ enumerable: true, get: function () { return Stream_1.Stream; } }));
-Object.defineProperty(exports, "LazyStream", ({ enumerable: true, get: function () { return Stream_1.LazyStream; } }));
-var SourcesCollectors_1 = __webpack_require__(/*! ./SourcesCollectors */ "./node_modules/mona-dish/src/main/typescript/SourcesCollectors.ts");
-Object.defineProperty(exports, "ArrayStreamDataSource", ({ enumerable: true, get: function () { return SourcesCollectors_1.ArrayStreamDataSource; } }));
-Object.defineProperty(exports, "MappedStreamDataSource", ({ enumerable: true, get: function () { return SourcesCollectors_1.MappedStreamDataSource; } }));
-Object.defineProperty(exports, "FilteredStreamDatasource", ({ enumerable: true, get: function () { return SourcesCollectors_1.FilteredStreamDatasource; } }));
-Object.defineProperty(exports, "FlatMapStreamDataSource", ({ enumerable: true, get: function () { return SourcesCollectors_1.FlatMapStreamDataSource; } }));
-Object.defineProperty(exports, "SequenceDataSource", ({ enumerable: true, get: function () { return SourcesCollectors_1.SequenceDataSource; } }));
-Object.defineProperty(exports, "QueryFormStringCollector", ({ enumerable: true, get: function () { return SourcesCollectors_1.QueryFormStringCollector; } }));
-Object.defineProperty(exports, "ArrayCollector", ({ enumerable: true, get: function () { return SourcesCollectors_1.ArrayCollector; } }));
-Object.defineProperty(exports, "AssocArrayCollector", ({ enumerable: true, get: function () { return SourcesCollectors_1.AssocArrayCollector; } }));
-Object.defineProperty(exports, "FormDataCollector", ({ enumerable: true, get: function () { return SourcesCollectors_1.FormDataCollector; } }));
-Object.defineProperty(exports, "QueryFormDataCollector", ({ enumerable: true, get: function () { return SourcesCollectors_1.QueryFormDataCollector; } }));
+var AssocArray_1 = __webpack_require__(/*! ./AssocArray */ "./node_modules/mona-dish/src/main/typescript/AssocArray.ts");
+Object.defineProperty(exports, "assign", ({ enumerable: true, get: function () { return AssocArray_1.assign; } }));
+Object.defineProperty(exports, "assignIf", ({ enumerable: true, get: function () { return AssocArray_1.assignIf; } }));
+Object.defineProperty(exports, "append", ({ enumerable: true, get: function () { return AssocArray_1.append; } }));
+Object.defineProperty(exports, "simpleShallowMerge", ({ enumerable: true, get: function () { return AssocArray_1.simpleShallowMerge; } }));
+Object.defineProperty(exports, "shallowMerge", ({ enumerable: true, get: function () { return AssocArray_1.shallowMerge; } }));
+var Config_1 = __webpack_require__(/*! ./Config */ "./node_modules/mona-dish/src/main/typescript/Config.ts");
+Object.defineProperty(exports, "Config", ({ enumerable: true, get: function () { return Config_1.Config; } }));
+var Config_2 = __webpack_require__(/*! ./Config */ "./node_modules/mona-dish/src/main/typescript/Config.ts");
+Object.defineProperty(exports, "CONFIG_ANY", ({ enumerable: true, get: function () { return Config_2.CONFIG_ANY; } }));
+var Config_3 = __webpack_require__(/*! ./Config */ "./node_modules/mona-dish/src/main/typescript/Config.ts");
+Object.defineProperty(exports, "CONFIG_VALUE", ({ enumerable: true, get: function () { return Config_3.CONFIG_VALUE; } }));
+exports.Assoc = __importStar(__webpack_require__(/*! ./AssocArray */ "./node_modules/mona-dish/src/main/typescript/AssocArray.ts"));
 
 
 /***/ }),
@@ -4131,12 +3971,12 @@ var faces;
         /**
          * this function has to send the ajax requests
          *
-         * following request conditions must be met:
+         * following requestInternal conditions must be met:
          * <ul>
-         *  <li> the request must be sent asynchronously! </li>
-         *  <li> the request must be a POST!!! request </li>
-         *  <li> the request url must be the form action attribute </li>
-         *  <li> all requests must be queued with a client side request queue to ensure the request ordering!</li>
+         *  <li> the requestInternal must be sent asynchronously! </li>
+         *  <li> the requestInternal must be a POST!!! requestInternal </li>
+         *  <li> the requestInternal url must be the form action attribute </li>
+         *  <li> all requests must be queued with a client side requestInternal queue to ensure the requestInternal ordering!</li>
          * </ul>
          *
          * @param {String|Node} element: any dom element no matter being it html or jsf, from which the event is emitted
@@ -4152,6 +3992,7 @@ var faces;
          * @param request the request object having triggered this response
          * @param context the request context
          *
+         * TODO add info on what can be in the context
          */
         function response(request, context) {
             AjaxImpl_1.Implementation.response(request, context);
@@ -4166,10 +4007,10 @@ var faces;
          *     <li> errorData.status : the error status message</li>
          *     <li> errorData.serverErrorName : the server error name in case of a server error</li>
          *     <li> errorData.serverErrorMessage : the server error message in case of a server error</li>
-         *     <li> errorData.source  : the issuing source element which triggered the request </li>
-         *     <li> eventData.responseCode: the response code (aka http request response code, 401 etc...) </li>
-         *     <li> eventData.responseText: the request response text </li>
-         *     <li> eventData.responseXML: the request response xml </li>
+         *     <li> errorData.source  : the issuing source element which triggered the requestInternal </li>
+         *     <li> eventData.responseCode: the response code (aka http requestInternal response code, 401 etc...) </li>
+         *     <li> eventData.responseText: the requestInternal response text </li>
+         *     <li> eventData.responseXML: the requestInternal response xml </li>
          * </ul>
          *
          * @param errorFunc error handler must be of the format <i>function errorListener(&lt;errorData&gt;)</i>
@@ -4283,7 +4124,7 @@ var myfaces;
      *
      * @param executionFunc the function to be executed upon ready
      */
-    function onOnDomReady(executionFunc) {
+    function onDomReady(executionFunc) {
         if (document.readyState !== "complete") {
             onReadyChain.push(executionFunc);
             if (!readyStateListener) {
@@ -4308,7 +4149,7 @@ var myfaces;
             executionFunc();
         }
     }
-    myfaces.onOnDomReady = onOnDomReady;
+    myfaces.onDomReady = onDomReady;
     /**
      * legacy oam functions
      */
@@ -4344,7 +4185,6 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Implementation = void 0;
 const Response_1 = __webpack_require__(/*! ./xhrCore/Response */ "./src/main/typescript/impl/xhrCore/Response.ts");
 const XhrRequest_1 = __webpack_require__(/*! ./xhrCore/XhrRequest */ "./src/main/typescript/impl/xhrCore/XhrRequest.ts");
-const AsyncQueue_1 = __webpack_require__(/*! ./util/AsyncQueue */ "./src/main/typescript/impl/util/AsyncQueue.ts");
 const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const Assertions_1 = __webpack_require__(/*! ./util/Assertions */ "./src/main/typescript/impl/util/Assertions.ts");
 const ExtDomQuery_1 = __webpack_require__(/*! ./util/ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
@@ -4353,6 +4193,7 @@ const Lang_1 = __webpack_require__(/*! ./util/Lang */ "./src/main/typescript/imp
 const Const_1 = __webpack_require__(/*! ./core/Const */ "./src/main/typescript/impl/core/Const.ts");
 const RequestDataResolver_1 = __webpack_require__(/*! ./xhrCore/RequestDataResolver */ "./src/main/typescript/impl/xhrCore/RequestDataResolver.ts");
 const FileUtils_1 = __webpack_require__(/*! ./util/FileUtils */ "./src/main/typescript/impl/util/FileUtils.ts");
+const XhrQueueController_1 = __webpack_require__(/*! ./util/XhrQueueController */ "./src/main/typescript/impl/util/XhrQueueController.ts");
 /*
  * allowed project stages
  */
@@ -4400,17 +4241,7 @@ var Implementation;
      it provides following
     
      a) Monad like structures for querying because this keeps the code denser and adds abstractions
-     that always was the strong point of jquery and it still is better in this regard than what ecmascript provides
-    
-     b) Streams and lazy streams like java has, a pull stream construct, ecmascript does not have anything like it.
-     (it has array filters and maps, but ES2015 does not support flatMap)
-     Another option would have been rxjs but that would have introduced a code dependency and probably more code. We might
-     move to RXJS if the need arises, however. But for now I would rather stick with my small self grown library which works
-     quite well and where I can patch quickly (I have used it in several industrial projects, so it works well
-     and is heavily fortified by unit tests (140 testcases as time of writing this))
-     The long term plan is to eliminate the Stream usage as soon as we can move up to ES2019 (adding the missing
-     functions as shims, is a no go, because we are a library, and absolutey do not Shim anything which can leak
-     into the global namespace!)
+     that always was the strong point of jQuery, and it still is better in this regard than what ecmascript provides
     
      c) A neutral json like configuration which allows assignments of arbitrary values with reduce code which then can be
      transformed into different data representations
@@ -4446,6 +4277,8 @@ var Implementation;
     var getMessage = Lang_1.ExtLang.getMessage;
     var getGlobalConfig = Lang_1.ExtLang.getGlobalConfig;
     var assert = Assertions_1.Assertions.assert;
+    var ofAssoc = Lang_1.ExtLang.ofAssoc;
+    var collectAssoc = Lang_1.ExtLang.collectAssoc;
     let projectStage = null;
     let separator = null;
     let eventQueue = [];
@@ -4478,7 +4311,7 @@ var Implementation;
     /**
      * @return the project stage also emitted by the server:
      * it cannot be cached and must be delivered over the server
-     * The value for it comes from the request parameter of the faces.js script called "stage".
+     * The value for it comes from the requestInternal parameter of the faces.js script called "stage".
      */
     function getProjectStage() {
         var _a, _b, _c;
@@ -4503,15 +4336,18 @@ var Implementation;
      * @param funcs
      */
     function chain(source, event, ...funcs) {
-        // we can use our lazy stream each functionality to run our chain here..
+        // we can use our lazy stream each functionality to run our chain here.
         // by passing a boolean as return value into the onElem call
         // we can stop early at the first false, just like the spec requests
-        return mona_dish_1.LazyStream.of(...funcs)
-            .map(func => resolveAndExecute(source, event, func))
-            // we use the return false == stop as an early stop, onElem stops at the first false
-            .onElem((opResult) => opResult)
-            //last ensures we run until the first false is returned
-            .last().value;
+        let ret;
+        funcs.every(func => {
+            let returnVal = resolveAndExecute(source, event, func);
+            if (returnVal !== false) {
+                ret = returnVal;
+            }
+            return returnVal !== false;
+        });
+        return ret;
     }
     Implementation.chain = chain;
     /**
@@ -4533,7 +4369,7 @@ var Implementation;
      * b) passThrough handling with a map copy with a filter map block map
      */
     function request(el, event, opts) {
-        var _a, _b, _c;
+        var _a, _b, _c, _d, _e;
         const { options, elem, elementId, windowId, isResetValues } = (0, RequestDataResolver_1.resolveDefaults)(event, opts, el);
         const requestCtx = new ExtDomQuery_1.ExtConfig({});
         const internalCtx = new ExtDomQuery_1.ExtConfig({});
@@ -4551,7 +4387,7 @@ var Implementation;
         const delay = (0, RequestDataResolver_1.resolveDelay)(options);
         const timeout = (0, RequestDataResolver_1.resolveTimeout)(options);
         requestCtx.assignIf(!!windowId, Const_1.P_WINDOW_ID).value = windowId;
-        // old non spec behavior will be removed after it is clear whether the removal breaks any code
+        // old non - spec behavior will be removed after it is clear whether the removal breaks any code
         requestCtx.assign(Const_1.CTX_PARAM_REQ_PASS_THR).value = extractLegacyParams(options.value);
         // spec conform behavior, all passthrough params must be under "passthrough
         const params = remapArrayToAssocArr(options.getIf(Const_1.CTX_OPTIONS_PARAMS).orElse({}).value);
@@ -4577,13 +4413,13 @@ var Implementation;
         requestCtx.assign(Const_1.ON_EVENT).value = (_a = options.value) === null || _a === void 0 ? void 0 : _a.onevent;
         requestCtx.assign(Const_1.ON_ERROR).value = (_b = options.value) === null || _b === void 0 ? void 0 : _b.onerror;
         /**
-         * lets drag the myfaces config params also in
+         * Fetch the myfaces config params
          */
         requestCtx.assign(Const_1.MYFACES).value = (_c = options.value) === null || _c === void 0 ? void 0 : _c.myfaces;
         /**
          * binding contract the jakarta.faces.source must be set
          */
-        requestCtx.assign(Const_1.CTX_PARAM_REQ_PASS_THR, Const_1.P_PARTIAL_SOURCE).value = elementId;
+        requestCtx.assign(Const_1.CTX_PARAM_REQ_PASS_THR, Const_1.P_AJAX_SOURCE).value = elementId;
         /**
          * jakarta.faces.partial.ajax must be set to true
          */
@@ -4606,6 +4442,8 @@ var Implementation;
         // won't hurt but for the sake of compatibility we are going to add it
         requestCtx.assign(Const_1.CTX_PARAM_REQ_PASS_THR, formId).value = formId;
         internalCtx.assign(Const_1.CTX_PARAM_SRC_CTL_ID).value = elementId;
+        // reintroduction of PPS as per myfaces 2.3 (myfaces.pps = true, only the executes are submitted)
+        internalCtx.assign(Const_1.CTX_PARAM_PPS).value = (_e = (_d = extractMyFacesParams(options.value)) === null || _d === void 0 ? void 0 : _d[Const_1.MYFACES_OPTION_PPS]) !== null && _e !== void 0 ? _e : false;
         assignClientWindowId(form, requestCtx);
         assignExecute(options, requestCtx, form, elementId);
         assignRender(options, requestCtx, form, elementId);
@@ -4682,7 +4520,7 @@ var Implementation;
         }
         finally {
             if (clearRequestQueue) {
-                Implementation.requestQueue.cleanup();
+                Implementation.requestQueue.clear();
             }
         }
     }
@@ -4723,26 +4561,11 @@ var Implementation;
         /*
          * the search root for the dom element search
          */
-        let searchRoot = ((node) ? mona_dish_1.DQ.byId(node) : (0, mona_dish_1.DQ$)("form"));
-        let inputs = searchRoot
-            .filterSelector(`input[name='${(0, Const_1.$nsp)(Const_1.P_CLIENT_WINDOW)}']`)
-            .orElseLazy(() => searchRoot.querySelectorAll(`input[name='${(0, Const_1.$nsp)(Const_1.P_CLIENT_WINDOW)}']`));
+        let searchRoot = new mona_dish_1.DQ(node || document.body).querySelectorAll(`form input [name='${Const_1.P_CLIENT_WINDOW}']`);
         /*
-         * lazy helper to fetch the window id from the included faces.js
+         * lazy helper to fetch the window id from the window url
          */
-        let fetchWindowIdFromJSFJS = () => ExtDomQuery_1.ExtDomQuery.searchJsfJsFor(/jfwid=([^&;]*)/).orElse(null).value;
-        /*
-         * fetch window id from the url
-         */
-        let fetchWindowIdFromURL = function () {
-            const href = window.location.href, windowId = "jfwid";
-            const regex = new RegExp("[\\?&]" + windowId + "=([^&#\\;]*)");
-            const results = regex.exec(href);
-            //initial trial over the url and a regexp
-            if (results != null)
-                return results[1];
-            return null;
-        };
+        let fetchWindowIdFromUrl = () => ExtDomQuery_1.ExtDomQuery.searchJsfJsFor(/jfwid=([^&;]*)/).orElse(null).value;
         /*
          * functional double check based on stream reduction
          * the values should be identical or on INIT value which is a premise to
@@ -4765,19 +4588,20 @@ var Implementation;
          *
          * @param item
          */
-        let getValue = (item) => item.val;
+        let getValue = (item) => item.attr("value").value;
         /*
          * fetch the window id from the forms
          * window ids must be present in all forms
          * or non-existent. If they exist all of them must be the same
          */
-        let formWindowId = inputs.stream.map(getValue).reduce(differenceCheck, INIT);
+        let formWindowId = mona_dish_1.Optional.fromNullable(searchRoot.asArray
+            .map(getValue).reduce(differenceCheck, INIT));
         //if the resulting window id is set on altered then we have an unresolvable problem
         assert(ALTERED != formWindowId.value, "Multiple different windowIds found in document");
         /*
          * return the window id or null
          */
-        return formWindowId.value != INIT ? formWindowId.value : (fetchWindowIdFromURL() || fetchWindowIdFromJSFJS());
+        return formWindowId.value != INIT ? formWindowId.value : fetchWindowIdFromUrl();
     }
     Implementation.getClientWindow = getClientWindow;
     /**
@@ -4803,7 +4627,7 @@ var Implementation;
         // fetch all non file input form elements
         let formElements = element.deepElements.encodeFormElement();
         // encode them! (file inputs are handled differently and are not part of the viewstate)
-        return (0, FileUtils_1.encodeFormData)(formElements, (0, RequestDataResolver_1.resoveNamingContainerMapper)(dummyContext));
+        return (0, FileUtils_1.encodeFormData)(new ExtDomQuery_1.ExtConfig(formElements), (0, RequestDataResolver_1.resoveNamingContainerMapper)(dummyContext));
     }
     Implementation.getViewState = getViewState;
     /**
@@ -4818,8 +4642,8 @@ var Implementation;
          * adds a new request to our queue for further processing
          */
         addRequestToQueue: function (elem, form, reqCtx, respPassThr, delay = 0, timeout = 0) {
-            Implementation.requestQueue = Implementation.requestQueue !== null && Implementation.requestQueue !== void 0 ? Implementation.requestQueue : new AsyncQueue_1.AsynchronousQueue();
-            Implementation.requestQueue.enqueue(new XhrRequest_1.XhrRequest(elem, form, reqCtx, respPassThr, [], timeout), delay);
+            Implementation.requestQueue = Implementation.requestQueue !== null && Implementation.requestQueue !== void 0 ? Implementation.requestQueue : new XhrQueueController_1.XhrQueueController();
+            Implementation.requestQueue.enqueue(new XhrRequest_1.XhrRequest(reqCtx, respPassThr, timeout), delay);
         }
     };
     //----------------------------------------------- Methods ---------------------------------------------------------------------
@@ -4919,7 +4743,7 @@ var Implementation;
          * can deal with them either prefixed ir not
          * also resolves the absolute id case (it was assumed the server does this, but
          * apparently the RI does not, so we have to follow the RI behavior here)
-         * @param componentIdToTransform the componentId which needs post processing
+         * @param componentIdToTransform the componentId which needs post-processing
          */
         const remapNamingContainer = componentIdToTransform => {
             // pattern :<anything> must be prepended by viewRoot if there is one,
@@ -4933,7 +4757,7 @@ var Implementation;
             const hasLeadingSep = componentIdToTransform.indexOf(SEP) === 0;
             const isAbsolutSearchExpr = hasLeadingSep || (rootNamingContainerId.length
                 && componentIdToTransform.indexOf(rootNamingContainerPrefix) == 0);
-            let finalIdentifier = "";
+            let finalIdentifier;
             if (isAbsolutSearchExpr) {
                 //we cut off the leading sep if there is one
                 componentIdToTransform = hasLeadingSep ? componentIdToTransform.substring(1) : componentIdToTransform;
@@ -4952,13 +4776,13 @@ var Implementation;
                     [rootNamingContainerPrefix, componentIdToTransform].join(Const_1.EMPTY_STR) :
                     [nearestNamingContainerPrefix, componentIdToTransform].join(Const_1.EMPTY_STR);
             }
-            // We need to double check because we have scenarios where we have a naming container
+            // We need to double-check because we have scenarios where we have a naming container
             // and no prepend (aka tobago testcase "must handle ':' in IDs properly", scenario 3,
             // in this case we return the component id, and be happy
             // we can roll a dom check here
             return (!!document.getElementById(finalIdentifier)) ? finalIdentifier : componentIdToTransform;
         };
-        // in this case we do not use lazy stream because it wont bring any code reduction
+        // in this case we do not use lazy stream because it won´t bring any code reduction
         // or speedup
         for (let cnt = 0; cnt < iterValues.length; cnt++) {
             //avoid doubles
@@ -4998,23 +4822,36 @@ var Implementation;
      * the values required for params-through are processed in the ajax request
      *
      * Note this is a bug carried over from the old implementation
-     * the spec conform behavior is to use params for passthrough values
+     * the spec conform behavior is to use params for pass - through values
      * this will be removed soon, after it is cleared up whether removing
      * it breaks any legacy code
      *
      * @param {Context} mappedOpts the options to be filtered
-     * @deprecated
      */
     function extractLegacyParams(mappedOpts) {
         //we now can use the full code reduction given by our stream api
         //to filter
-        return mona_dish_1.Stream.ofAssoc(mappedOpts)
-            .filter(item => !(item[0] in BlockFilter))
-            .collect(new mona_dish_1.AssocArrayCollector());
+        return ofAssoc(mappedOpts)
+            .filter((item => !(item[0] in BlockFilter)))
+            .reduce(collectAssoc, {});
+    }
+    /**
+     * extracts the myfaces config parameters which provide extra functionality
+     * on top of JSF
+     * @param mappedOpts
+     * @private
+     */
+    function extractMyFacesParams(mappedOpts) {
+        var _a;
+        //we now can use the full code reduction given by our stream api
+        //to filter
+        return (_a = ofAssoc(mappedOpts)
+            .filter((item => (item[0] == "myfaces")))
+            .reduce(collectAssoc, {})) === null || _a === void 0 ? void 0 : _a[Const_1.MYFACES];
     }
     function remapArrayToAssocArr(arrayedParams) {
         if (Array.isArray(arrayedParams)) {
-            return mona_dish_1.Stream.of(...arrayedParams).collect(new mona_dish_1.AssocArrayCollector());
+            return arrayedParams.reduce(collectAssoc, {});
         }
         return arrayedParams;
     }
@@ -5342,16 +5179,16 @@ var PushImpl;
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.CTX_OPTIONS_PARAMS = exports.TIMEOUT_EVENT = exports.CLIENT_ERROR = exports.SERVER_ERROR = exports.MALFORMEDXML = exports.EMPTY_RESPONSE = exports.HTTPERROR = exports.RESPONSE_XML = exports.RESPONSE_TEXT = exports.ERROR_MESSAGE = exports.ERROR_NAME = exports.STATUS = exports.SOURCE = exports.SUCCESS = exports.COMPLETE = exports.BEGIN = exports.ON_EVENT = exports.ON_ERROR = exports.EVENT = exports.ERROR = exports.WINDOW_ID = exports.CTX_PARAM_RENDER = exports.P_BEHAVIOR_EVENT = exports.P_WINDOW_ID = exports.P_RESET_VALUES = exports.P_EVT = exports.P_RENDER_OVERRIDE = exports.P_RENDER = exports.P_EXECUTE = exports.P_AJAX = exports.IDENT_FORM = exports.IDENT_THIS = exports.IDENT_NONE = exports.IDENT_ALL = exports.HTML_CLIENT_WINDOW = exports.HTML_VIEWSTATE = exports.EMPTY_MAP = exports.EMPTY_STR = exports.EMPTY_FUNC = exports.P_RESOURCE = exports.P_VIEWBODY = exports.P_VIEWHEAD = exports.P_VIEWROOT = exports.P_CLIENT_WINDOW = exports.P_VIEWSTATE = exports.VIEW_ID = exports.NAMING_CONTAINER_ID = exports.P_PARTIAL_SOURCE = exports.NAMED_VIEWROOT = exports.XML_ATTR_NAMED_VIEWROOT = void 0;
-exports.XML_TAG_AFTER = exports.XML_TAG_BEFORE = exports.XML_TAG_REDIRECT = exports.XML_TAG_EXTENSION = exports.XML_TAG_ATTRIBUTES = exports.XML_TAG_ERROR = exports.XML_TAG_EVAL = exports.XML_TAG_INSERT = exports.XML_TAG_DELETE = exports.XML_TAG_UPDATE = exports.XML_TAG_CHANGES = exports.XML_TAG_PARTIAL_RESP = exports.ATTR_ID = exports.ATTR_VALUE = exports.ATTR_NAME = exports.ATTR_URL = exports.ERR_NO_PARTIAL_RESPONSE = exports.PHASE_PROCESS_RESPONSE = exports.SEL_RESPONSE_XML = exports.SEL_CLIENT_WINDOW_ELEM = exports.SEL_VIEWSTATE_ELEM = exports.HTML_TAG_STYLE = exports.HTML_TAG_SCRIPT = exports.HTML_TAG_LINK = exports.HTML_TAG_BODY = exports.HTML_TAG_FORM = exports.HTML_TAG_HEAD = exports.STD_ACCEPT = exports.NO_TIMEOUT = exports.MULTIPART = exports.URL_ENCODED = exports.STATE_EVT_COMPLETE = exports.STATE_EVT_TIMEOUT = exports.STATE_EVT_BEGIN = exports.REQ_TYPE_POST = exports.REQ_TYPE_GET = exports.ENCODED_URL = exports.VAL_AJAX = exports.REQ_ACCEPT = exports.HEAD_FACES_REQ = exports.CONTENT_TYPE = exports.CTX_PARAM_REQ_PASS_THR = exports.CTX_PARAM_SRC_CTL_ID = exports.CTX_PARAM_SRC_FRM_ID = exports.CTX_PARAM_MF_INTERNAL = exports.CTX_OPTIONS_EXECUTE = exports.CTX_OPTIONS_RESET = exports.CTX_OPTIONS_TIMEOUT = exports.DELAY_NONE = exports.CTX_OPTIONS_DELAY = void 0;
-exports.$nsp = exports.$faces = exports.UNKNOWN = exports.MAX_RECONNECT_ATTEMPTS = exports.RECONNECT_INTERVAL = exports.APPLIED_CLIENT_WINDOW = exports.APPLIED_VST = exports.REASON_EXPIRED = exports.MF_NONE = exports.MYFACES = exports.DEFERRED_HEAD_INSERTS = exports.UPDATE_ELEMS = exports.UPDATE_FORMS = exports.XML_TAG_ATTR = void 0;
+exports.CTX_OPTIONS_PARAMS = exports.TIMEOUT_EVENT = exports.CLIENT_ERROR = exports.SERVER_ERROR = exports.MALFORMEDXML = exports.EMPTY_RESPONSE = exports.HTTPERROR = exports.RESPONSE_XML = exports.RESPONSE_TEXT = exports.ERROR_MESSAGE = exports.ERROR_NAME = exports.STATUS = exports.SOURCE = exports.SUCCESS = exports.COMPLETE = exports.BEGIN = exports.ON_EVENT = exports.ON_ERROR = exports.EVENT = exports.ERROR = exports.WINDOW_ID = exports.CTX_PARAM_RENDER = exports.P_BEHAVIOR_EVENT = exports.P_WINDOW_ID = exports.P_RESET_VALUES = exports.P_EVT = exports.P_RENDER_OVERRIDE = exports.P_RENDER = exports.P_EXECUTE = exports.P_AJAX = exports.IDENT_FORM = exports.IDENT_THIS = exports.IDENT_NONE = exports.IDENT_ALL = exports.HTML_CLIENT_WINDOW = exports.HTML_VIEWSTATE = exports.EMPTY_MAP = exports.EMPTY_STR = exports.EMPTY_FUNC = exports.P_RESOURCE = exports.P_VIEWBODY = exports.P_VIEWHEAD = exports.P_VIEWROOT = exports.P_CLIENT_WINDOW = exports.P_VIEWSTATE = exports.VIEW_ID = exports.NAMING_CONTAINER_ID = exports.P_AJAX_SOURCE = exports.NAMED_VIEWROOT = exports.XML_ATTR_NAMED_VIEWROOT = void 0;
+exports.XML_TAG_REDIRECT = exports.XML_TAG_EXTENSION = exports.XML_TAG_ATTRIBUTES = exports.XML_TAG_ERROR = exports.XML_TAG_EVAL = exports.XML_TAG_INSERT = exports.XML_TAG_DELETE = exports.XML_TAG_UPDATE = exports.XML_TAG_CHANGES = exports.XML_TAG_PARTIAL_RESP = exports.ATTR_ID = exports.ATTR_VALUE = exports.ATTR_NAME = exports.ATTR_URL = exports.MYFACES_OPTION_PPS = exports.ERR_NO_PARTIAL_RESPONSE = exports.PHASE_PROCESS_RESPONSE = exports.SEL_RESPONSE_XML = exports.SEL_CLIENT_WINDOW_ELEM = exports.SEL_VIEWSTATE_ELEM = exports.HTML_TAG_STYLE = exports.HTML_TAG_SCRIPT = exports.HTML_TAG_LINK = exports.HTML_TAG_BODY = exports.HTML_TAG_FORM = exports.HTML_TAG_HEAD = exports.STD_ACCEPT = exports.NO_TIMEOUT = exports.MULTIPART = exports.URL_ENCODED = exports.STATE_EVT_COMPLETE = exports.STATE_EVT_TIMEOUT = exports.STATE_EVT_BEGIN = exports.REQ_TYPE_POST = exports.REQ_TYPE_GET = exports.ENCODED_URL = exports.VAL_AJAX = exports.REQ_ACCEPT = exports.HEAD_FACES_REQ = exports.CONTENT_TYPE = exports.CTX_PARAM_PPS = exports.CTX_PARAM_REQ_PASS_THR = exports.CTX_PARAM_SRC_CTL_ID = exports.CTX_PARAM_SRC_FRM_ID = exports.CTX_PARAM_MF_INTERNAL = exports.CTX_OPTIONS_EXECUTE = exports.CTX_OPTIONS_RESET = exports.CTX_OPTIONS_TIMEOUT = exports.DELAY_NONE = exports.CTX_OPTIONS_DELAY = void 0;
+exports.$nsp = exports.$faces = exports.UNKNOWN = exports.MAX_RECONNECT_ATTEMPTS = exports.RECONNECT_INTERVAL = exports.APPLIED_CLIENT_WINDOW = exports.APPLIED_VST = exports.REASON_EXPIRED = exports.MF_NONE = exports.MYFACES = exports.DEFERRED_HEAD_INSERTS = exports.UPDATE_ELEMS = exports.UPDATE_FORMS = exports.XML_TAG_ATTR = exports.XML_TAG_AFTER = exports.XML_TAG_BEFORE = void 0;
 /*
  * [export const] constants
  */
 exports.XML_ATTR_NAMED_VIEWROOT = "namedViewRoot";
 exports.NAMED_VIEWROOT = "namedViewRoot";
-exports.P_PARTIAL_SOURCE = "jakarta.faces.source";
-exports.NAMING_CONTAINER_ID = "myfaces.partialId";
+exports.P_AJAX_SOURCE = "jakarta.faces.source";
+exports.NAMING_CONTAINER_ID = "myfaces.NamingContainerId";
 exports.VIEW_ID = "myfaces.viewId";
 exports.P_VIEWSTATE = "jakarta.faces.ViewState";
 exports.P_CLIENT_WINDOW = "jakarta.faces.ClientWindow";
@@ -5414,6 +5251,7 @@ exports.CTX_PARAM_MF_INTERNAL = "myfaces.internal";
 exports.CTX_PARAM_SRC_FRM_ID = "myfaces.source.formId";
 exports.CTX_PARAM_SRC_CTL_ID = "myfaces.source.controlId";
 exports.CTX_PARAM_REQ_PASS_THR = "myfaces.request.passThrough";
+exports.CTX_PARAM_PPS = "myfaces.request.pps";
 exports.CONTENT_TYPE = "Content-Type";
 exports.HEAD_FACES_REQ = "Faces-Request";
 exports.REQ_ACCEPT = "Accept";
@@ -5439,6 +5277,7 @@ exports.SEL_CLIENT_WINDOW_ELEM = "[name='" + exports.P_CLIENT_WINDOW + "']";
 exports.SEL_RESPONSE_XML = "responseXML";
 exports.PHASE_PROCESS_RESPONSE = "processResponse";
 exports.ERR_NO_PARTIAL_RESPONSE = "Partial response not set";
+exports.MYFACES_OPTION_PPS = "pps";
 exports.ATTR_URL = "url";
 exports.ATTR_NAME = "name";
 exports.ATTR_VALUE = "value";
@@ -5774,120 +5613,89 @@ var Assertions;
 
 /***/ }),
 
-/***/ "./src/main/typescript/impl/util/AsyncQueue.ts":
-/*!*****************************************************!*\
-  !*** ./src/main/typescript/impl/util/AsyncQueue.ts ***!
-  \*****************************************************/
+/***/ "./src/main/typescript/impl/util/AsyncRunnable.ts":
+/*!********************************************************!*\
+  !*** ./src/main/typescript/impl/util/AsyncRunnable.ts ***!
+  \********************************************************/
 /***/ ((__unused_webpack_module, exports) => {
 
 
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.AsynchronousQueue = void 0;
-/**
- * Asynchronous queue which starts to work
- * through the callbacks until the queue is empty
+/*! Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- * Every callback must be of async runnable
- * which is sort of an extended promise which has
- * added a dedicated cancel and start point
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * This interface can be used as wrapper contract
- * for normal promises if needed.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-class AsynchronousQueue {
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AsyncRunnable = void 0;
+/**
+ * pretty much the same as cancellable Promise, but given
+ * we do not have that on browser level yet this is sort
+ * of a non - intrusive Shim!
+ */
+class AsyncRunnable {
     constructor() {
-        this.runnableQueue = [];
+        /**
+         * helper support so that we do not have to drag in Promise shims
+         */
+        this.catchFunctions = [];
+        this.thenFunctions = [];
     }
     /**
-     * simple is empty accessor, returns true if queue is empty atm
+     * resolve handler function which calls the then chain
+     * and after that finally
+     * @param data
      */
-    get isEmpty() {
-        return !this.runnableQueue.length;
+    resolve(data) {
+        this.thenFunctions.reduce((inputVal, thenFunc) => {
+            return thenFunc(inputVal);
+        }, data);
     }
     /**
-     * enqueues an element and starts the
-     * asynchronous work loop if not already running
-     *
-     * @param element the element to be queued and processed
-     * @param delay possible delay after our usual process or drop if something newer is incoming algorithm
+     * reject handler function which triggers the catch chain
+     * @param data
      */
-    enqueue(element, delay = 0) {
-        if (this.delayTimeout) {
-            clearTimeout(this.delayTimeout);
-            this.delayTimeout = null;
-        }
-        if (delay) {
-            this.delayTimeout = setTimeout(() => {
-                this.appendElement(element);
-            });
-        }
-        else {
-            this.appendElement(element);
-        }
+    reject(data) {
+        this.catchFunctions.reduce((inputVal, catchFunc) => {
+            return catchFunc(inputVal);
+        }, data);
     }
     /**
-     * fetches the next element from the queue (first in first out order)
+     * register a catch functor
+     * @param func the functor for the catch monad
      */
-    dequeue() {
-        return this.runnableQueue.shift();
+    catch(func) {
+        this.catchFunctions.push(func);
+        return this;
     }
     /**
-     * clears up all elements from the queue
+     * registers a finally functor
+     * @param func the functor for the finally handling chanin
      */
-    cleanup() {
-        this.currentlyRunning = null;
-        this.runnableQueue.length = 0;
+    finally(func) {
+        // no ie11 support we probably are going to revert to shims for that one
+        this.catchFunctions.push(func);
+        this.thenFunctions.push(func);
+        return this;
     }
     /**
-     * cancels the currently running element and then cleans up the queue
-     * aka cancel the queue entirely
+     * @param func then functor similar to promise
      */
-    cancel() {
-        try {
-            if (this.currentlyRunning) {
-                this.currentlyRunning.cancel();
-            }
-        }
-        finally {
-            this.cleanup();
-        }
-    }
-    callForNextElementToProcess() {
-        this.runEntry();
-    }
-    appendElement(element) {
-        //only if the first element is added we start with a trigger
-        //otherwise a process already is running and not finished yet at that
-        //time
-        this.runnableQueue.push(element);
-        if (!this.currentlyRunning) {
-            this.runEntry();
-        }
-    }
-    runEntry() {
-        if (this.isEmpty) {
-            this.currentlyRunning = null;
-            return;
-        }
-        this.currentlyRunning = this.dequeue();
-        this.currentlyRunning
-            .catch((e) => {
-            //in case of an error we always clean up the remaining calls
-            //to allow a clean recovery of the application
-            this.cleanup();
-            throw e;
-        })
-            .then(
-        //the idea is to trigger the next over an event to reduce
-        //the number of recursive calls (stacks might be limited
-        //compared to ram)
-        //naturally give we have a DOM, the DOM is the natural event dispatch system
-        //which we can use, to decouple the calls from a recursive stack call
-        //(the browser engine will take care of that)
-        () => this.callForNextElementToProcess()).start();
+    then(func) {
+        this.thenFunctions.push(func);
+        return this;
     }
 }
-exports.AsynchronousQueue = AsynchronousQueue;
+exports.AsyncRunnable = AsyncRunnable;
 
 
 /***/ }),
@@ -5996,6 +5804,7 @@ class ExtDomQuery extends mona_dish_1.DQ {
     * this is done once and only lazily
     */
     get nonce() {
+        var _a;
         //already processed
         let myfacesConfig = new ExtConfig(window.myfaces);
         let nonce = myfacesConfig.getIf("config", "cspMeta", "nonce");
@@ -6010,12 +5819,10 @@ class ExtDomQuery extends mona_dish_1.DQ {
         }
         // fallback if the currentScript method fails, we just search the jsf tags for nonce, this is
         // the last possibility
-        let nonceScript = mona_dish_1.DQ
-            .querySelectorAll("script[src], link[src]")
-            .lazyStream
+        let nonceScript = mona_dish_1.Optional.fromNullable((_a = mona_dish_1.DQ
+            .querySelectorAll("script[src], link[src]").asArray
             .filter((item) => this.extractNonce(item) && item.attr(ATTR_SRC) != null)
-            .filter(item => IS_FACES_SOURCE(item.attr(ATTR_SRC).value))
-            .first();
+            .filter(item => IS_FACES_SOURCE(item.attr(ATTR_SRC).value))) === null || _a === void 0 ? void 0 : _a[0]);
         if (nonceScript.isPresent()) {
             return this.extractNonce(nonceScript.value);
         }
@@ -6030,14 +5837,15 @@ class ExtDomQuery extends mona_dish_1.DQ {
      * @param regExp
      */
     searchJsfJsFor(regExp) {
+        var _a;
         //perfect application for lazy stream
-        return mona_dish_1.DQ.querySelectorAll("script[src], link[src]").lazyStream
+        return mona_dish_1.Optional.fromNullable((_a = mona_dish_1.DQ.querySelectorAll("script[src], link[src]").asArray
             .filter(item => IS_FACES_SOURCE(item.attr(ATTR_SRC).value))
             .map(item => item.attr(ATTR_SRC).value.match(regExp))
             .filter(item => item != null && item.length > 1)
             .map((result) => {
             return decodeURIComponent(result[1]);
-        }).first();
+        })) === null || _a === void 0 ? void 0 : _a[0]);
     }
     globalEval(code, nonce) {
         return new ExtDomQuery(super.globalEval(code, nonce !== null && nonce !== void 0 ? nonce : this.nonce));
@@ -6196,7 +6004,7 @@ class ExtConfig extends mona_dish_1.Config {
         if (!this.$nspEnabled) {
             return accessPath;
         }
-        return mona_dish_1.Stream.of(...accessPath).map(key => (0, Const_1.$nsp)(key)).collect(new mona_dish_1.ArrayCollector());
+        return [...accessPath].map(key => (0, Const_1.$nsp)(key));
     }
 }
 exports.ExtConfig = ExtConfig;
@@ -6212,8 +6020,7 @@ exports.ExtConfig = ExtConfig;
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getFormInputsAsStream = exports.fixEmmptyParameters = exports.resolveFiles = exports.decodeEncodedValues = exports.encodeFormData = void 0;
-const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
+exports.getFormInputsAsArr = exports.fixEmptyParameters = exports.resolveFiles = exports.decodeEncodedValues = exports.encodeFormData = void 0;
 const ExtDomQuery_1 = __webpack_require__(/*! ./ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
 const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 /*
@@ -6231,18 +6038,16 @@ function encodeFormData(formData, paramsMapper = (inStr, inVal) => [inStr, inVal
         return defaultStr;
     }
     const assocValues = formData.value;
-    const expandValueArrAndRename = key => mona_dish_1.Stream.of(...assocValues[key]).map(val => paramsMapper(key, val));
+    const expandValueArrAndRename = key => assocValues[key].map(val => paramsMapper(key, val));
     const isPropertyKey = key => assocValues.hasOwnProperty(key);
     const isNotFile = ([, value]) => !(value instanceof ExtDomQuery_1.ExtDomQuery.global().File);
     const mapIntoUrlParam = keyVal => `${encodeURIComponent(keyVal[0])}=${encodeURIComponent(keyVal[1])}`;
-    const entries = mona_dish_1.LazyStream.of(...Object.keys(assocValues))
+    return Object.keys(assocValues)
         .filter(isPropertyKey)
         .flatMap(expandValueArrAndRename)
-        //we cannot encode file elements that is handled by multipart requests anyway
         .filter(isNotFile)
         .map(mapIntoUrlParam)
-        .collect(new mona_dish_1.ArrayCollector());
-    return entries.join("&");
+        .join("&");
 }
 exports.encodeFormData = encodeFormData;
 /**
@@ -6259,9 +6064,7 @@ function decodeEncodedValues(encoded) {
         return [line.substring(0, index), line.substring(index + 1)];
     };
     let requestParamEntries = decodeURIComponent(encoded).split(/&/gi);
-    return mona_dish_1.Stream.of(...requestParamEntries)
-        .filter(filterBlanks)
-        .map(splitKeyValuePair);
+    return requestParamEntries.filter(filterBlanks).map(splitKeyValuePair);
 }
 exports.decodeEncodedValues = decodeEncodedValues;
 /**
@@ -6269,20 +6072,26 @@ exports.decodeEncodedValues = decodeEncodedValues;
  * @param dataSource
  */
 function resolveFiles(dataSource) {
-    const expandFilesArr = ([key, files]) => mona_dish_1.Stream.of(...files).map(file => [key, file]);
-    const remapFileInput = fileInput => [fileInput.name.value || fileInput.id.value, fileInput.filesFromElem(0)];
-    return dataSource
+    const expandFilesArr = ([key, files]) => {
+        return [...files].map(file => [key, file]);
+    };
+    const remapFileInput = fileInput => {
+        return [fileInput.name.value || fileInput.id.value, fileInput.filesFromElem(0)];
+    };
+    const files = dataSource
         .querySelectorAllDeep("input[type='file']")
-        .stream
+        .asArray;
+    const ret = files
         .map(remapFileInput)
         .flatMap(expandFilesArr);
+    return ret;
 }
 exports.resolveFiles = resolveFiles;
-function fixEmmptyParameters(keyVal) {
+function fixEmptyParameters(keyVal) {
     var _a, _b;
     return (keyVal.length < 3 ? [(_a = keyVal === null || keyVal === void 0 ? void 0 : keyVal[0]) !== null && _a !== void 0 ? _a : [], (_b = keyVal === null || keyVal === void 0 ? void 0 : keyVal[1]) !== null && _b !== void 0 ? _b : []] : keyVal);
 }
-exports.fixEmmptyParameters = fixEmmptyParameters;
+exports.fixEmptyParameters = fixEmptyParameters;
 /**
  * returns the decoded viewState from parentItem
  * @param parentItem
@@ -6296,15 +6105,15 @@ function resolveViewState(parentItem) {
 }
 /**
  * gets all the inputs under the form parentItem
- * as stream
+ * as array
  * @param parentItem
  */
-function getFormInputsAsStream(parentItem) {
+function getFormInputsAsArr(parentItem) {
     const standardInputs = resolveViewState(parentItem);
     const fileInputs = resolveFiles(parentItem);
-    return standardInputs.concat(fileInputs);
+    return standardInputs.concat(...fileInputs);
 }
-exports.getFormInputsAsStream = getFormInputsAsStream;
+exports.getFormInputsAsArr = getFormInputsAsArr;
 
 
 /***/ }),
@@ -6367,13 +6176,17 @@ class HiddenInputBuilder {
         var _a, _b, _c;
         const SEP = (0, Const_1.$faces)().separatorchar;
         let existingStates = (0, mona_dish_1.DQ$)(`[name*='${(0, Const_1.$nsp)(this.name)}']`);
-        let cnt = existingStates.stream.map(state => {
+        let cnt = existingStates.asArray.map(state => {
             let ident = state.id.orElse("-1").value;
             ident = ident.substring(ident.lastIndexOf(SEP) + 1);
             return parseInt(ident);
         })
-            .filter(item => !isNaN(item))
-            .reduce((item1, item2) => Math.max(item1, item2), -1).value;
+            .filter(item => {
+            return !isNaN(item);
+        })
+            .reduce((item1, item2) => {
+            return Math.max(item1, item2);
+        }, -1);
         //the maximum  new ident is the current max + 1
         cnt++;
         const newElement = mona_dish_1.DQ.fromMarkup((0, Const_1.$nsp)(this.template));
@@ -6489,7 +6302,7 @@ var ExtLang;
         var _a, _b;
         installedLocale = installedLocale !== null && installedLocale !== void 0 ? installedLocale : new Messages_1.Messages();
         let msg = (_b = (_a = installedLocale[key]) !== null && _a !== void 0 ? _a : defaultMessage) !== null && _b !== void 0 ? _b : key;
-        mona_dish_1.Stream.of(...templateParams).each((param, cnt) => {
+        templateParams.forEach((param, cnt) => {
             msg = msg.replace(new RegExp(["\\{", cnt, "\\}"].join(Const_1.EMPTY_STR), "g"), param);
         });
         return msg;
@@ -6598,6 +6411,57 @@ var ExtLang;
     }
     ExtLang.getLocalOrGlobalConfig = getLocalOrGlobalConfig;
     /**
+     * expands an associative array into an array of key value tuples
+     * @param value
+     */
+    function ofAssoc(value) {
+        return Object.keys(value)
+            .map(key => [key, value[key]]);
+    }
+    ExtLang.ofAssoc = ofAssoc;
+    function collectAssoc(target, item) {
+        target[item[0]] = item[1];
+        return target;
+    }
+    ExtLang.collectAssoc = collectAssoc;
+    /**
+     * The active timeout for the "debounce".
+     * Since we only use it in the XhrController
+     * we can use a local module variable here
+     */
+    let activeTimeouts = {};
+    /**
+     * a simple debounce function
+     * which waits until a timeout is reached and
+     * if something comes in in between debounces
+     *
+     * @param runnable a runnable which should go under debounce control
+     * @param timeout a timeout for the debounce window
+     */
+    function debounce(key, runnable, timeout) {
+        function clearActiveTimeout() {
+            clearTimeout(activeTimeouts[key]);
+            delete activeTimeouts[key];
+        }
+        if (!!(activeTimeouts === null || activeTimeouts === void 0 ? void 0 : activeTimeouts[key])) {
+            clearActiveTimeout();
+        }
+        if (timeout > 0) {
+            activeTimeouts[key] = setTimeout(() => {
+                try {
+                    runnable();
+                }
+                finally {
+                    clearActiveTimeout();
+                }
+            }, timeout);
+        }
+        else {
+            runnable();
+        }
+    }
+    ExtLang.debounce = debounce;
+    /**
      * assert that the form exists and throw an exception in the case it does not
      *
      * @param form the form to check for
@@ -6608,6 +6472,122 @@ var ExtLang;
         }
     }
 })(ExtLang = exports.ExtLang || (exports.ExtLang = {}));
+
+
+/***/ }),
+
+/***/ "./src/main/typescript/impl/util/XhrQueueController.ts":
+/*!*************************************************************!*\
+  !*** ./src/main/typescript/impl/util/XhrQueueController.ts ***!
+  \*************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.XhrQueueController = void 0;
+const Lang_1 = __webpack_require__(/*! ./Lang */ "./src/main/typescript/impl/util/Lang.ts");
+var debounce = Lang_1.ExtLang.debounce;
+/**
+ * A simple XHR queue controller
+ * following the async op -> next pattern
+ * Faces enforces for the XHR handling
+ */
+class XhrQueueController {
+    constructor() {
+        this.queue = [];
+        this.taskRunning = false;
+    }
+    /**
+     * executes or enqueues an element
+     * @param runnable the runnable (request) to be enqueued
+     * @param timeOut timeout if > 0 which defers the execution
+     * until the debounce window for the timeout is closed.
+     */
+    enqueue(runnable, timeOut = 0) {
+        debounce("xhrQueue", () => {
+            const requestHandler = this.enrichRunnable(runnable);
+            if (!this.taskRunning) {
+                this.signalTaskRunning();
+                requestHandler.start();
+            }
+            else {
+                this.queue.push(requestHandler);
+            }
+        }, timeOut);
+    }
+    /**
+     * trigger the next element in the queue
+     * to be started!
+     */
+    next() {
+        this.updateTaskRunning();
+        const next = this.queue.shift();
+        next === null || next === void 0 ? void 0 : next.start();
+    }
+    /**
+     * clears and resets the queue
+     */
+    clear() {
+        this.queue.length = 0;
+        this.updateTaskRunning();
+    }
+    /**
+     * true if queue is empty
+     */
+    get isEmpty() {
+        return !this.queue.length;
+    }
+    /**
+     * Enriches the incoming async asyncRunnable
+     * with the error and next handling
+     * (aka: asyncRunnable is done -> next
+     *                   error -> clear queue
+     * @param asyncRunnable the async runnable which needs enrichment
+     * @private
+     */
+    enrichRunnable(asyncRunnable) {
+        /**
+         * we can use the Promise pattern asyncrunnable uses
+         * to trigger queue control callbacks of next element
+         * and clear the queue (theoretically this
+         * would work with any promise)
+         */
+        try {
+            return asyncRunnable
+                .then(() => this.next())
+                .catch((e) => this.handleError(e));
+        }
+        catch (e) {
+            this.handleError(e);
+        }
+    }
+    /**
+     * alerts the queue that a task is running
+     *
+     * @private
+     */
+    signalTaskRunning() {
+        this.taskRunning = true;
+    }
+    /**
+     * updates the task running status according to the current queue
+     * @private
+     */
+    updateTaskRunning() {
+        this.taskRunning = !this.isEmpty;
+    }
+    /**
+     * standard error handling
+     * we clear the queue and then bomb out
+     * @param e
+     * @private
+     */
+    handleError(e) {
+        this.clear();
+        throw e;
+    }
+}
+exports.XhrQueueController = XhrQueueController;
 
 
 /***/ }),
@@ -6737,8 +6717,8 @@ class EventData {
         eventData.type = Const_1.EVENT;
         eventData.status = name;
         let sourceId = context.getIf(Const_1.SOURCE)
-            .orElseLazy(() => context.getIf(Const_1.P_PARTIAL_SOURCE).value)
-            .orElseLazy(() => context.getIf(Const_1.CTX_PARAM_REQ_PASS_THR, Const_1.P_PARTIAL_SOURCE).value)
+            .orElseLazy(() => context.getIf(Const_1.P_AJAX_SOURCE).value)
+            .orElseLazy(() => context.getIf(Const_1.CTX_PARAM_REQ_PASS_THR, Const_1.P_AJAX_SOURCE).value)
             .value;
         if (sourceId) {
             eventData.source = mona_dish_1.DQ.byId(sourceId, true).first().value.value;
@@ -7295,6 +7275,8 @@ const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/
 const ExtDomQuery_1 = __webpack_require__(/*! ../util/ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
 const HiddenInputBuilder_1 = __webpack_require__(/*! ../util/HiddenInputBuilder */ "./src/main/typescript/impl/util/HiddenInputBuilder.ts");
 var trim = mona_dish_1.Lang.trim;
+const Lang_1 = __webpack_require__(/*! ../util/Lang */ "./src/main/typescript/impl/util/Lang.ts");
+var ofAssoc = Lang_1.ExtLang.ofAssoc;
 /**
  * Response processor
  *
@@ -7392,7 +7374,7 @@ class ResponseProcessor {
          * <error>
          */
         const mergedErrorData = new ExtDomQuery_1.ExtConfig({});
-        mergedErrorData.assign(Const_1.SOURCE).value = this.externalContext.getIf(Const_1.P_PARTIAL_SOURCE).get(0).value;
+        mergedErrorData.assign(Const_1.SOURCE).value = this.externalContext.getIf(Const_1.P_AJAX_SOURCE).get(0).value;
         mergedErrorData.assign(Const_1.ERROR_NAME).value = node.querySelectorAll(Const_1.ERROR_NAME).textContent(Const_1.EMPTY_STR);
         mergedErrorData.assign(Const_1.ERROR_MESSAGE).value = node.querySelectorAll(Const_1.ERROR_MESSAGE).cDATAAsString;
         const hasResponseXML = this.internalContext.get(Const_1.RESPONSE_XML).isPresent();
@@ -7540,8 +7522,8 @@ class ResponseProcessor {
      * as last lifecycle step, before going into the next request.
      */
     fixViewStates() {
-        mona_dish_1.Stream.ofAssoc(this.internalContext.getIf(Const_1.APPLIED_VST).orElse({}).value)
-            .each(([, value]) => {
+        ofAssoc(this.internalContext.getIf(Const_1.APPLIED_VST).orElse({}).value)
+            .forEach(([, value]) => {
             const namingContainerId = this.internalContext.getIf(Const_1.NAMING_CONTAINER_ID);
             const namedViewRoot = !!this.internalContext.getIf(Const_1.NAMED_VIEWROOT).value;
             const affectedForms = this.getContainerForms(namingContainerId)
@@ -7554,8 +7536,8 @@ class ResponseProcessor {
      * is done.
      */
     fixClientWindow() {
-        mona_dish_1.Stream.ofAssoc(this.internalContext.getIf(Const_1.APPLIED_CLIENT_WINDOW).orElse({}).value)
-            .each(([, value]) => {
+        ofAssoc(this.internalContext.getIf(Const_1.APPLIED_CLIENT_WINDOW).orElse({}).value)
+            .forEach(([, value]) => {
             const namingContainerId = this.internalContext.getIf(Const_1.NAMING_CONTAINER_ID);
             const namedViewRoot = !!this.internalContext.getIf(Const_1.NAMED_VIEWROOT).value;
             const affectedForms = this.getContainerForms(namingContainerId)
@@ -7698,7 +7680,7 @@ class ResponseProcessor {
             .orElseLazy(() => this.externalContext.getIf((0, Const_1.$nsp)(Const_1.P_RENDER)).value)
             .orElse(Const_1.IDENT_NONE).value.split(/\s+/gi);
         const executeAndRenders = executes.concat(...renders);
-        return mona_dish_1.LazyStream.of(...executeAndRenders).filter(nameOrId => {
+        return [...executeAndRenders].filter(nameOrId => {
             if ([Const_1.IDENT_ALL, Const_1.IDENT_NONE].indexOf(nameOrId) != -1) {
                 return true;
             }
@@ -7707,7 +7689,7 @@ class ResponseProcessor {
             return affectedForm.matchesSelector(NAME_OR_ID) ||
                 affectedForm.querySelectorAll(NAME_OR_ID).isPresent() ||
                 affectedForm.firstParent(NAME_OR_ID).isPresent();
-        }).first().isPresent();
+        }).length > 0;
     }
     /**
      * gets all forms under a single naming container id
@@ -7763,6 +7745,8 @@ exports.XhrFormData = void 0;
 const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 const FileUtils_1 = __webpack_require__(/*! ../util/FileUtils */ "./src/main/typescript/impl/util/FileUtils.ts");
+const Lang_1 = __webpack_require__(/*! ../util/Lang */ "./src/main/typescript/impl/util/Lang.ts");
+var ofAssoc = Lang_1.ExtLang.ofAssoc;
 const defaultParamsMapper = (key, item) => [key, item];
 /**
  * A unified form data class
@@ -7815,12 +7799,17 @@ class XhrFormData extends mona_dish_1.Config {
      */
     toFormData() {
         /*
-         * expands key: [item1, item2]
-         * to: [{key: key,  value: item1}, {key: key, value: item2}]
-         */
-        let expandAssocArray = ([key, item]) => mona_dish_1.Stream.of(...item).map(value => {
-            return { key, value };
-        });
+           * expands key: [item1, item2]
+           * to: [{key: key,  value: item1}, {key: key, value: item2}]
+           */
+        let expandValueArrays = ([key, item]) => {
+            if (Array.isArray(item)) {
+                return item.map(value => {
+                    return { key, value };
+                });
+            }
+            return [{ key, value: item }];
+        };
         /*
          * remaps the incoming {key, value} tuples
          * to naming container prefixed keys and values
@@ -7832,10 +7821,13 @@ class XhrFormData extends mona_dish_1.Config {
         /*
          * collects everything into a FormData object
          */
-        return mona_dish_1.Stream.ofAssoc(this.value)
-            .flatMap(expandAssocArray)
+        return ofAssoc(this.value)
+            .flatMap(expandValueArrays)
             .map(remapForNamingContainer)
-            .collect(new mona_dish_1.FormDataCollector());
+            .reduce((formData, { key, value }) => {
+            formData.append(key, value);
+            return formData;
+        }, new FormData());
     }
     /**
      * returns an encoded string representation of our xhr form data
@@ -7847,6 +7839,7 @@ class XhrFormData extends mona_dish_1.Config {
     }
     /**
      * generic post init code, for now, this performs some post assign data post-processing
+     * @param rootElement the root element which knows the request type (usually a form)
      * @param executes the executable dom nodes which need to be processed into the form data, which we can send
      * in our ajax request
      */
@@ -7871,18 +7864,21 @@ class XhrFormData extends mona_dish_1.Config {
     }
     /**
      * determines fields to submit
-     * @param {Object} targetBuf - the target form buffer receiving the data
      * @param {Node} parentItem - form element item is nested in
      * @param {Array} partialIds - ids fo PPS
      */
-    encodeSubmittableFields(parentItem, partialIds) {
-        const formInputs = (0, FileUtils_1.getFormInputsAsStream)(parentItem);
+    encodeSubmittableFields(parentItem, partialIds = []) {
         const mergeIntoThis = ([key, value]) => this.append(key).value = value;
         const namingContainerRemap = ([key, value]) => this.paramsMapper(key, value);
-        formInputs
-            .map(FileUtils_1.fixEmmptyParameters)
+        const remappedPartialIds = partialIds.map(partialId => this.remapKeyForNamingContainer(partialId));
+        const partialIdsFilter = ([key, value]) => (!remappedPartialIds.length || key.indexOf("@") == 0) ? true :
+            remappedPartialIds.indexOf(key) != -1;
+        let inputs = (0, FileUtils_1.getFormInputsAsArr)(parentItem);
+        inputs
+            .map(FileUtils_1.fixEmptyParameters)
             .map(namingContainerRemap)
-            .each(mergeIntoThis);
+            .filter(partialIdsFilter)
+            .forEach(mergeIntoThis);
     }
     remapKeyForNamingContainer(key) {
         return this.paramsMapper(key, "")[0];
@@ -7917,6 +7913,7 @@ exports.XhrFormData = XhrFormData;
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.XhrRequest = void 0;
+const AsyncRunnable_1 = __webpack_require__(/*! ../util/AsyncRunnable */ "./src/main/typescript/impl/util/AsyncRunnable.ts");
 const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const AjaxImpl_1 = __webpack_require__(/*! ../AjaxImpl */ "./src/main/typescript/impl/AjaxImpl.ts");
 const XhrFormData_1 = __webpack_require__(/*! ./XhrFormData */ "./src/main/typescript/impl/xhrCore/XhrFormData.ts");
@@ -7929,6 +7926,10 @@ var failSaveExecute = Lang_1.ExtLang.failSaveExecute;
 /**
  * Faces XHR Request Wrapper
  * as AsyncRunnable for our Asynchronous queue
+ * This means from the outside the
+ * xhr request is similar to a Promise in a way
+ * that you can add then and catch and finally callbacks.
+ *
  *
  * The idea is that we basically just enqueue
  * a single ajax request into our queue
@@ -7936,51 +7937,35 @@ var failSaveExecute = Lang_1.ExtLang.failSaveExecute;
  *
  *
  */
-class XhrRequest {
+class XhrRequest extends AsyncRunnable_1.AsyncRunnable {
     /**
      * Required Parameters
      *
-     * @param source the issuing element
-     * @param sourceForm the form which is related to the issuing element
      * @param requestContext the request context with all pass through values
-     *
-     * Optional Parameters
-     *
      * @param internalContext internal context with internal info which is passed through, not used by the user
-     * @param partialIdsArray an optional restricting partial ids array for encoding
+     * Optional Parameters
      * @param timeout optional xhr timeout
      * @param ajaxType optional request type, default "POST"
      * @param contentType optional content type, default "application/x-www-form-urlencoded"
-     * @param xhrObject optional xhr object which must fulfill the XMLHTTPRequest api, default XMLHttpRequest
      */
-    constructor(source, sourceForm, requestContext, internalContext, partialIdsArray = [], timeout = Const_1.NO_TIMEOUT, ajaxType = Const_1.REQ_TYPE_POST, contentType = Const_1.URL_ENCODED, xhrObject = new XMLHttpRequest()) {
-        this.source = source;
-        this.sourceForm = sourceForm;
+    constructor(requestContext, internalContext, timeout = Const_1.NO_TIMEOUT, ajaxType = Const_1.REQ_TYPE_POST, contentType = Const_1.URL_ENCODED) {
+        super();
         this.requestContext = requestContext;
         this.internalContext = internalContext;
-        this.partialIdsArray = partialIdsArray;
         this.timeout = timeout;
         this.ajaxType = ajaxType;
         this.contentType = contentType;
-        this.xhrObject = xhrObject;
         this.stopProgress = false;
-        /**
-         * helper support so that we do not have to drag in Promise shims
-         */
-        this.catchFunctions = [];
-        this.thenFunctions = [];
+        this.xhrObject = new XMLHttpRequest();
         // we omit promises here because we have to deal with cancel functionality,
         // and promises to not provide that (yet) instead we have our async queue
         // which uses an api internally, which is very close to promises
-        this.registerXhrCallbacks((data) => {
-            this.resolve(data);
-        }, (data) => {
-            this.reject(data);
-        });
+        this.registerXhrCallbacks((data) => this.resolve(data), (data) => this.reject(data));
     }
     start() {
         let ignoreErr = failSaveExecute;
         let xhrObject = this.xhrObject;
+        let sourceForm = mona_dish_1.DQ.byId(this.internalContext.getIf(Const_1.CTX_PARAM_SRC_FRM_ID).value);
         let executesArr = () => {
             return this.requestContext.getIf(Const_1.CTX_PARAM_REQ_PASS_THR, Const_1.P_EXECUTE).get(Const_1.IDENT_NONE).value.split(/\s+/gi);
         };
@@ -7993,13 +7978,14 @@ class XhrRequest {
             // whatever the formData object delivers
             // the partialIdsArray arr is almost deprecated legacy code where we allowed to send a separate list of partial
             // ids for reduced load and server processing, this will be removed soon, we can handle the same via execute
-            // anyway TODO reimplement the partial ids array, we still do not have it in jsf the way we need it
-            let formData = new XhrFormData_1.XhrFormData(this.sourceForm, (0, RequestDataResolver_1.resoveNamingContainerMapper)(this.internalContext), executesArr(), this.partialIdsArray);
+            const executes = executesArr();
+            const partialIdsArray = this.internalContext.getIf(Const_1.CTX_PARAM_PPS).value === true ? executes : [];
+            const formData = new XhrFormData_1.XhrFormData(sourceForm, (0, RequestDataResolver_1.resoveNamingContainerMapper)(this.internalContext), executes, partialIdsArray);
             this.contentType = formData.isMultipartRequest ? "undefined" : this.contentType;
             // next step the pass through parameters are merged in for post params
             this.requestContext.$nspEnabled = false;
-            let requestContext = this.requestContext;
-            let requestPassThroughParams = requestContext.getIf(Const_1.CTX_PARAM_REQ_PASS_THR);
+            const requestContext = this.requestContext;
+            const requestPassThroughParams = requestContext.getIf(Const_1.CTX_PARAM_REQ_PASS_THR);
             // we are turning off here the jsf, faces remapping because we are now dealing with
             // pass-through parameters
             requestPassThroughParams.$nspEnabled = false;
@@ -8010,17 +7996,20 @@ class XhrRequest {
                 formData.shallowMerge(requestPassThroughParams, true, true);
             }
             finally {
+                // unfortunately as long as we support
+                // both namespaces we have to keep manual control
+                // on the key renaming before doing ops like deep copy
                 this.requestContext.$nspEnabled = true;
                 requestPassThroughParams.$nspEnabled = true;
             }
             this.responseContext = requestPassThroughParams.deepCopy;
             // we have to shift the internal passthroughs around to build up our response context
-            let responseContext = this.responseContext;
+            const responseContext = this.responseContext;
             responseContext.assign(Const_1.CTX_PARAM_MF_INTERNAL).value = this.internalContext.value;
-            // per spec the onevent and onerror handlers must be passed through to the response
+            // per spec the onEvent and onError handlers must be passed through to the response
             responseContext.assign(Const_1.ON_EVENT).value = requestContext.getIf(Const_1.ON_EVENT).value;
             responseContext.assign(Const_1.ON_ERROR).value = requestContext.getIf(Const_1.ON_ERROR).value;
-            xhrObject.open(this.ajaxType, (0, RequestDataResolver_1.resolveFinalUrl)(this.sourceForm, formData, this.ajaxType), true);
+            xhrObject.open(this.ajaxType, (0, RequestDataResolver_1.resolveFinalUrl)(sourceForm, formData, this.ajaxType), true);
             // adding timeout
             this.timeout ? xhrObject.timeout = this.timeout : null;
             // a bug in the xhr stub library prevents the setRequestHeader to be properly executed on fake xhr objects
@@ -8045,35 +8034,13 @@ class XhrRequest {
     }
     cancel() {
         try {
+            // this causes onError to be called where the error
+            // handling takes over
             this.xhrObject.abort();
         }
         catch (e) {
             this.handleError(e);
         }
-    }
-    resolve(data) {
-        mona_dish_1.Stream.of(...this.thenFunctions).reduce((inputVal, thenFunc) => {
-            return thenFunc(inputVal);
-        }, data);
-    }
-    reject(data) {
-        mona_dish_1.Stream.of(...this.catchFunctions).reduce((inputVal, catchFunc) => {
-            return catchFunc(inputVal);
-        }, data);
-    }
-    catch(func) {
-        this.catchFunctions.push(func);
-        return this;
-    }
-    finally(func) {
-        // no ie11 support we probably are going to revert to shims for that one
-        this.catchFunctions.push(func);
-        this.thenFunctions.push(func);
-        return this;
-    }
-    then(func) {
-        this.thenFunctions.push(func);
-        return this;
     }
     /**
      * attaches the internal event and processing
@@ -8083,7 +8050,7 @@ class XhrRequest {
      * @param reject
      */
     registerXhrCallbacks(resolve, reject) {
-        let xhrObject = this.xhrObject;
+        const xhrObject = this.xhrObject;
         xhrObject.onabort = () => {
             this.onAbort(reject);
         };
@@ -8097,13 +8064,17 @@ class XhrRequest {
             this.onDone(this.xhrObject, resolve);
         };
         xhrObject.onerror = (errorData) => {
-            // some browsers trigger an error when cancelling a request internally
+            // some browsers trigger an error when cancelling a request internally, or when
+            // cancel is called from outside
             // in this case we simply ignore the request and clear up the queue, because
             // it is not safe anymore to proceed with the current queue
             // This bypasses a Safari issue where it keeps requests hanging after page unload
             // and then triggers a cancel error on then instead of just stopping
             // and clearing the code
             if (this.isCancelledResponse(this.xhrObject)) {
+                /*
+                 * this triggers the catch chain and after that finally
+                 */
                 reject();
                 this.stopProgress = true;
                 return;
@@ -8144,14 +8115,12 @@ class XhrRequest {
     handleMalFormedXML(resolve) {
         var _a;
         this.stopProgress = true;
-        let errorData = {
+        const errorData = {
             type: Const_1.ERROR,
             status: Const_1.MALFORMEDXML,
             responseCode: 200,
             responseText: (_a = this.xhrObject) === null || _a === void 0 ? void 0 : _a.responseText,
-            // we remap the element just in case it gets replaced
-            // it will be unremapped
-            source: this.source.id.value
+            source: this.internalContext.getIf(Const_1.CTX_PARAM_SRC_CTL_ID).value
         };
         try {
             this.handleError(errorData, true);
@@ -8168,14 +8137,20 @@ class XhrRequest {
         if (this.stopProgress) {
             return;
         }
+        /**
+         * now call the then chain
+         */
         resolve(data);
     }
     onError(errorData, reject) {
         this.handleError(errorData);
+        /*
+         * this triggers the catch chain and after that finally
+         */
         reject();
     }
     sendRequest(formData) {
-        let isPost = this.ajaxType != Const_1.REQ_TYPE_GET;
+        const isPost = this.ajaxType != Const_1.REQ_TYPE_GET;
         if (formData.isMultipartRequest) {
             // in case of a multipart request we send in a formData object as body
             this.xhrObject.send((isPost) ? formData.toFormData() : null);
@@ -8190,7 +8165,7 @@ class XhrRequest {
      */
     sendEvent(evtType) {
         var _a;
-        let eventData = EventData_1.EventData.createFromRequest(this.xhrObject, this.requestContext, evtType);
+        const eventData = EventData_1.EventData.createFromRequest(this.xhrObject, this.requestContext, evtType);
         try {
             // User code error, we might cover
             // this in onError, but also we cannot swallow it.
@@ -8206,8 +8181,8 @@ class XhrRequest {
         }
     }
     handleError(exception, responseFormatError = false) {
-        let errorData = (responseFormatError) ? ErrorData_1.ErrorData.fromHttpConnection(exception.source, exception.type, exception.status, exception.responseText, exception.responseCode, exception.status) : ErrorData_1.ErrorData.fromClient(exception);
-        let eventHandler = (0, RequestDataResolver_1.resolveHandlerFunc)(this.requestContext, this.responseContext, Const_1.ON_ERROR);
+        const errorData = (responseFormatError) ? ErrorData_1.ErrorData.fromHttpConnection(exception.source, exception.type, exception.status, exception.responseText, exception.responseCode, exception.status) : ErrorData_1.ErrorData.fromClient(exception);
+        const eventHandler = (0, RequestDataResolver_1.resolveHandlerFunc)(this.requestContext, this.responseContext, Const_1.ON_ERROR);
         AjaxImpl_1.Implementation.sendError(errorData, eventHandler);
     }
 }
@@ -8241,6 +8216,7 @@ exports.XhrRequest = XhrRequest;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.oam = void 0;
 const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
+const Lang_1 = __webpack_require__(/*! ../impl/util/Lang */ "./src/main/typescript/impl/util/Lang.ts");
 /**
  * legacy code to enable various aspects
  * of myfaces, used to be rendered inline
@@ -8254,6 +8230,7 @@ const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-di
  */
 var oam;
 (function (oam) {
+    var ofAssoc = Lang_1.ExtLang.ofAssoc;
     /**
      * sets a hidden input field
      * @param formName the formName
@@ -8309,8 +8286,8 @@ var oam;
         if (((_d = (_c = (_b = window === null || window === void 0 ? void 0 : window.myfaces) === null || _b === void 0 ? void 0 : _b.core) === null || _c === void 0 ? void 0 : _c.config) === null || _d === void 0 ? void 0 : _d.autoScroll) && (window === null || window === void 0 ? void 0 : window.getScrolling)) {
             myfaces.oam.setHiddenInput(formName, 'autoScroll', window === null || window === void 0 ? void 0 : window.getScrolling());
         }
-        let paramsStream = Array.isArray(params) ? mona_dish_1.Stream.of(...params) : mona_dish_1.Stream.ofAssoc(params);
-        paramsStream.each(([key, data]) => myfaces.oam.setHiddenInput(formName, key, data));
+        let paramsStream = Array.isArray(params) ? [...params] : ofAssoc(params);
+        paramsStream.forEach(([key, data]) => myfaces.oam.setHiddenInput(formName, key, data));
         //we call the namespaced function, to allow decoration, via a direct call we would
         myfaces.oam.setHiddenInput(formName, `${formName}:_idcl`, linkId !== null && linkId !== void 0 ? linkId : '');
         mona_dish_1.DQ.byId((_f = (_e = document.forms) === null || _e === void 0 ? void 0 : _e[formName]) !== null && _f !== void 0 ? _f : document.getElementById(formName)).each(form => {
@@ -8338,7 +8315,7 @@ var oam;
                     form.getAsElem(0).value.setAttribute("target", oldTarget);
                 }
                 // noinspection JSUnusedLocalSymbols
-                paramsStream.each(([key, data]) => {
+                paramsStream.forEach(([key, data]) => {
                     myfaces.oam.clearHiddenInput(formName, key);
                 });
                 myfaces.oam.clearHiddenInput(formName, `${formName}:_idcl`);

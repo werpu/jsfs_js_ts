@@ -162,4 +162,10 @@ Usage *faces-config.xml*
 This resource decorator detects automatically a faces*.js file coming from a resource library
 and adjusts the references in the resource accordingly to the request patterns
 
+## Changes since 4.0
+
+* Elimination of Streams in favor of native arrays
+* Providing an internal non intrusive shim for browsers which do not have array map and flapMap
+(older Edge and Chromium versions) - done in mona-dish
+
 

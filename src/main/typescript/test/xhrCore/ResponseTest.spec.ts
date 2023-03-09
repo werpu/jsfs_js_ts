@@ -517,7 +517,6 @@ describe('Tests of the various aspects of the response protocol functionality', 
         </partial-response>`
 
         window.document.body.innerHTML = INNER_HTML_MULIT_VIEW;
-        global["debug4"] = true;
         faces.ajax.request(window.document.getElementById("viewroot_1:submit_1"), null, {
             "javax.faces.behavior.event": "change",
             execute: "submit_1",
@@ -675,7 +674,7 @@ describe('Tests of the various aspects of the response protocol functionality', 
         });
 
         //TODO xhr stubbing, to check if the viewId is prepended in render!
-
+        global["state_1"] = true;
         this.respond(`<?xml version="1.0" encoding="UTF-8"?>
 <partial-response id="viewroot_1">
     <changes>
@@ -727,35 +726,37 @@ describe('Tests of the various aspects of the response protocol functionality', 
     it('must handle a ViewExpired Error correctly, and only once in a listener', function (done) {
 
         document.body.innerHTML = TCK_790_NAV_MARKUP;
+        const oldErr = console.error;
+        console.error = () => {};
+        try {
+            let errorCalled = 0;
+            faces.ajax.addOnError((error) => {
+                expect(error.errorName).to.eq("jakarta.faces.application.ViewExpiredException");
+                expect(error.errorMessage).to.eq("serverError: View \"/testhmtl.xhtml\" could not be restored.");
+                expect(error.source.id).to.eq("form1x:button");
+                errorCalled++;
+            });
 
-        let errorCalled = 0;
-        faces.ajax.addOnError((error)=> {
-            expect(error.errorName).to.eq("jakarta.faces.application.ViewExpiredException");
-            expect(error.errorMessage).to.eq("serverError: View \"/testhmtl.xhtml\" could not be restored.");
-            expect(error.source.id).to.eq("form1x:button");
-            errorCalled++;
-        });
+            faces.ajax.request(window.document.getElementById("form1x:button"), null, {
+                "javax.faces.behavior.event": "click",
+                execute: "@form",
+                render: ":form1x:button"
+            });
 
-        faces.ajax.request(window.document.getElementById("form1x:button"), null, {
-            "javax.faces.behavior.event": "click",
-            execute: "@form",
-            render: ":form1x:button"
-        });
-
-        this.respond(`<?xml version="1.0" encoding="UTF-8"?>
+            this.respond(`<?xml version="1.0" encoding="UTF-8"?>
         <partial-response><error>
         <error-name>jakarta.faces.application.ViewExpiredException</error-name>
         <error-message><![CDATA[View "/testhmtl.xhtml" could not be restored.]]></error-message>
         </error>
         </partial-response>`)
 
-        expect(errorCalled).to.eq(1);
-
+            expect(errorCalled).to.eq(1);
+        } finally {
+            console.error = oldErr;
+        }
         done();
 
     });
-
-
 
 
 });

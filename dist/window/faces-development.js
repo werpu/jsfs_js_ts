@@ -3971,12 +3971,12 @@ var faces;
         /**
          * this function has to send the ajax requests
          *
-         * following requestInternal conditions must be met:
+         * following request conditions must be met:
          * <ul>
-         *  <li> the requestInternal must be sent asynchronously! </li>
-         *  <li> the requestInternal must be a POST!!! requestInternal </li>
-         *  <li> the requestInternal url must be the form action attribute </li>
-         *  <li> all requests must be queued with a client side requestInternal queue to ensure the requestInternal ordering!</li>
+         *  <li> the request must be sent asynchronously! </li>
+         *  <li> the request must be a POST!!! request </li>
+         *  <li> the request url must be the form action attribute </li>
+         *  <li> all requests must be queued with a client side request queue to ensure the request ordering!</li>
          * </ul>
          *
          * @param {String|Node} element: any dom element no matter being it html or jsf, from which the event is emitted
@@ -3992,7 +3992,6 @@ var faces;
          * @param request the request object having triggered this response
          * @param context the request context
          *
-         * TODO add info on what can be in the context
          */
         function response(request, context) {
             AjaxImpl_1.Implementation.response(request, context);
@@ -4007,10 +4006,10 @@ var faces;
          *     <li> errorData.status : the error status message</li>
          *     <li> errorData.serverErrorName : the server error name in case of a server error</li>
          *     <li> errorData.serverErrorMessage : the server error message in case of a server error</li>
-         *     <li> errorData.source  : the issuing source element which triggered the requestInternal </li>
-         *     <li> eventData.responseCode: the response code (aka http requestInternal response code, 401 etc...) </li>
-         *     <li> eventData.responseText: the requestInternal response text </li>
-         *     <li> eventData.responseXML: the requestInternal response xml </li>
+         *     <li> errorData.source  : the issuing source element which triggered the request </li>
+         *     <li> eventData.responseCode: the response code (aka http request response code, 401 etc...) </li>
+         *     <li> eventData.responseText: the request response text </li>
+         *     <li> eventData.responseXML: the request response xml </li>
          * </ul>
          *
          * @param errorFunc error handler must be of the format <i>function errorListener(&lt;errorData&gt;)</i>
@@ -4561,11 +4560,26 @@ var Implementation;
         /*
          * the search root for the dom element search
          */
-        let searchRoot = new mona_dish_1.DQ(node || document.body).querySelectorAll(`form input [name='${Const_1.P_CLIENT_WINDOW}']`);
+        let searchRoot = ((node) ? mona_dish_1.DQ.byId(node) : (0, mona_dish_1.DQ$)("form"));
+        let inputs = searchRoot
+            .filterSelector(`input[name='${(0, Const_1.$nsp)(Const_1.P_CLIENT_WINDOW)}']`)
+            .orElseLazy(() => searchRoot.querySelectorAll(`input[name='${(0, Const_1.$nsp)(Const_1.P_CLIENT_WINDOW)}']`));
         /*
-         * lazy helper to fetch the window id from the window url
+         * lazy helper to fetch the window id from the included faces.js
          */
-        let fetchWindowIdFromUrl = () => ExtDomQuery_1.ExtDomQuery.searchJsfJsFor(/jfwid=([^&;]*)/).orElse(null).value;
+        let fetchWindowIdFromJSFJS = () => ExtDomQuery_1.ExtDomQuery.searchJsfJsFor(/jfwid=([^&;]*)/).orElse(null).value;
+        /*
+         * fetch window id from the url
+         */
+        let fetchWindowIdFromURL = function () {
+            const href = window.location.href, windowId = "jfwid";
+            const regex = new RegExp("[\\?&]" + windowId + "=([^&#\\;]*)");
+            const results = regex.exec(href);
+            //initial trial over the url and a regexp
+            if (results != null)
+                return results[1];
+            return null;
+        };
         /*
          * functional double check based on stream reduction
          * the values should be identical or on INIT value which is a premise to
@@ -4588,20 +4602,19 @@ var Implementation;
          *
          * @param item
          */
-        let getValue = (item) => item.attr("value").value;
+        let getValue = (item) => item.val;
         /*
          * fetch the window id from the forms
          * window ids must be present in all forms
          * or non-existent. If they exist all of them must be the same
          */
-        let formWindowId = mona_dish_1.Optional.fromNullable(searchRoot.asArray
-            .map(getValue).reduce(differenceCheck, INIT));
+        let formWindowId = inputs.stream.map(getValue).reduce(differenceCheck, INIT);
         //if the resulting window id is set on altered then we have an unresolvable problem
         assert(ALTERED != formWindowId.value, "Multiple different windowIds found in document");
         /*
          * return the window id or null
          */
-        return formWindowId.value != INIT ? formWindowId.value : fetchWindowIdFromUrl();
+        return formWindowId.value != INIT ? formWindowId.value : (fetchWindowIdFromURL() || fetchWindowIdFromJSFJS());
     }
     Implementation.getClientWindow = getClientWindow;
     /**

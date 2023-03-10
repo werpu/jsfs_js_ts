@@ -18,7 +18,7 @@ import {Implementation} from "../../impl/AjaxImpl";
 import {StandardInits} from "../frameworkBase/_ext/shared/StandardInits";
 
 import protocolPage = StandardInits.protocolPage;
-import {Config, DQ, Stream} from "mona-dish";
+import {Config, DQ} from "mona-dish";
 import {expect} from "chai";
 import HTML_PREFIX_EMBEDDED_BODY = StandardInits.HTML_PREFIX_EMBEDDED_BODY;
 import {it} from "mocha";

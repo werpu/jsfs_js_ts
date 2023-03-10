@@ -109,5 +109,28 @@ describe('Tests of the various aspects of the response protocol functionality', 
         expect(DQ.byId("form1:out1").innerHTML).to.eq("5");
         done();
     })
+
+
+    it("must process the error chain properly with a standard Ajax Error", function (done) {
+        DQ.byId("form1:button1").click();
+        expect(Implementation.requestQueue.queue.length >= 4).to.be.true;
+
+        for (let cnt = 1; cnt <= 5; cnt++) {
+            if(!Implementation.requestQueue.queue.length) {
+                this.respond(XmlResponses.ERROR_CHAIN_RESPOND_OK(cnt));
+                break;
+            }
+            if (cnt == 3) {
+                //any error suffices
+                this.respond(XmlResponses.ERROR_1);
+            } else {
+                this.respond(XmlResponses.ERROR_CHAIN_RESPOND_OK(cnt))
+            }
+        }
+        expect(Implementation.requestQueue.queue.length).to.eq(0);
+        expect(DQ.byId("errorCalled").innerHTML).to.eq("1");
+        expect(DQ.byId("form1:out1").innerHTML).to.eq("5");
+        done();
+    })
 });
 

@@ -152,10 +152,10 @@ export module StandardInits {
   <meta name='viewport' content='width=device-width, initial-scale=1.0'>
   <title>Test
   </title>
-  <link rel='stylesheet' href='/tobago/standard/5.6.0-SNAPSHOT/css/tobago.css' type='text/css'>
-  <link rel='stylesheet' href='/tobago/standard/5.6.0-SNAPSHOT/css/bootstrap-icons.css' type='text/css'>
-  <script src='/tobago/standard/5.6.0-SNAPSHOT/js/jsf.js' type='text/javascript'></script>
-  <script src='/tobago/standard/5.6.0-SNAPSHOT/js/tobago.js' type='module'></script>
+  <link rel='stylesheet' href='./fixtures/css/tobago.css' type='text/css'>
+  <link rel='stylesheet' href='./fixtures/css/bootstrap-icons.css' type='text/css'>
+  <script src='./fixtures/jakarta.faces.resource/faces.js.jsf' type='text/javascript'></script>
+  <script src='./fixtures/js/tobago.js' type='module'></script>
 </head>
 <body>
 <tobago-page locale='de' class='container-fluid' id='page' focus-on-error='true' wait-overlay-delay-full='1000'

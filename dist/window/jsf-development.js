@@ -1,14 +1,3850 @@
 /******/ (() => { // webpackBootstrap
+/******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
-/***/ "./node_modules/mona-dish/dist/js/commonjs/index_core.js":
-/*!***************************************************************!*\
-  !*** ./node_modules/mona-dish/dist/js/commonjs/index_core.js ***!
-  \***************************************************************/
+/***/ "./node_modules/mona-dish/src/main/typescript/AssocArray.ts":
+/*!******************************************************************!*\
+  !*** ./node_modules/mona-dish/src/main/typescript/AssocArray.ts ***!
+  \******************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+/*!
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.shallowMerge = exports.simpleShallowMerge = exports.deepCopy = exports.buildPath = exports.resolve = exports.appendIf = exports.assignIf = exports.append = exports.assign = void 0;
+const Es2019Array_1 = __webpack_require__(/*! ./Es2019Array */ "./node_modules/mona-dish/src/main/typescript/Es2019Array.ts");
+/**
+ * A nop as assign functionality (aka ignore assign)
+ */
+class IgnoreAssign {
+    constructor(parent) {
+        this.parent = parent;
+    }
+    set value(value) {
+    }
+    get value() {
+        return this.parent;
+    }
+}
+;
+/**
+ * uses the known pattern from config
+ * assign(target, key1, key2, key3).value = value;
+ * @param target
+ * @param keys
+ */
+function assign(target, ...accessPath) {
+    if (accessPath.length < 1) {
+        return new IgnoreAssign(target);
+    }
+    const lastPathItem = buildPath(target, ...accessPath);
+    let assigner = new (class {
+        set value(value) {
+            lastPathItem.target[lastPathItem.key] = value;
+        }
+        get value() {
+            return lastPathItem.target[lastPathItem.key];
+        }
+    })();
+    return assigner;
+}
+exports.assign = assign;
+function append(target, ...accessPath) {
+    if (accessPath.length < 1) {
+        return new IgnoreAssign(target);
+    }
+    const lastPathItem = buildPath(target, ...accessPath);
+    let appender = new (class {
+        set value(value) {
+            if (!Array.isArray(value)) {
+                value = [value];
+            }
+            if (!lastPathItem.target[lastPathItem.key]) {
+                lastPathItem.target[lastPathItem.key] = value;
+            }
+            else {
+                if (!Array.isArray(lastPathItem.target[lastPathItem.key])) {
+                    lastPathItem.target[lastPathItem.key] = [lastPathItem.target[lastPathItem.key]];
+                }
+                lastPathItem.target[lastPathItem.key].push(...value);
+            }
+        }
+    })();
+    return appender;
+}
+exports.append = append;
+/**
+ * uses the known pattern from config
+ * assign(target, key1, key2, key3).value = value;
+ * @param target
+ * @param keys
+ */
+function assignIf(condition, target, ...accessPath) {
+    if ((!condition) || accessPath.length < 1) {
+        return new IgnoreAssign(target);
+    }
+    return assign(target, ...accessPath);
+}
+exports.assignIf = assignIf;
+/**
+ * uses the known pattern from config
+ * assign(target, key1, key2, key3).value = value;
+ * @param target
+ * @param keys
+ */
+function appendIf(condition, target, ...accessPath) {
+    if ((!condition) || accessPath.length < 1) {
+        return new IgnoreAssign(target);
+    }
+    return append(target, ...accessPath);
+}
+exports.appendIf = appendIf;
+function resolve(target, ...accessPath) {
+    let ret = null;
+    accessPath = flattenAccessPath(accessPath);
+    let currPtr = target;
+    for (let cnt = 0; cnt < accessPath.length; cnt++) {
+        let accessKeyIndex = accessPath[cnt];
+        accessKeyIndex = arrayIndex(accessKeyIndex) != -1 ? arrayIndex(accessKeyIndex) : accessKeyIndex;
+        currPtr = currPtr === null || currPtr === void 0 ? void 0 : currPtr[accessKeyIndex];
+        if ('undefined' == typeof currPtr) {
+            return null;
+        }
+        ret = currPtr;
+    }
+    return currPtr;
+}
+exports.resolve = resolve;
+function keyVal(key) {
+    let start = key.indexOf("[");
+    if (start >= 0) {
+        return key.substring(0, start);
+    }
+    else {
+        return key;
+    }
+}
+function arrayIndex(key) {
+    let start = key.indexOf("[");
+    let end = key.indexOf("]");
+    if (start >= 0 && end > 0 && start < end) {
+        return parseInt(key.substring(start + 1, end));
+    }
+    else {
+        return -1;
+    }
+}
+function isArrayPos(currKey, arrPos) {
+    return currKey === "" && arrPos >= 0;
+}
+function isNoArray(arrPos) {
+    return arrPos == -1;
+}
+function alloc(arr, length, defaultVal = {}) {
+    let toAdd = [];
+    toAdd.length = length;
+    toAdd[length - 1] = defaultVal;
+    arr.push(...toAdd);
+}
+function flattenAccessPath(accessPath) {
+    return new Es2019Array_1.Es2019Array(...accessPath).flatMap(path => path.split("["))
+        .map(path => path.indexOf("]") != -1 ? "[" + path : path)
+        .filter(path => path != "");
+}
+/**
+ * builds up a path, only done if no data is present!
+ * @param target
+ * @param accessPath
+ * @returns the last assignable entry
+ */
+function buildPath(target, ...accessPath) {
+    accessPath = flattenAccessPath(accessPath);
+    //we now have a pattern of having the array accessors always in separate items
+    let parentPtr = target;
+    let parKeyArrPos = null;
+    let currKey = null;
+    let arrPos = -1;
+    for (let cnt = 0; cnt < accessPath.length; cnt++) {
+        currKey = keyVal(accessPath[cnt]);
+        arrPos = arrayIndex(accessPath[cnt]);
+        //it now is either key or arrPos
+        if (arrPos != -1) {
+            //case root(array)[5] -> root must be array and allocate 5 elements
+            //case root.item[5] root.item must be array and of 5 elements
+            if (!Array.isArray(parentPtr)) {
+                throw Error("Associative array referenced as index array in path reference");
+            }
+            //we need to look ahead for proper allocation
+            //not end reached
+            let nextArrPos = -1;
+            if (cnt < accessPath.length - 1) {
+                nextArrPos = arrayIndex(accessPath[cnt + 1]);
+            }
+            let dataPresent = 'undefined' != typeof (parentPtr === null || parentPtr === void 0 ? void 0 : parentPtr[arrPos]);
+            //no data present check here is needed, because alloc only reserves if not present
+            alloc(parentPtr, arrPos + 1, nextArrPos != -1 ? [] : {});
+            parKeyArrPos = arrPos;
+            //we now go to the reserved element
+            if (cnt == accessPath.length - 1) {
+                parentPtr[arrPos] = (dataPresent) ? parentPtr[arrPos] : null;
+            }
+            else {
+                parentPtr = parentPtr[arrPos];
+            }
+        }
+        else {
+            if (Array.isArray(parentPtr)) {
+                throw Error("Index array referenced as associative array in path reference");
+            }
+            //again look ahead whether the next value is an array or assoc array
+            let nextArrPos = -1;
+            if (cnt < accessPath.length - 1) {
+                nextArrPos = arrayIndex(accessPath[cnt + 1]);
+            }
+            parKeyArrPos = currKey;
+            let dataPresent = 'undefined' != typeof (parentPtr === null || parentPtr === void 0 ? void 0 : parentPtr[currKey]);
+            if (cnt == accessPath.length - 1) {
+                if (!dataPresent) {
+                    parentPtr[currKey] = null;
+                }
+            }
+            else {
+                if (!dataPresent) {
+                    parentPtr[currKey] = nextArrPos == -1 ? {} : [];
+                }
+                parentPtr = parentPtr[currKey];
+            }
+        }
+    }
+    return { target: parentPtr, key: parKeyArrPos };
+}
+exports.buildPath = buildPath;
+function deepCopy(fromAssoc) {
+    return JSON.parse(JSON.stringify(fromAssoc));
+}
+exports.deepCopy = deepCopy;
+/**
+ * simple left to right merge
+ *
+ * @param assocArrays
+ */
+function simpleShallowMerge(...assocArrays) {
+    return shallowMerge(true, false, ...assocArrays);
+}
+exports.simpleShallowMerge = simpleShallowMerge;
+/**
+ * Shallow merge as in config, but on raw associative arrays
+ *
+ * @param overwrite
+ * @param withAppend
+ * @param assocArrays
+ */
+function shallowMerge(overwrite = true, withAppend = false, ...assocArrays) {
+    let target = {};
+    new Es2019Array_1.Es2019Array(...assocArrays).map(arr => {
+        return { arr, keys: Object.keys(arr) };
+    }).forEach(({ arr, keys }) => {
+        keys.forEach(key => {
+            let toAssign = arr[key];
+            if (!Array.isArray(toAssign) && withAppend) {
+                toAssign = new Es2019Array_1.Es2019Array(...[toAssign]);
+            }
+            if (overwrite || !(target === null || target === void 0 ? void 0 : target[key])) {
+                if (!withAppend) {
+                    target[key] = arr[key];
+                }
+                else {
+                    if ('undefined' == typeof (target === null || target === void 0 ? void 0 : target[key])) {
+                        target[key] = toAssign;
+                    }
+                    else if (!Array.isArray(target[key])) {
+                        let oldVal = target[key];
+                        target[key] = new Es2019Array_1.Es2019Array(...[]);
+                        target[key].push(oldVal);
+                        target[key].push(...toAssign);
+                    }
+                    else {
+                        target[key].push(...toAssign);
+                    }
+                }
+            }
+        });
+    });
+    return target;
+}
+exports.shallowMerge = shallowMerge;
+
+
+/***/ }),
+
+/***/ "./node_modules/mona-dish/src/main/typescript/Config.ts":
+/*!**************************************************************!*\
+  !*** ./node_modules/mona-dish/src/main/typescript/Config.ts ***!
+  \**************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Config = exports.CONFIG_ANY = exports.CONFIG_VALUE = void 0;
+const Es2019Array_1 = __webpack_require__(/*! ./Es2019Array */ "./node_modules/mona-dish/src/main/typescript/Es2019Array.ts");
+const Monad_1 = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
+const Lang_1 = __webpack_require__(/*! ./Lang */ "./node_modules/mona-dish/src/main/typescript/Lang.ts");
+var objAssign = Lang_1.Lang.objAssign;
+const AssocArray_1 = __webpack_require__(/*! ./AssocArray */ "./node_modules/mona-dish/src/main/typescript/AssocArray.ts");
+/**
+ * specialized value embedder
+ * for our Configuration
+ */
+class ConfigEntry extends Monad_1.ValueEmbedder {
+    constructor(rootElem, key, arrPos) {
+        super(rootElem, key);
+        this.arrPos = arrPos !== null && arrPos !== void 0 ? arrPos : -1;
+    }
+    get value() {
+        if (this.key == "" && this.arrPos >= 0) {
+            return this._value[this.arrPos];
+        }
+        else if (this.key && this.arrPos >= 0) {
+            return this._value[this.key][this.arrPos];
+        }
+        return this._value[this.key];
+    }
+    set value(val) {
+        if (this.key == "" && this.arrPos >= 0) {
+            this._value[this.arrPos] = val;
+            return;
+        }
+        else if (this.key && this.arrPos >= 0) {
+            this._value[this.key][this.arrPos] = val;
+            return;
+        }
+        this._value[this.key] = val;
+    }
+}
+/*default value for absent*/
+ConfigEntry.absent = ConfigEntry.fromNullable(null);
+exports.CONFIG_VALUE = "__END_POINT__";
+exports.CONFIG_ANY = "__ANY_POINT__";
+/**
+ * Config, basically an optional wrapper for a json structure
+ * (not Side - effect free, since we can alter the internal config state
+ * without generating a new config), not sure if we should make it side - effect free
+ * since this would swallow a lot of performance and ram
+ */
+class Config extends Monad_1.Optional {
+    constructor(root, configDef) {
+        super(root);
+        this.configDef = configDef;
+    }
+    /**
+     * shallow copy getter, copies only the first level, references the deeper nodes
+     * in a shared manner
+     */
+    get shallowCopy() {
+        return this.shallowCopy$();
+    }
+    shallowCopy$() {
+        let ret = new Config({});
+        ret.shallowMerge(this.value);
+        return ret;
+    }
+    /**
+     * deep copy, copies all config nodes
+     */
+    get deepCopy() {
+        return this.deepCopy$();
+    }
+    deepCopy$() {
+        return new Config(objAssign({}, this.value));
+    }
+    /**
+     * creates a config from an initial value or null
+     * @param value
+     */
+    static fromNullable(value) {
+        return new Config(value);
+    }
+    /**
+     * simple merge for the root configs
+     */
+    shallowMerge(other, overwrite = true, withAppend = false) {
+        //shallow merge must be mutable so we have to remap
+        let newThis = (0, AssocArray_1.shallowMerge)(overwrite, withAppend, this.value, other.value);
+        if (Array.isArray(this._value)) {
+            this._value.length = 0;
+            this._value.push(...newThis);
+        }
+        else {
+            Object.getOwnPropertyNames(this._value).forEach(key => delete this._value[key]);
+            Object.getOwnPropertyNames(newThis).forEach(key => this._value[key] = newThis[key]);
+        }
+    }
+    /**
+     * assigns a single value as array, or appends it
+     * to an existing value mapping a single value to array
+     *
+     *
+     * usage myConfig.append("foobaz").value = "newValue"
+     *       myConfig.append("foobaz").value = "newValue2"
+     *
+     * resulting in myConfig.foobaz == ["newValue, newValue2"]
+     *
+     * @param {string[]} accessPath
+     */
+    append(...accessPath) {
+        return (0, AssocArray_1.append)(this._value, ...accessPath);
+    }
+    /**
+     * appends to an existing entry (or extends into an array and appends)
+     * if the condition is met
+     * @param {boolean} condition
+     * @param {string[]} accessPath
+     */
+    appendIf(condition, ...accessPath) {
+        return (0, AssocArray_1.appendIf)(condition, this._value, ...accessPath);
+    }
+    /**
+     * assigns a new value on the given access path
+     * @param accessPath
+     */
+    assign(...accessPath) {
+        return (0, AssocArray_1.assign)(this.value, ...accessPath);
+    }
+    /**
+     * assign a value if the condition is set to true, otherwise skip it
+     *
+     * @param condition the condition, the access accessPath into the config
+     * @param accessPath
+     */
+    assignIf(condition, ...accessPath) {
+        return (0, AssocArray_1.assignIf)(condition, this._value, ...accessPath);
+    }
+    /**
+     * get if the access path is present (get is reserved as getter with a default, on the current path)
+     * TODO will be renamed to something more meaningful and deprecated, the name is ambiguous
+     * @param accessPath the access path
+     */
+    getIf(...accessPath) {
+        this.assertAccessPath(...accessPath);
+        return this.getClass().fromNullable((0, AssocArray_1.resolve)(this.value, ...accessPath));
+    }
+    /**
+     * gets the current node and if none is present returns a config with a default value
+     * @param defaultVal
+     */
+    get(defaultVal) {
+        return this.getClass().fromNullable(super.get(defaultVal).value);
+    }
+    //empties the current config entry
+    delete(key) {
+        if (key in this.value) {
+            delete this.value[key];
+        }
+        return this;
+    }
+    /**
+     * converts the entire config into a json object
+     */
+    toJson() {
+        return JSON.stringify(this.value);
+    }
+    getClass() {
+        return Config;
+    }
+    setVal(val) {
+        this._value = val;
+    }
+    /**
+     * asserts the access path for a semi typed access
+     * @param accessPath
+     * @private
+     */
+    assertAccessPath(...accessPath) {
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+        accessPath = this.preprocessKeys(...accessPath);
+        if (!this.configDef) {
+            //untyped
+            return;
+        }
+        const ERR_ACCESS_PATH = "Access Path to config invalid";
+        let currAccessPos = Monad_1.Optional.fromNullable(Object.keys(this.configDef).map(key => {
+            let ret = {};
+            ret[key] = this.configDef[key];
+            return ret;
+        }));
+        for (let cnt = 0; cnt < accessPath.length; cnt++) {
+            let currKey = this.keyVal(accessPath[cnt]);
+            let arrPos = this.arrayIndex(accessPath[cnt]);
+            //key index
+            if (this.isArray(arrPos)) {
+                if (currKey != "") {
+                    currAccessPos = Array.isArray(currAccessPos.value) ?
+                        Monad_1.Optional.fromNullable((_b = (_a = new Es2019Array_1.Es2019Array(...currAccessPos.value)
+                            .find(item => {
+                            var _a;
+                            return !!((_a = item === null || item === void 0 ? void 0 : item[currKey]) !== null && _a !== void 0 ? _a : false);
+                        })) === null || _a === void 0 ? void 0 : _a[currKey]) === null || _b === void 0 ? void 0 : _b[arrPos]) :
+                        Monad_1.Optional.fromNullable((_e = (_d = (_c = currAccessPos.value) === null || _c === void 0 ? void 0 : _c[currKey]) === null || _d === void 0 ? void 0 : _d[arrPos]) !== null && _e !== void 0 ? _e : null);
+                }
+                else {
+                    currAccessPos = (Array.isArray(currAccessPos.value)) ?
+                        Monad_1.Optional.fromNullable((_f = currAccessPos.value) === null || _f === void 0 ? void 0 : _f[arrPos]) : Monad_1.Optional.absent;
+                }
+                //we noe store either the current array or the filtered look ahead to go further
+            }
+            else {
+                //we now have an array and go further with a singular key
+                currAccessPos = (Array.isArray(currAccessPos.value)) ? Monad_1.Optional.fromNullable((_g = new Es2019Array_1.Es2019Array(...currAccessPos.value)
+                    .find(item => {
+                    var _a;
+                    return !!((_a = item === null || item === void 0 ? void 0 : item[currKey]) !== null && _a !== void 0 ? _a : false);
+                })) === null || _g === void 0 ? void 0 : _g[currKey]) :
+                    Monad_1.Optional.fromNullable((_j = (_h = currAccessPos.value) === null || _h === void 0 ? void 0 : _h[currKey]) !== null && _j !== void 0 ? _j : null);
+            }
+            if (!currAccessPos.isPresent()) {
+                throw Error(ERR_ACCESS_PATH);
+            }
+            if (currAccessPos.value == exports.CONFIG_ANY) {
+                return;
+            }
+        }
+    }
+    isNoArray(arrPos) {
+        return arrPos == -1;
+    }
+    isArray(arrPos) {
+        return !this.isNoArray(arrPos);
+    }
+}
+exports.Config = Config;
+
+
+/***/ }),
+
+/***/ "./node_modules/mona-dish/src/main/typescript/DomQuery.ts":
+/*!****************************************************************!*\
+  !*** ./node_modules/mona-dish/src/main/typescript/DomQuery.ts ***!
+  \****************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+/*!
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http:// www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.DQ$ = exports.DQ = exports.DomQueryCollector = exports.DomQuery = exports.Style = exports.ElementAttribute = void 0;
+const Monad_1 = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
+const SourcesCollectors_1 = __webpack_require__(/*! ./SourcesCollectors */ "./node_modules/mona-dish/src/main/typescript/SourcesCollectors.ts");
+const Lang_1 = __webpack_require__(/*! ./Lang */ "./node_modules/mona-dish/src/main/typescript/Lang.ts");
+const Global_1 = __webpack_require__(/*! ./Global */ "./node_modules/mona-dish/src/main/typescript/Global.ts");
+const Es2019Array_1 = __webpack_require__(/*! ./Es2019Array */ "./node_modules/mona-dish/src/main/typescript/Es2019Array.ts");
+var trim = Lang_1.Lang.trim;
+var isString = Lang_1.Lang.isString;
+var eqi = Lang_1.Lang.equalsIgnoreCase;
+var objToArray = Lang_1.Lang.objToArray;
+const AssocArray_1 = __webpack_require__(/*! ./AssocArray */ "./node_modules/mona-dish/src/main/typescript/AssocArray.ts");
+/**
+ *
+ *        // - submit checkboxes and radio inputs only if checked
+ if ((tagName != "select" && elemType != "button"
+ && elemType != "reset" && elemType != "submit" && elemType != "image")
+ && ((elemType != "checkbox" && elemType != "radio"
+ */
+var ALLOWED_SUBMITTABLE_ELEMENTS;
+(function (ALLOWED_SUBMITTABLE_ELEMENTS) {
+    ALLOWED_SUBMITTABLE_ELEMENTS["SELECT"] = "select";
+    ALLOWED_SUBMITTABLE_ELEMENTS["BUTTON"] = "button";
+    ALLOWED_SUBMITTABLE_ELEMENTS["SUBMIT"] = "submit";
+    ALLOWED_SUBMITTABLE_ELEMENTS["RESET"] = "reset";
+    ALLOWED_SUBMITTABLE_ELEMENTS["IMAGE"] = "image";
+    ALLOWED_SUBMITTABLE_ELEMENTS["RADIO"] = "radio";
+    ALLOWED_SUBMITTABLE_ELEMENTS["CHECKBOX"] = "checkbox";
+})(ALLOWED_SUBMITTABLE_ELEMENTS || (ALLOWED_SUBMITTABLE_ELEMENTS = {}));
+/**
+ * helper to fix a common problem that a system has to wait, until a certain condition is reached.
+ * Depending on the browser this uses either the Mutation Observer or a semi compatible interval as fallback.
+ * @param root the root DomQuery element to start from
+ * @param condition the condition lambda to be fulfilled
+ * @param options options for the search
+ */
+function waitUntilDom(root, condition, options = {
+    attributes: true,
+    childList: true,
+    subtree: true,
+    timeout: 500,
+    interval: 100
+}) {
+    return new Promise((success, error) => {
+        let observer = null;
+        const MUT_ERROR = new Error("Mutation observer timeout");
+        // we do the same but for now ignore the options on the dom query
+        // we cannot use absent here, because the condition might search for an absent element
+        function findElement(root, condition) {
+            let found = null;
+            if (!!condition(root)) {
+                return root;
+            }
+            if (options.childList) {
+                found = (condition(root)) ? root : root.childNodes.filter(item => condition(item)).first().value.value;
+            }
+            else if (options.subtree) {
+                found = (condition(root)) ? root : root.querySelectorAll(" * ").filter(item => condition(item)).first().value.value;
+            }
+            else {
+                found = (condition(root)) ? root : null;
+            }
+            return found;
+        }
+        let foundElement = root;
+        if (!!(foundElement = findElement(foundElement, condition))) {
+            success(new DomQuery(foundElement));
+            return;
+        }
+        if ('undefined' != typeof MutationObserver) {
+            const mutTimeout = setTimeout(() => {
+                observer.disconnect();
+                return error(MUT_ERROR);
+            }, options.timeout);
+            const callback = (mutationList) => {
+                const found = new DomQuery(mutationList.map((mut) => mut.target)).filter(item => condition(item)).first();
+                if (found.isPresent()) {
+                    clearTimeout(mutTimeout);
+                    observer.disconnect();
+                    success(new DomQuery(found || root));
+                }
+            };
+            observer = new MutationObserver(callback);
+            // browsers might ignore it, but we cannot break the api in the case
+            // hence no timeout is passed
+            let observableOpts = Object.assign({}, options);
+            delete observableOpts.timeout;
+            root.eachElem(item => {
+                observer.observe(item, observableOpts);
+            });
+        }
+        else { // fallback for legacy browsers without mutation observer
+            let interval = setInterval(() => {
+                let found = findElement(root, condition);
+                if (!!found) {
+                    if (timeout) {
+                        clearTimeout(timeout);
+                        clearInterval(interval);
+                        interval = null;
+                    }
+                    success(new DomQuery(found || root));
+                }
+            }, options.interval);
+            let timeout = setTimeout(() => {
+                if (interval) {
+                    clearInterval(interval);
+                    error(MUT_ERROR);
+                }
+            }, options.timeout);
+        }
+    });
+}
+class ElementAttribute extends Monad_1.ValueEmbedder {
+    constructor(element, name, defaultVal = null) {
+        super(element, name);
+        this.element = element;
+        this.name = name;
+        this.defaultVal = defaultVal;
+    }
+    get value() {
+        let val = this.element.get(0).orElse(...[]).values;
+        if (!val.length) {
+            return this.defaultVal;
+        }
+        return val[0].getAttribute(this.name);
+    }
+    set value(value) {
+        let val = this.element.get(0).orElse(...[]).values;
+        for (let cnt = 0; cnt < val.length; cnt++) {
+            val[cnt].setAttribute(this.name, value);
+        }
+        val[0].setAttribute(this.name, value);
+    }
+    getClass() {
+        return ElementAttribute;
+    }
+    static fromNullable(value, valueKey = "value") {
+        return new ElementAttribute(value, valueKey);
+    }
+}
+exports.ElementAttribute = ElementAttribute;
+class Style extends Monad_1.ValueEmbedder {
+    constructor(element, name, defaultVal = null) {
+        super(element, name);
+        this.element = element;
+        this.name = name;
+        this.defaultVal = defaultVal;
+    }
+    get value() {
+        let val = this.element.values;
+        if (!val.length) {
+            return this.defaultVal;
+        }
+        return val[0].style[this.name];
+    }
+    set value(value) {
+        let val = this.element.values;
+        for (let cnt = 0; cnt < val.length; cnt++) {
+            val[cnt].style[this.name] = value;
+        }
+    }
+    getClass() {
+        return ElementAttribute;
+    }
+    static fromNullable(value, valueKey = "value") {
+        return new ElementAttribute(value, valueKey);
+    }
+}
+exports.Style = Style;
+/**
+ * small helper for the specialized jsf case
+ * @constructor
+ */
+const DEFAULT_WHITELIST = () => {
+    return true;
+};
+/**
+ * Monadic DomNode representation, ala jquery
+ * This is a thin wrapper over querySelectorAll
+ * to get slim monadic support
+ * to reduce implementation code on the users side.
+ * This is vital for frameworks which want to rely on
+ * plain dom but still do not want to lose
+ * the reduced code footprint of querying dom trees and traversing
+ * by using functional patterns.
+ *
+ * Also, a few convenience methods are added to reduce
+ * the code footprint of standard dom processing
+ * operations like eval
+ *
+ * in most older systems
+ * Note parts of this code still stem from the Dom.js I have written 10 years
+ * ago, those parts look a bit ancient and will be replaced over time.
+ *
+ */
+class DomQuery {
+    constructor(...rootNode) {
+        this.rootNode = [];
+        this.pos = -1;
+        // because we can stream from an array stream directly into the dom query
+        this._limits = -1;
+        if (Monad_1.Optional.fromNullable(rootNode).isAbsent() || !rootNode.length) {
+            return;
+        }
+        else {
+            // we need to flatten out the arrays
+            for (let cnt = 0; cnt < rootNode.length; cnt++) {
+                if (!rootNode[cnt]) {
+                    // we skip possible null entries which can happen in
+                    // certain corner conditions due to the constructor re-wrapping single elements into arrays.
+                }
+                else if (isString(rootNode[cnt])) {
+                    let foundElement = DomQuery.querySelectorAll(rootNode[cnt]);
+                    if (!foundElement.isAbsent()) {
+                        rootNode.push(...foundElement.values);
+                    }
+                }
+                else if (rootNode[cnt] instanceof DomQuery) {
+                    this.rootNode.push(...rootNode[cnt].values);
+                }
+                else {
+                    this.rootNode.push(rootNode[cnt]);
+                }
+            }
+        }
+    }
+    /**
+     * returns the first element
+     */
+    get value() {
+        return this.getAsElem(0);
+    }
+    get values() {
+        return this.allElems();
+    }
+    get global() {
+        return Global_1._global$;
+    }
+    get stream() {
+        throw Error("Not implemented, include Stream.ts for this to work");
+    }
+    get lazyStream() {
+        throw Error("Not implemented, include Stream.ts for this to work");
+    }
+    /**
+     * returns the id of the first element
+     */
+    get id() {
+        return new ElementAttribute(this.get(0), "id");
+    }
+    /**
+     * length of the entire query set
+     */
+    get length() {
+        return this.rootNode.length;
+    }
+    /**
+     * convenience method for tagName
+     */
+    get tagName() {
+        return this.getAsElem(0).getIf("tagName");
+    }
+    /**
+     * convenience method for nodeName
+     */
+    get nodeName() {
+        return this.getAsElem(0).getIf("nodeName");
+    }
+    isTag(tagName) {
+        return !this.isAbsent()
+            && (this.nodeName.orElse("__none___")
+                .value.toLowerCase() == tagName.toLowerCase()
+                || this.tagName.orElse("__none___")
+                    .value.toLowerCase() == tagName.toLowerCase());
+    }
+    /**
+     * convenience property for type
+     *
+     * returns null in case of no type existing otherwise
+     * the type of the first element
+     */
+    get type() {
+        return this.getAsElem(0).getIf("type");
+    }
+    /**
+     * convenience property for name
+     *
+     * returns null in case of no type existing otherwise
+     * the name of the first element
+     */
+    get name() {
+        return new Monad_1.ValueEmbedder(this.getAsElem(0).value, "name");
+    }
+    /**
+     * convenience property for value
+     *
+     * returns null in case of no type existing otherwise
+     * the value of the first element
+     */
+    get inputValue() {
+        if (this.getAsElem(0).getIf("value").isPresent()) {
+            return new Monad_1.ValueEmbedder(this.getAsElem(0).value);
+        }
+        else {
+            return Monad_1.ValueEmbedder.absent;
+        }
+    }
+    get val() {
+        return this.inputValue.value;
+    }
+    set val(value) {
+        this.inputValue.value = value;
+    }
+    get nodeId() {
+        return this.id.value;
+    }
+    set nodeId(value) {
+        this.id.value = value;
+    }
+    get checked() {
+        return new Es2019Array_1.Es2019Array(...this.values).every(el => !!el.checked);
+    }
+    set checked(newChecked) {
+        this.eachElem(el => el.checked = newChecked);
+    }
+    get elements() {
+        // a simple querySelectorAll should suffice
+        return this.querySelectorAll("input, checkbox, select, textarea, fieldset");
+    }
+    get deepElements() {
+        let elemStr = "input, select, textarea, checkbox, fieldset";
+        return this.querySelectorAllDeep(elemStr);
+    }
+    /**
+     * a deep search which treats the single isolated shadow dom areas
+     * separately and runs the query on each shadow dom
+     * @param queryStr
+     */
+    querySelectorAllDeep(queryStr) {
+        let found = [];
+        let queryRes = this.querySelectorAll(queryStr);
+        if (queryRes.length) {
+            found.push(queryRes);
+        }
+        let shadowRoots = this.querySelectorAll("*").shadowRoot;
+        if (shadowRoots.length) {
+            let shadowRes = shadowRoots.querySelectorAllDeep(queryStr);
+            if (shadowRes.length) {
+                found.push(shadowRes);
+            }
+        }
+        return new DomQuery(...found);
+    }
+    /**
+     * disabled flag
+     */
+    get disabled() {
+        return this.attr("disabled").isPresent();
+    }
+    set disabled(disabled) {
+        // this.attr("disabled").value = disabled + "";
+        if (!disabled) {
+            this.removeAttribute("disabled");
+        }
+        else {
+            this.attr("disabled").value = "disabled";
+        }
+    }
+    removeAttribute(name) {
+        this.eachElem(item => item.removeAttribute(name));
+    }
+    get childNodes() {
+        let childNodeArr = [];
+        this.eachElem((item) => {
+            childNodeArr = childNodeArr.concat(objToArray(item.childNodes));
+        });
+        return new DomQuery(...childNodeArr);
+    }
+    get asArray() {
+        // filter not supported by IE11
+        let items = new Es2019Array_1.Es2019Array(...this.rootNode).filter(item => {
+            return item != null;
+        }).map(item => {
+            return DomQuery.byId(item);
+        });
+        return items;
+    }
+    get offsetWidth() {
+        return new Es2019Array_1.Es2019Array(...this.rootNode)
+            .filter(item => item != null)
+            .map(elem => elem.offsetWidth)
+            .reduce((accumulate, incoming) => accumulate + incoming, 0);
+    }
+    get offsetHeight() {
+        return new Es2019Array_1.Es2019Array(...this.rootNode)
+            .filter(item => item != null)
+            .map(elem => elem.offsetHeight)
+            .reduce((accumulate, incoming) => accumulate + incoming, 0);
+    }
+    get offsetLeft() {
+        return new Es2019Array_1.Es2019Array(...this.rootNode)
+            .filter(item => item != null)
+            .map(elem => elem.offsetLeft)
+            .reduce((accumulate, incoming) => accumulate + incoming, 0);
+    }
+    get offsetTop() {
+        return new Es2019Array_1.Es2019Array(this.rootNode)
+            .filter(item => item != null)
+            .map(elem => elem.offsetTop)
+            .reduce((accumulate, incoming) => accumulate + incoming, 0);
+    }
+    get asNodeArray() {
+        return new Es2019Array_1.Es2019Array(...this.rootNode.filter(item => item != null));
+    }
+    static querySelectorAllDeep(selector) {
+        return new DomQuery(document).querySelectorAllDeep(selector);
+    }
+    /**
+     * easy query selector all producer
+     *
+     * @param selector the selector
+     * @returns a results dom query object
+     */
+    static querySelectorAll(selector) {
+        if (selector.indexOf("/shadow/") != -1) {
+            return new DomQuery(document)._querySelectorAllDeep(selector);
+        }
+        else {
+            return new DomQuery(document)._querySelectorAll(selector);
+        }
+    }
+    /**
+     * byId producer
+     *
+     * @param selector id
+     * @param deep true if you want to go into shadow areas
+     * @return a DomQuery containing the found elements
+     */
+    static byId(selector, deep = false) {
+        if (isString(selector)) {
+            return (!deep) ? new DomQuery(document).byId(selector) : new DomQuery(document).byIdDeep(selector);
+        }
+        else {
+            return new DomQuery(selector);
+        }
+    }
+    /**
+     * byTagName producer
+     *
+     * @param selector name
+     * @return a DomQuery containing the found elements
+     */
+    static byTagName(selector) {
+        if (isString(selector)) {
+            return new DomQuery(document).byTagName(selector);
+        }
+        else {
+            return new DomQuery(selector);
+        }
+    }
+    static globalEval(code, nonce) {
+        return new DomQuery(document).globalEval(code, nonce);
+    }
+    static globalEvalSticky(code, nonce) {
+        return new DomQuery(document).globalEvalSticky(code, nonce);
+    }
+    /**
+     * builds the ie nodes properly in a placeholder
+     * and bypasses a non script insert bug that way
+     * @param markup the markup code to be executed from
+     */
+    static fromMarkup(markup) {
+        // https:// developer.mozilla.org/de/docs/Web/API/DOMParser license creative commons
+        const doc = document.implementation.createHTMLDocument("");
+        markup = trim(markup);
+        let lowerMarkup = markup.toLowerCase();
+        if (lowerMarkup.search(/<!doctype[^\w\-]+/gi) != -1 ||
+            lowerMarkup.search(/<html[^\w\-]+/gi) != -1 ||
+            lowerMarkup.search(/<head[^\w\-]+/gi) != -1 ||
+            lowerMarkup.search(/<body[^\w\-]+/gi) != -1) {
+            doc.documentElement.innerHTML = markup;
+            return new DomQuery(doc.documentElement);
+        }
+        else {
+            let startsWithTag = function (str, tagName) {
+                let tag1 = ["<", tagName, ">"].join("");
+                let tag2 = ["<", tagName, " "].join("");
+                return (str.indexOf(tag1) == 0) || (str.indexOf(tag2) == 0);
+            };
+            let dummyPlaceHolder = new DomQuery(document.createElement("div"));
+            // table needs special treatment due to the browsers auto creation
+            if (startsWithTag(lowerMarkup, "thead") || startsWithTag(lowerMarkup, "tbody")) {
+                dummyPlaceHolder.html(`<table>${markup}</table>`);
+                return dummyPlaceHolder.querySelectorAll("table").get(0).childNodes.detach();
+            }
+            else if (startsWithTag(lowerMarkup, "tfoot")) {
+                dummyPlaceHolder.html(`<table><thead></thead><tbody><tbody${markup}</table>`);
+                return dummyPlaceHolder.querySelectorAll("table").get(2).childNodes.detach();
+            }
+            else if (startsWithTag(lowerMarkup, "tr")) {
+                dummyPlaceHolder.html(`<table><tbody>${markup}</tbody></table>`);
+                return dummyPlaceHolder.querySelectorAll("tbody").get(0).childNodes.detach();
+            }
+            else if (startsWithTag(lowerMarkup, "td")) {
+                dummyPlaceHolder.html(`<table><tbody><tr>${markup}</tr></tbody></table>`);
+                return dummyPlaceHolder.querySelectorAll("tr").get(0).childNodes.detach();
+            }
+            dummyPlaceHolder.html(markup);
+            return dummyPlaceHolder.childNodes.detach();
+        }
+    }
+    /**
+     * returns the nth element as DomQuery
+     * from the internal elements
+     * note if you try to reach a non-existing element position
+     * you will get back an absent entry
+     *
+     * @param index the nth index
+     */
+    get(index) {
+        return (index < this.rootNode.length) ? new DomQuery(this.rootNode[index]) : DomQuery.absent;
+    }
+    /**
+     * returns the nth element as optional of an Element object
+     * @param index the number from the index
+     * @param defaults the default value if the index is overrun default Optional\.absent
+     */
+    getAsElem(index, defaults = Monad_1.Optional.absent) {
+        return (index < this.rootNode.length) ? Monad_1.Optional.fromNullable(this.rootNode[index]) : defaults;
+    }
+    /**
+     * returns the files from a given element
+     * @param index
+     */
+    filesFromElem(index) {
+        var _a;
+        return (index < this.rootNode.length) ? ((_a = this.rootNode[index]) === null || _a === void 0 ? void 0 : _a.files) ? this.rootNode[index].files : [] : [];
+    }
+    /**
+     * returns the value array< of all elements
+     */
+    allElems() {
+        return this.rootNode;
+    }
+    /**
+     * absent no values reached?
+     */
+    isAbsent() {
+        return this.length == 0;
+    }
+    /**
+     * should make the code clearer
+     * note if you pass a function
+     * this refers to the active DomQuery object
+     */
+    isPresent(presentRunnable) {
+        let absent = this.isAbsent();
+        if (!absent && presentRunnable) {
+            presentRunnable.call(this, this);
+        }
+        return !absent;
+    }
+    /**
+     * should make the code clearer
+     * note if you pass a function
+     * this refers to the active DomQuery object
+     *
+     *
+     * @param presentRunnable
+     */
+    ifPresentLazy(presentRunnable = function () {
+    }) {
+        this.isPresent.call(this, presentRunnable);
+        return this;
+    }
+    /**
+     * remove all affected nodes from this query object from the dom tree
+     */
+    delete() {
+        this.eachElem((node) => {
+            if (node.parentNode) {
+                node.parentNode.removeChild(node);
+            }
+        });
+    }
+    querySelectorAll(selector) {
+        // We could merge both methods, but for now this is more readable
+        if (selector.indexOf("/shadow/") != -1) {
+            return this._querySelectorAllDeep(selector);
+        }
+        else {
+            return this._querySelectorAll(selector);
+        }
+    }
+    closest(selector) {
+        // We could merge both methods, but for now this is more readable
+        if (selector.indexOf("/shadow/") != -1) {
+            return this._closestDeep(selector);
+        }
+        else {
+            return this._closest(selector);
+        }
+    }
+    /**
+     * core byId method
+     * @param id the id to search for
+     * @param includeRoot also match the root element?
+     */
+    byId(id, includeRoot) {
+        let res = [];
+        if (includeRoot) {
+            res = res.concat(...new Es2019Array_1.Es2019Array(...((this === null || this === void 0 ? void 0 : this.rootNode) || []))
+                .filter(((item) => id == item.id))
+                .map(item => new DomQuery(item)));
+        }
+        // for some strange kind of reason the # selector fails
+        // on hidden elements we use the attributes match selector
+        // that works
+        res = res.concat(this.querySelectorAll(`[id="${id}"]`));
+        return new DomQuery(...res);
+    }
+    byIdDeep(id, includeRoot) {
+        let res = [];
+        if (includeRoot) {
+            res = res.concat(new Es2019Array_1.Es2019Array(...((this === null || this === void 0 ? void 0 : this.rootNode) || []))
+                .filter(item => id == item.id)
+                .map(item => new DomQuery(item)));
+        }
+        let subItems = this.querySelectorAllDeep(`[id="${id}"]`);
+        if (subItems.length) {
+            res.push(subItems);
+        }
+        return new DomQuery(...res);
+    }
+    /**
+     * same as byId just for the tag name
+     * @param tagName the tag-name to search for
+     * @param includeRoot shall the root element be part of this search
+     * @param deep do we also want to go into shadow dom areas
+     */
+    byTagName(tagName, includeRoot, deep) {
+        var _a;
+        let res = [];
+        if (includeRoot) {
+            res = new Es2019Array_1.Es2019Array(...((_a = this === null || this === void 0 ? void 0 : this.rootNode) !== null && _a !== void 0 ? _a : []))
+                .filter(element => (element === null || element === void 0 ? void 0 : element.tagName) == tagName)
+                .reduce((reduction, item) => reduction.concat([item]), res);
+        }
+        (deep) ? res.push(this.querySelectorAllDeep(tagName)) : res.push(this.querySelectorAll(tagName));
+        return new DomQuery(...res);
+    }
+    /**
+     * attr accessor, usage myQuery.attr("class").value = "bla"
+     * or let value myQuery.attr("class").value
+     * @param attr the attribute to set
+     * @param defaultValue the default value in case nothing is presented (defaults to null)
+     */
+    attr(attr, defaultValue = null) {
+        return new ElementAttribute(this, attr, defaultValue);
+    }
+    style(cssProperty, defaultValue = null) {
+        return new Style(this, cssProperty, defaultValue);
+    }
+    /**
+     * Checks for an existing class in the class attributes
+     *
+     * @param clazz the class to search for
+     */
+    hasClass(clazz) {
+        let hasIt = false;
+        this.eachElem(node => {
+            hasIt = node.classList.contains(clazz);
+            if (hasIt) {
+                return false;
+            }
+        });
+        return hasIt;
+    }
+    /**
+     * appends a class string if not already in the element(s)
+     *
+     * @param clazz the style class to append
+     */
+    addClass(clazz) {
+        this.eachElem(item => item.classList.add(clazz));
+        return this;
+    }
+    /**
+     * remove the style class if in the class definitions
+     *
+     * @param clazz
+     */
+    removeClass(clazz) {
+        this.eachElem(item => item.classList.remove(clazz));
+        return this;
+    }
+    /**
+     * checks whether we have a multipart element in our children
+     * or are one
+     */
+    isMultipartCandidate(deep = false) {
+        const FILE_INPUT = "input[type='file']";
+        return this.matchesSelector(FILE_INPUT) ||
+            ((!deep) ? this.querySelectorAll(FILE_INPUT) :
+                this.querySelectorAllDeep(FILE_INPUT)).first().isPresent();
+    }
+    /**
+     * innerHtml
+     * equivalent to jQueries html
+     * as setter the html is set and the
+     * DomQuery is given back
+     * as getter the html string is returned
+     *
+     * @param newInnerHTML the inner html to be inserted
+     */
+    html(newInnerHTML) {
+        if (Monad_1.Optional.fromNullable(newInnerHTML).isAbsent()) {
+            return this.isPresent() ? Monad_1.Optional.fromNullable(this.innerHTML) : Monad_1.Optional.absent;
+        }
+        this.innerHTML = newInnerHTML;
+        return this;
+    }
+    /**
+     * Standard dispatch event method, delegated from node
+     */
+    dispatchEvent(evt) {
+        this.eachElem(elem => elem.dispatchEvent(evt));
+        return this;
+    }
+    /**
+     * abbreviation property to use innerHTML directly like on the dom tree
+     * @param newInnerHTML  the new inner html which should be attached to "this" domQuery
+     */
+    set innerHTML(newInnerHTML) {
+        this.eachElem(elem => elem.innerHTML = newInnerHTML);
+    }
+    /**
+     * getter abbreviation to use innerHTML directly
+     */
+    get innerHTML() {
+        let retArr = [];
+        this.eachElem(elem => retArr.push(elem.innerHTML));
+        return retArr.join("");
+    }
+    /**
+     * since the dom allows both innerHTML and innerHtml we also have to implement both
+     * @param newInnerHtml see above
+     */
+    set innerHtml(newInnerHtml) {
+        this.innerHTML = newInnerHtml;
+    }
+    /**
+     * same here, getter for allowing innerHtml directly
+     */
+    get innerHtml() {
+        return this.innerHTML;
+    }
+    /**
+     * filters the current dom query elements
+     * upon a given selector
+     *
+     * @param selector
+     */
+    filterSelector(selector) {
+        let matched = [];
+        this.eachElem(item => {
+            if (this._mozMatchesSelector(item, selector)) {
+                matched.push(item);
+            }
+        });
+        return new DomQuery(...matched);
+    }
+    /**
+     * checks whether any item in this domQuery level matches the selector
+     * if there is one element only attached, as root the match is only
+     * performed on this element.
+     * @param selector
+     */
+    matchesSelector(selector) {
+        return this.asArray
+            .some(item => this._mozMatchesSelector(item.getAsElem(0).value, selector));
+    }
+    /**
+     * easy node traversal, you can pass
+     * a set of node selectors which are joined as direct children
+     *
+     * Note!!! The root nodes are not in the getIf, those are always the child nodes
+     *
+     * @param nodeSelector
+     */
+    getIf(...nodeSelector) {
+        let selectorStage = this.childNodes;
+        for (let cnt = 0; cnt < nodeSelector.length; cnt++) {
+            selectorStage = selectorStage.filterSelector(nodeSelector[cnt]);
+            if (selectorStage.isAbsent()) {
+                return selectorStage;
+            }
+        }
+        return selectorStage;
+    }
+    eachElem(func) {
+        for (let cnt = 0, len = this.rootNode.length; cnt < len; cnt++) {
+            if (func(this.rootNode[cnt], cnt) === false) {
+                break;
+            }
+        }
+        return this;
+    }
+    firstElem(func = item => item) {
+        if (this.rootNode.length > 1) {
+            func(this.rootNode[0], 0);
+        }
+        return this;
+    }
+    lastElem(func = item => item) {
+        if (this.rootNode.length > 1) {
+            func(this.rootNode[this.rootNode.length - 1], 0);
+        }
+        return this;
+    }
+    each(func) {
+        new Es2019Array_1.Es2019Array(...this.rootNode)
+            .forEach((item, cnt) => {
+            // we could use a filter, but for the best performance we don´t
+            if (item == null) {
+                return;
+            }
+            return func(DomQuery.byId(item), cnt);
+        });
+        return this;
+    }
+    /**
+     * replace convenience function, replaces one or more elements with
+     * a set of elements passed as DomQuery
+     * @param toReplace the replaced nodes as reference (original node has been replaced)
+     */
+    replace(toReplace) {
+        this.each(item => {
+            let asElem = item.getAsElem(0).value;
+            let parent = asElem.parentElement;
+            let nextElement = asElem.nextElementSibling;
+            let previousElement = asElem.previousElementSibling;
+            if (nextElement != null) {
+                new DomQuery(nextElement).insertBefore(toReplace);
+            }
+            else if (previousElement) {
+                new DomQuery(previousElement).insertAfter(toReplace);
+            }
+            else {
+                new DomQuery(parent).append(toReplace);
+            }
+            item.delete();
+        });
+        return toReplace;
+    }
+    /**
+     * returns a new dom query containing only the first element max
+     *
+     * @param func a an optional callback function to perform an operation on the first element
+     */
+    first(func = (item) => item) {
+        if (this.rootNode.length >= 1) {
+            func(this.get(0), 0);
+            return this.get(0);
+        }
+        return this;
+    }
+    /**
+     * returns a new dom query containing only the first element max
+     *
+     * @param func a an optional callback function to perform an operation on the first element
+     */
+    last(func = (item) => item) {
+        if (this.rootNode.length >= 1) {
+            let lastNode = this.get(this.rootNode.length - 1);
+            func(lastNode, 0);
+            return lastNode;
+        }
+        return this;
+    }
+    /**
+     * filter function which filters a subset
+     *
+     * @param func
+     */
+    filter(func) {
+        let reArr = [];
+        this.each((item) => {
+            func(item) ? reArr.push(item) : null;
+        });
+        return new DomQuery(...reArr);
+    }
+    /**
+     * global eval head appendix method
+     * no other methods are supported anymore
+     * @param code the code to be evaluated
+     * @param  nonce optional  nonce key for higher security
+     */
+    globalEval(code, nonce) {
+        var _a, _b, _c;
+        const head = (_b = (_a = document.getElementsByTagName("head")) === null || _a === void 0 ? void 0 : _a[0]) !== null && _b !== void 0 ? _b : (_c = document.documentElement.getElementsByTagName("head")) === null || _c === void 0 ? void 0 : _c[0];
+        const script = document.createElement("script");
+        if (nonce) {
+            if ('undefined' != typeof (script === null || script === void 0 ? void 0 : script.nonce)) {
+                script.nonce = nonce;
+            }
+            else {
+                script.setAttribute("nonce", nonce);
+            }
+        }
+        script.type = "text/javascript";
+        script.innerHTML = code;
+        let newScriptElement = head.appendChild(script);
+        head.removeChild(newScriptElement);
+        return this;
+    }
+    /**
+     * global eval head appendix method
+     * no other methods are supported anymore
+     * @param code the code to be evaluated
+     * @param  nonce optional  nonce key for higher security
+     */
+    globalEvalSticky(code, nonce) {
+        let head = document.getElementsByTagName("head")[0] || document.documentElement;
+        let script = document.createElement("script");
+        this.applyNonce(nonce, script);
+        script.type = "text/javascript";
+        script.innerHTML = code;
+        head.appendChild(script);
+        return this;
+    }
+    /**
+     * detaches a set of nodes from their parent elements
+     * in a browser independent manner
+     * @return {Array} an array of nodes with the detached dom nodes
+     */
+    detach() {
+        this.eachElem((item) => {
+            item.parentNode.removeChild(item);
+        });
+        return this;
+    }
+    /**
+     * appends the current set of elements
+     * to the element or first element passed via elem
+     * @param elem
+     */
+    appendTo(elem) {
+        if (Lang_1.Lang.isString(elem)) {
+            this.appendTo(DomQuery.querySelectorAll(elem));
+            return this;
+        }
+        this.eachElem((item) => {
+            let value1 = elem.getAsElem(0).orElseLazy(() => {
+                return {
+                    appendChild: () => {
+                    }
+                };
+            }).value;
+            value1.appendChild(item);
+        });
+        return this;
+    }
+    /**
+     * loads and evaluates a script from a source uri
+     *
+     * @param src the source to be loaded and evaluated
+     * @param delay in milliseconds execution default (0 == no delay)
+     * @param nonce optional nonce value to allow increased security via nonce crypto token
+     */
+    loadScriptEval(src, delay = 0, nonce) {
+        this._loadScriptEval(false, src, delay, nonce);
+        return this;
+    }
+    /**
+     * loads and evaluates a script from a source uri
+     *
+     * @param src the source to be loaded and evaluated
+     * @param delay in milliseconds execution default (0 == no delay)
+     * @param nonce optional nonce parameter for increased security via nonce crypto token
+     */
+    loadScriptEvalSticky(src, delay = 0, nonce) {
+        this._loadScriptEval(true, src, delay, nonce);
+        return this;
+    }
+    insertAfter(...toInsertParams) {
+        this.each(existingItem => {
+            let existingElement = existingItem.getAsElem(0).value;
+            let rootNode = existingElement.parentNode;
+            for (let cnt = 0; cnt < toInsertParams.length; cnt++) {
+                let nextSibling = existingElement.nextSibling;
+                toInsertParams[cnt].eachElem(insertElem => {
+                    if (nextSibling) {
+                        rootNode.insertBefore(insertElem, nextSibling);
+                        existingElement = nextSibling;
+                    }
+                    else {
+                        rootNode.appendChild(insertElem);
+                    }
+                });
+            }
+        });
+        let res = [];
+        res.push(this);
+        res = res.concat(toInsertParams);
+        return new DomQuery(...res);
+    }
+    insertBefore(...toInsertParams) {
+        this.each(existingItem => {
+            let existingElement = existingItem.getAsElem(0).value;
+            let rootNode = existingElement.parentNode;
+            for (let cnt = 0; cnt < toInsertParams.length; cnt++) {
+                toInsertParams[cnt].eachElem(insertElem => {
+                    rootNode.insertBefore(insertElem, existingElement);
+                });
+            }
+        });
+        let res = [];
+        res.push(this);
+        res = res.concat(toInsertParams);
+        return new DomQuery(...res);
+    }
+    orElse(...elseValue) {
+        if (this.isPresent()) {
+            return this;
+        }
+        else {
+            return new DomQuery(...elseValue);
+        }
+    }
+    orElseLazy(func) {
+        if (this.isPresent()) {
+            return this;
+        }
+        else {
+            return new DomQuery(func());
+        }
+    }
+    /**
+     * find all parents in the hierarchy for which the selector matches
+     * @param selector
+     */
+    allParents(selector) {
+        let parent = this.parent();
+        let ret = [];
+        while (parent.isPresent()) {
+            if (parent.matchesSelector(selector)) {
+                ret.push(parent);
+            }
+            parent = parent.parent();
+        }
+        return new DomQuery(...ret);
+    }
+    /**
+     * finds the first parent in the hierarchy for which the selector matches
+     * @param selector
+     */
+    firstParent(selector) {
+        let parent = this.parent();
+        while (parent.isPresent()) {
+            if (parent.matchesSelector(selector)) {
+                return parent;
+            }
+            parent = parent.parent();
+        }
+        return DomQuery.absent;
+    }
+    /**
+     * fetches all parents as long as the filter criterium matches
+     * @param selector
+     */
+    parentsWhileMatch(selector) {
+        const retArr = [];
+        let parent = this.parent().filter(item => item.matchesSelector(selector));
+        while (parent.isPresent()) {
+            retArr.push(parent);
+            parent = parent.parent().filter(item => item.matchesSelector(selector));
+        }
+        return new DomQuery(...retArr);
+    }
+    parent() {
+        let ret = [];
+        this.eachElem((item) => {
+            let parent = item.parentNode || item.host || item.shadowRoot;
+            if (parent && ret.indexOf(parent) == -1) {
+                ret.push(parent);
+            }
+        });
+        return new DomQuery(...ret);
+    }
+    copyAttrs(sourceItem) {
+        sourceItem.eachElem((sourceNode) => {
+            let attrs = objToArray(sourceNode.attributes);
+            for (let item of attrs) {
+                let value = item.value;
+                let name = item.name;
+                switch (name) {
+                    case "id":
+                        this.id.value = value;
+                        break;
+                    case "disabled":
+                        this.resolveAttributeHolder("disabled").disabled = value;
+                        break;
+                    case "checked":
+                        this.resolveAttributeHolder("checked").checked = value;
+                        break;
+                    default:
+                        this.attr(name).value = value;
+                }
+            }
+        });
+        return this;
+    }
+    /**
+     * outerHTML convenience method
+     * browsers only support innerHTML but
+     * for instance for your jsf.js we have a full
+     * replace pattern which needs outerHTML processing
+     *
+     * @param markup the markup which should replace the root element
+     * @param runEmbeddedScripts if true the embedded scripts are executed
+     * @param runEmbeddedCss if true the embedded css are executed
+     * @param deep should this also work for shadow dom (run scripts etc...)
+     */
+    outerHTML(markup, runEmbeddedScripts, runEmbeddedCss, deep = false) {
+        var _a;
+        if (this.isAbsent()) {
+            return;
+        }
+        let focusElementId = (_a = document === null || document === void 0 ? void 0 : document.activeElement) === null || _a === void 0 ? void 0 : _a.id;
+        let caretPosition = (focusElementId) ? DomQuery.getCaretPosition(document.activeElement) : null;
+        let nodes = DomQuery.fromMarkup(markup);
+        let res = [];
+        let toReplace = this.getAsElem(0).value;
+        let firstInsert = nodes.get(0);
+        let parentNode = toReplace.parentNode;
+        let replaced = firstInsert.getAsElem(0).value;
+        parentNode.replaceChild(replaced, toReplace);
+        res.push(new DomQuery(replaced));
+        // no replacement possible
+        if (this.isAbsent()) {
+            return this;
+        }
+        let insertAdditionalItems = [];
+        if (nodes.length > 1) {
+            insertAdditionalItems = insertAdditionalItems.concat(...nodes.values.slice(1));
+            res.push(DomQuery.byId(replaced).insertAfter(new DomQuery(...insertAdditionalItems)));
+        }
+        if (runEmbeddedScripts) {
+            this.runScripts();
+        }
+        if (runEmbeddedCss) {
+            this.runCss();
+        }
+        let focusElement = DomQuery.byId(focusElementId);
+        if (focusElementId && focusElement.isPresent() &&
+            caretPosition != null && "undefined" != typeof caretPosition) {
+            focusElement.eachElem(item => DomQuery.setCaretPosition(item, caretPosition));
+        }
+        return nodes;
+    }
+    /**
+     * Run through the given nodes in the DomQuery execute the inline scripts
+     * @param sticky if set to true the evaluated elements will stick to the head, default false
+     * @param whitelisted: optional whitelist function which can filter out script tags which are not processed
+     * defaults to the standard jsf.js exclusion (we use this code for myfaces)
+     */
+    runScripts(sticky = false, whitelisted = DEFAULT_WHITELIST) {
+        const evalCollectedScripts = (scriptsToProcess) => {
+            if (scriptsToProcess.length) {
+                // script source means we have to eval the existing
+                // scripts before we run the 'include' command
+                // this.globalEval(finalScripts.join("\n"));
+                let joinedScripts = [];
+                new Es2019Array_1.Es2019Array(...scriptsToProcess).forEach(item => {
+                    if (!item.nonce) {
+                        joinedScripts.push(item.evalText);
+                    }
+                    else {
+                        if (joinedScripts.length) {
+                            this.globalEval(joinedScripts.join("\n"));
+                            joinedScripts.length = 0;
+                        }
+                        (!sticky) ?
+                            this.globalEval(item.evalText, item.nonce) :
+                            this.globalEvalSticky(item.evalText, item.nonce);
+                    }
+                });
+                if (joinedScripts.length) {
+                    (!sticky) ? this.globalEval(joinedScripts.join("\n")) :
+                        this.globalEvalSticky(joinedScripts.join("\n"));
+                    joinedScripts.length = 0;
+                }
+                scriptsToProcess = [];
+            }
+            return scriptsToProcess;
+        };
+        let finalScripts = [], allowedItemTypes = ["", "script", "text/javascript", "text/ecmascript", "ecmascript"], execScript = (item) => {
+            var _a, _b, _c, _d;
+            let tagName = item.tagName;
+            let itemType = ((_a = item === null || item === void 0 ? void 0 : item.type) !== null && _a !== void 0 ? _a : '').toLowerCase();
+            if (tagName &&
+                eqi(tagName, "script") &&
+                allowedItemTypes.indexOf(itemType) != -1) {
+                let src = item.getAttribute('src');
+                if ('undefined' != typeof src
+                    && null != src
+                    && src.length > 0) {
+                    let nonce = (_b = item === null || item === void 0 ? void 0 : item.nonce) !== null && _b !== void 0 ? _b : item.getAttribute('nonce').value;
+                    // we have to move this into an inner if because chrome otherwise chokes
+                    // due to changing the and order instead of relying on left to right
+                    // if jsf.js is already registered we do not replace it anymore
+                    if (whitelisted(src)) {
+                        // we run the collected scripts, before we run the 'include' command
+                        finalScripts = evalCollectedScripts(finalScripts);
+                        if (!sticky) {
+                            (!!nonce) ? this.loadScriptEval(src, 0, nonce) :
+                                // if no nonce is set we do not pass any once
+                                this.loadScriptEval(src, 0);
+                        }
+                        else {
+                            (!!nonce) ? this.loadScriptEvalSticky(src, 0, nonce) :
+                                // if no nonce is set we do not pass any once
+                                this.loadScriptEvalSticky(src, 0);
+                        }
+                    }
+                }
+                else {
+                    // embedded script auto eval
+                    // probably not needed anymore
+                    let evalText = trim(item.text || item.innerText || item.innerHTML);
+                    let go = true;
+                    while (go) {
+                        go = false;
+                        if (evalText.substring(0, 4) == "<!--") {
+                            evalText = evalText.substring(4);
+                            go = true;
+                        }
+                        if (evalText.substring(0, 4) == "//<!--") {
+                            evalText = evalText.substring(6);
+                            go = true;
+                        }
+                        if (evalText.substring(0, 11) == "//<![CDATA[") {
+                            evalText = evalText.substring(11);
+                            go = true;
+                        }
+                    }
+                    let nonce = (_d = (_c = item === null || item === void 0 ? void 0 : item.nonce) !== null && _c !== void 0 ? _c : item.getAttribute('nonce').value) !== null && _d !== void 0 ? _d : '';
+                    // we have to run the script under a global context
+                    // we store the script for fewer calls to eval
+                    finalScripts.push({
+                        nonce,
+                        evalText
+                    });
+                }
+            }
+        };
+        try {
+            let scriptElements = new DomQuery(this.filterSelector("script"), this.querySelectorAll("script"));
+            // script execution order by relative pos in their dom tree
+            scriptElements.asArray
+                .flatMap(item => [...item.values])
+                .sort((node1, node2) => node1.compareDocumentPosition(node2) - 3) // preceding 2, following == 4)
+                .forEach(item => execScript(item));
+            evalCollectedScripts(finalScripts);
+        }
+        catch (e) {
+            if (console && console.error) {
+                // not sure if we
+                // should use our standard
+                // error mechanisms here
+                // because in the head appendix
+                // method only a console
+                // error would be raised as well
+                console.error(e.message || e.description);
+            }
+        }
+        finally {
+            // the usual ie6 fix code
+            // the IE6 garbage collector is broken
+            // nulling closures helps somewhat to reduce
+            // mem leaks, which are impossible to avoid
+            // at this browser
+            execScript = null;
+        }
+        return this;
+    }
+    runCss() {
+        const execCss = (toReplace) => {
+            const _toReplace = DomQuery.byId(toReplace);
+            const tagName = _toReplace.tagName.orElse("").value;
+            let newElement = DomQuery.fromMarkup(`<${tagName.toLowerCase()} />`);
+            newElement = newElement.copyAttrs(_toReplace);
+            newElement.innerHTML = toReplace.innerHTML;
+            // css suffices a simple replace to get it eval-ed, no need
+            // for a full head replace
+            _toReplace.replace(newElement);
+        };
+        const scriptElements = new DomQuery(this.filterSelector("link, style"), this.querySelectorAll("link, style"));
+        scriptElements.asArray
+            .flatMap(item => [...item.values])
+            // sort to make sure the execution order is correct
+            // this is needed because we mix 2 queries together
+            // -3 is needed due to the compareDocumentPosition return value
+            .sort((node1, node2) => node1.compareDocumentPosition(node2) - 3)
+            .forEach(item => execCss(item));
+        return this;
+    }
+    /**
+     * fires a click event on the underlying dom elements
+     */
+    click() {
+        this.fireEvent("click");
+        return this;
+    }
+    addEventListener(type, listener, options) {
+        this.eachElem((node) => node.addEventListener(type, listener, options));
+        return this;
+    }
+    removeEventListener(type, listener, options) {
+        this.eachElem((node) => node.removeEventListener(type, listener, options));
+        return this;
+    }
+    /**
+     * fires an event
+     */
+    fireEvent(eventName, options = {}) {
+        // merge with last one having the highest priority
+        let finalOptions = {
+            bubbles: true, cancelable: true
+        };
+        finalOptions = (0, AssocArray_1.simpleShallowMerge)(finalOptions, options);
+        this.eachElem((node) => {
+            let doc;
+            if (node.ownerDocument) {
+                doc = node.ownerDocument;
+            }
+            else if (node.nodeType == 9) {
+                // the node may be the document itself, nodeType 9 = DOCUMENT_NODE
+                doc = node;
+            }
+            else {
+                throw new Error("Invalid node passed to fireEvent: " + node.id);
+            }
+            if (node.dispatchEvent) {
+                // Gecko-style approach (now the standard) takes more work
+                let EventClass = Event;
+                // Different events have different event classes.
+                // If this switch statement can't map an eventName to an EventClass,
+                // the event firing is going to fail.
+                // extend this list on demand
+                switch (eventName) {
+                    case "click": // Dispatching of 'click' appears to not work correctly in Safari. Use 'mousedown' or 'mouseup' instead.
+                    case "mousedown":
+                    case "mouseup":
+                    case "mousemove":
+                        EventClass = this.global().MouseEvent;
+                        break;
+                    case "keyup":
+                    case "keydown":
+                    case "keypress":
+                        EventClass = this.global().KeyboardEvent;
+                        break;
+                    case "focus":
+                    case "change":
+                    case "blur":
+                    case "select":
+                        break;
+                    default:
+                        throw "fireEvent: Couldn't find an event class for event '" + eventName + "'.";
+                }
+                let event = new EventClass(eventName, finalOptions);
+                // this is added as an extra to allow internally the detection of synthetic events
+                // not used atm, but it does not hurt to have the extra info
+                event.synthetic = true; // allow detection of synthetic events
+                // The second parameter says go ahead with the default action
+                node.dispatchEvent(event);
+            }
+            else if (node.fireEvent) {
+                // IE-old school style, you can drop this if you don't need to support IE8 and lower
+                let event = doc.createEventObject();
+                event.synthetic = true; // allow detection of synthetic events
+                Object.keys(finalOptions).forEach(key => event[key] = finalOptions[key]);
+                node.fireEvent("on" + eventName, event);
+            }
+        });
+    }
+    textContent(joinString = "") {
+        return this.asArray
+            .map((value) => {
+            let item = value.getAsElem(0).orElseLazy(() => {
+                return {
+                    textContent: ""
+                };
+            }).value;
+            return item.textContent || "";
+        })
+            .reduce((text1, text2) => [text1, joinString, text2].join(""), "");
+    }
+    innerText(joinString = "") {
+        return this.asArray
+            .map((value) => {
+            let item = value.getAsElem(0).orElseLazy(() => {
+                return {
+                    innerText: ""
+                };
+            }).value;
+            return item.innerText || "";
+        })
+            .reduce((text1, text2) => {
+            return [text1, text2].join(joinString);
+        }, "");
+    }
+    /**
+     * encodes all input elements properly into respective
+     * config entries, this can be used
+     * for legacy systems, for newer use-cases, use the
+     * HTML5 Form class which all newer browsers provide
+     *
+     * @param toMerge optional config which can be merged in
+     * @return a copy pf
+     */
+    encodeFormElement(toMerge = {}) {
+        // browser behavior no element name no encoding (normal submit fails in that case)
+        // https:// issues.apache.org/jira/browse/MYFACES-2847
+        if (this.name.isAbsent()) {
+            return;
+        }
+        // let´s keep it side-effects free
+        let target = (0, AssocArray_1.simpleShallowMerge)(toMerge);
+        this.each((element) => {
+            var _a, _b;
+            if (element.name.isAbsent()) { // no name, no encoding
+                return;
+            }
+            let name = element.name.value;
+            let tagName = element.tagName.orElse("__none__").value.toLowerCase();
+            let elemType = element.type.orElse("__none__").value.toLowerCase();
+            elemType = elemType.toLowerCase();
+            // routine for all elements
+            // rules:
+            // - process only input, textarea and select elements
+            // - elements must have attribute "name"
+            // - elements must not be disabled
+            if (((tagName == "input" || tagName == "textarea" || tagName == "select") &&
+                (name != null && name != "")) && !element.disabled) {
+                // routine for select elements
+                // rules:
+                // - if select-one and value-Attribute exist => "name=value"
+                // (also if value empty => "name=")
+                // - if select-one and value-Attribute don't exist =>
+                // "name=DisplayValue"
+                // - if select multi and multiple selected => "name=value1&name=value2"
+                // - if select and selectedIndex=-1 don't submit
+                if (tagName == "select") {
+                    // selectedIndex must be >= 0 to be submitted
+                    let selectElem = element.getAsElem(0).value;
+                    if (selectElem.selectedIndex >= 0) {
+                        let uLen = selectElem.options.length;
+                        for (let u = 0; u < uLen; u++) {
+                            // find all selected options
+                            // let subBuf = [];
+                            if (selectElem.options[u].selected) {
+                                let elementOption = selectElem.options[u];
+                                (0, AssocArray_1.append)(target, name).value = (elementOption.getAttribute("value") != null) ?
+                                    elementOption.value : elementOption.text;
+                            }
+                        }
+                    }
+                }
+                // routine for remaining elements
+                // rules:
+                // - don't submit no selects (processed above), buttons, reset buttons, submit buttons,
+                // - submit checkboxes and radio inputs only if checked
+                if ((tagName != ALLOWED_SUBMITTABLE_ELEMENTS.SELECT &&
+                    elemType != ALLOWED_SUBMITTABLE_ELEMENTS.BUTTON &&
+                    elemType != ALLOWED_SUBMITTABLE_ELEMENTS.RESET &&
+                    elemType != ALLOWED_SUBMITTABLE_ELEMENTS.SUBMIT &&
+                    elemType != ALLOWED_SUBMITTABLE_ELEMENTS.IMAGE) && ((elemType != ALLOWED_SUBMITTABLE_ELEMENTS.CHECKBOX && elemType != ALLOWED_SUBMITTABLE_ELEMENTS.RADIO) ||
+                    element.checked)) {
+                    let uploadedFiles = (_b = (_a = element.value) === null || _a === void 0 ? void 0 : _a.value) === null || _b === void 0 ? void 0 : _b.files;
+                    let filesArr = uploadedFiles !== null && uploadedFiles !== void 0 ? uploadedFiles : [];
+                    if (filesArr === null || filesArr === void 0 ? void 0 : filesArr.length) { //files can be empty but set
+                        // xhr level2, single multiple must be passes as they are
+                        (0, AssocArray_1.assign)(target, name).value = Array.from(filesArr);
+                    }
+                    else {
+                        if (!!uploadedFiles) { //we skip empty file elements i
+                            return;
+                        }
+                        //checkboxes etc.. need to be appended
+                        (0, AssocArray_1.append)(target, name).value = element.inputValue.value;
+                    }
+                }
+            }
+        });
+        return target;
+    }
+    get cDATAAsString() {
+        let TYPE_CDATA_BLOCK = 4;
+        let res = this.asArray
+            .flatMap(item => {
+            return item.childNodes.asArray;
+        })
+            .filter(item => {
+            var _a, _b;
+            return ((_b = (_a = item === null || item === void 0 ? void 0 : item.value) === null || _a === void 0 ? void 0 : _a.value) === null || _b === void 0 ? void 0 : _b.nodeType) == TYPE_CDATA_BLOCK;
+        })
+            .reduce((reduced, item) => {
+            var _a, _b, _c;
+            reduced.push((_c = (_b = (_a = item === null || item === void 0 ? void 0 : item.value) === null || _a === void 0 ? void 0 : _a.value) === null || _b === void 0 ? void 0 : _b.data) !== null && _c !== void 0 ? _c : "");
+            return reduced;
+        }, []);
+        /*let res: any = this.lazyStream.flatMap(item => {
+            return item.childNodes.stream
+        }).filter(item => {
+            return item?.value?.value?.nodeType == TYPE_CDATA_BLOCK;
+        }).reduce((reduced: Array<any>, item: DomQuery) => {
+            reduced.push((<any>item?.value?.value)?.data ?? "");
+            return reduced;
+        }, []).value;*/
+        // response may contain several blocks
+        return res.join("");
+    }
+    subNodes(from, to) {
+        if (Monad_1.Optional.fromNullable(to).isAbsent()) {
+            to = this.length;
+        }
+        return new DomQuery(...this.rootNode.slice(from, Math.min(to, this.length)));
+    }
+    limits(end) {
+        this._limits = end;
+        return this;
+    }
+    //-- internally exposed methods needed for the interconnectivity
+    hasNext() {
+        let isLimitsReached = this._limits != -1 && this.pos >= this._limits - 1;
+        let isEndOfArray = this.pos >= this.values.length - 1;
+        return !(isLimitsReached ||
+            isEndOfArray);
+    }
+    next() {
+        if (!this.hasNext()) {
+            return null;
+        }
+        this.pos++;
+        return new DomQuery(this.values[this.pos]);
+    }
+    lookAhead(cnt = 1) {
+        if ((this.values.length - 1) < (this.pos + cnt)) {
+            return SourcesCollectors_1.ITERATION_STATUS.EO_STRM;
+        }
+        return new DomQuery(this.values[this.pos + cnt]);
+    }
+    current() {
+        if (this.pos == -1) {
+            return SourcesCollectors_1.ITERATION_STATUS.BEF_STRM;
+        }
+        return new DomQuery(this.values[this.pos]);
+    }
+    reset() {
+        this.pos = -1;
+    }
+    attachShadow(params = { mode: "open" }) {
+        let shadowRoots = [];
+        this.eachElem((item) => {
+            let shadowElement;
+            if (item === null || item === void 0 ? void 0 : item.attachShadow) {
+                shadowElement = DomQuery.byId(item.attachShadow(params));
+                shadowRoots.push(shadowElement);
+            }
+            else {
+                throw new Error("Shadow dom creation not supported by the browser, please use a shim, to gain this functionality");
+            }
+        });
+        return new DomQuery(...shadowRoots);
+    }
+    /**
+     * helper to fix a common dom problem
+     * we have to wait until a certain condition is met, in most of the cases we just want to know whether an element is present in the sub dom-tree before being able to proceed
+     * @param condition
+     * @param options
+     */
+    waitUntilDom(condition, options = {
+        attributes: true,
+        childList: true,
+        subtree: true,
+        timeout: 500,
+        interval: 100
+    }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return waitUntilDom(this, condition, options);
+        });
+    }
+    /**
+     * returns the embedded shadow elements
+     */
+    get shadowElements() {
+        let shadowElements = this.querySelectorAll("*")
+            .filter(item => item.hasShadow);
+        let mapped = (shadowElements.allElems() || []).map(element => element.shadowRoot);
+        return new DomQuery(...mapped);
+    }
+    get shadowRoot() {
+        let shadowRoots = [];
+        for (let cnt = 0; cnt < this.rootNode.length; cnt++) {
+            if (this.rootNode[cnt].shadowRoot) {
+                shadowRoots.push(this.rootNode[cnt].shadowRoot);
+            }
+        }
+        return new DomQuery(...shadowRoots);
+    }
+    get hasShadow() {
+        for (let cnt = 0; cnt < this.rootNode.length; cnt++) {
+            if (this.rootNode[cnt].shadowRoot) {
+                return true;
+            }
+        }
+        return false;
+    }
+    // from
+    // http:// blog.vishalon.net/index.php/javascript-getting-and-setting-caret-position-in-textarea/
+    static getCaretPosition(ctrl) {
+        let caretPos = 0;
+        try {
+            if (document === null || document === void 0 ? void 0 : document.selection) {
+                ctrl.focus();
+                let selection = document.selection.createRange();
+                // the selection now is start zero
+                selection.moveStart('character', -ctrl.value.length);
+                // the caret-position is the selection start
+                caretPos = selection.text.length;
+            }
+        }
+        catch (e) {
+            // now this is ugly, but not supported input types throw errors for selectionStart
+            // just in case someone dumps this code onto unsupported browsers
+        }
+        return caretPos;
+    }
+    /**
+     * sets the caret position
+     *
+     * @param ctrl the control to set the caret position to
+     * @param pos the position to set
+     *
+     * note if the control does not have any selectable and focusable behavior
+     * calling this method does nothing (silent fail)
+     *
+     */
+    static setCaretPosition(ctrl, pos) {
+        (ctrl === null || ctrl === void 0 ? void 0 : ctrl.focus) ? ctrl === null || ctrl === void 0 ? void 0 : ctrl.focus() : null;
+        // the selection range is our caret position
+        (ctrl === null || ctrl === void 0 ? void 0 : ctrl.setSelectiongRange) ? ctrl === null || ctrl === void 0 ? void 0 : ctrl.setSelectiongRange(pos, pos) : null;
+    }
+    /**
+     * Implementation of an iterator
+     * to allow loops over dom query collections
+     */
+    [Symbol.iterator]() {
+        return {
+            next: () => {
+                let done = !this.hasNext();
+                let val = this.next();
+                return {
+                    done: done,
+                    value: val
+                };
+            }
+        };
+    }
+    /**
+     * Concatenates the elements of two Dom Queries into a single one
+     * @param toAttach the elements to attach
+     * @param filterDoubles filter out possible double elements (aka same markup)
+     */
+    concat(toAttach, filterDoubles = true) {
+        let domQueries = this.asArray;
+        const ret = new DomQuery(...domQueries.concat(toAttach.asArray));
+        // we now filter the doubles out
+        if (!filterDoubles) {
+            return ret;
+        }
+        let idx = {}; // ie11 does not support sets, we have to fake it
+        return new DomQuery(...ret.asArray.filter(node => {
+            const notFound = !(idx === null || idx === void 0 ? void 0 : idx[node.value.value.outerHTML]);
+            idx[node.value.value.outerHTML] = true;
+            return notFound;
+        }));
+    }
+    append(elem) {
+        this.each(item => elem.appendTo(item));
+        return this;
+    }
+    prependTo(elem) {
+        elem.eachElem(item => {
+            item.prepend(...this.allElems());
+        });
+        return this;
+    }
+    prepend(elem) {
+        this.eachElem(item => {
+            item.prepend(...elem.allElems());
+        });
+        return this;
+    }
+    /**
+     * query selector all on the existing dom queryX object
+     *
+     * @param selector the standard selector
+     * @return a DomQuery with the results
+     */
+    _querySelectorAll(selector) {
+        var _a, _b;
+        if (!((_a = this === null || this === void 0 ? void 0 : this.rootNode) === null || _a === void 0 ? void 0 : _a.length)) {
+            return this;
+        }
+        let nodes = [];
+        for (let cnt = 0; cnt < this.rootNode.length; cnt++) {
+            if (!((_b = this.rootNode[cnt]) === null || _b === void 0 ? void 0 : _b.querySelectorAll)) {
+                continue;
+            }
+            let res = this.rootNode[cnt].querySelectorAll(selector);
+            nodes = nodes.concat(...objToArray(res));
+        }
+        return new DomQuery(...nodes);
+    }
+    /*deep with a selector and a pseudo /shadow/ marker to break into the next level*/
+    _querySelectorAllDeep(selector) {
+        var _a;
+        if (!((_a = this === null || this === void 0 ? void 0 : this.rootNode) === null || _a === void 0 ? void 0 : _a.length)) {
+            return this;
+        }
+        let foundNodes = new DomQuery(...this.rootNode);
+        let selectors = selector.split(/\/shadow\//);
+        for (let cnt2 = 0; cnt2 < selectors.length; cnt2++) {
+            if (selectors[cnt2] == "") {
+                continue;
+            }
+            let levelSelector = selectors[cnt2];
+            foundNodes = foundNodes.querySelectorAll(levelSelector);
+            if (cnt2 < selectors.length - 1) {
+                foundNodes = foundNodes.shadowRoot;
+            }
+        }
+        return foundNodes;
+    }
+    /**
+     * query selector all on the existing dom queryX object
+     *
+     * @param selector the standard selector
+     * @return a DomQuery with the results
+     */
+    _closest(selector) {
+        var _a, _b;
+        if (!((_a = this === null || this === void 0 ? void 0 : this.rootNode) === null || _a === void 0 ? void 0 : _a.length)) {
+            return this;
+        }
+        let nodes = [];
+        for (let cnt = 0; cnt < this.rootNode.length; cnt++) {
+            if (!((_b = this.rootNode[cnt]) === null || _b === void 0 ? void 0 : _b.closest)) {
+                continue;
+            }
+            let res = [this.rootNode[cnt].closest(selector)];
+            nodes = nodes.concat(...res);
+        }
+        return new DomQuery(...nodes);
+    }
+    /*deep with a selector and a pseudo /shadow/ marker to break into the next level*/
+    _closestDeep(selector) {
+        var _a;
+        if (!((_a = this === null || this === void 0 ? void 0 : this.rootNode) === null || _a === void 0 ? void 0 : _a.length)) {
+            return this;
+        }
+        let foundNodes = new DomQuery(...this.rootNode);
+        let selectors = selector.split(/\/shadow\//);
+        for (let cnt2 = 0; cnt2 < selectors.length; cnt2++) {
+            if (selectors[cnt2] == "") {
+                continue;
+            }
+            let levelSelector = selectors[cnt2];
+            foundNodes = foundNodes.closest(levelSelector);
+            if (cnt2 < selectors.length - 1) {
+                foundNodes = foundNodes.shadowRoot;
+            }
+        }
+        return foundNodes;
+    }
+    // source: https:// developer.mozilla.org/en-US/docs/Web/API/Element/matches
+    // code snippet license: https:// creativecommons.org/licenses/by-sa/2.5/
+    /**
+     * matches selector call in a browser independent manner
+     *
+     * @param toMatch
+     * @param selector
+     * @private
+     */
+    _mozMatchesSelector(toMatch, selector) {
+        let prototypeOwner = toMatch;
+        let matchesSelector = prototypeOwner.matches ||
+            prototypeOwner.matchesSelector ||
+            prototypeOwner.mozMatchesSelector ||
+            prototypeOwner.msMatchesSelector ||
+            prototypeOwner.oMatchesSelector ||
+            prototypeOwner.webkitMatchesSelector ||
+            function (s) {
+                let matches = (document || ownerDocument).querySelectorAll(s), i = matches.length;
+                while (--i >= 0 && matches.item(i) !== toMatch) {
+                }
+                return i > -1;
+            };
+        return matchesSelector.call(toMatch, selector);
+    }
+    /**
+     * sticky non-sticky unified code of the load script eval
+     * implementation if programmatic &gt;script src="... loading
+     *
+     * @param sticky if set to true a head element is left in the dom tree after the script has loaded
+     *
+     * @param src the sec to load
+     * @param delay delay the script loading x ms (default immediately === 0)
+     * @param nonce optional nonce token to be passed into the script tag
+     * @private
+     */
+    _loadScriptEval(sticky, src, delay = 0, nonce) {
+        let srcNode = this.createSourceNode(src, nonce);
+        let nonceCheck = this.createSourceNode(null, nonce);
+        let marker = `nonce_${Date.now()}_${Math.random()}`;
+        nonceCheck.innerHTML = `document.head["${marker}"] = true`; // noop
+        let head = document.head;
+        //  upfront nonce check, needed mostly for testing
+        //  but cannot hurt to block src calls which have invalid nonce on localhost
+        // the reason for doing this up until now we have a similar construct automatically
+        // by loading the scripts via xhr and then embedding them.
+        // this is not needed anymore but the nonce is more relaxed with script src
+        // we now enforce it the old way
+        head.appendChild(nonceCheck);
+        head.removeChild(nonceCheck);
+        if (!head[marker]) {
+            return;
+        }
+        try {
+            if (!delay) {
+                head.appendChild(srcNode);
+                if (!sticky) {
+                    head.removeChild(srcNode);
+                }
+            }
+            else {
+                setTimeout(() => {
+                    head.appendChild(srcNode);
+                    if (!sticky) {
+                        head.removeChild(srcNode);
+                    }
+                }, delay);
+            }
+        }
+        finally {
+            delete head[marker];
+        }
+        return this;
+    }
+    /**
+     * resolves an attribute holder compared
+     * @param attrName the attribute name
+     */
+    resolveAttributeHolder(attrName = "value") {
+        let ret = [];
+        ret[attrName] = null;
+        return (attrName in this.getAsElem(0).value) ?
+            this.getAsElem(0).value :
+            ret;
+    }
+    createSourceNode(src, nonce) {
+        let srcNode = document.createElement("script");
+        srcNode.type = "text/javascript";
+        if (!!nonce) {
+            if ('undefined' != typeof (srcNode === null || srcNode === void 0 ? void 0 : srcNode.nonce)) {
+                srcNode.nonce = nonce;
+            }
+            else {
+                srcNode.setAttribute("nonce", nonce);
+            }
+        }
+        if (!!src) {
+            srcNode.src = src;
+        }
+        return srcNode;
+    }
+    applyNonce(nonce, script) {
+        if (nonce) {
+            if ('undefined' != typeof (script === null || script === void 0 ? void 0 : script.nonce)) {
+                script.nonce = nonce;
+            }
+            else {
+                script.setAttribute("nonce", nonce);
+            }
+        }
+    }
+}
+DomQuery.absent = new DomQuery();
+/**
+ * reference to the environmental global object
+ */
+DomQuery.global = Global_1._global$;
+exports.DomQuery = DomQuery;
+/**
+ * Various collectors
+ * which can be used in conjunction with Streams
+ */
+/**
+ * A collector which bundles a full dom query stream into a single dom query element
+ *
+ * This connects basically our stream back into DomQuery
+ */
+class DomQueryCollector {
+    constructor() {
+        this.data = [];
+    }
+    collect(element) {
+        this.data.push(element);
+    }
+    get finalValue() {
+        return new DomQuery(...this.data);
+    }
+}
+exports.DomQueryCollector = DomQueryCollector;
+/**
+ * abbreviation for DomQuery
+ */
+exports.DQ = DomQuery;
+// noinspection JSUnusedGlobalSymbols
+/**
+ * replacement for the jquery $
+ */
+exports.DQ$ = DomQuery.querySelectorAll;
+
+
+/***/ }),
+
+/***/ "./node_modules/mona-dish/src/main/typescript/Es2019Array.ts":
+/*!*******************************************************************!*\
+  !*** ./node_modules/mona-dish/src/main/typescript/Es2019Array.ts ***!
+  \*******************************************************************/
 /***/ ((__unused_webpack_module, exports) => {
 
-!function(){"use strict";var e={447:function(e,t,r){r.r(t),r.d(t,{append:function(){return i},appendIf:function(){return a},assign:function(){return s},assignIf:function(){return o},buildPath:function(){return v},deepCopy:function(){return p},resolve:function(){return u},shallowMerge:function(){return m},simpleShallowMerge:function(){return g}});var n=r(484);class l{constructor(e){this.parent=e}set value(e){}get value(){return this.parent}}function s(e,...t){if(t.length<1)return new l(e);const r=v(e,...t);return new class{set value(e){r.target[r.key]=e}get value(){return r.target[r.key]}}}function i(e,...t){if(t.length<1)return new l(e);const r=v(e,...t);return new class{set value(e){Array.isArray(e)||(e=[e]),r.target[r.key]?(Array.isArray(r.target[r.key])||(r.target[r.key]=[r.target[r.key]]),r.target[r.key].push(...e)):r.target[r.key]=e}}}function o(e,t,...r){return!e||r.length<1?new l(t):s(t,...r)}function a(e,t,...r){return!e||r.length<1?new l(t):i(t,...r)}function u(e,...t){let r=null;t=f(t);let n=e;for(let e=0;e<t.length;e++){let l=t[e];if(l=-1!=c(l)?c(l):l,n=null==n?void 0:n[l],void 0===n)return null;r=n}return n}function h(e){let t=e.indexOf("[");return t>=0?e.substring(0,t):e}function c(e){let t=e.indexOf("["),r=e.indexOf("]");return t>=0&&r>0&&t<r?parseInt(e.substring(t+1,r)):-1}function d(e,t,r={}){let n=[];n.length=t,n[t-1]=r,e.push(...n)}function f(e){return new n.Es2019Array(...e).flatMap((e=>e.split("["))).map((e=>-1!=e.indexOf("]")?"["+e:e)).filter((e=>""!=e))}function v(e,...t){t=f(t);let r=e,n=null,l=null,s=-1;for(let e=0;e<t.length;e++)if(l=h(t[e]),s=c(t[e]),-1!=s){if(!Array.isArray(r))throw Error("Associative array referenced as index array in path reference");let l=-1;e<t.length-1&&(l=c(t[e+1]));let i=void 0!==(null==r?void 0:r[s]);d(r,s+1,-1!=l?[]:{}),n=s,e==t.length-1?r[s]=i?r[s]:null:r=r[s]}else{if(Array.isArray(r))throw Error("Index array referenced as associative array in path reference");let s=-1;e<t.length-1&&(s=c(t[e+1])),n=l;let i=void 0!==(null==r?void 0:r[l]);e==t.length-1?i||(r[l]=null):(i||(r[l]=-1==s?{}:[]),r=r[l])}return{target:r,key:n}}function p(e){return JSON.parse(JSON.stringify(e))}function g(...e){return m(!0,!1,...e)}function m(e=!0,t=!1,...r){let l={};return new n.Es2019Array(...r).map((e=>({arr:e,keys:Object.keys(e)}))).forEach((({arr:r,keys:s})=>{s.forEach((s=>{let i=r[s];if(!Array.isArray(i)&&t&&(i=new n.Es2019Array(...[i])),e||!(null==l?void 0:l[s]))if(t)if(void 0===(null==l?void 0:l[s]))l[s]=i;else if(Array.isArray(l[s]))l[s].push(...i);else{let e=l[s];l[s]=new n.Es2019Array(...[]),l[s].push(e),l[s].push(...i)}else l[s]=r[s]}))})),l}},549:function(e,t,r){r.d(t,{De:function(){return c},ac:function(){return u},ko:function(){return h}});var n=r(484),l=r(152),s=r(805),i=r(447),o=s.Lang.objAssign;class a extends l.ValueEmbedder{constructor(e,t,r){super(e,t),this.arrPos=null!=r?r:-1}get value(){return""==this.key&&this.arrPos>=0?this._value[this.arrPos]:this.key&&this.arrPos>=0?this._value[this.key][this.arrPos]:this._value[this.key]}set value(e){""==this.key&&this.arrPos>=0?this._value[this.arrPos]=e:this.key&&this.arrPos>=0?this._value[this.key][this.arrPos]=e:this._value[this.key]=e}}a.absent=a.fromNullable(null);const u="__END_POINT__",h="__ANY_POINT__";class c extends l.Optional{constructor(e,t){super(e),this.configDef=t}get shallowCopy(){return this.shallowCopy$()}shallowCopy$(){let e=new c({});return e.shallowMerge(this.value),e}get deepCopy(){return this.deepCopy$()}deepCopy$(){return new c(o({},this.value))}static fromNullable(e){return new c(e)}shallowMerge(e,t=!0,r=!1){let n=(0,i.shallowMerge)(t,r,this.value,e.value);Array.isArray(this._value)?(this._value.length=0,this._value.push(...n)):(Object.getOwnPropertyNames(this._value).forEach((e=>delete this._value[e])),Object.getOwnPropertyNames(n).forEach((e=>this._value[e]=n[e])))}append(...e){return(0,i.append)(this._value,...e)}appendIf(e,...t){return(0,i.appendIf)(e,this._value,...t)}assign(...e){return(0,i.assign)(this.value,...e)}assignIf(e,...t){return(0,i.assignIf)(e,this._value,...t)}getIf(...e){return this.assertAccessPath(...e),this.getClass().fromNullable((0,i.resolve)(this.value,...e))}get(e){return this.getClass().fromNullable(super.get(e).value)}delete(e){return e in this.value&&delete this.value[e],this}toJson(){return JSON.stringify(this.value)}getClass(){return c}setVal(e){this._value=e}assertAccessPath(...e){var t,r,s,i,o,a,u,c,d;if(e=this.preprocessKeys(...e),!this.configDef)return;let f=l.Optional.fromNullable(Object.keys(this.configDef).map((e=>{let t={};return t[e]=this.configDef[e],t})));for(let v=0;v<e.length;v++){let p=this.keyVal(e[v]),g=this.arrayIndex(e[v]);if(f=this.isArray(g)?""!=p?Array.isArray(f.value)?l.Optional.fromNullable(null===(r=null===(t=new n.Es2019Array(...f.value).find((e=>{var t;return!(null===(t=null==e?void 0:e[p])||void 0===t||!t)})))||void 0===t?void 0:t[p])||void 0===r?void 0:r[g]):l.Optional.fromNullable(null!==(o=null===(i=null===(s=f.value)||void 0===s?void 0:s[p])||void 0===i?void 0:i[g])&&void 0!==o?o:null):Array.isArray(f.value)?l.Optional.fromNullable(null===(a=f.value)||void 0===a?void 0:a[g]):l.Optional.absent:Array.isArray(f.value)?l.Optional.fromNullable(null===(u=new n.Es2019Array(...f.value).find((e=>{var t;return!(null===(t=null==e?void 0:e[p])||void 0===t||!t)})))||void 0===u?void 0:u[p]):l.Optional.fromNullable(null!==(d=null===(c=f.value)||void 0===c?void 0:c[p])&&void 0!==d?d:null),!f.isPresent())throw Error("Access Path to config invalid");if(f.value==h)return}}isNoArray(e){return-1==e}isArray(e){return!this.isNoArray(e)}}},585:function(e,t,r){r.d(t,{DQ:function(){return w},DQ$:function(){return E},DomQuery:function(){return y},DomQueryCollector:function(){return b},ElementAttribute:function(){return p}});var n,l=r(152),s=r(255),i=r(805),o=r(456),a=r(484),u=r(447),h=function(e,t,r,n){return new(r||(r=Promise))((function(l,s){function i(e){try{a(n.next(e))}catch(e){s(e)}}function o(e){try{a(n.throw(e))}catch(e){s(e)}}function a(e){var t;e.done?l(e.value):(t=e.value,t instanceof r?t:new r((function(e){e(t)}))).then(i,o)}a((n=n.apply(e,t||[])).next())}))},c=i.Lang.trim,d=i.Lang.isString,f=i.Lang.equalsIgnoreCase,v=i.Lang.objToArray;!function(e){e.SELECT="select",e.BUTTON="button",e.SUBMIT="submit",e.RESET="reset",e.IMAGE="image",e.RADIO="radio",e.CHECKBOX="checkbox"}(n||(n={}));class p extends l.ValueEmbedder{constructor(e,t,r=null){super(e,t),this.element=e,this.name=t,this.defaultVal=r}get value(){let e=this.element.get(0).orElse().values;return e.length?e[0].getAttribute(this.name):this.defaultVal}set value(e){let t=this.element.get(0).orElse().values;for(let r=0;r<t.length;r++)t[r].setAttribute(this.name,e);t[0].setAttribute(this.name,e)}getClass(){return p}static fromNullable(e,t="value"){return new p(e,t)}}class g extends l.ValueEmbedder{constructor(e,t,r=null){super(e,t),this.element=e,this.name=t,this.defaultVal=r}get value(){let e=this.element.values;return e.length?e[0].style[this.name]:this.defaultVal}set value(e){let t=this.element.values;for(let r=0;r<t.length;r++)t[r].style[this.name]=e}getClass(){return p}static fromNullable(e,t="value"){return new p(e,t)}}const m=()=>!0;class y{constructor(...e){if(this.rootNode=[],this.pos=-1,this._limits=-1,!l.Optional.fromNullable(e).isAbsent()&&e.length)for(let t=0;t<e.length;t++)if(e[t])if(d(e[t])){let r=y.querySelectorAll(e[t]);r.isAbsent()||e.push(...r.values)}else e[t]instanceof y?this.rootNode.push(...e[t].values):this.rootNode.push(e[t]);else;}get value(){return this.getAsElem(0)}get values(){return this.allElems()}get global(){return o.R}get stream(){throw Error("Not implemented, include Stream.ts for this to work")}get lazyStream(){throw Error("Not implemented, include Stream.ts for this to work")}get id(){return new p(this.get(0),"id")}get length(){return this.rootNode.length}get tagName(){return this.getAsElem(0).getIf("tagName")}get nodeName(){return this.getAsElem(0).getIf("nodeName")}isTag(e){return!this.isAbsent()&&(this.nodeName.orElse("__none___").value.toLowerCase()==e.toLowerCase()||this.tagName.orElse("__none___").value.toLowerCase()==e.toLowerCase())}get type(){return this.getAsElem(0).getIf("type")}get name(){return new l.ValueEmbedder(this.getAsElem(0).value,"name")}get inputValue(){return this.getAsElem(0).getIf("value").isPresent()?new l.ValueEmbedder(this.getAsElem(0).value):l.ValueEmbedder.absent}get val(){return this.inputValue.value}set val(e){this.inputValue.value=e}get nodeId(){return this.id.value}set nodeId(e){this.id.value=e}get checked(){return new a.Es2019Array(...this.values).every((e=>!!e.checked))}set checked(e){this.eachElem((t=>t.checked=e))}get elements(){return this.querySelectorAll("input, checkbox, select, textarea, fieldset")}get deepElements(){return this.querySelectorAllDeep("input, select, textarea, checkbox, fieldset")}querySelectorAllDeep(e){let t=[],r=this.querySelectorAll(e);r.length&&t.push(r);let n=this.querySelectorAll("*").shadowRoot;if(n.length){let r=n.querySelectorAllDeep(e);r.length&&t.push(r)}return new y(...t)}get disabled(){return this.attr("disabled").isPresent()}set disabled(e){e?this.attr("disabled").value="disabled":this.removeAttribute("disabled")}removeAttribute(e){this.eachElem((t=>t.removeAttribute(e)))}get childNodes(){let e=[];return this.eachElem((t=>{e=e.concat(v(t.childNodes))})),new y(...e)}get asArray(){return new a.Es2019Array(...this.rootNode).filter((e=>null!=e)).map((e=>y.byId(e)))}get offsetWidth(){return new a.Es2019Array(...this.rootNode).filter((e=>null!=e)).map((e=>e.offsetWidth)).reduce(((e,t)=>e+t),0)}get offsetHeight(){return new a.Es2019Array(...this.rootNode).filter((e=>null!=e)).map((e=>e.offsetHeight)).reduce(((e,t)=>e+t),0)}get offsetLeft(){return new a.Es2019Array(...this.rootNode).filter((e=>null!=e)).map((e=>e.offsetLeft)).reduce(((e,t)=>e+t),0)}get offsetTop(){return new a.Es2019Array(this.rootNode).filter((e=>null!=e)).map((e=>e.offsetTop)).reduce(((e,t)=>e+t),0)}get asNodeArray(){return new a.Es2019Array(...this.rootNode.filter((e=>null!=e)))}static querySelectorAllDeep(e){return new y(document).querySelectorAllDeep(e)}static querySelectorAll(e){return-1!=e.indexOf("/shadow/")?new y(document)._querySelectorAllDeep(e):new y(document)._querySelectorAll(e)}static byId(e,t=!1){return d(e)?t?new y(document).byIdDeep(e):new y(document).byId(e):new y(e)}static byTagName(e){return d(e)?new y(document).byTagName(e):new y(e)}static globalEval(e,t){return new y(document).globalEval(e,t)}static globalEvalSticky(e,t){return new y(document).globalEvalSticky(e,t)}static fromMarkup(e){const t=document.implementation.createHTMLDocument("");let r=(e=c(e)).toLowerCase();if(-1!=r.search(/<!doctype[^\w\-]+/gi)||-1!=r.search(/<html[^\w\-]+/gi)||-1!=r.search(/<head[^\w\-]+/gi)||-1!=r.search(/<body[^\w\-]+/gi))return t.documentElement.innerHTML=e,new y(t.documentElement);{let t=function(e,t){let r=["<",t,">"].join(""),n=["<",t," "].join("");return 0==e.indexOf(r)||0==e.indexOf(n)},n=new y(document.createElement("div"));return t(r,"thead")||t(r,"tbody")?(n.html(`<table>${e}</table>`),n.querySelectorAll("table").get(0).childNodes.detach()):t(r,"tfoot")?(n.html(`<table><thead></thead><tbody><tbody${e}</table>`),n.querySelectorAll("table").get(2).childNodes.detach()):t(r,"tr")?(n.html(`<table><tbody>${e}</tbody></table>`),n.querySelectorAll("tbody").get(0).childNodes.detach()):t(r,"td")?(n.html(`<table><tbody><tr>${e}</tr></tbody></table>`),n.querySelectorAll("tr").get(0).childNodes.detach()):(n.html(e),n.childNodes.detach())}}get(e){return e<this.rootNode.length?new y(this.rootNode[e]):y.absent}getAsElem(e,t=l.Optional.absent){return e<this.rootNode.length?l.Optional.fromNullable(this.rootNode[e]):t}filesFromElem(e){var t;return e<this.rootNode.length&&(null===(t=this.rootNode[e])||void 0===t?void 0:t.files)?this.rootNode[e].files:[]}allElems(){return this.rootNode}isAbsent(){return 0==this.length}isPresent(e){let t=this.isAbsent();return!t&&e&&e.call(this,this),!t}ifPresentLazy(e=function(){}){return this.isPresent.call(this,e),this}delete(){this.eachElem((e=>{e.parentNode&&e.parentNode.removeChild(e)}))}querySelectorAll(e){return-1!=e.indexOf("/shadow/")?this._querySelectorAllDeep(e):this._querySelectorAll(e)}closest(e){return-1!=e.indexOf("/shadow/")?this._closestDeep(e):this._closest(e)}byId(e,t){let r=[];return t&&(r=r.concat(...new a.Es2019Array(...(null==this?void 0:this.rootNode)||[]).filter((t=>e==t.id)).map((e=>new y(e))))),r=r.concat(this.querySelectorAll(`[id="${e}"]`)),new y(...r)}byIdDeep(e,t){let r=[];t&&(r=r.concat(new a.Es2019Array(...(null==this?void 0:this.rootNode)||[]).filter((t=>e==t.id)).map((e=>new y(e)))));let n=this.querySelectorAllDeep(`[id="${e}"]`);return n.length&&r.push(n),new y(...r)}byTagName(e,t,r){var n;let l=[];return t&&(l=new a.Es2019Array(...null!==(n=null==this?void 0:this.rootNode)&&void 0!==n?n:[]).filter((t=>(null==t?void 0:t.tagName)==e)).reduce(((e,t)=>e.concat([t])),l)),r?l.push(this.querySelectorAllDeep(e)):l.push(this.querySelectorAll(e)),new y(...l)}attr(e,t=null){return new p(this,e,t)}style(e,t=null){return new g(this,e,t)}hasClass(e){let t=!1;return this.eachElem((r=>{if(t=r.classList.contains(e),t)return!1})),t}addClass(e){return this.eachElem((t=>t.classList.add(e))),this}removeClass(e){return this.eachElem((t=>t.classList.remove(e))),this}isMultipartCandidate(e=!1){const t="input[type='file']";return this.matchesSelector(t)||(e?this.querySelectorAllDeep(t):this.querySelectorAll(t)).first().isPresent()}html(e){return l.Optional.fromNullable(e).isAbsent()?this.isPresent()?l.Optional.fromNullable(this.innerHTML):l.Optional.absent:(this.innerHTML=e,this)}dispatchEvent(e){return this.eachElem((t=>t.dispatchEvent(e))),this}set innerHTML(e){this.eachElem((t=>t.innerHTML=e))}get innerHTML(){let e=[];return this.eachElem((t=>e.push(t.innerHTML))),e.join("")}set innerHtml(e){this.innerHTML=e}get innerHtml(){return this.innerHTML}filterSelector(e){let t=[];return this.eachElem((r=>{this._mozMatchesSelector(r,e)&&t.push(r)})),new y(...t)}matchesSelector(e){return this.asArray.some((t=>this._mozMatchesSelector(t.getAsElem(0).value,e)))}getIf(...e){let t=this.childNodes;for(let r=0;r<e.length;r++)if(t=t.filterSelector(e[r]),t.isAbsent())return t;return t}eachElem(e){for(let t=0,r=this.rootNode.length;t<r&&!1!==e(this.rootNode[t],t);t++);return this}firstElem(e=(e=>e)){return this.rootNode.length>1&&e(this.rootNode[0],0),this}lastElem(e=(e=>e)){return this.rootNode.length>1&&e(this.rootNode[this.rootNode.length-1],0),this}each(e){return new a.Es2019Array(...this.rootNode).forEach(((t,r)=>{if(null!=t)return e(y.byId(t),r)})),this}replace(e){return this.each((t=>{let r=t.getAsElem(0).value,n=r.parentElement,l=r.nextElementSibling,s=r.previousElementSibling;null!=l?new y(l).insertBefore(e):s?new y(s).insertAfter(e):new y(n).append(e),t.delete()})),e}first(e=(e=>e)){return this.rootNode.length>=1?(e(this.get(0),0),this.get(0)):this}last(e=(e=>e)){if(this.rootNode.length>=1){let t=this.get(this.rootNode.length-1);return e(t,0),t}return this}filter(e){let t=[];return this.each((r=>{e(r)&&t.push(r)})),new y(...t)}globalEval(e,t){var r,n,l;const s=null!==(n=null===(r=document.getElementsByTagName("head"))||void 0===r?void 0:r[0])&&void 0!==n?n:null===(l=document.documentElement.getElementsByTagName("head"))||void 0===l?void 0:l[0],i=document.createElement("script");t&&(void 0!==(null==i?void 0:i.nonce)?i.nonce=t:i.setAttribute("nonce",t)),i.type="text/javascript",i.innerHTML=e;let o=s.appendChild(i);return s.removeChild(o),this}globalEvalSticky(e,t){let r=document.getElementsByTagName("head")[0]||document.documentElement,n=document.createElement("script");return this.applyNonce(t,n),n.type="text/javascript",n.innerHTML=e,r.appendChild(n),this}detach(){return this.eachElem((e=>{e.parentNode.removeChild(e)})),this}appendTo(e){return i.Lang.isString(e)?(this.appendTo(y.querySelectorAll(e)),this):(this.eachElem((t=>{e.getAsElem(0).orElseLazy((()=>({appendChild:()=>{}}))).value.appendChild(t)})),this)}loadScriptEval(e,t=0,r){return this._loadScriptEval(!1,e,t,r),this}loadScriptEvalSticky(e,t=0,r){return this._loadScriptEval(!0,e,t,r),this}insertAfter(...e){this.each((t=>{let r=t.getAsElem(0).value,n=r.parentNode;for(let t=0;t<e.length;t++){let l=r.nextSibling;e[t].eachElem((e=>{l?(n.insertBefore(e,l),r=l):n.appendChild(e)}))}}));let t=[];return t.push(this),t=t.concat(e),new y(...t)}insertBefore(...e){this.each((t=>{let r=t.getAsElem(0).value,n=r.parentNode;for(let t=0;t<e.length;t++)e[t].eachElem((e=>{n.insertBefore(e,r)}))}));let t=[];return t.push(this),t=t.concat(e),new y(...t)}orElse(...e){return this.isPresent()?this:new y(...e)}orElseLazy(e){return this.isPresent()?this:new y(e())}allParents(e){let t=this.parent(),r=[];for(;t.isPresent();)t.matchesSelector(e)&&r.push(t),t=t.parent();return new y(...r)}firstParent(e){let t=this.parent();for(;t.isPresent();){if(t.matchesSelector(e))return t;t=t.parent()}return y.absent}parentsWhileMatch(e){const t=[];let r=this.parent().filter((t=>t.matchesSelector(e)));for(;r.isPresent();)t.push(r),r=r.parent().filter((t=>t.matchesSelector(e)));return new y(...t)}parent(){let e=[];return this.eachElem((t=>{let r=t.parentNode||t.host||t.shadowRoot;r&&-1==e.indexOf(r)&&e.push(r)})),new y(...e)}copyAttrs(e){return e.eachElem((e=>{let t=v(e.attributes);for(let e of t){let t=e.value,r=e.name;switch(r){case"id":this.id.value=t;break;case"disabled":this.resolveAttributeHolder("disabled").disabled=t;break;case"checked":this.resolveAttributeHolder("checked").checked=t;break;default:this.attr(r).value=t}}})),this}outerHTML(e,t,r,n=!1){var l;if(this.isAbsent())return;let s=null===(l=null===document||void 0===document?void 0:document.activeElement)||void 0===l?void 0:l.id,i=s?y.getCaretPosition(document.activeElement):null,o=y.fromMarkup(e),a=[],u=this.getAsElem(0).value,h=o.get(0),c=u.parentNode,d=h.getAsElem(0).value;if(c.replaceChild(d,u),a.push(new y(d)),this.isAbsent())return this;let f=[];o.length>1&&(f=f.concat(...o.values.slice(1)),a.push(y.byId(d).insertAfter(new y(...f)))),t&&this.runScripts(),r&&this.runCss();let v=y.byId(s);return s&&v.isPresent()&&null!=i&&void 0!==i&&v.eachElem((e=>y.setCaretPosition(e,i))),o}runScripts(e=!1,t=m){const r=t=>{if(t.length){let r=[];new a.Es2019Array(...t).forEach((t=>{t.nonce?(r.length&&(this.globalEval(r.join("\n")),r.length=0),e?this.globalEvalSticky(t.evalText,t.nonce):this.globalEval(t.evalText,t.nonce)):r.push(t.evalText)})),r.length&&(e?this.globalEvalSticky(r.join("\n")):this.globalEval(r.join("\n")),r.length=0),t=[]}return t};let n=[],l=["","script","text/javascript","text/ecmascript","ecmascript"],s=s=>{var i,o,a,u;let h=s.tagName,d=(null!==(i=null==s?void 0:s.type)&&void 0!==i?i:"").toLowerCase();if(h&&f(h,"script")&&-1!=l.indexOf(d)){let l=s.getAttribute("src");if(void 0!==l&&null!=l&&l.length>0){let i=null!==(o=null==s?void 0:s.nonce)&&void 0!==o?o:s.getAttribute("nonce").value;t(l)&&(n=r(n),e?i?this.loadScriptEvalSticky(l,0,i):this.loadScriptEvalSticky(l,0):i?this.loadScriptEval(l,0,i):this.loadScriptEval(l,0))}else{let e=c(s.text||s.innerText||s.innerHTML),t=!0;for(;t;)t=!1,"\x3c!--"==e.substring(0,4)&&(e=e.substring(4),t=!0),"//\x3c!--"==e.substring(0,4)&&(e=e.substring(6),t=!0),"//<![CDATA["==e.substring(0,11)&&(e=e.substring(11),t=!0);let r=null!==(u=null!==(a=null==s?void 0:s.nonce)&&void 0!==a?a:s.getAttribute("nonce").value)&&void 0!==u?u:"";n.push({nonce:r,evalText:e})}}};try{new y(this.filterSelector("script"),this.querySelectorAll("script")).asArray.flatMap((e=>[...e.values])).sort(((e,t)=>e.compareDocumentPosition(t)-3)).forEach((e=>s(e))),r(n)}catch(e){console&&console.error&&console.error(e.message||e.description)}finally{s=null}return this}runCss(){return new y(this.filterSelector("link, style"),this.querySelectorAll("link, style")).asArray.flatMap((e=>[...e.values])).sort(((e,t)=>e.compareDocumentPosition(t)-3)).forEach((e=>(e=>{const t=y.byId(e),r=t.tagName.orElse("").value;let n=y.fromMarkup(`<${r.toLowerCase()} />`);n=n.copyAttrs(t),n.innerHTML=e.innerHTML,t.replace(n)})(e))),this}click(){return this.fireEvent("click"),this}addEventListener(e,t,r){return this.eachElem((n=>n.addEventListener(e,t,r))),this}removeEventListener(e,t,r){return this.eachElem((n=>n.removeEventListener(e,t,r))),this}fireEvent(e,t={}){let r={bubbles:!0,cancelable:!0};r=(0,u.simpleShallowMerge)(r,t),this.eachElem((t=>{let n;if(t.ownerDocument)n=t.ownerDocument;else{if(9!=t.nodeType)throw new Error("Invalid node passed to fireEvent: "+t.id);n=t}if(t.dispatchEvent){let n=Event;switch(e){case"click":case"mousedown":case"mouseup":case"mousemove":n=this.global().MouseEvent;break;case"keyup":case"keydown":case"keypress":n=this.global().KeyboardEvent;break;case"focus":case"change":case"blur":case"select":break;default:throw"fireEvent: Couldn't find an event class for event '"+e+"'."}let l=new n(e,r);l.synthetic=!0,t.dispatchEvent(l)}else if(t.fireEvent){let l=n.createEventObject();l.synthetic=!0,Object.keys(r).forEach((e=>l[e]=r[e])),t.fireEvent("on"+e,l)}}))}textContent(e=""){return this.asArray.map((e=>e.getAsElem(0).orElseLazy((()=>({textContent:""}))).value.textContent||"")).reduce(((t,r)=>[t,e,r].join("")),"")}innerText(e=""){return this.asArray.map((e=>e.getAsElem(0).orElseLazy((()=>({innerText:""}))).value.innerText||"")).reduce(((t,r)=>[t,r].join(e)),"")}encodeFormElement(e={}){if(this.name.isAbsent())return;let t=(0,u.simpleShallowMerge)(e);return this.each((e=>{var r,l;if(e.name.isAbsent())return;let s=e.name.value,i=e.tagName.orElse("__none__").value.toLowerCase(),o=e.type.orElse("__none__").value.toLowerCase();if(o=o.toLowerCase(),("input"==i||"textarea"==i||"select"==i)&&null!=s&&""!=s&&!e.disabled){if("select"==i){let r=e.getAsElem(0).value;if(r.selectedIndex>=0){let e=r.options.length;for(let n=0;n<e;n++)if(r.options[n].selected){let e=r.options[n];(0,u.append)(t,s).value=null!=e.getAttribute("value")?e.value:e.text}}}if(i!=n.SELECT&&o!=n.BUTTON&&o!=n.RESET&&o!=n.SUBMIT&&o!=n.IMAGE&&(o!=n.CHECKBOX&&o!=n.RADIO||e.checked)){let n=null===(l=null===(r=e.value)||void 0===r?void 0:r.value)||void 0===l?void 0:l.files,i=null!=n?n:[];if(null==i?void 0:i.length)(0,u.assign)(t,s).value=Array.from(i);else{if(n)return;(0,u.append)(t,s).value=e.inputValue.value}}}})),t}get cDATAAsString(){return this.asArray.flatMap((e=>e.childNodes.asArray)).filter((e=>{var t,r;return 4==(null===(r=null===(t=null==e?void 0:e.value)||void 0===t?void 0:t.value)||void 0===r?void 0:r.nodeType)})).reduce(((e,t)=>{var r,n,l;return e.push(null!==(l=null===(n=null===(r=null==t?void 0:t.value)||void 0===r?void 0:r.value)||void 0===n?void 0:n.data)&&void 0!==l?l:""),e}),[]).join("")}subNodes(e,t){return l.Optional.fromNullable(t).isAbsent()&&(t=this.length),new y(...this.rootNode.slice(e,Math.min(t,this.length)))}limits(e){return this._limits=e,this}hasNext(){let e=-1!=this._limits&&this.pos>=this._limits-1,t=this.pos>=this.values.length-1;return!(e||t)}next(){return this.hasNext()?(this.pos++,new y(this.values[this.pos])):null}lookAhead(e=1){return this.values.length-1<this.pos+e?s.dD.EO_STRM:new y(this.values[this.pos+e])}current(){return-1==this.pos?s.dD.BEF_STRM:new y(this.values[this.pos])}reset(){this.pos=-1}attachShadow(e={mode:"open"}){let t=[];return this.eachElem((r=>{let n;if(!(null==r?void 0:r.attachShadow))throw new Error("Shadow dom creation not supported by the browser, please use a shim, to gain this functionality");n=y.byId(r.attachShadow(e)),t.push(n)})),new y(...t)}waitUntilDom(e,t={attributes:!0,childList:!0,subtree:!0,timeout:500,interval:100}){return h(this,void 0,void 0,(function*(){return function(e,t,r={attributes:!0,childList:!0,subtree:!0,timeout:500,interval:100}){return new Promise(((n,l)=>{let s=null;const i=new Error("Mutation observer timeout");function o(e,t){let n=null;return t(e)?e:(n=r.childList?t(e)?e:e.childNodes.filter((e=>t(e))).first().value.value:r.subtree?t(e)?e:e.querySelectorAll(" * ").filter((e=>t(e))).first().value.value:t(e)?e:null,n)}let a=e;if(a=o(a,t))n(new y(a));else if("undefined"!=typeof MutationObserver){const o=setTimeout((()=>(s.disconnect(),l(i))),r.timeout),a=r=>{const l=new y(r.map((e=>e.target))).filter((e=>t(e))).first();l.isPresent()&&(clearTimeout(o),s.disconnect(),n(new y(l||e)))};s=new MutationObserver(a);let u=Object.assign({},r);delete u.timeout,e.eachElem((e=>{s.observe(e,u)}))}else{let s=setInterval((()=>{let r=o(e,t);r&&(a&&(clearTimeout(a),clearInterval(s),s=null),n(new y(r||e)))}),r.interval),a=setTimeout((()=>{s&&(clearInterval(s),l(i))}),r.timeout)}}))}(this,e,t)}))}get shadowElements(){let e=(this.querySelectorAll("*").filter((e=>e.hasShadow)).allElems()||[]).map((e=>e.shadowRoot));return new y(...e)}get shadowRoot(){let e=[];for(let t=0;t<this.rootNode.length;t++)this.rootNode[t].shadowRoot&&e.push(this.rootNode[t].shadowRoot);return new y(...e)}get hasShadow(){for(let e=0;e<this.rootNode.length;e++)if(this.rootNode[e].shadowRoot)return!0;return!1}static getCaretPosition(e){let t=0;try{if(null===document||void 0===document?void 0:document.selection){e.focus();let r=document.selection.createRange();r.moveStart("character",-e.value.length),t=r.text.length}}catch(e){}return t}static setCaretPosition(e,t){(null==e?void 0:e.focus)&&(null==e||e.focus()),(null==e?void 0:e.setSelectiongRange)&&(null==e||e.setSelectiongRange(t,t))}[Symbol.iterator](){return{next:()=>({done:!this.hasNext(),value:this.next()})}}concat(e,t=!0){let r=this.asArray;const n=new y(...r.concat(e.asArray));if(!t)return n;let l={};return new y(...n.asArray.filter((e=>{const t=!(null==l?void 0:l[e.value.value.outerHTML]);return l[e.value.value.outerHTML]=!0,t})))}append(e){return this.each((t=>e.appendTo(t))),this}prependTo(e){return e.eachElem((e=>{e.prepend(...this.allElems())})),this}prepend(e){return this.eachElem((t=>{t.prepend(...e.allElems())})),this}_querySelectorAll(e){var t,r;if(!(null===(t=null==this?void 0:this.rootNode)||void 0===t?void 0:t.length))return this;let n=[];for(let t=0;t<this.rootNode.length;t++){if(!(null===(r=this.rootNode[t])||void 0===r?void 0:r.querySelectorAll))continue;let l=this.rootNode[t].querySelectorAll(e);n=n.concat(...v(l))}return new y(...n)}_querySelectorAllDeep(e){var t;if(!(null===(t=null==this?void 0:this.rootNode)||void 0===t?void 0:t.length))return this;let r=new y(...this.rootNode),n=e.split(/\/shadow\//);for(let e=0;e<n.length;e++){if(""==n[e])continue;let t=n[e];r=r.querySelectorAll(t),e<n.length-1&&(r=r.shadowRoot)}return r}_closest(e){var t,r;if(!(null===(t=null==this?void 0:this.rootNode)||void 0===t?void 0:t.length))return this;let n=[];for(let t=0;t<this.rootNode.length;t++){if(!(null===(r=this.rootNode[t])||void 0===r?void 0:r.closest))continue;let l=[this.rootNode[t].closest(e)];n=n.concat(...l)}return new y(...n)}_closestDeep(e){var t;if(!(null===(t=null==this?void 0:this.rootNode)||void 0===t?void 0:t.length))return this;let r=new y(...this.rootNode),n=e.split(/\/shadow\//);for(let e=0;e<n.length;e++){if(""==n[e])continue;let t=n[e];r=r.closest(t),e<n.length-1&&(r=r.shadowRoot)}return r}_mozMatchesSelector(e,t){let r=e,n=r.matches||r.matchesSelector||r.mozMatchesSelector||r.msMatchesSelector||r.oMatchesSelector||r.webkitMatchesSelector||function(t){let r=(document||ownerDocument).querySelectorAll(t),n=r.length;for(;--n>=0&&r.item(n)!==e;);return n>-1};return n.call(e,t)}_loadScriptEval(e,t,r=0,n){let l=this.createSourceNode(t,n),s=this.createSourceNode(null,n),i=`nonce_${Date.now()}_${Math.random()}`;s.innerHTML=`document.head["${i}"] = true`;let o=document.head;if(o.appendChild(s),o.removeChild(s),o[i]){try{r?setTimeout((()=>{o.appendChild(l),e||o.removeChild(l)}),r):(o.appendChild(l),e||o.removeChild(l))}finally{delete o[i]}return this}}resolveAttributeHolder(e="value"){let t=[];return t[e]=null,e in this.getAsElem(0).value?this.getAsElem(0).value:t}createSourceNode(e,t){let r=document.createElement("script");return r.type="text/javascript",t&&(void 0!==(null==r?void 0:r.nonce)?r.nonce=t:r.setAttribute("nonce",t)),e&&(r.src=e),r}applyNonce(e,t){e&&(void 0!==(null==t?void 0:t.nonce)?t.nonce=e:t.setAttribute("nonce",e))}}y.absent=new y,y.global=o.R;class b{constructor(){this.data=[]}collect(e){this.data.push(e)}get finalValue(){return new y(...this.data)}}const w=y,E=y.querySelectorAll},484:function(e,t,r){r.d(t,{Es2019Array:function(){return s},_Es2019Array:function(){return l}});class n extends Array{constructor(...e){super(...e),e._another?this._another=e._another:this._another=e,this.flatMap=e=>this._flatMap(e),this.flat=(e=1)=>this._flat(e)}map(e,t){return new l(...Array.prototype.map.call(this._another,e,t))}concat(...e){return new l(...Array.prototype.concat.call(this._another,...e))}reverse(){return new l(...Array.prototype.reverse.call(this._another))}slice(e,t){return new l(...Array.prototype.slice.call(this._another,e,t))}splice(e,t){return new l(...Array.prototype.splice.call(this._another,e,t))}filter(e,t){return new l(...Array.prototype.filter.call(this._another,e,t))}reduce(e,t){return Array.prototype.reduce.call(this._another,e,t)}_flat(e=1){return this._flatResolve(this._another,e)}_flatResolve(e,t=1){if(0==t)return e;let r=[];return e.forEach((e=>{e=Array.isArray(e)?e:[e];let n=this._flatResolve(e,t-1);r=r.concat(n)})),new s(...r)}_flatMap(e){let t=this.map((t=>e(t)));return this._flatResolve(t)}}function l(...e){let t=new n(...e);return new Proxy(t,{get(e,t,r){return"symbol"==typeof t?e._another[t]:isNaN(parseInt(t))?e[t]:e._another[t]},set(e,t,r){return e[t]=r,e._another[t]=r,!0}})}var s=Array.prototype.flatMap?function(...e){return[...e]}:l},456:function(e,t,r){function n(){var e;let t="undefined"!=typeof globalThis&&globalThis.window?globalThis.window:"undefined"!=typeof window?window:"undefined"!=typeof globalThis?globalThis:void 0!==r.g&&(null===r.g||void 0===r.g?void 0:r.g.window)?r.g.window:void 0!==r.g?r.g:null;return null!==(e=null==t?void 0:t.window)&&void 0!==e?e:t}r.d(t,{R:function(){return n}})},805:function(e,t,r){r.d(t,{Lang:function(){return n}});var n,l=r(152),s=r(484);!function(e){function t(e){let t=/\s/,r=(e=e.replace(/^\s\s*/,"")).length;for(;t.test(e.charAt(--r)););return e.slice(0,r+1)}function r(e){return!!arguments.length&&null!=e&&("string"==typeof e||e instanceof String)}e.saveResolve=function(e,t=null){try{let r=e();return l.Optional.fromNullable(null!=r?r:t)}catch(e){return l.Optional.absent}},e.saveResolveLazy=function(e,t=null){try{let r=e();return l.Optional.fromNullable(null!=r?r:t())}catch(e){return l.Optional.absent}},e.strToArray=function(e,r=/\./gi){let n=[];return e.split(r).forEach((e=>{n.push(t(e))})),n},e.trim=t,e.objToArray=function(e,t=0,r=[]){return"__undefined__"==(null!=e?e:"__undefined__")?null!=r?r:null:e instanceof Array&&!t&&!r?e:new s.Es2019Array(...r.concat(Array.prototype.slice.call(e,t)))},e.equalsIgnoreCase=function(e,t){let r=null!=t?t:"___no_value__";return(null!=e?e:"___no_value__").toLowerCase()===r.toLowerCase()},e.assertType=function(e,t){return r(t)?typeof e==t:e instanceof t},e.isString=r,e.isFunc=function(e){return e instanceof Function||"function"==typeof e},e.objAssign=function(e,...t){if(null==e)throw new TypeError("Cannot convert undefined or null to object");let r=Object(e);return Object.assign?(t.forEach((e=>Object.assign(r,e))),r):(t.filter((e=>null!=e)).forEach((e=>{let t=e;Object.keys(t).filter((e=>Object.prototype.hasOwnProperty.call(t,e))).forEach((e=>r[e]=t[e]))})),r)}}(n||(n={}))},152:function(e,t,r){r.d(t,{Monad:function(){return l},Optional:function(){return s},ValueEmbedder:function(){return i}});var n=r(484);class l{constructor(e){this._value=e}get value(){return this._value}map(e){e||(e=e=>e);let t=e(this.value);return new l(t)}flatMap(e){let t=this.map(e);for(;(null==t?void 0:t.value)instanceof l;)t=t.value;return t}}class s extends l{constructor(e){super(e)}get value(){return this._value instanceof l?this._value.flatMap().value:this._value}static fromNullable(e){return new s(e)}isAbsent(){return void 0===this.value||null==this.value}isPresent(e){let t=this.isAbsent();return!t&&e&&e.call(this,this),!t}ifPresentLazy(e=(()=>{})){return this.isPresent.call(this,e),this}orElse(e){return this.isPresent()?this:null==e?s.absent:this.flatMap((()=>e))}orElseLazy(e){return this.isPresent()?this:this.flatMap(e)}flatMap(e){let t=super.flatMap(e);return t instanceof s?t.flatMap():s.fromNullable(t.value)}getIf(...e){e=this.preprocessKeys(...e);let t=this;for(let r=0;r<e.length;r++){let n=this.keyVal(e[r]),l=this.arrayIndex(e[r]);if(""===n&&l>=0){if(t=this.getClass().fromNullable(t.value instanceof Array?t.value.length<l?null:t.value[l]:null),t.isAbsent())return t}else if(n&&l>=0){if(t.getIfPresent(n).isAbsent())return t;if(t=t.getIfPresent(n).value instanceof Array?this.getClass().fromNullable(t.getIfPresent(n).value[l]):this.getClass().absent,t.isAbsent())return t}else{if(t=t.getIfPresent(n),t.isAbsent())return t;l>-1&&(t=this.getClass().fromNullable(t.value[l]))}}return t}match(e){return!this.isAbsent()&&e(this.value)}get(e=s.absent){return this.isAbsent()?this.getClass().fromNullable(e).flatMap():this.getClass().fromNullable(this.value).flatMap()}toJson(){return JSON.stringify(this.value)}getClass(){return s}arrayIndex(e){let t=e.indexOf("["),r=e.indexOf("]");return t>=0&&r>0&&t<r?parseInt(e.substring(t+1,r)):-1}keyVal(e){let t=e.indexOf("[");return t>=0?e.substring(0,t):e}getIfPresent(e){return this.isAbsent()?this.getClass().absent:this.getClass().fromNullable(this.value[e]).flatMap()}resolve(e){if(this.isAbsent())return s.absent;try{return s.fromNullable(e(this.value))}catch(e){return s.absent}}preprocessKeys(...e){return e.flatMap((e=>new n.Es2019Array(...e.split(/]\s*\[/gi)).map((e=>(-1==(e=e.replace(/^\s+|\s+$/g,"")).indexOf("[")&&-1!=e.indexOf("]")&&(e="["+e),-1==e.indexOf("]")&&-1!=e.indexOf("[")&&(e+="]"),e)))))}}s.absent=s.fromNullable(null);class i extends s{constructor(e,t="value"){super(e),this.key=t}get value(){return this._value?this._value[this.key]:null}set value(e){this._value&&(this._value[this.key]=e)}orElse(e){let t={};return t[this.key]=e,this.isPresent()?this:new i(t,this.key)}orElseLazy(e){if(this.isPresent())return this;{let t={};return t[this.key]=e(),new i(t,this.key)}}getClass(){return i}static fromNullable(e,t="value"){return new i(e,t)}}i.absent=i.fromNullable(null)},255:function(e,t,r){r.d(t,{dD:function(){return n}});var n;r(484),r(549);!function(e){e.EO_STRM="__EO_STRM__",e.BEF_STRM="___BEF_STRM__"}(n||(n={}))},121:function(e,t,r){r.d(t,{XMLQuery:function(){return o},XQ:function(){return a}});var n=r(805),l=r(585),s=r(456),i=n.Lang.isString;class o extends l.DomQuery{constructor(e,t="text/xml"){let r=e=>{if(null==e)return null;return n.Lang.saveResolveLazy((()=>new((0,s.R)().DOMParser)),(()=>(()=>{let e=new ActiveXObject("Microsoft.XMLDOM");return e.async=!1,{parseFromString:(t,r)=>e.loadXML(t)}})())).value.parseFromString(e,t)};i(e)?super(r(e)):super(e)}isXMLParserError(){return this.querySelectorAll("parsererror").isPresent()}toString(){let e=[];return this.eachElem((t=>{var r,n,l,i;let o=null!==(i=null===(l=null===(n=null===(r=(0,s.R)())||void 0===r?void 0:r.XMLSerializer)||void 0===n?void 0:n.constructor())||void 0===l?void 0:l.serializeToString(t))&&void 0!==i?i:null==t?void 0:t.xml;o&&e.push(o)})),e.join("")}parserErrorText(e){return this.querySelectorAll("parsererror").textContent(e)}static parseXML(e){return new o(e)}static parseHTML(e){return new o(e,"text/html")}static fromString(e,t="text/xml"){return new o(e,t)}}const a=o}},t={};function r(n){var l=t[n];if(void 0!==l)return l.exports;var s=t[n]={exports:{}};return e[n](s,s.exports,r),s.exports}r.d=function(e,t){for(var n in t)r.o(t,n)&&!r.o(e,n)&&Object.defineProperty(e,n,{enumerable:!0,get:t[n]})},r.g=function(){if("object"==typeof globalThis)return globalThis;try{return this||new Function("return this")()}catch(e){if("object"==typeof window)return window}}(),r.o=function(e,t){return Object.prototype.hasOwnProperty.call(e,t)},r.r=function(e){"undefined"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(e,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(e,"__esModule",{value:!0})};var n={};!function(){r.r(n),r.d(n,{Assoc:function(){return i},CONFIG_ANY:function(){return o.ko},CONFIG_VALUE:function(){return o.ac},Config:function(){return o.De},DQ:function(){return e.DQ},DQ$:function(){return e.DQ$},DomQuery:function(){return e.DomQuery},DomQueryCollector:function(){return e.DomQueryCollector},ElementAttribute:function(){return e.ElementAttribute},Es2019Array:function(){return a.Es2019Array},Lang:function(){return t.Lang},Monad:function(){return l.Monad},Optional:function(){return l.Optional},ValueEmbedder:function(){return l.ValueEmbedder},XMLQuery:function(){return s.XMLQuery},XQ:function(){return s.XQ},_Es2019Array:function(){return a._Es2019Array},append:function(){return i.append},assign:function(){return i.assign},assignIf:function(){return i.assignIf},shallowMerge:function(){return i.shallowMerge},simpleShallowMerge:function(){return i.simpleShallowMerge}});var e=r(585),t=r(805),l=r(152),s=r(121),i=r(447),o=r(549),a=r(484)}();var l=exports;for(var s in n)l[s]=n[s];n.__esModule&&Object.defineProperty(l,"__esModule",{value:!0})}();
-//# sourceMappingURL=index_core.js.map
+
+/**
+ * Extended array
+ */
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Es2019Array = exports._Es2019Array = void 0;
+/**
+ * Extended array which adds various es 2019 shim functions to the normal array
+ * We must remap all array producing functions in order to keep
+ * the delegation active, once we are in!
+ */
+class Es2019Array_ extends Array {
+    constructor(...another) {
+        super(...another);
+        if (another._another) {
+            this._another = another._another;
+        }
+        else {
+            this._another = another;
+        }
+        //for testing it definitely runs into this branch because we are on es5 level
+        //if (!(<any>Array.prototype).flatMap) {
+        this.flatMap = (flatMapFun) => this._flatMap(flatMapFun);
+        //}
+        //if (!(<any>Array.prototype).flat) {
+        this.flat = (flatLevel = 1) => this._flat(flatLevel);
+        //}
+    }
+    map(callbackfn, thisArg) {
+        const ret = Array.prototype.map.call(this._another, callbackfn, thisArg);
+        return new _Es2019Array(...ret);
+    }
+    concat(...items) {
+        const ret = Array.prototype.concat.call(this._another, ...items);
+        return new _Es2019Array(...ret);
+    }
+    reverse() {
+        const ret = Array.prototype.reverse.call(this._another);
+        return new _Es2019Array(...ret);
+    }
+    slice(start, end) {
+        const ret = Array.prototype.slice.call(this._another, start, end);
+        return new _Es2019Array(...ret);
+    }
+    splice(start, deleteCount) {
+        const ret = Array.prototype.splice.call(this._another, start, deleteCount);
+        return new _Es2019Array(...ret);
+    }
+    filter(predicate, thisArg) {
+        const ret = Array.prototype.filter.call(this._another, predicate, thisArg);
+        return new _Es2019Array(...ret);
+    }
+    reduce(callbackfn, initialValue) {
+        const ret = Array.prototype.reduce.call(this._another, callbackfn, initialValue);
+        return ret;
+    }
+    /*reduceRight(callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: T[]) => T, initialValue: T): T {
+        const ret = Array.prototype.reduceRight.call(callbackfn, initialValue);
+        return ret;
+    }*/
+    _flat(flatDepth = 1) {
+        return this._flatResolve(this._another, flatDepth);
+    }
+    _flatResolve(arr, flatDepth = 1) {
+        //recursion break
+        if (flatDepth == 0) {
+            return arr;
+        }
+        let res = [];
+        let reFlat = item => {
+            item = Array.isArray(item) ? item : [item];
+            let mapped = this._flatResolve(item, flatDepth - 1);
+            res = res.concat(mapped);
+        };
+        arr.forEach(reFlat);
+        return new exports.Es2019Array(...res);
+    }
+    _flatMap(mapperFunction) {
+        let res = this.map(item => mapperFunction(item));
+        return this._flatResolve(res);
+    }
+}
+//let _Es2019Array = function<T>(...data: T[]) {};
+//let oldProto = Es2019Array.prototype;
+function _Es2019Array(...data) {
+    let ret = new Es2019Array_(...data);
+    let proxied = new Proxy(ret, {
+        get(target, p, receiver) {
+            if ("symbol" == typeof p) {
+                return target._another[p];
+            }
+            if (!isNaN(parseInt(p))) {
+                return target._another[p];
+            }
+            else {
+                return target[p];
+            }
+        },
+        set(target, property, value) {
+            target[property] = value;
+            target._another[property] = value;
+            return true;
+        }
+    });
+    return proxied;
+}
+exports._Es2019Array = _Es2019Array;
+;
+/**
+ * this is the switch between normal array and our shim
+ * the shim is only provided in case the native browser
+ * does not yet have flatMap support on arrays
+ */
+exports.Es2019Array = (Array.prototype.flatMap) ? function (...data) {
+    // sometimes the typescript compiler produces
+    // an array without flatmap between boundaries (the result produces True for Array.isArray
+    // but has no flatMap function, could be a node issue also or Typescript!
+    // we remap that (could be related to: https://github.com/microsoft/TypeScript/issues/31033
+    // the check and remap fixes the issue which should not exist in the first place
+    return (data === null || data === void 0 ? void 0 : data.flatMap) ? data : _Es2019Array(...data);
+} : _Es2019Array;
+
+
+/***/ }),
+
+/***/ "./node_modules/mona-dish/src/main/typescript/Global.ts":
+/*!**************************************************************!*\
+  !*** ./node_modules/mona-dish/src/main/typescript/Global.ts ***!
+  \**************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports._global$ = void 0;
+/*!
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/**
+ * various environments handle the global variable different
+ * we have to deal with this.
+ */
+function _global$() {
+    var _a;
+    let _global$ = ('undefined' != typeof globalThis && globalThis.window) ? globalThis.window :
+        ('undefined' != typeof window) ? window :
+            ('undefined' != typeof globalThis) ? globalThis :
+                ('undefined' != typeof __webpack_require__.g && (__webpack_require__.g === null || __webpack_require__.g === void 0 ? void 0 : __webpack_require__.g.window)) ? __webpack_require__.g.window :
+                    ('undefined' != typeof __webpack_require__.g) ? __webpack_require__.g : null;
+    //under test systems we often have a lazy init of the window object under global.window, but we
+    //want the window object
+    return (_a = _global$ === null || _global$ === void 0 ? void 0 : _global$.window) !== null && _a !== void 0 ? _a : _global$;
+}
+exports._global$ = _global$;
+
+
+/***/ }),
+
+/***/ "./node_modules/mona-dish/src/main/typescript/Lang.ts":
+/*!************************************************************!*\
+  !*** ./node_modules/mona-dish/src/main/typescript/Lang.ts ***!
+  \************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+/*!
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Lang = void 0;
+const Monad_1 = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
+const Es2019Array_1 = __webpack_require__(/*! ./Es2019Array */ "./node_modules/mona-dish/src/main/typescript/Es2019Array.ts");
+/**
+ * Lang helpers crossported from the apache myfaces project
+ */
+var Lang;
+(function (Lang) {
+    //should be in lang, but for now here to avoid recursive imports, not sure if typescript still has a problem with those
+    /**
+     * helper function to safely resolve anything
+     * this is not an elvis operator, it resolves
+     * a value without exception in a tree and if
+     * it is not resolvable then an optional of
+     * a default value is restored or Optional.empty
+     * if none is given
+     *
+     * usage
+     * <code>
+     *     let var: Optiona<string> = saveResolve(() => a.b.c.d.e, "foobaz")
+     * </code>
+     *
+     * @param resolverProducer a lambda which can produce the value
+     * @param defaultValue an optional default value if the producer failes to produce anything
+     * @returns an Optional of the produced value
+     */
+    function saveResolve(resolverProducer, defaultValue = null) {
+        try {
+            let result = resolverProducer();
+            return Monad_1.Optional.fromNullable(result !== null && result !== void 0 ? result : defaultValue);
+        }
+        catch (e) {
+            return Monad_1.Optional.absent;
+        }
+    }
+    Lang.saveResolve = saveResolve;
+    /**
+     * lazy resolve... aka the function is called on resolve and a default value also
+     * is a producing function (called only if the original producer does not produce any result)
+     * @param resolverProducer the producer for the resolve
+     * @param defaultValue the default value producer function
+     */
+    function saveResolveLazy(resolverProducer, defaultValue = null) {
+        try {
+            let result = resolverProducer();
+            return Monad_1.Optional.fromNullable(result !== null && result !== void 0 ? result : defaultValue());
+        }
+        catch (e) {
+            return Monad_1.Optional.absent;
+        }
+    }
+    Lang.saveResolveLazy = saveResolveLazy;
+    /**
+     * String to array function performs a string to array transformation
+     * @param {String} it the string which has to be changed into an array
+     * @param {RegExp} splitter our splitter reglar expression
+     * @return a trimmed array of the splitted string
+     */
+    function strToArray(it, splitter = /\./gi) {
+        let ret = [];
+        it.split(splitter).forEach((element => {
+            ret.push(trim(element));
+        }));
+        return ret;
+    }
+    Lang.strToArray = strToArray;
+    /**
+     * hyperfast trim
+     * http://blog.stevenlevithan.com/archives/faster-trim-javascript
+     * crossported from dojo
+     */
+    function trim(str) {
+        str = str.replace(/^\s\s*/, '');
+        let ws = /\s/, i = str.length;
+        while (ws.test(str.charAt(--i))) {
+            //do nothing
+        }
+        return str.slice(0, i + 1);
+    }
+    Lang.trim = trim;
+    /**
+     * generic object arrays like dom definitions to array conversion method which
+     * transforms any object to something array like
+     * @param obj
+     * @param offset
+     * @param pack
+     * @returns an array converted from the object
+     */
+    function objToArray(obj, offset = 0, pack = []) {
+        if ((obj !== null && obj !== void 0 ? obj : "__undefined__") == "__undefined__") {
+            return pack !== null && pack !== void 0 ? pack : null;
+        }
+        //since offset is numeric we cannot use the shortcut due to 0 being false
+        //special condition array delivered no offset no pack
+        if (obj instanceof Array && !offset && !pack)
+            return obj;
+        return new Es2019Array_1.Es2019Array(...pack.concat(Array.prototype.slice.call(obj, offset)));
+    }
+    Lang.objToArray = objToArray;
+    /**
+     * equalsIgnoreCase, case-insensitive comparison of two strings
+     *
+     * @param source
+     * @param destination
+     */
+    function equalsIgnoreCase(source, destination) {
+        let finalSource = source !== null && source !== void 0 ? source : "___no_value__";
+        let finalDest = destination !== null && destination !== void 0 ? destination : "___no_value__";
+        //in any other case we do a strong string comparison
+        return finalSource.toLowerCase() === finalDest.toLowerCase();
+    }
+    Lang.equalsIgnoreCase = equalsIgnoreCase;
+    /**
+     * runtime type assertion
+     *
+     * @param probe the probe to be tested for a type
+     * @param theType the type to be tested for
+     */
+    function assertType(probe, theType) {
+        return isString(theType) ? typeof probe == theType : probe instanceof theType;
+    }
+    Lang.assertType = assertType;
+    /**
+     * Back ported from Dojo
+     * a failsafe string determination method
+     * (since in javascript String != "" typeof alone fails!)
+     * @param it {|Object|} the object to be checked for being a string
+     * @return true in case of being a string false otherwise
+     */
+    function isString(it) {
+        //	summary:
+        //		Return true if it is a String
+        return !!arguments.length && it != null && (typeof it == "string" || it instanceof String); // Boolean
+    }
+    Lang.isString = isString;
+    /**
+     * Back-ported, a failsafe determination code for checking whether an object is a function
+     * @param it the object to check for being a function
+     */
+    function isFunc(it) {
+        return it instanceof Function || typeof it === "function";
+    }
+    Lang.isFunc = isFunc;
+    // code from https://developer.mozilla.org/de/docs/Web/JavaScript/Reference/Global_Objects/Object/assign
+    // license https://creativecommons.org/licenses/by-sa/2.5/
+    function objAssign(target, ...theArgs) {
+        if (target == null) { // TypeError if undefined or null
+            throw new TypeError('Cannot convert undefined or null to object');
+        }
+        let to = Object(target);
+        if (Object.assign) {
+            theArgs.forEach(item => Object.assign(to, item));
+            return to;
+        }
+        theArgs.filter(item => item != null).forEach(item => {
+            let nextSource = item;
+            Object.keys(nextSource)
+                .filter(nextKey => Object.prototype.hasOwnProperty.call(nextSource, nextKey))
+                .forEach(nextKey => to[nextKey] = nextSource[nextKey]);
+        });
+        return to;
+    }
+    Lang.objAssign = objAssign;
+})(Lang = exports.Lang || (exports.Lang = {}));
+
+
+/***/ }),
+
+/***/ "./node_modules/mona-dish/src/main/typescript/Monad.ts":
+/*!*************************************************************!*\
+  !*** ./node_modules/mona-dish/src/main/typescript/Monad.ts ***!
+  \*************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+/*!
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ValueEmbedder = exports.Optional = exports.Monad = void 0;
+const Es2019Array_1 = __webpack_require__(/*! ./Es2019Array */ "./node_modules/mona-dish/src/main/typescript/Es2019Array.ts");
+/**
+ * Implementation of a monad
+ * (Side - effect free), no write allowed directly on the monads
+ * value state
+ */
+class Monad {
+    constructor(value) {
+        this._value = value;
+    }
+    get value() {
+        return this._value;
+    }
+    map(fn) {
+        if (!fn) {
+            fn = (inVal) => inVal;
+        }
+        let result = fn(this.value);
+        return new Monad(result);
+    }
+    flatMap(fn) {
+        let mapped = this.map(fn);
+        while ((mapped === null || mapped === void 0 ? void 0 : mapped.value) instanceof Monad) {
+            mapped = mapped.value;
+        }
+        return mapped;
+    }
+}
+exports.Monad = Monad;
+/**
+ * optional implementation, an optional is basically an implementation of a Monad with additional syntactic
+ * sugar on top
+ * (Side - effect free, since value assignment is not allowed)
+ * */
+class Optional extends Monad {
+    constructor(value) {
+        super(value);
+    }
+    get value() {
+        if (this._value instanceof Monad) {
+            return this._value.flatMap().value;
+        }
+        return this._value;
+    }
+    static fromNullable(value) {
+        return new Optional(value);
+    }
+    /*syntactic sugar for absent and present checks*/
+    isAbsent() {
+        return "undefined" == typeof this.value || null == this.value;
+    }
+    /**
+     * any value present
+     */
+    isPresent(presentRunnable) {
+        let absent = this.isAbsent();
+        if (!absent && presentRunnable) {
+            presentRunnable.call(this, this);
+        }
+        return !absent;
+    }
+    ifPresentLazy(presentRunnable = () => {
+    }) {
+        this.isPresent.call(this, presentRunnable);
+        return this;
+    }
+    orElse(elseValue) {
+        if (this.isPresent()) {
+            return this;
+        }
+        else {
+            //shortcut
+            if (elseValue == null) {
+                return Optional.absent;
+            }
+            return this.flatMap(() => elseValue);
+        }
+    }
+    /**
+     * lazy, passes a function which then is lazily evaluated
+     * instead of a direct value
+     * @param func
+     */
+    orElseLazy(func) {
+        if (this.isPresent()) {
+            return this;
+        }
+        else {
+            return this.flatMap(func);
+        }
+    }
+    /*
+     * we need to implement it to fulfill the contract, although it is used only internally
+     * all values are flattened when accessed anyway, so there is no need to call this method
+     */
+    flatMap(fn) {
+        let val = super.flatMap(fn);
+        if (!(val instanceof Optional)) {
+            return Optional.fromNullable(val.value);
+        }
+        return val.flatMap();
+    }
+    /*
+     * elvis operation, take care, if you use this you lose typesafety and refactoring
+     * capabilities, unfortunately typescript does not allow to have its own elvis operator
+     * this is some syntactic sugar however which is quite useful*/
+    getIf(...key) {
+        key = this.preprocessKeys(...key);
+        let currentPos = this;
+        for (let cnt = 0; cnt < key.length; cnt++) {
+            let currKey = this.keyVal(key[cnt]);
+            let arrPos = this.arrayIndex(key[cnt]);
+            if (currKey === "" && arrPos >= 0) {
+                currentPos = this.getClass().fromNullable(!(currentPos.value instanceof Array) ? null : (currentPos.value.length < arrPos ? null : currentPos.value[arrPos]));
+                if (currentPos.isAbsent()) {
+                    return currentPos;
+                }
+                continue;
+            }
+            else if (currKey && arrPos >= 0) {
+                if (currentPos.getIfPresent(currKey).isAbsent()) {
+                    return currentPos;
+                }
+                currentPos = (currentPos.getIfPresent(currKey).value instanceof Array) ? this.getClass().fromNullable(currentPos.getIfPresent(currKey).value[arrPos]) : this.getClass().absent;
+                if (currentPos.isAbsent()) {
+                    return currentPos;
+                }
+                continue;
+            }
+            else {
+                currentPos = currentPos.getIfPresent(currKey);
+            }
+            if (currentPos.isAbsent()) {
+                return currentPos;
+            }
+            else if (arrPos > -1) {
+                currentPos = this.getClass().fromNullable(currentPos.value[arrPos]);
+            }
+        }
+        return currentPos;
+    }
+    /**
+     * simple match, if the first order function call returns
+     * true then there is a match, if the value is not present
+     * it never matches
+     *
+     * @param fn the first order function performing the match
+     */
+    match(fn) {
+        if (this.isAbsent()) {
+            return false;
+        }
+        return fn(this.value);
+    }
+    /**
+     * convenience function to flatmap the internal value
+     * and replace it with a default in case of being absent
+     *
+     * @param defaultVal
+     * @returns {Optional<any>}
+     */
+    get(defaultVal = Optional.absent) {
+        if (this.isAbsent()) {
+            return this.getClass().fromNullable(defaultVal).flatMap();
+        }
+        return this.getClass().fromNullable(this.value).flatMap();
+    }
+    toJson() {
+        return JSON.stringify(this.value);
+    }
+    /**
+     * helper to override several implementations in a more fluent way
+     * by having a getClass operation we can avoid direct calls into the constructor or
+     * static methods and do not have to implement several methods which rely on the type
+     * of "this"
+     * @returns the type of Optional
+     */
+    getClass() {
+        return Optional;
+    }
+    /*helper method for getIf with array access aka <name>[<indexPos>]*/
+    arrayIndex(key) {
+        let start = key.indexOf("[");
+        let end = key.indexOf("]");
+        if (start >= 0 && end > 0 && start < end) {
+            return parseInt(key.substring(start + 1, end));
+        }
+        else {
+            return -1;
+        }
+    }
+    /*helper method for getIf with array access aka <name>[<indexPos>]*/
+    keyVal(key) {
+        let start = key.indexOf("[");
+        if (start >= 0) {
+            return key.substring(0, start);
+        }
+        else {
+            return key;
+        }
+    }
+    /**
+     * additional syntactic sugar which is not part of the usual optional implementation
+     * but makes life easier, if you want to sacrifice typesafety and refactoring
+     * capabilities in typescript
+     */
+    getIfPresent(key) {
+        if (this.isAbsent()) {
+            return this.getClass().absent;
+        }
+        return this.getClass().fromNullable(this.value[key]).flatMap();
+    }
+    /**
+     * elvis like typesafe functional save resolver
+     * a typesafe option for getIfPresent
+     *
+     * usage myOptional.resolve(value => value.subAttr.subAttr2).orElseLazy(....)
+     * if this is resolvable without any errors an Optional with the value is returned
+     * if not, then an Optional absent is returned, also if you return Optional absent
+     * it is flatmapped into absent
+     *
+     * @param resolver the resolver function, can throw any arbitrary errors, int  the error case
+     * the resolution goes towards absent
+     */
+    resolve(resolver) {
+        if (this.isAbsent()) {
+            return Optional.absent;
+        }
+        try {
+            return Optional.fromNullable(resolver(this.value));
+        }
+        catch (e) {
+            return Optional.absent;
+        }
+    }
+    preprocessKeys(...keys) {
+        return new Es2019Array_1.Es2019Array(...keys)
+            .flatMap(item => {
+            return new Es2019Array_1.Es2019Array(...item.split(/]\s*\[/gi))
+                .map(item => {
+                item = item.replace(/^\s+|\s+$/g, "");
+                if (item.indexOf("[") == -1 && item.indexOf("]") != -1) {
+                    item = "[" + item;
+                }
+                if (item.indexOf("]") == -1 && item.indexOf("[") != -1) {
+                    item = item + "]";
+                }
+                return item;
+            });
+        });
+    }
+}
+/*default value for absent*/
+Optional.absent = Optional.fromNullable(null);
+exports.Optional = Optional;
+// --------------------- From here onwards we break out the side effect free limits ------------
+/**
+ * ValueEmbedder is the writeable version
+ * of optional, it basically is a wrapper
+ * around a construct which has a state
+ * and can be written to.
+ *
+ * For the readonly version see Optional
+ */
+class ValueEmbedder extends Optional {
+    constructor(rootElem, valueKey = "value") {
+        super(rootElem);
+        this.key = valueKey;
+    }
+    get value() {
+        return this._value ? this._value[this.key] : null;
+    }
+    set value(newVal) {
+        if (!this._value) {
+            return;
+        }
+        this._value[this.key] = newVal;
+    }
+    orElse(elseValue) {
+        let alternative = {};
+        alternative[this.key] = elseValue;
+        return this.isPresent() ? this : new ValueEmbedder(alternative, this.key);
+    }
+    orElseLazy(func) {
+        if (this.isPresent()) {
+            return this;
+        }
+        else {
+            let alternative = {};
+            alternative[this.key] = func();
+            return new ValueEmbedder(alternative, this.key);
+        }
+    }
+    /**
+     * helper to override several implementations in a more fluent way
+     * by having a getClass operation we can avoid direct calls into the constructor or
+     * static methods and do not have to implement several methods which rely on the type
+     * of "this"
+     * @returns ValueEmbedder
+     */
+    getClass() {
+        return ValueEmbedder;
+    }
+    static fromNullable(value, valueKey = "value") {
+        return new ValueEmbedder(value, valueKey);
+    }
+}
+/*default value for absent*/
+ValueEmbedder.absent = ValueEmbedder.fromNullable(null);
+exports.ValueEmbedder = ValueEmbedder;
+
+
+/***/ }),
+
+/***/ "./node_modules/mona-dish/src/main/typescript/SourcesCollectors.ts":
+/*!*************************************************************************!*\
+  !*** ./node_modules/mona-dish/src/main/typescript/SourcesCollectors.ts ***!
+  \*************************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+/*!
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ArrayCollector = exports.QueryFormStringCollector = exports.QueryFormDataCollector = exports.FormDataCollector = exports.ConfigCollector = exports.AssocArrayCollector = exports.Run = exports.ArrayAssocArrayCollector = exports.InverseArrayCollector = exports.ShimArrayCollector = exports.MappedStreamDataSource = exports.FilteredStreamDatasource = exports.ArrayStreamDataSource = exports.SequenceDataSource = exports.MultiStreamDatasource = exports.calculateSkips = exports.ITERATION_STATUS = void 0;
+const Es2019Array_1 = __webpack_require__(/*! ./Es2019Array */ "./node_modules/mona-dish/src/main/typescript/Es2019Array.ts");
+const Config_1 = __webpack_require__(/*! ./Config */ "./node_modules/mona-dish/src/main/typescript/Config.ts");
+/**
+ * special status of the datasource location pointer
+ * if an access, outside - of the possible data boundaries is happening
+ * (example for instance current without a first next call, or next
+ * which goes over the last possible dataset), an iteration status return
+ * value is returned marking this boundary instead of a classical element
+ *
+ * Note this is only internally used but must be implemented to fulfill
+ * internal contracts, the end user will never see those values if he uses
+ * streams!
+ */
+var ITERATION_STATUS;
+(function (ITERATION_STATUS) {
+    ITERATION_STATUS["EO_STRM"] = "__EO_STRM__";
+    ITERATION_STATUS["BEF_STRM"] = "___BEF_STRM__";
+})(ITERATION_STATUS = exports.ITERATION_STATUS || (exports.ITERATION_STATUS = {}));
+function calculateSkips(next_strm) {
+    let pos = 1;
+    while (next_strm.lookAhead(pos) != ITERATION_STATUS.EO_STRM) {
+        pos++;
+    }
+    return --pos;
+}
+exports.calculateSkips = calculateSkips;
+/**
+ * A data source which combines multiple streams sequentially into one
+ * (this is used internally by  flatmap, but also can be used externally)
+ */
+class MultiStreamDatasource {
+    constructor(first, ...strms) {
+        this.first = first;
+        this.selectedPos = 0;
+        this.strms = [first].concat(...strms);
+        this.activeStrm = this.strms[this.selectedPos];
+    }
+    current() {
+        return this.activeStrm.current();
+    }
+    hasNext() {
+        if (this.activeStrm.hasNext()) {
+            return true;
+        }
+        if (this.selectedPos >= this.strms.length) {
+            return false;
+        }
+        return this.findNextStrm() != -1;
+    }
+    findNextStrm() {
+        let hasNext = false;
+        let cnt = this.selectedPos;
+        while (!hasNext && cnt < this.strms.length) {
+            hasNext = this.strms[cnt].hasNext();
+            if (!hasNext) {
+                cnt++;
+            }
+        }
+        return hasNext ? cnt : -1;
+    }
+    lookAhead(cnt = 1) {
+        //lets clone
+        const strms = this.strms.slice(this.selectedPos);
+        if (!strms.length) {
+            return ITERATION_STATUS.EO_STRM;
+        }
+        const all_strms = [...strms];
+        while (all_strms.length) {
+            let next_strm = all_strms.shift();
+            let lookAhead = next_strm.lookAhead(cnt);
+            if (lookAhead != ITERATION_STATUS.EO_STRM) {
+                return lookAhead;
+            }
+            cnt = cnt - calculateSkips(next_strm);
+        }
+        return ITERATION_STATUS.EO_STRM;
+    }
+    next() {
+        if (this.activeStrm.hasNext()) {
+            return this.activeStrm.next();
+        }
+        this.selectedPos = this.findNextStrm();
+        if (this.selectedPos == -1) {
+            return ITERATION_STATUS.EO_STRM;
+        }
+        this.activeStrm = this.strms[this.selectedPos];
+        return this.activeStrm.next();
+    }
+    reset() {
+        this.activeStrm = this.strms[0];
+        this.selectedPos = 0;
+        for (let cnt = 0; cnt < this.strms.length; cnt++) {
+            this.strms[cnt].reset();
+        }
+    }
+}
+exports.MultiStreamDatasource = MultiStreamDatasource;
+/**
+ * defines a sequence of numbers for our stream input
+ */
+class SequenceDataSource {
+    constructor(start, total) {
+        this.total = total;
+        this.start = start;
+        this.value = start - 1;
+    }
+    hasNext() {
+        return this.value < (this.total - 1);
+    }
+    next() {
+        this.value++;
+        return this.value <= (this.total - 1) ? this.value : ITERATION_STATUS.EO_STRM;
+    }
+    lookAhead(cnt = 1) {
+        if ((this.value + cnt) > this.total - 1) {
+            return ITERATION_STATUS.EO_STRM;
+        }
+        else {
+            return this.value + cnt;
+        }
+    }
+    reset() {
+        this.value = this.start - 1;
+    }
+    current() {
+        //first condition current without initial call for next
+        return (this.start - 1) ? ITERATION_STATUS.BEF_STRM : this.value;
+    }
+}
+exports.SequenceDataSource = SequenceDataSource;
+/**
+ * implementation of a datasource on top of a standard array
+ */
+class ArrayStreamDataSource {
+    constructor(...value) {
+        this.dataPos = -1;
+        this.value = value;
+    }
+    lookAhead(cnt = 1) {
+        if ((this.dataPos + cnt) > this.value.length - 1) {
+            return ITERATION_STATUS.EO_STRM;
+        }
+        return this.value[this.dataPos + cnt];
+    }
+    hasNext() {
+        return this.value.length - 1 > this.dataPos;
+    }
+    next() {
+        var _a;
+        this.dataPos++;
+        return (_a = this === null || this === void 0 ? void 0 : this.value[this.dataPos]) !== null && _a !== void 0 ? _a : ITERATION_STATUS.EO_STRM;
+    }
+    reset() {
+        this.dataPos = -1;
+    }
+    current() {
+        return this.value[Math.max(0, this.dataPos)];
+    }
+}
+exports.ArrayStreamDataSource = ArrayStreamDataSource;
+/**
+ * an intermediate data source which prefilters
+ * incoming stream data
+ * and lets only the data out which
+ * passes the filter function check
+ */
+class FilteredStreamDatasource {
+    constructor(filterFunc, parent) {
+        this._current = ITERATION_STATUS.BEF_STRM;
+        // we have to add a filter idx because the external filter values might change over time, so
+        // we cannot reset the state properly unless we do it from a snapshot
+        this._filterIdx = {};
+        this._unfilteredPos = 0;
+        this.filterFunc = filterFunc;
+        this.inputDataSource = parent;
+    }
+    /**
+     * in order to filter we have to make a look ahead until the
+     * first next allowed element
+     * hence we prefetch the element and then
+     * serve it via next
+     */
+    hasNext() {
+        let steps = 1;
+        let found = false;
+        let next;
+        while (!found && (next = this.inputDataSource.lookAhead(steps)) != ITERATION_STATUS.EO_STRM) {
+            if (this.filterFunc(next)) {
+                this._filterIdx[this._unfilteredPos + steps] = true;
+                found = true;
+            }
+            else {
+                steps++;
+            }
+        }
+        return found;
+    }
+    /**
+     * serve the next element
+     */
+    next() {
+        var _a, _b;
+        let found = ITERATION_STATUS.EO_STRM;
+        while (this.inputDataSource.hasNext()) {
+            this._unfilteredPos++;
+            let next = this.inputDataSource.next();
+            //again here we cannot call the filter function twice, because its state might change, so if indexed, we have a decent snapshot, either has next or next can trigger
+            //the snapshot
+            if (next != ITERATION_STATUS.EO_STRM &&
+                (((_b = (_a = this._filterIdx) === null || _a === void 0 ? void 0 : _a[this._unfilteredPos]) !== null && _b !== void 0 ? _b : false) || this.filterFunc(next))) {
+                this._filterIdx[this._unfilteredPos] = true;
+                found = next;
+                break;
+            }
+        }
+        this._current = found;
+        return found;
+    }
+    /**
+     * looks ahead cnt without changing the internal data "pointers" of the data source
+     * (this is mostly needed by LazyStreams, because they do not know by definition their
+     * boundaries)
+     *
+     * @param cnt the elements to look ahead
+     * @return either the element or ITERATION_STATUS.EO_STRM if we hit the end of the stream before
+     * finding the "cnt" element
+     */
+    lookAhead(cnt = 1) {
+        var _a;
+        let lookupVal;
+        for (let loop = 1; cnt > 0 && (lookupVal = this.inputDataSource.lookAhead(loop)) != ITERATION_STATUS.EO_STRM; loop++) {
+            let inCache = (_a = this._filterIdx) === null || _a === void 0 ? void 0 : _a[this._unfilteredPos + loop];
+            if (inCache || this.filterFunc(lookupVal)) {
+                cnt--;
+                this._filterIdx[this._unfilteredPos + loop] = true;
+            }
+        }
+        return lookupVal;
+    }
+    current() {
+        return this._current;
+    }
+    reset() {
+        this._current = ITERATION_STATUS.BEF_STRM;
+        this._filterIdx = {};
+        this._unfilteredPos = 0;
+        this.inputDataSource.reset();
+    }
+}
+exports.FilteredStreamDatasource = FilteredStreamDatasource;
+/**
+ * an intermediate datasource which maps the items from
+ * one into another
+ */
+class MappedStreamDataSource {
+    constructor(mapFunc, parent) {
+        this.mapFunc = mapFunc;
+        this.inputDataSource = parent;
+    }
+    hasNext() {
+        return this.inputDataSource.hasNext();
+    }
+    next() {
+        return this.mapFunc(this.inputDataSource.next());
+    }
+    reset() {
+        this.inputDataSource.reset();
+    }
+    current() {
+        return this.mapFunc(this.inputDataSource.current());
+    }
+    lookAhead(cnt = 1) {
+        const lookAheadVal = this.inputDataSource.lookAhead(cnt);
+        return (lookAheadVal == ITERATION_STATUS.EO_STRM) ? lookAheadVal : this.mapFunc(lookAheadVal);
+    }
+}
+exports.MappedStreamDataSource = MappedStreamDataSource;
+/**
+ * For the time being we only need one collector
+ * a collector which collects a stream back into arrays
+ */
+class ShimArrayCollector {
+    constructor() {
+        this.data = new Es2019Array_1.Es2019Array(...[]);
+    }
+    collect(element) {
+        this.data.push(element);
+    }
+    get finalValue() {
+        return this.data;
+    }
+}
+exports.ShimArrayCollector = ShimArrayCollector;
+/**
+ * collects the values as inverse array
+ */
+class InverseArrayCollector {
+    constructor() {
+        this.data = [];
+    }
+    collect(element) {
+        this.data.unshift(element);
+    }
+    get finalValue() {
+        return this.data;
+    }
+}
+exports.InverseArrayCollector = InverseArrayCollector;
+/**
+ * collects an tuple array stream into an assoc array with elements being collected into arrays
+ *
+ */
+class ArrayAssocArrayCollector {
+    constructor() {
+        this.finalValue = {};
+    }
+    collect(element) {
+        var _a, _b, _c, _d;
+        let key = (_a = element === null || element === void 0 ? void 0 : element[0]) !== null && _a !== void 0 ? _a : element;
+        this.finalValue[key] = (_c = (_b = this.finalValue) === null || _b === void 0 ? void 0 : _b[key]) !== null && _c !== void 0 ? _c : [];
+        this.finalValue[key].push((_d = element === null || element === void 0 ? void 0 : element[1]) !== null && _d !== void 0 ? _d : true);
+    }
+}
+exports.ArrayAssocArrayCollector = ArrayAssocArrayCollector;
+/**
+ * dummy collector which just triggers a run
+ * on lazy streams without collecting anything
+ */
+class Run {
+    collect(element) {
+    }
+    get finalValue() {
+        return null;
+    }
+}
+exports.Run = Run;
+/**
+ * collects an assoc stream back to an assoc array
+ */
+class AssocArrayCollector {
+    constructor() {
+        this.finalValue = {};
+    }
+    collect(element) {
+        var _a, _b;
+        this.finalValue[(_a = element[0]) !== null && _a !== void 0 ? _a : element] = (_b = element[1]) !== null && _b !== void 0 ? _b : true;
+    }
+}
+exports.AssocArrayCollector = AssocArrayCollector;
+/**
+ * A Config collector similar to the FormDFata Collector
+ */
+class ConfigCollector {
+    constructor() {
+        this.finalValue = new Config_1.Config({});
+    }
+    collect(element) {
+        this.finalValue.append(element.key).value = element.value;
+    }
+}
+exports.ConfigCollector = ConfigCollector;
+/**
+ * Form data collector for key value pair streams
+ */
+class FormDataCollector {
+    constructor() {
+        this.finalValue = new FormData();
+    }
+    collect(element) {
+        this.finalValue.append(element.key, element.value);
+    }
+}
+exports.FormDataCollector = FormDataCollector;
+/**
+ * Form data collector for DomQuery streams
+ */
+class QueryFormDataCollector {
+    constructor() {
+        this.finalValue = new FormData();
+    }
+    collect(element) {
+        let toMerge = element.encodeFormElement();
+        if (toMerge.isPresent()) {
+            this.finalValue.append(element.name.value, toMerge.get(element.name).value);
+        }
+    }
+}
+exports.QueryFormDataCollector = QueryFormDataCollector;
+/**
+ * Encoded String collector from dom query streams
+ */
+class QueryFormStringCollector {
+    constructor() {
+        this.formData = [];
+    }
+    collect(element) {
+        let toMerge = element.encodeFormElement();
+        if (toMerge.isPresent()) {
+            this.formData.push([element.name.value, toMerge.get(element.name).value]);
+        }
+    }
+    get finalValue() {
+        return new Es2019Array_1.Es2019Array(...this.formData)
+            .map(keyVal => keyVal.join("="))
+            .reduce((item1, item2) => [item1, item2].join("&"));
+    }
+}
+exports.QueryFormStringCollector = QueryFormStringCollector;
+/**
+ * For the time being we only need one collector
+ * a collector which collects a stream back into arrays
+ */
+class ArrayCollector {
+    constructor() {
+        this.data = [];
+    }
+    collect(element) {
+        this.data.push(element);
+    }
+    get finalValue() {
+        return this.data;
+    }
+}
+exports.ArrayCollector = ArrayCollector;
+
+
+/***/ }),
+
+/***/ "./node_modules/mona-dish/src/main/typescript/XmlQuery.ts":
+/*!****************************************************************!*\
+  !*** ./node_modules/mona-dish/src/main/typescript/XmlQuery.ts ***!
+  \****************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+/*!
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.XQ = exports.XMLQuery = void 0;
+const Lang_1 = __webpack_require__(/*! ./Lang */ "./node_modules/mona-dish/src/main/typescript/Lang.ts");
+const DomQuery_1 = __webpack_require__(/*! ./DomQuery */ "./node_modules/mona-dish/src/main/typescript/DomQuery.ts");
+var isString = Lang_1.Lang.isString;
+const Global_1 = __webpack_require__(/*! ./Global */ "./node_modules/mona-dish/src/main/typescript/Global.ts");
+/**
+ * xml query as specialized case for DomQuery
+ */
+class XMLQuery extends DomQuery_1.DomQuery {
+    constructor(rootNode, docType = "text/xml") {
+        let createIe11DomQueryShim = () => {
+            //at the time if wroting ie11 is the only relevant browser
+            //left withut any DomQuery support
+            let parser = new ActiveXObject("Microsoft.XMLDOM");
+            parser.async = false;
+            //we shim th dom parser from ie in
+            return {
+                parseFromString: (text, contentType) => {
+                    return parser.loadXML(text);
+                }
+            };
+        };
+        let parseXML = (xml) => {
+            if (xml == null) {
+                return null;
+            }
+            let domParser = Lang_1.Lang.saveResolveLazy(() => new ((0, Global_1._global$)()).DOMParser(), () => createIe11DomQueryShim()).value;
+            return domParser.parseFromString(xml, docType);
+        };
+        if (isString(rootNode)) {
+            super(parseXML(rootNode));
+        }
+        else {
+            super(rootNode);
+        }
+    }
+    isXMLParserError() {
+        return this.querySelectorAll("parsererror").isPresent();
+    }
+    toString() {
+        let ret = [];
+        this.eachElem((node) => {
+            var _a, _b, _c, _d;
+            let serialized = (_d = (_c = (_b = (_a = ((0, Global_1._global$)())) === null || _a === void 0 ? void 0 : _a.XMLSerializer) === null || _b === void 0 ? void 0 : _b.constructor()) === null || _c === void 0 ? void 0 : _c.serializeToString(node)) !== null && _d !== void 0 ? _d : node === null || node === void 0 ? void 0 : node.xml;
+            if (!!serialized) {
+                ret.push(serialized);
+            }
+        });
+        return ret.join("");
+    }
+    parserErrorText(joinstr) {
+        return this.querySelectorAll("parsererror").textContent(joinstr);
+    }
+    static parseXML(txt) {
+        return new XMLQuery(txt);
+    }
+    static parseHTML(txt) {
+        return new XMLQuery(txt, "text/html");
+    }
+    static fromString(txt, parseType = "text/xml") {
+        return new XMLQuery(txt, parseType);
+    }
+}
+exports.XMLQuery = XMLQuery;
+exports.XQ = XMLQuery;
+
+
+/***/ }),
+
+/***/ "./node_modules/mona-dish/src/main/typescript/index_core.ts":
+/*!******************************************************************!*\
+  !*** ./node_modules/mona-dish/src/main/typescript/index_core.ts ***!
+  \******************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports._Es2019Array = exports.Es2019Array = exports.Assoc = exports.CONFIG_VALUE = exports.CONFIG_ANY = exports.Config = exports.shallowMerge = exports.simpleShallowMerge = exports.append = exports.assignIf = exports.assign = exports.XQ = exports.XMLQuery = exports.ValueEmbedder = exports.Optional = exports.Monad = exports.Lang = exports.DQ$ = exports.DQ = exports.DomQueryCollector = exports.ElementAttribute = exports.DomQuery = void 0;
+/*!
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+var DomQuery_1 = __webpack_require__(/*! ./DomQuery */ "./node_modules/mona-dish/src/main/typescript/DomQuery.ts");
+Object.defineProperty(exports, "DomQuery", ({ enumerable: true, get: function () { return DomQuery_1.DomQuery; } }));
+Object.defineProperty(exports, "ElementAttribute", ({ enumerable: true, get: function () { return DomQuery_1.ElementAttribute; } }));
+Object.defineProperty(exports, "DomQueryCollector", ({ enumerable: true, get: function () { return DomQuery_1.DomQueryCollector; } }));
+Object.defineProperty(exports, "DQ", ({ enumerable: true, get: function () { return DomQuery_1.DQ; } }));
+Object.defineProperty(exports, "DQ$", ({ enumerable: true, get: function () { return DomQuery_1.DQ$; } }));
+var Lang_1 = __webpack_require__(/*! ./Lang */ "./node_modules/mona-dish/src/main/typescript/Lang.ts");
+Object.defineProperty(exports, "Lang", ({ enumerable: true, get: function () { return Lang_1.Lang; } }));
+var Monad_1 = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
+Object.defineProperty(exports, "Monad", ({ enumerable: true, get: function () { return Monad_1.Monad; } }));
+Object.defineProperty(exports, "Optional", ({ enumerable: true, get: function () { return Monad_1.Optional; } }));
+Object.defineProperty(exports, "ValueEmbedder", ({ enumerable: true, get: function () { return Monad_1.ValueEmbedder; } }));
+var XmlQuery_1 = __webpack_require__(/*! ./XmlQuery */ "./node_modules/mona-dish/src/main/typescript/XmlQuery.ts");
+Object.defineProperty(exports, "XMLQuery", ({ enumerable: true, get: function () { return XmlQuery_1.XMLQuery; } }));
+Object.defineProperty(exports, "XQ", ({ enumerable: true, get: function () { return XmlQuery_1.XQ; } }));
+var AssocArray_1 = __webpack_require__(/*! ./AssocArray */ "./node_modules/mona-dish/src/main/typescript/AssocArray.ts");
+Object.defineProperty(exports, "assign", ({ enumerable: true, get: function () { return AssocArray_1.assign; } }));
+Object.defineProperty(exports, "assignIf", ({ enumerable: true, get: function () { return AssocArray_1.assignIf; } }));
+Object.defineProperty(exports, "append", ({ enumerable: true, get: function () { return AssocArray_1.append; } }));
+Object.defineProperty(exports, "simpleShallowMerge", ({ enumerable: true, get: function () { return AssocArray_1.simpleShallowMerge; } }));
+Object.defineProperty(exports, "shallowMerge", ({ enumerable: true, get: function () { return AssocArray_1.shallowMerge; } }));
+var Config_1 = __webpack_require__(/*! ./Config */ "./node_modules/mona-dish/src/main/typescript/Config.ts");
+Object.defineProperty(exports, "Config", ({ enumerable: true, get: function () { return Config_1.Config; } }));
+var Config_2 = __webpack_require__(/*! ./Config */ "./node_modules/mona-dish/src/main/typescript/Config.ts");
+Object.defineProperty(exports, "CONFIG_ANY", ({ enumerable: true, get: function () { return Config_2.CONFIG_ANY; } }));
+var Config_3 = __webpack_require__(/*! ./Config */ "./node_modules/mona-dish/src/main/typescript/Config.ts");
+Object.defineProperty(exports, "CONFIG_VALUE", ({ enumerable: true, get: function () { return Config_3.CONFIG_VALUE; } }));
+exports.Assoc = __importStar(__webpack_require__(/*! ./AssocArray */ "./node_modules/mona-dish/src/main/typescript/AssocArray.ts"));
+var Es2019Array_1 = __webpack_require__(/*! ./Es2019Array */ "./node_modules/mona-dish/src/main/typescript/Es2019Array.ts");
+Object.defineProperty(exports, "Es2019Array", ({ enumerable: true, get: function () { return Es2019Array_1.Es2019Array; } }));
+Object.defineProperty(exports, "_Es2019Array", ({ enumerable: true, get: function () { return Es2019Array_1._Es2019Array; } }));
+
 
 /***/ }),
 
@@ -18,7 +3854,6 @@
   \*****************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.myfaces = exports.faces = void 0;
@@ -323,7 +4158,6 @@ var myfaces;
   \**********************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-"use strict";
 
 /*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -344,7 +4178,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Implementation = void 0;
 const Response_1 = __webpack_require__(/*! ./xhrCore/Response */ "./src/main/typescript/impl/xhrCore/Response.ts");
 const XhrRequest_1 = __webpack_require__(/*! ./xhrCore/XhrRequest */ "./src/main/typescript/impl/xhrCore/XhrRequest.ts");
-const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/dist/js/commonjs/index_core.js");
+const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const Assertions_1 = __webpack_require__(/*! ./util/Assertions */ "./src/main/typescript/impl/util/Assertions.ts");
 const ExtDomQuery_1 = __webpack_require__(/*! ./util/ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
 const ErrorData_1 = __webpack_require__(/*! ./xhrCore/ErrorData */ "./src/main/typescript/impl/xhrCore/ErrorData.ts");
@@ -1067,7 +4901,6 @@ var Implementation;
   \**********************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-"use strict";
 
 /*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -1090,7 +4923,7 @@ exports.PushImpl = void 0;
  * Typescript port of the faces\.push part in the myfaces implementation
  */
 const Const_1 = __webpack_require__(/*! ./core/Const */ "./src/main/typescript/impl/core/Const.ts");
-const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/dist/js/commonjs/index_core.js");
+const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 /**
  * Implementation class for the push functionality
  */
@@ -1336,7 +5169,6 @@ var PushImpl;
   \************************************************/
 /***/ ((__unused_webpack_module, exports) => {
 
-"use strict";
 
 /*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -1515,7 +5347,6 @@ exports.$nsp = $nsp;
   \****************************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.StateHolder = void 0;
@@ -1563,7 +5394,6 @@ exports.StateHolder = StateHolder;
   \***************************************************/
 /***/ ((__unused_webpack_module, exports) => {
 
-"use strict";
 
 /*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -1686,7 +5516,6 @@ exports.Messages = Messages;
   \*****************************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Assertions = void 0;
@@ -1705,7 +5534,7 @@ exports.Assertions = void 0;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/dist/js/commonjs/index_core.js");
+const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 const Lang_1 = __webpack_require__(/*! ./Lang */ "./src/main/typescript/impl/util/Lang.ts");
 /**
@@ -1797,7 +5626,6 @@ var Assertions;
   \********************************************************/
 /***/ ((__unused_webpack_module, exports) => {
 
-"use strict";
 
 /*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -1885,7 +5713,6 @@ exports.AsyncRunnable = AsyncRunnable;
   \******************************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ExtConfig = exports.ExtDQ = exports.ExtDomQuery = void 0;
@@ -1904,7 +5731,7 @@ exports.ExtConfig = exports.ExtDQ = exports.ExtDomQuery = void 0;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/dist/js/commonjs/index_core.js");
+const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 /**
  * detects whether a source is a faces.js request
@@ -2198,11 +6025,10 @@ exports.ExtConfig = ExtConfig;
   \****************************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getFormInputsAsArr = exports.fixEmptyParameters = exports.resolveFiles = exports.decodeEncodedValues = exports.encodeFormData = void 0;
-const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/dist/js/commonjs/index_core.js");
+const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const ExtDomQuery_1 = __webpack_require__(/*! ./ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
 const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 /*
@@ -2306,7 +6132,6 @@ exports.getFormInputsAsArr = getFormInputsAsArr;
   \*************************************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-"use strict";
 
 /*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -2326,7 +6151,7 @@ exports.getFormInputsAsArr = getFormInputsAsArr;
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HiddenInputBuilder = void 0;
-const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/dist/js/commonjs/index_core.js");
+const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 /**
  * Builder for hidden inputs.
@@ -2399,7 +6224,6 @@ exports.HiddenInputBuilder = HiddenInputBuilder;
   \***********************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-"use strict";
 
 /*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -2419,11 +6243,11 @@ exports.HiddenInputBuilder = HiddenInputBuilder;
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ExtLang = void 0;
-const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/dist/js/commonjs/index_core.js");
+const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const Messages_1 = __webpack_require__(/*! ../i18n/Messages */ "./src/main/typescript/impl/i18n/Messages.ts");
 const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 const RequestDataResolver_1 = __webpack_require__(/*! ../xhrCore/RequestDataResolver */ "./src/main/typescript/impl/xhrCore/RequestDataResolver.ts");
-const mona_dish_2 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/dist/js/commonjs/index_core.js");
+const mona_dish_2 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 var ExtLang;
 (function (ExtLang) {
     let installedLocale;
@@ -2667,7 +6491,6 @@ var ExtLang;
   \*************************************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.XhrQueueController = void 0;
@@ -2769,7 +6592,6 @@ exports.XhrQueueController = XhrQueueController;
   \*******************************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ErrorData = exports.ErrorType = void 0;
@@ -2862,7 +6684,6 @@ exports.ErrorData = ErrorData;
   \*******************************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EventData = void 0;
@@ -2881,7 +6702,7 @@ exports.EventData = void 0;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/dist/js/commonjs/index_core.js");
+const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 class EventData {
     static createFromRequest(request, context, /*event name*/ name) {
@@ -2915,7 +6736,6 @@ exports.EventData = EventData;
   \*****************************************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-"use strict";
 
 /*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -2934,7 +6754,7 @@ exports.EventData = EventData;
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.resolveDefaults = exports.getEventTarget = exports.resolveWindowId = exports.resolveDelay = exports.resolveTimeout = exports.resoveNamingContainerMapper = exports.resolveViewRootId = exports.resolveViewId = exports.resolveForm = exports.resolveFinalUrl = exports.resolveTargetUrl = exports.resolveHandlerFunc = void 0;
-const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/dist/js/commonjs/index_core.js");
+const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 const Lang_1 = __webpack_require__(/*! ../util/Lang */ "./src/main/typescript/impl/util/Lang.ts");
 const ExtDomQuery_1 = __webpack_require__(/*! ../util/ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
@@ -3112,7 +6932,6 @@ exports.resolveDefaults = resolveDefaults;
   \*****************************************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-"use strict";
 
 /*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -3131,9 +6950,9 @@ exports.resolveDefaults = resolveDefaults;
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.resolveSourceForm = exports.resolveSourceElement = exports.resolveContexts = exports.resolveResponseXML = void 0;
-const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/dist/js/commonjs/index_core.js");
+const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const Assertions_1 = __webpack_require__(/*! ../util/Assertions */ "./src/main/typescript/impl/util/Assertions.ts");
-const mona_dish_2 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/dist/js/commonjs/index_core.js");
+const mona_dish_2 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 const ExtDomQuery_1 = __webpack_require__(/*! ../util/ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
 /**
@@ -3227,7 +7046,6 @@ function resolveSourceElementId(context, internalContext) {
   \******************************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-"use strict";
 
 /*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -3246,7 +7064,7 @@ function resolveSourceElementId(context, internalContext) {
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Response = void 0;
-const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/dist/js/commonjs/index_core.js");
+const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const ResponseProcessor_1 = __webpack_require__(/*! ./ResponseProcessor */ "./src/main/typescript/impl/xhrCore/ResponseProcessor.ts");
 const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 const ResonseDataResolver_1 = __webpack_require__(/*! ./ResonseDataResolver */ "./src/main/typescript/impl/xhrCore/ResonseDataResolver.ts");
@@ -3423,7 +7241,6 @@ var Response;
   \***************************************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-"use strict";
 
 /*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -3442,7 +7259,7 @@ var Response;
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ResponseProcessor = void 0;
-const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/dist/js/commonjs/index_core.js");
+const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const AjaxImpl_1 = __webpack_require__(/*! ../AjaxImpl */ "./src/main/typescript/impl/AjaxImpl.ts");
 const Assertions_1 = __webpack_require__(/*! ../util/Assertions */ "./src/main/typescript/impl/util/Assertions.ts");
 const ErrorData_1 = __webpack_require__(/*! ./ErrorData */ "./src/main/typescript/impl/xhrCore/ErrorData.ts");
@@ -3901,7 +7718,6 @@ exports.ResponseProcessor = ResponseProcessor;
   \*********************************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.XhrFormData = void 0;
@@ -3920,12 +7736,12 @@ exports.XhrFormData = void 0;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/dist/js/commonjs/index_core.js");
+const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 const FileUtils_1 = __webpack_require__(/*! ../util/FileUtils */ "./src/main/typescript/impl/util/FileUtils.ts");
 const Lang_1 = __webpack_require__(/*! ../util/Lang */ "./src/main/typescript/impl/util/Lang.ts");
 var ofAssoc = Lang_1.ExtLang.ofAssoc;
-const mona_dish_2 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/dist/js/commonjs/index_core.js");
+const mona_dish_2 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const defaultParamsMapper = (key, item) => [key, item];
 /**
  * A unified form data class
@@ -4074,7 +7890,6 @@ exports.XhrFormData = XhrFormData;
   \********************************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-"use strict";
 
 /*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -4094,7 +7909,7 @@ exports.XhrFormData = XhrFormData;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.XhrRequest = void 0;
 const AsyncRunnable_1 = __webpack_require__(/*! ../util/AsyncRunnable */ "./src/main/typescript/impl/util/AsyncRunnable.ts");
-const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/dist/js/commonjs/index_core.js");
+const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const AjaxImpl_1 = __webpack_require__(/*! ../AjaxImpl */ "./src/main/typescript/impl/AjaxImpl.ts");
 const XhrFormData_1 = __webpack_require__(/*! ./XhrFormData */ "./src/main/typescript/impl/xhrCore/XhrFormData.ts");
 const ErrorData_1 = __webpack_require__(/*! ./ErrorData */ "./src/main/typescript/impl/xhrCore/ErrorData.ts");
@@ -4421,7 +8236,6 @@ exports.XhrRequest = XhrRequest;
   \**************************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-"use strict";
 
 /*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -4440,7 +8254,7 @@ exports.XhrRequest = XhrRequest;
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.oam = void 0;
-const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/dist/js/commonjs/index_core.js");
+const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const Lang_1 = __webpack_require__(/*! ../impl/util/Lang */ "./src/main/typescript/impl/util/Lang.ts");
 /**
  * legacy code to enable various aspects
@@ -4573,17 +8387,29 @@ var oam;
 /******/ 		};
 /******/ 	
 /******/ 		// Execute the module function
-/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
+/******/ 		__webpack_modules__[moduleId].call(module.exports, module, module.exports, __webpack_require__);
 /******/ 	
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
 /******/ 	
 /************************************************************************/
+/******/ 	/* webpack/runtime/global */
+/******/ 	(() => {
+/******/ 		__webpack_require__.g = (function() {
+/******/ 			if (typeof globalThis === 'object') return globalThis;
+/******/ 			try {
+/******/ 				return this || new Function('return this')();
+/******/ 			} catch (e) {
+/******/ 				if (typeof window === 'object') return window;
+/******/ 			}
+/******/ 		})();
+/******/ 	})();
+/******/ 	
+/************************************************************************/
 var __webpack_exports__ = {};
-// This entry need to be wrapped in an IIFE because it need to be in strict mode.
+// This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
-"use strict";
 var exports = __webpack_exports__;
 /*!****************************************!*\
   !*** ./src/main/typescript/api/jsf.ts ***!

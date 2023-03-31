@@ -375,6 +375,7 @@ describe('Tests of the various aspects of the response protocol functionality', 
 
         expect(DQ.querySelectorAll("head > style").length).to.be.eq(0);
         expect(DQ.querySelectorAll("body tobago-page tobago-sheet > style").length).to.be.eq(1);
+        expect(DQ.querySelectorAll("body tobago-page tobago-sheet > style")[0].nonce).to.be.eq("nonceValue");
     });
 
     

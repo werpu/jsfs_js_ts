@@ -126,10 +126,7 @@ export class ExtDomQuery extends DQ {
             .filter((item) => item.nonce.isPresent()  && item.attr(ATTR_SRC) != null)
             .filter(item => IS_FACES_SOURCE(item.attr(ATTR_SRC).value))?.[0]);
 
-        if (nonceScript.isPresent()) {
-            return nonceScript.value.nonce;
-        }
-        return Optional.absent;
+        return Optional.fromNullable(nonceScript.value?.nonce?.value);
     }
 
     static searchJsfJsFor(item: RegExp): Optional<String> {

@@ -4565,7 +4565,7 @@ var Implementation;
         /*
          * lazy helper to fetch the window id from the included faces.js
          */
-        let fetchWindowIdFromJSFJS = () => ExtDomQuery_1.ExtDomQuery.searchJsfJsFor(/jfwid=([^&;]*)/).orElse(null).value;
+        let fetchWindowIdFromJSFJS = () => ExtDomQuery_1.ExtDomQuery.searchJsfJsFor(/jfwid=([^&;]*)/).orElse(null);
         /*
          * fetch window id from the url
          */
@@ -4575,8 +4575,8 @@ var Implementation;
             const results = regex.exec(href);
             //initial trial over the url and a regexp
             if (results != null)
-                return results[1];
-            return null;
+                return mona_dish_1.Optional.fromNullable(results[1]);
+            return mona_dish_1.Optional.fromNullable(null);
         };
         /*
          * functional double check based on stream reduction
@@ -4612,7 +4612,7 @@ var Implementation;
         /*
          * return the window id or null
          */
-        return formWindowId != INIT ? formWindowId : (fetchWindowIdFromURL() || fetchWindowIdFromJSFJS());
+        return formWindowId != INIT ? formWindowId : (fetchWindowIdFromURL() || fetchWindowIdFromJSFJS()).value;
     }
     Implementation.getClientWindow = getClientWindow;
     /**
@@ -5815,7 +5815,7 @@ class ExtDomQuery extends mona_dish_1.DQ {
     * this is done once and only lazily
     */
     get nonce() {
-        var _a;
+        var _a, _b, _c;
         //already processed
         let myfacesConfig = new ExtConfig(window.myfaces);
         let globalNonce = myfacesConfig.getIf("config", "cspMeta", "nonce");
@@ -5835,10 +5835,7 @@ class ExtDomQuery extends mona_dish_1.DQ {
             .querySelectorAll("script[src], link[src]").asArray
             .filter((item) => item.nonce.isPresent() && item.attr(ATTR_SRC) != null)
             .filter(item => IS_FACES_SOURCE(item.attr(ATTR_SRC).value))) === null || _a === void 0 ? void 0 : _a[0]);
-        if (nonceScript.isPresent()) {
-            return nonceScript.value.nonce;
-        }
-        return null;
+        return mona_dish_1.Optional.fromNullable((_c = (_b = nonceScript.value) === null || _b === void 0 ? void 0 : _b.nonce) === null || _c === void 0 ? void 0 : _c.value);
     }
     static searchJsfJsFor(item) {
         return new ExtDomQuery(document).searchJsfJsFor(item);

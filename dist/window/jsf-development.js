@@ -580,6 +580,34 @@ var isString = Lang_1.Lang.isString;
 var eqi = Lang_1.Lang.equalsIgnoreCase;
 var objToArray = Lang_1.Lang.objToArray;
 const AssocArray_1 = __webpack_require__(/*! ./AssocArray */ "./node_modules/mona-dish/src/main/typescript/AssocArray.ts");
+class NonceValueEmbedder extends Monad_1.ValueEmbedder {
+    constructor(rootElems) {
+        super(rootElems === null || rootElems === void 0 ? void 0 : rootElems[0], "nonce");
+        this.rootElems = rootElems;
+    }
+    isAbsent() {
+        const value = this.value;
+        return 'undefined' == typeof value || '' == value;
+    }
+    get value() {
+        var _a, _b, _c, _d, _e;
+        return (_c = (_b = (_a = this === null || this === void 0 ? void 0 : this.rootElems) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b.nonce) !== null && _c !== void 0 ? _c : (_e = (_d = this === null || this === void 0 ? void 0 : this.rootElems) === null || _d === void 0 ? void 0 : _d[0]) === null || _e === void 0 ? void 0 : _e.getAttribute("nonce");
+    }
+    set value(newVal) {
+        var _a;
+        if (!((_a = this === null || this === void 0 ? void 0 : this.rootElems) === null || _a === void 0 ? void 0 : _a.length)) {
+            return;
+        }
+        this.rootElems.forEach((rootElem) => {
+            if ("undefined" != typeof (rootElem === null || rootElem === void 0 ? void 0 : rootElem.nonce)) {
+                rootElem.nonce = newVal;
+            }
+            else {
+                rootElem.setAttribute("nonce", newVal);
+            }
+        });
+    }
+}
 /**
  *
  *        // - submit checkboxes and radio inputs only if checked
@@ -983,8 +1011,7 @@ class DomQuery {
         return new Es2019Array_1.Es2019Array(...this.rootNode.filter(item => item != null));
     }
     get nonce() {
-        var _a, _b, _c, _d, _e;
-        return Monad_1.Optional.fromNullable((_c = (_b = (_a = this === null || this === void 0 ? void 0 : this.rootNode) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b.nonce) !== null && _c !== void 0 ? _c : (_e = (_d = this === null || this === void 0 ? void 0 : this.rootNode) === null || _d === void 0 ? void 0 : _d[0]) === null || _e === void 0 ? void 0 : _e.getAttribute("nonce"));
+        return new NonceValueEmbedder(this.rootNode);
     }
     static querySelectorAllDeep(selector) {
         return new DomQuery(document).querySelectorAllDeep(selector);
@@ -1678,10 +1705,17 @@ class DomQuery {
                     case "checked":
                         this.resolveAttributeHolder("checked").checked = value;
                         break;
+                    case "nonce":
+                        // nonce will be handled below!
+                        break;
                     default:
                         this.attr(name).value = value;
                 }
             }
+        });
+        //special nonce handling
+        sourceItem.nonce.isPresent(() => {
+            this.nonce.value = sourceItem.nonce.value;
         });
         return this;
     }
@@ -5815,19 +5849,19 @@ class ExtDomQuery extends mona_dish_1.DQ {
     * this is done once and only lazily
     */
     get nonce() {
-        var _a, _b, _c;
+        var _a;
         //already processed
         let myfacesConfig = new ExtConfig(window.myfaces);
         let globalNonce = myfacesConfig.getIf("config", "cspMeta", "nonce");
         if (!!globalNonce.value) {
-            return mona_dish_1.Optional.fromNullable(globalNonce.value);
+            return mona_dish_1.ValueEmbedder.fromNullable(globalNonce);
         }
         let curScript = new mona_dish_1.DQ(document.currentScript);
         //since our baseline atm is ie11 we cannot use document.currentScript globally
         let nonce = curScript.nonce;
         if (nonce.isPresent()) {
             // fast-path for modern browsers
-            return nonce;
+            return mona_dish_1.ValueEmbedder.fromNullable(nonce);
         }
         // fallback if the currentScript method fails, we just search the jsf tags for nonce, this is
         // the last possibility
@@ -5835,7 +5869,10 @@ class ExtDomQuery extends mona_dish_1.DQ {
             .querySelectorAll("script[src], link[src]").asArray
             .filter((item) => item.nonce.isPresent() && item.attr(ATTR_SRC) != null)
             .filter(item => IS_FACES_SOURCE(item.attr(ATTR_SRC).value))) === null || _a === void 0 ? void 0 : _a[0]);
-        return mona_dish_1.Optional.fromNullable((_c = (_b = nonceScript.value) === null || _b === void 0 ? void 0 : _b.nonce) === null || _c === void 0 ? void 0 : _c.value);
+        if (!(nonceScript === null || nonceScript === void 0 ? void 0 : nonceScript.value)) {
+            return mona_dish_1.ValueEmbedder.absent;
+        }
+        return new mona_dish_1.DomQuery(nonceScript.value).nonce;
     }
     static searchJsfJsFor(item) {
         return new ExtDomQuery(document).searchJsfJsFor(item);

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Config, IValueHolder, Optional, DomQuery, DQ, Es2019Array} from "mona-dish";
+import {Config, IValueHolder, Optional, DomQuery, DQ, Es2019Array, ValueEmbedder} from "mona-dish";
 import {$nsp, P_WINDOW_ID} from "../core/Const";
 
 
@@ -104,12 +104,12 @@ export class ExtDomQuery extends DQ {
     * determines the faces.js nonce and adds them to the namespace
     * this is done once and only lazily
     */
-    get nonce(): Optional<string> {
+    get nonce(): ValueEmbedder<string> {
         //already processed
         let myfacesConfig = new ExtConfig(window.myfaces);
         let globalNonce: IValueHolder<string> = myfacesConfig.getIf("config", "cspMeta", "nonce");
         if (!!globalNonce.value) {
-            return Optional.fromNullable(globalNonce.value as string) as Optional<string>;
+            return ValueEmbedder.fromNullable(globalNonce);
         }
 
         let curScript = new DQ(document.currentScript);
@@ -117,7 +117,7 @@ export class ExtDomQuery extends DQ {
         let nonce = curScript.nonce;
         if (nonce.isPresent()) {
             // fast-path for modern browsers
-            return nonce;
+            return ValueEmbedder.fromNullable(nonce);
         }
         // fallback if the currentScript method fails, we just search the jsf tags for nonce, this is
         // the last possibility
@@ -125,8 +125,11 @@ export class ExtDomQuery extends DQ {
             .querySelectorAll("script[src], link[src]").asArray
             .filter((item) => item.nonce.isPresent()  && item.attr(ATTR_SRC) != null)
             .filter(item => IS_FACES_SOURCE(item.attr(ATTR_SRC).value))?.[0]);
+        if(!nonceScript?.value) {
+            return ValueEmbedder.absent as ValueEmbedder<string>;
+        }
 
-        return Optional.fromNullable(nonceScript.value?.nonce?.value);
+        return new DomQuery(nonceScript.value).nonce;
     }
 
     static searchJsfJsFor(item: RegExp): Optional<String> {

@@ -982,6 +982,10 @@ class DomQuery {
     get asNodeArray() {
         return new Es2019Array_1.Es2019Array(...this.rootNode.filter(item => item != null));
     }
+    get nonce() {
+        var _a, _b, _c, _d, _e;
+        return Monad_1.Optional.fromNullable((_c = (_b = (_a = this === null || this === void 0 ? void 0 : this.rootNode) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b.nonce) !== null && _c !== void 0 ? _c : (_e = (_d = this === null || this === void 0 ? void 0 : this.rootNode) === null || _d === void 0 ? void 0 : _d[0]) === null || _e === void 0 ? void 0 : _e.getAttribute("nonce"));
+    }
     static querySelectorAllDeep(selector) {
         return new DomQuery(document).querySelectorAllDeep(selector);
     }
@@ -1866,8 +1870,8 @@ class DomQuery {
             // for a full head replace
             _toReplace.replace(newElement);
         };
-        const scriptElements = new DomQuery(this.filterSelector("link, style"), this.querySelectorAll("link, style"));
-        scriptElements.asArray
+        const cssElems = new DomQuery(this.filterSelector("link, style"), this.querySelectorAll("link, style"));
+        cssElems.asArray
             .flatMap(item => [...item.values])
             // sort to make sure the execution order is correct
             // this is needed because we mix 2 queries together
@@ -5800,10 +5804,10 @@ class ExtDomQuery extends mona_dish_1.DQ {
             if (result.length > 1) {
                 throw Error("Multiple different windowIds found in document");
             }
-            return (result.isPresent()) ? result.getAsElem(0).value.value : fetchWindowIdFromURL();
+            return mona_dish_1.Optional.fromNullable((result.isPresent()) ? result.getAsElem(0).value.value : fetchWindowIdFromURL());
         }
         else {
-            return fetchWindowIdFromURL();
+            return mona_dish_1.Optional.fromNullable(fetchWindowIdFromURL());
         }
     }
     /*
@@ -5814,24 +5818,25 @@ class ExtDomQuery extends mona_dish_1.DQ {
         var _a;
         //already processed
         let myfacesConfig = new ExtConfig(window.myfaces);
-        let nonce = myfacesConfig.getIf("config", "cspMeta", "nonce");
-        if (nonce.value) {
-            return nonce.value;
+        let globalNonce = myfacesConfig.getIf("config", "cspMeta", "nonce");
+        if (!!globalNonce.value) {
+            return mona_dish_1.Optional.fromNullable(globalNonce.value);
         }
         let curScript = new mona_dish_1.DQ(document.currentScript);
         //since our baseline atm is ie11 we cannot use document.currentScript globally
-        if (!!this.extractNonce(curScript)) {
+        let nonce = curScript.nonce;
+        if (nonce.isPresent()) {
             // fast-path for modern browsers
-            return this.extractNonce(curScript);
+            return nonce;
         }
         // fallback if the currentScript method fails, we just search the jsf tags for nonce, this is
         // the last possibility
         let nonceScript = mona_dish_1.Optional.fromNullable((_a = mona_dish_1.DQ
             .querySelectorAll("script[src], link[src]").asArray
-            .filter((item) => this.extractNonce(item) && item.attr(ATTR_SRC) != null)
+            .filter((item) => item.nonce.isPresent() && item.attr(ATTR_SRC) != null)
             .filter(item => IS_FACES_SOURCE(item.attr(ATTR_SRC).value))) === null || _a === void 0 ? void 0 : _a[0]);
         if (nonceScript.isPresent()) {
-            return this.extractNonce(nonceScript.value);
+            return nonceScript.value.nonce;
         }
         return null;
     }
@@ -5855,12 +5860,12 @@ class ExtDomQuery extends mona_dish_1.DQ {
         })) === null || _a === void 0 ? void 0 : _a[0]);
     }
     globalEval(code, nonce) {
-        return new ExtDomQuery(super.globalEval(code, nonce !== null && nonce !== void 0 ? nonce : this.nonce));
+        return new ExtDomQuery(super.globalEval(code, nonce !== null && nonce !== void 0 ? nonce : this.nonce.value));
     }
     // called from base class runScripts, do not delete
     // noinspection JSUnusedGlobalSymbols
     globalEvalSticky(code, nonce) {
-        return new ExtDomQuery(super.globalEvalSticky(code, nonce !== null && nonce !== void 0 ? nonce : this.nonce));
+        return new ExtDomQuery(super.globalEvalSticky(code, nonce !== null && nonce !== void 0 ? nonce : this.nonce.value));
     }
     /**
      * decorated run scripts which takes our jsf extensions into consideration
@@ -5933,10 +5938,6 @@ class ExtDomQuery extends mona_dish_1.DQ {
     static byId(selector, deep = false) {
         const ret = mona_dish_1.DomQuery.byId(selector, deep);
         return new ExtDomQuery(ret);
-    }
-    extractNonce(curScript) {
-        var _a, _b;
-        return (_b = (_a = curScript.getAsElem(0).value) === null || _a === void 0 ? void 0 : _a.nonce) !== null && _b !== void 0 ? _b : curScript.attr("nonce").value;
     }
     filter(func) {
         return new ExtDomQuery(super.filter(func));
@@ -6869,7 +6870,7 @@ exports.resolveDelay = resolveDelay;
  */
 function resolveWindowId(options) {
     var _a, _b;
-    return (_b = (_a = options === null || options === void 0 ? void 0 : options.value) === null || _a === void 0 ? void 0 : _a.windowId) !== null && _b !== void 0 ? _b : ExtDomQuery_1.ExtDomQuery.windowId;
+    return (_b = (_a = options === null || options === void 0 ? void 0 : options.value) === null || _a === void 0 ? void 0 : _a.windowId) !== null && _b !== void 0 ? _b : ExtDomQuery_1.ExtDomQuery.windowId.value;
 }
 exports.resolveWindowId = resolveWindowId;
 /**

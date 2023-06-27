@@ -6220,7 +6220,7 @@ class HiddenInputBuilder {
         const SEP = (0, Const_1.$faces)().separatorchar;
         let existingStates = (0, mona_dish_1.DQ$)(`[name*='${(0, Const_1.$nsp)(this.name)}']`);
         let cnt = existingStates.asArray.map(state => {
-            let ident = state.id.orElse("-1").value;
+            let ident = state.id.orElse("0").value;
             ident = ident.substring(ident.lastIndexOf(SEP) + 1);
             return parseInt(ident);
         })
@@ -6229,7 +6229,7 @@ class HiddenInputBuilder {
         })
             .reduce((item1, item2) => {
             return Math.max(item1, item2);
-        }, -1);
+        }, 0); //we start with 1 (see cnt++)
         //the maximum  new ident is the current max + 1
         cnt++;
         const newElement = mona_dish_1.DQ.fromMarkup((0, Const_1.$nsp)(this.template));
@@ -8035,10 +8035,12 @@ class XhrRequest extends AsyncRunnable_1.AsyncRunnable {
             }
             const issuingItemId = this.internalContext.getIf(Const_1.CTX_PARAM_SRC_CTL_ID).value;
             if (issuingItemId) {
-                const issuingItem = mona_dish_1.DQ.byId(issuingItemId);
-                const arr = new ExtDomQuery_1.ExtConfig({});
-                arr.assign(issuingItemId).value = issuingItem.val;
-                formData.shallowMerge(arr, true, true);
+                const itemValue = mona_dish_1.DQ.byId(issuingItemId).inputValue;
+                if (itemValue.isPresent()) {
+                    const arr = new ExtDomQuery_1.ExtConfig({});
+                    arr.assign(issuingItemId).value = itemValue.value;
+                    formData.shallowMerge(arr, true, true);
+                }
             }
             this.responseContext = requestPassThroughParams.deepCopy;
             // we have to shift the internal passthroughs around to build up our response context

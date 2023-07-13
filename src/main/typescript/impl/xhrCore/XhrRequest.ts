@@ -151,13 +151,13 @@ export class XhrRequest extends AsyncRunnable<XMLHttpRequest> {
             }
 
             const issuingItemId = this.internalContext.getIf(CTX_PARAM_SRC_CTL_ID).value;
-            if(issuingItemId) {
-                const itemValue = DQ.byId(issuingItemId).inputValue;
-                if(itemValue.isPresent()) {
-                    const arr = new ExtConfig({});
-                    arr.assign(issuingItemId).value = itemValue.value;
-                    formData.shallowMerge(arr, true, true);
-                }
+            //not encoded
+            if(issuingItemId && formData.getIf(issuingItemId).isAbsent()) {
+                const domQuery = DQ.byId(issuingItemId);
+                const itemValue = domQuery.inputValue;
+                const arr = new ExtConfig({});
+                arr.assign(issuingItemId).value = itemValue.value;
+                formData.shallowMerge(arr, true, true);
             }
 
             this.responseContext = requestPassThroughParams.deepCopy;
@@ -387,7 +387,6 @@ export class XhrRequest extends AsyncRunnable<XMLHttpRequest> {
             // We need to resolve the local handlers lazily,
             // because some frameworks might decorate them over the context in the response
             let eventHandler = resolveHandlerFunc(this.requestContext, this.responseContext, ON_EVENT);
-
             Implementation.sendEvent(eventData, eventHandler);
         } catch (e) {
             e.source = e?.source ?? this.requestContext.getIf(SOURCE).value;

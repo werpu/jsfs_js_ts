@@ -2506,12 +2506,12 @@ class DomQuery {
         }
     }
 }
-exports.DomQuery = DomQuery;
 DomQuery.absent = new DomQuery();
 /**
  * reference to the environmental global object
  */
 DomQuery.global = Global_1._global$;
+exports.DomQuery = DomQuery;
 /**
  * Various collectors
  * which can be used in conjunction with Streams
@@ -2911,7 +2911,7 @@ var Lang;
         return to;
     }
     Lang.objAssign = objAssign;
-})(Lang || (exports.Lang = Lang = {}));
+})(Lang = exports.Lang || (exports.Lang = {}));
 
 
 /***/ }),
@@ -3193,9 +3193,9 @@ class Optional extends Monad {
         });
     }
 }
-exports.Optional = Optional;
 /*default value for absent*/
 Optional.absent = Optional.fromNullable(null);
+exports.Optional = Optional;
 // --------------------- From here onwards we break out the side effect free limits ------------
 /**
  * ValueEmbedder is the writeable version
@@ -3248,9 +3248,9 @@ class ValueEmbedder extends Optional {
         return new ValueEmbedder(value, valueKey);
     }
 }
-exports.ValueEmbedder = ValueEmbedder;
 /*default value for absent*/
 ValueEmbedder.absent = ValueEmbedder.fromNullable(null);
+exports.ValueEmbedder = ValueEmbedder;
 
 
 /***/ }),
@@ -3297,7 +3297,7 @@ var ITERATION_STATUS;
 (function (ITERATION_STATUS) {
     ITERATION_STATUS["EO_STRM"] = "__EO_STRM__";
     ITERATION_STATUS["BEF_STRM"] = "___BEF_STRM__";
-})(ITERATION_STATUS || (exports.ITERATION_STATUS = ITERATION_STATUS = {}));
+})(ITERATION_STATUS = exports.ITERATION_STATUS || (exports.ITERATION_STATUS = {}));
 function calculateSkips(next_strm) {
     let pos = 1;
     while (next_strm.lookAhead(pos) != ITERATION_STATUS.EO_STRM) {
@@ -4115,7 +4115,7 @@ var faces;
         }
         push.close = close;
     })(push = faces.push || (faces.push = {}));
-})(faces || (exports.faces = faces = {}));
+})(faces = exports.faces || (exports.faces = {}));
 var myfaces;
 (function (myfaces) {
     /**
@@ -4185,7 +4185,7 @@ var myfaces;
      * legacy oam functions
      */
     myfaces.oam = OamSubmit_1.oam;
-})(myfaces || (exports.myfaces = myfaces = {}));
+})(myfaces = exports.myfaces || (exports.myfaces = {}));
 
 
 /***/ }),
@@ -4928,7 +4928,7 @@ var Implementation;
             return new Function("event", sourceCode).call(source, event) !== false;
         }
     }
-})(Implementation || (exports.Implementation = Implementation = {}));
+})(Implementation = exports.Implementation || (exports.Implementation = {}));
 
 
 /***/ }),
@@ -5196,7 +5196,7 @@ var PushImpl;
     }) {
         return ((typeof fn !== "function") && (fn = mona_dish_1.DQ.global()[fn]), fn);
     }
-})(PushImpl || (exports.PushImpl = PushImpl = {}));
+})(PushImpl = exports.PushImpl || (exports.PushImpl = {}));
 
 
 /***/ }),
@@ -5653,7 +5653,7 @@ var Assertions;
         }
     }
     Assertions.assertDelay = assertDelay;
-})(Assertions || (exports.Assertions = Assertions = {}));
+})(Assertions = exports.Assertions || (exports.Assertions = {}));
 
 
 /***/ }),
@@ -6515,7 +6515,7 @@ var ExtLang;
             throw makeException(new Error(), null, null, "Impl", "getForm", getMessage("ERR_FORM"));
         }
     }
-})(ExtLang || (exports.ExtLang = ExtLang = {}));
+})(ExtLang = exports.ExtLang || (exports.ExtLang = {}));
 
 
 /***/ }),
@@ -6655,7 +6655,7 @@ var ErrorType;
     ErrorType["HTTP_ERROR"] = "httpError";
     ErrorType["CLIENT_ERROR"] = "clientErrror";
     ErrorType["TIMEOUT"] = "timeout";
-})(ErrorType || (exports.ErrorType = ErrorType = {}));
+})(ErrorType = exports.ErrorType || (exports.ErrorType = {}));
 /**
  * the spec has a problem of having the error
  * object somewhat underspecified, there is no clear
@@ -7265,7 +7265,7 @@ var Response;
                 break;
         }
     }
-})(Response || (exports.Response = Response = {}));
+})(Response = exports.Response || (exports.Response = {}));
 
 
 /***/ }),
@@ -8034,13 +8034,13 @@ class XhrRequest extends AsyncRunnable_1.AsyncRunnable {
                 requestPassThroughParams.$nspEnabled = true;
             }
             const issuingItemId = this.internalContext.getIf(Const_1.CTX_PARAM_SRC_CTL_ID).value;
-            if (issuingItemId) {
-                const itemValue = mona_dish_1.DQ.byId(issuingItemId).inputValue;
-                if (itemValue.isPresent()) {
-                    const arr = new ExtDomQuery_1.ExtConfig({});
-                    arr.assign(issuingItemId).value = itemValue.value;
-                    formData.shallowMerge(arr, true, true);
-                }
+            //not encoded
+            if (issuingItemId && formData.getIf(issuingItemId).isAbsent()) {
+                const domQuery = mona_dish_1.DQ.byId(issuingItemId);
+                const itemValue = domQuery.inputValue;
+                const arr = new ExtDomQuery_1.ExtConfig({});
+                arr.assign(issuingItemId).value = itemValue.value;
+                formData.shallowMerge(arr, true, true);
             }
             this.responseContext = requestPassThroughParams.deepCopy;
             // we have to shift the internal passthroughs around to build up our response context
@@ -8407,7 +8407,7 @@ var oam;
         });
         return false;
     };
-})(oam || (exports.oam = oam = {}));
+})(oam = exports.oam || (exports.oam = {}));
 
 
 /***/ })

@@ -17,8 +17,6 @@
 import * as webpack from 'webpack';
 import * as path from 'path'
 
-let CompressionPlugin = require('compression-webpack-plugin');
-
 
 
 /**
@@ -70,27 +68,7 @@ function build(env: {[key:string]: string}, argv: {[key:string]: string}) {
                     }]
                 }
             ]
-        },
-
-
-        plugins: [
-
-             new CompressionPlugin({
-                filename: '[name].js.gz[query]',
-                algorithm: 'gzip',
-                test: /\.js$|\.css$|\.html$|\.eot?.+$|\.ttf?.+$|\.woff?.+$|\.svg?.+$/,
-                threshold: 10240,
-                minRatio: 0.3
-
-            }),
-            new CompressionPlugin({
-                filename: '[name].js.br[query]',
-                algorithm: 'brotliCompress',
-                test: /\.(js|css|html|svg)$/,
-                threshold: 10240,
-                minRatio: 0.8
-            })
-        ]
+        }
     }
     return config;
 }

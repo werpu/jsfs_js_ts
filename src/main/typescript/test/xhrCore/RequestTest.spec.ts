@@ -687,7 +687,7 @@ describe('Tests after core when it hits response', function () {
 
     /**
      * the idea is if a checkbox or radio button is the issuing element
-     * we cannot attach it
+     * we cannot attach it if unchecked
      */
     it("must handle issuing checkboxes and radio buttons with values correctly", () => {
         const waitForResult = initCheckboxForm();
@@ -719,7 +719,46 @@ describe('Tests after core when it hits response', function () {
             }
 
             //TODO test assert here
-            expect(resultsMap["page%3numbers%31"]).to.not.exist;
+            expect(resultsMap["page%3Anumbers%3A1"]).to.not.exist;
+            //expect(doubles).to.eq(2);
+
+        });
+    });
+
+    /**
+     * the idea is if a checkbox or radio button is the issuing element
+     *  if checked
+     */
+    it("must handle issuing checkboxes and radio buttons with values correctly", () => {
+        const waitForResult = initCheckboxForm();
+        return waitForResult.then((close) => {
+            const send = sinon.spy(XMLHttpRequest.prototype, "send");
+            let dqElem = DomQuery.byId("page:numbers:1");
+            let element = dqElem.getAsElem(0).value;
+
+            faces.ajax.request(element, null, {
+                execute: "form1",
+                render: "@form",
+                params: {
+                    pass1: "pass1",
+                    pass2: "pass2"
+                }
+            });
+
+            let argsVal: any = send.args[0][0];
+            let arsArr = argsVal.split("&");
+            let resultsMap = {};
+            let doubles = 0;
+            for (let val of arsArr) {
+                let keyVal = val.split("=");
+                if(!!resultsMap[keyVal[0]]) {
+                    doubles++;
+                }
+                resultsMap[keyVal[0]] = keyVal[1];
+            }
+
+            //TODO test assert here
+            expect(resultsMap["page%3Anumbers%3A1"]).to.eq("1");
             //expect(doubles).to.eq(2);
 
         });
@@ -755,7 +794,42 @@ describe('Tests after core when it hits response', function () {
             }
 
             //TODO test assert here
-            expect(resultsMap["page%3numbers%3r%31"]).to.not.exist;
+            expect(resultsMap["page%3Anumbers%3Ar%3A1"]).to.not.exist;
+            //expect(doubles).to.eq(2);
+
+        });
+    });
+
+    it("must handle issuing checkboxes and radio buttons with values correctly with value", () => {
+        const waitForResult = initCheckboxForm();
+        return waitForResult.then((close) => {
+            const send = sinon.spy(XMLHttpRequest.prototype, "send");
+            let dqElem = DomQuery.byId("page:numbers:r:1");
+            let element = dqElem.getAsElem(0).value;
+
+            faces.ajax.request(element, null, {
+                execute: "form2",
+                render: "@form",
+                params: {
+                    pass1: "pass1",
+                    pass2: "pass2"
+                }
+            });
+
+            let argsVal: any = send.args[0][0];
+            let arsArr = argsVal.split("&");
+            let resultsMap = {};
+            let doubles = 0;
+            for (let val of arsArr) {
+                let keyVal = val.split("=");
+                if(!!resultsMap[keyVal[0]]) {
+                    doubles++;
+                }
+                resultsMap[keyVal[0]] = keyVal[1];
+            }
+
+            //TODO test assert here
+            expect(resultsMap["page%3Anumbers%3Ar%3A1"]).to.exist;
             //expect(doubles).to.eq(2);
 
         });

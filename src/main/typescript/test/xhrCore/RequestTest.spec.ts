@@ -18,7 +18,7 @@ import {describe, it} from "mocha";
 import * as sinon from "sinon";
 import {expect} from "chai";
 import {StandardInits} from "../frameworkBase/_ext/shared/StandardInits";
-import {_Es2019Array, DomQuery} from "mona-dish";
+import {_Es2019Array, DomQuery, DQ$} from "mona-dish";
 import {
     COMPLETE, EMPTY_STR,
     P_AJAX,
@@ -833,6 +833,54 @@ describe('Tests after core when it hits response', function () {
             //expect(doubles).to.eq(2);
 
         });
+    });
+
+    /**
+     * https://issues.apache.org/jira/browse/MYFACES-4638
+     */
+    it("must pass values with & in its value correctly", function (done) {
+        let send = sinon.spy(XMLHttpRequest.prototype, "send");
+        let globalCnt = 0;
+        let localCnt = 0;
+        DomQuery.byId("input_1").val = "aaa&bbb";
+        try {
+            let element = DomQuery.byId("input_2").getAsElem(0).value;
+            faces.ajax.addOnEvent(() => {
+                globalCnt++;
+            });
+            faces.ajax.request(element, null, {
+                execute: "input_1",
+                render: "@form",
+                params: {
+                    pass1: "pass1",
+                    pass2: "pass2"
+                },
+                message: "Hello World",
+                onevent: (evt: any) => {
+                    localCnt++;
+                }
+            });
+
+            let xhrReq = this.requests[0];
+            let requestBody = xhrReq.requestBody.split("&");
+
+            xhrReq.respond(200, {'Content-Type': 'text/xml'}, STD_XML);
+            expect(requestBody.indexOf("input_1=aaa%26bbb")).not.to.eq(-1);
+            expect(requestBody.indexOf("pass1=pass1")).not.to.eq(-1);
+            expect(requestBody.indexOf("pass2=pass2")).not.to.eq(-1);
+            expect(requestBody.indexOf("message=Hello%20World")).not.to.eq(-1);
+
+            expect(this.jsfAjaxResponse.callCount).to.eq(1);
+            //success ommitted due to fake response
+            expect(globalCnt == 3).to.eq(true);
+            expect(localCnt == 3).to.eq(true);
+            done();
+        } catch (e) {
+            console.error(e);
+
+        } finally {
+            send.restore();
+        }
     });
 
 });

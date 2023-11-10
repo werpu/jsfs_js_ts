@@ -429,31 +429,22 @@ describe("test for proper request param patterns identical to the old implementa
             resultsMap[keyVal[0]] = keyVal[1];
         }
 
-        function encode(string: string): string {
-            return string
-                .split(" ").join("%20")
-                .split(",").join("%2C")
-                .split(":").join("%3A")
-                .split("[").join("%5B")
-                .split("]").join("%5D");
-        }
-
-        expect(resultsMap[encode("page::lastFocusId")]).to.exist;
+        expect(resultsMap[encodeURIComponent("page::lastFocusId")]).to.exist;
         expect(resultsMap["org.apache.myfaces.tobago.webapp.Secret"]).to.eq("secretValue");
         expect(resultsMap["jakarta.faces.ViewState"]).to.eq("viewStateValue");
         expect(resultsMap["jakarta.faces.RenderKitId"]).to.eq("tobago");
         expect(resultsMap["jakarta.faces.ClientWindow"]).to.eq("clientWindowValue");
-        expect(resultsMap[encode("page:categoriesTree::selected")]).to.eq(encode("[3]"));
-        expect(resultsMap[encode("page:categoriesTree::expanded")]).to.eq(encode("[0,3,8]"));
-        expect(resultsMap[encode("page:categoriesTree::scrollPosition")]).to.eq(encode("[0,0]"));
+        expect(resultsMap[encodeURIComponent("page:categoriesTree::selected")]).to.eq(encodeURIComponent("[3]"));
+        expect(resultsMap[encodeURIComponent("page:categoriesTree::expanded")]).to.eq(encodeURIComponent("[0,3,8]"));
+        expect(resultsMap[encodeURIComponent("page:categoriesTree::scrollPosition")]).to.eq(encodeURIComponent("[0,0]"));
         expect(resultsMap["jakarta.faces.behavior.event"]).to.eq("change");
         expect(resultsMap["jakarta.faces.partial.event"]).to.eq("change");
-        expect(resultsMap["jakarta.faces.source"]).to.eq(encode("page:categoriesTree:3:select"));
+        expect(resultsMap["jakarta.faces.source"]).to.eq(encodeURIComponent("page:categoriesTree:3:select"));
         expect(resultsMap["jakarta.faces.partial.ajax"]).to.eq("true");
-        expect(resultsMap[encode("page::form")]).to.eq(encode("page::form"));
-        expect(resultsMap["jakarta.faces.partial.execute"]).to.eq(encode("page:categoriesTree:3:select page:categoriesTree"));
-        expect(resultsMap["jakarta.faces.partial.render"]).to.eq(encode("page:selectedNodesOutput page:categoriesTree"));
-        expect(resultsMap[encode("page:categoriesTree:3:select")]).to.exist;
+        expect(resultsMap[encodeURIComponent("page::form")]).to.eq(encodeURIComponent("page::form"));
+        expect(resultsMap["jakarta.faces.partial.execute"]).to.eq(encodeURIComponent("page:categoriesTree:3:select page:categoriesTree"));
+        expect(resultsMap["jakarta.faces.partial.render"]).to.eq(encodeURIComponent("page:selectedNodesOutput page:categoriesTree"));
+        expect(resultsMap[encodeURIComponent("page:categoriesTree:3:select")]).to.exist;
 
         done();
     });

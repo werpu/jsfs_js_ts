@@ -453,7 +453,7 @@ describe("test for proper request param patterns identical to the old implementa
         expect(resultsMap[encode("page::form")]).to.eq(encode("page::form"));
         expect(resultsMap["jakarta.faces.partial.execute"]).to.eq(encode("page:categoriesTree:3:select page:categoriesTree"));
         expect(resultsMap["jakarta.faces.partial.render"]).to.eq(encode("page:selectedNodesOutput page:categoriesTree"));
-        expect(resultsMap[encode("page:categoriesTree:3:select")]).not.to.exist;
+        expect(resultsMap[encode("page:categoriesTree:3:select")]).to.exist;
 
         done();
     });

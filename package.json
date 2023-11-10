@@ -48,6 +48,6 @@
     "webpack-dev-server": "^4.15.1"
   },
   "dependencies": {
-    "mona-dish": "0.28.10"
+    "mona-dish": "0.28.11"
   }
 }

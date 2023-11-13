@@ -448,4 +448,121 @@ describe("test for proper request param patterns identical to the old implementa
 
         done();
     });
+
+  /**
+   * This test is based on Tobago 6.0.0 (Jakarte EE 10).
+   */
+  it("tobago selectManyShuttle", function (done) {
+    window.document.body.innerHTML = `
+<tobago-page locale="de" class="container-fluid" id="page" focus-on-error="true" wait-overlay-delay-full="1000" wait-overlay-delay-ajax="1000">
+   <form action="/content/030-select/70-selectManyShuttle/Shuttle.xhtml" id="page::form" method="post" accept-charset="UTF-8" data-tobago-context-path="">
+    <input type="hidden" name="jakarta.faces.source" id="jakarta.faces.source" disabled="disabled">
+    <tobago-focus id="page::lastFocusId">
+     <input type="hidden" name="page::lastFocusId" id="page::lastFocusId::field">
+    </tobago-focus>
+    <input type="hidden" name="org.apache.myfaces.tobago.webapp.Secret" id="org.apache.myfaces.tobago.webapp.Secret" value="secretValue">
+    <div class="tobago-page-menuStore">
+    </div>
+    <div class="tobago-page-toastStore">
+    </div>
+    <span id="page::faces-state-container"><input type="hidden" name="jakarta.faces.ViewState" id="j_id__v_0:jakarta.faces.ViewState:1" value="viewStateValue" autocomplete="off"><input type="hidden" name="jakarta.faces.RenderKitId" value="tobago"><input type="hidden" id="j_id__v_0:jakarta.faces.ClientWindow:1" name="jakarta.faces.ClientWindow" value="clientWindowValue"></span>
+    <tobago-select-many-shuttle id="page:ajaxExample" class="tobago-auto-spacing">
+     <div class="tobago-body">
+      <div class="tobago-unselected-container">
+       <select id="page:ajaxExample::unselected" class="tobago-unselected form-select" multiple="multiple" size="4">
+        <option value="Proxima Centauri">Proxima Centauri
+        </option>
+        <option value="Alpha Centauri">Alpha Centauri
+        </option>
+        <option value="Wolf 359">Wolf 359
+        </option></select>
+      </div>
+      <div class="tobago-controls">
+       <div class="btn-group-vertical">
+        <button type="button" class="btn btn-secondary" id="page:ajaxExample::addAll"><i class="bi-chevron-double-right"></i></button>
+        <button type="button" class="btn btn-secondary" id="page:ajaxExample::add"><i class="bi-chevron-right"></i></button>
+        <button type="button" class="btn btn-secondary" id="page:ajaxExample::remove"><i class="bi-chevron-left"></i></button>
+        <button type="button" class="btn btn-secondary" id="page:ajaxExample::removeAll"><i class="bi-chevron-double-left"></i></button>
+       </div>
+      </div>
+      <div class="tobago-selected-container">
+       <select id="page:ajaxExample::selected" class="tobago-selected form-select" multiple="multiple" size="4">
+        <option value="Sirius">Sirius
+        </option></select>
+      </div>
+      <select class="d-none" id="page:ajaxExample::hidden" name="page:ajaxExample" multiple="multiple">
+       <option value="Proxima Centauri">Proxima Centauri
+       </option>
+       <option value="Alpha Centauri">Alpha Centauri
+       </option>
+       <option value="Wolf 359">Wolf 359
+       </option>
+       <option value="Sirius" selected="selected">Sirius
+       </option></select>
+     </div>
+     <tobago-behavior event="change" client-id="page:ajaxExample" execute="page:ajaxExample" render="page:outputStars"></tobago-behavior>
+    </tobago-select-many-shuttle>
+    <tobago-out id="page:outputStars" class="tobago-label-container tobago-auto-spacing"><label for="page:outputStars" class="col-form-label">Selected Stars</label><span class="form-control-plaintext">[Sirius]</span></tobago-out>
+   </form>
+  </tobago-page>
+`;
+
+    //we now run the tests here
+    try {
+      let siriusOption = document.querySelector<HTMLOptionElement>(".tobago-selected option");
+      document.querySelector<HTMLSelectElement>(".tobago-unselected").add(siriusOption);
+
+      document.getElementById("page:ajaxExample::hidden")
+          .querySelector<HTMLOptionElement>("option[value='Sirius']").selected = false;
+
+      let event = {
+        isTrusted: true,
+        type: 'change',
+        target: document.getElementById("page:ajaxExample"),
+        currentTarget: document.getElementById("page:ajaxExample")
+      };
+      global.debug2 = true;
+      faces.ajax.request(
+          document.getElementById("page:ajaxExample"),
+          event as any,
+          {
+            "jakarta.faces.behavior.event": "change",
+            execute: 'page:ajaxExample',
+            render: 'page:outputStars'
+          });
+    } catch (err) {
+      console.error(err);
+      expect(false).to.eq(true);
+    }
+    const requestBody = this.requests[0].requestBody;
+    let arsArr = requestBody.split("&");
+    let resultsMap = {};
+    for (let val of arsArr) {
+      let keyVal = val.split("=");
+
+      if (resultsMap[keyVal[0]]) {
+        console.log("duplicated key '" + keyVal[0] + "'");
+        expect(resultsMap[keyVal[0]]).not.to.exist;
+      }
+
+      console.log(keyVal[0] + " -- " + keyVal[1]);
+      resultsMap[keyVal[0]] = keyVal[1];
+    }
+
+    expect(resultsMap[encodeURIComponent("page::lastFocusId")]).to.exist;
+    expect(resultsMap["org.apache.myfaces.tobago.webapp.Secret"]).to.eq("secretValue");
+    expect(resultsMap["jakarta.faces.ViewState"]).to.eq("viewStateValue");
+    expect(resultsMap["jakarta.faces.RenderKitId"]).to.eq("tobago");
+    expect(resultsMap["jakarta.faces.ClientWindow"]).to.eq("clientWindowValue");
+    expect(resultsMap["jakarta.faces.behavior.event"]).to.eq("change");
+    expect(resultsMap["jakarta.faces.partial.event"]).to.eq("change");
+    expect(resultsMap["jakarta.faces.source"]).to.eq(encodeURIComponent("page:ajaxExample"));
+    expect(resultsMap["jakarta.faces.partial.ajax"]).to.eq("true");
+    expect(resultsMap[encodeURIComponent("page::form")]).to.eq(encodeURIComponent("page::form"));
+    expect(resultsMap["jakarta.faces.partial.execute"]).to.eq(encodeURIComponent("page:ajaxExample"));
+    expect(resultsMap["jakarta.faces.partial.render"]).to.eq(encodeURIComponent("page:outputStars"));
+    expect(resultsMap[encodeURIComponent("page:ajaxExample")]).not.to.exist;
+
+    done();
+  });
 });

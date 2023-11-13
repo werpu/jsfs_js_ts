@@ -416,7 +416,7 @@ export class XhrRequest extends AsyncRunnable<XMLHttpRequest> {
                 return;
             } else if((type == "checkbox" || type == "radio")) {
                 arr.assign(issuingItemId).value = itemValue.orElse(true).value;
-            } else {
+            } else if (itemValue.isPresent()) {
                 arr.assign(issuingItemId).value = itemValue.value;
             }
 

@@ -8355,7 +8355,7 @@ class XhrRequest extends AsyncRunnable_1.AsyncRunnable {
             else if ((type == "checkbox" || type == "radio")) {
                 arr.assign(issuingItemId).value = itemValue.orElse(true).value;
             }
-            else {
+            else if (itemValue.isPresent()) {
                 arr.assign(issuingItemId).value = itemValue.value;
             }
             formData.shallowMerge(arr, true, true);

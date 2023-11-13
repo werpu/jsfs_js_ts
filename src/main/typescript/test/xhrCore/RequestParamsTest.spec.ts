@@ -396,6 +396,8 @@ describe("test for proper request param patterns identical to the old implementa
 
         //we now run the tests here
         try {
+            document.querySelector<HTMLInputElement>("input[name='page:categoriesTree:3:select']").checked = false;
+
             let event = {
                 isTrusted: true,
                 type: 'change',
@@ -425,7 +427,6 @@ describe("test for proper request param patterns identical to the old implementa
                 console.log("duplicated key '" + keyVal[0] + "'");
                 expect(resultsMap[keyVal[0]]).not.to.exist;
             }
-
             resultsMap[keyVal[0]] = keyVal[1];
         }
 
@@ -444,7 +445,7 @@ describe("test for proper request param patterns identical to the old implementa
         expect(resultsMap[encodeURIComponent("page::form")]).to.eq(encodeURIComponent("page::form"));
         expect(resultsMap["jakarta.faces.partial.execute"]).to.eq(encodeURIComponent("page:categoriesTree:3:select page:categoriesTree"));
         expect(resultsMap["jakarta.faces.partial.render"]).to.eq(encodeURIComponent("page:selectedNodesOutput page:categoriesTree"));
-        expect(resultsMap[encodeURIComponent("page:categoriesTree:3:select")]).to.exist;
+        expect(resultsMap[encodeURIComponent("page:categoriesTree:3:select")]).not.to.exist;
 
         done();
     });
@@ -511,7 +512,6 @@ describe("test for proper request param patterns identical to the old implementa
     try {
       let siriusOption = document.querySelector<HTMLOptionElement>(".tobago-selected option");
       document.querySelector<HTMLSelectElement>(".tobago-unselected").add(siriusOption);
-
       document.getElementById("page:ajaxExample::hidden")
           .querySelector<HTMLOptionElement>("option[value='Sirius']").selected = false;
 
@@ -544,8 +544,6 @@ describe("test for proper request param patterns identical to the old implementa
         console.log("duplicated key '" + keyVal[0] + "'");
         expect(resultsMap[keyVal[0]]).not.to.exist;
       }
-
-      console.log(keyVal[0] + " -- " + keyVal[1]);
       resultsMap[keyVal[0]] = keyVal[1];
     }
 

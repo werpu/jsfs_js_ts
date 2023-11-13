@@ -8349,7 +8349,7 @@ class XhrRequest extends AsyncRunnable_1.AsyncRunnable {
             const type = issuingItem.type.orElse("").value.toLowerCase();
             //Checkbox and radio only value pass if checked is set, otherwise they should not show
             //up at all, and if checked is set, they either can have a value or simply being boolean
-            if ((type == "checkbox" || type == "radio") && issuingItem.attr("checked").isAbsent()) {
+            if ((type == "checkbox" || type == "radio") && !issuingItem.checked) {
                 return;
             }
             else if ((type == "checkbox" || type == "radio")) {

@@ -765,5 +765,23 @@ describe('Tests of the various aspects of the response protocol functionality', 
 
     });
 
+    it("Count of <html> and <body> must be 1", function () {
+        window.document.documentElement.innerHTML = StandardInits.HTML_TOBAGO_PAGE_WITH_BUTTON;
+
+        expect(DQ.querySelectorAll("html").length).to.be.eq(1);
+        expect(DQ.querySelectorAll("body").length).to.be.eq(1);
+
+        faces.ajax.request(window.document.getElementById("page:button"), null, {
+            "jakarta.faces.behavior.event": "click",
+            execute: "page:button",
+            render: "page"
+        });
+
+        this.respond(XmlResponses.UPDATE_TOBAGO_PAGE_WITH_BUTTON);
+
+        expect(DQ.querySelectorAll("html").length).to.be.eq(1);
+        expect(DQ.querySelectorAll("body").length).to.be.eq(1);
+    });
+
 
 });

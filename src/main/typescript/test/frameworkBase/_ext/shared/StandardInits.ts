@@ -231,6 +231,41 @@ export module StandardInits {
 </body>
 </html>`;
 
+    export const HTML_TOBAGO_PAGE_WITH_BUTTON = `<!DOCTYPE html>
+<html lang='de'>
+ <head>
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+  <title>Test
+  </title>
+  <link rel='stylesheet' href='./fixtures/css/tobago.css' type='text/css'>
+  <link rel='stylesheet' href='./fixtures/css/bootstrap-icons.css' type='text/css'>
+  <script src='./fixtures/jakarta.faces.resource/faces.js.jsf' type='text/javascript'></script>
+  <script src='./fixtures/js/tobago.js' type='module'></script>
+ </head>
+ <body>
+  <tobago-page locale='de' class='container-fluid' id='page' focus-on-error='true' wait-overlay-delay-full='1000' wait-overlay-delay-ajax='1000'>
+   <form action='/content/010-input/Input.xhtml' id='page::form' method='post' accept-charset='UTF-8' data-tobago-context-path=''>
+    <input type='hidden' name='jakarta.faces.source' id='jakarta.faces.source' disabled='disabled'>
+    <tobago-focus id='page::lastFocusId'>
+     <input type='hidden' name='page::lastFocusId' id='page::lastFocusId::field'>
+    </tobago-focus>
+    <input type='hidden' name='org.apache.myfaces.tobago.webapp.Secret' id='org.apache.myfaces.tobago.webapp.Secret' value='secretValue'>
+    <div class='tobago-page-menuStore'>
+    </div>
+    <div class='tobago-page-toastStore'>
+    </div>
+    <span id='page::faces-state-container'><input type='hidden' name='jakarta.faces.ViewState' id='j_id__v_0:jakarta.faces.ViewState:1' value='viewStateValue' autocomplete='off'><input type='hidden' name='jakarta.faces.RenderKitId' value='tobago'><input type='hidden' id='j_id__v_0:jakarta.faces.ClientWindow:1' name='jakarta.faces.ClientWindow' value='clientWindowValue'></span>
+    <button type='button' id='page:button' name='page:button' class='tobago-button btn btn-secondary tobago-auto-spacing'><tobago-behavior event='click' client-id='page:button' execute='page:button' render='page'></tobago-behavior><span>page ajax</span></button>
+   </form>
+   <noscript>
+    <div class='tobago-page-noscript'>Diese Seite benötigt JavaScript, allerdings ist JavaScript in Ihrem Browser derzeit deaktiviert. Um JavaScript zu aktivieren, lesen Sie ggf. die Anleitung Ihres Browsers.
+    </div>
+   </noscript>
+  </tobago-page>
+ </body>
+</html>`;
+
     /**
      * a page simulating basically a simple faces form
      */

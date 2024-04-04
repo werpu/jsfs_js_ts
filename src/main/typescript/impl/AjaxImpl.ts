@@ -225,7 +225,7 @@ export module Implementation {
             if(returnVal === false) {
                 ret = false;
             }
-            //we short circuit in case of false and break the every look
+            //we short circuit in case of false and break the every loop
             return ret;
         });
         return ret;

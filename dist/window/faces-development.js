@@ -5154,14 +5154,14 @@ var PushImpl;
             this.reconnectAttempts = 0;
         }
         onerror(event) {
-            var _a, _b;
-            let message = JSON.parse(event.data);
+            var _a, _b, _c;
+            let message = JSON.parse((_a = event === null || event === void 0 ? void 0 : event.data) !== null && _a !== void 0 ? _a : null);
             //TODO replace this with a more readable Stream code
             for (let i = PushImpl.clientIdsByTokens[this.channelToken].length - 1; i >= 0; i--) {
                 let socketClientId = PushImpl.clientIdsByTokens[this.channelToken][i];
                 if (document.getElementById(socketClientId)) {
                     try {
-                        (_b = (_a = PushImpl.components[socketClientId]) === null || _a === void 0 ? void 0 : _a['onerror']) === null || _b === void 0 ? void 0 : _b.call(_a, message, this.channel, event);
+                        (_c = (_b = PushImpl.components[socketClientId]) === null || _b === void 0 ? void 0 : _b['onerror']) === null || _c === void 0 ? void 0 : _c.call(_b, message, this.channel, event);
                     }
                     catch (e) {
                         //Ignore

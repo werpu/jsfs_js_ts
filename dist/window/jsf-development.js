@@ -8369,8 +8369,11 @@ class XhrRequest extends AsyncRunnable_1.AsyncRunnable {
     }
     appendIssuingItem(formData) {
         const issuingItemId = this.internalContext.getIf(Const_1.CTX_PARAM_SRC_CTL_ID).value;
+        //to avoid sideffects with buttons we only can append the issuing item if no behavior event is set
+        //MYFACES-4679!
+        const isBehaviorEvent = !!formData.getIf((0, Const_1.$nsp)(Const_1.P_BEHAVIOR_EVENT)).value;
         //not encoded
-        if (issuingItemId && formData.getIf(issuingItemId).isAbsent()) {
+        if (issuingItemId && formData.getIf(issuingItemId).isAbsent() && !isBehaviorEvent) {
             const issuingItem = mona_dish_1.DQ.byId(issuingItemId);
             const itemValue = issuingItem.inputValue;
             const arr = new ExtDomQuery_1.ExtConfig({});

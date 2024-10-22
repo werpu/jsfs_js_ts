@@ -1945,7 +1945,7 @@ class DomQuery {
             // script execution order by relative pos in their dom tree
             scriptElements.asArray
                 .flatMap(item => [...item.values])
-                .sort((node1, node2) => node1.compareDocumentPosition(node2) - 3) // preceding 2, following == 4)
+                .sort((node1, node2) => node2.compareDocumentPosition(node1) - 3) // preceding 2, following == 4)
                 .forEach(item => execScript(item));
             evalCollectedScripts(finalScripts);
         }
@@ -6512,8 +6512,9 @@ var ExtLang;
             .orElseLazy(() => queryElem.byTagName(Const_1.HTML_TAG_FORM, true))
             .orElseLazy(() => eventTarget.firstParent(Const_1.HTML_TAG_FORM))
             .orElseLazy(() => eventTarget.byTagName(Const_1.HTML_TAG_FORM))
+            .orElseLazy(() => mona_dish_1.DQ.byTagName(Const_1.HTML_TAG_FORM))
             .first();
-        assertFormExists(form);
+        assertOnlyOneFormExists(form);
         return form;
     }
     ExtLang.getForm = getForm;
@@ -6586,12 +6587,12 @@ var ExtLang;
     }
     ExtLang.debounce = debounce;
     /**
-     * assert that the form exists and throw an exception in the case it does not
+     * assert that the form exists and only one form exists and throw an exception in the case it does not
      *
-     * @param form the form to check for
+     * @param forms the form to check for
      */
-    function assertFormExists(form) {
-        if (form.isAbsent()) {
+    function assertOnlyOneFormExists(forms) {
+        if (forms.isAbsent() || forms.length > 1) {
             throw makeException(new Error(), null, null, "Impl", "getForm", getMessage("ERR_FORM"));
         }
     }

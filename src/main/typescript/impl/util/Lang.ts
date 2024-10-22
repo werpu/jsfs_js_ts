@@ -178,9 +178,10 @@ export module ExtLang {
             .orElseLazy(() => queryElem.byTagName(HTML_TAG_FORM, true))
             .orElseLazy(() => eventTarget.firstParent(HTML_TAG_FORM))
             .orElseLazy(() => eventTarget.byTagName(HTML_TAG_FORM))
+            .orElseLazy(() => DQ.byTagName(HTML_TAG_FORM))
             .first();
 
-        assertFormExists(form);
+        assertOnlyOneFormExists(form);
 
         return form;
     }
@@ -257,17 +258,14 @@ export module ExtLang {
         }
     }
 
-
     /**
-     * assert that the form exists and throw an exception in the case it does not
+     * assert that the form exists and only one form exists and throw an exception in the case it does not
      *
-     * @param form the form to check for
+     * @param forms the form to check for
      */
-    function assertFormExists(form: DomQuery): void | never {
-        if (form.isAbsent()) {
+    function assertOnlyOneFormExists(forms: DomQuery): void | never {
+        if (forms.isAbsent() || forms.length > 1) {
             throw makeException(new Error(), null, null, "Impl", "getForm", getMessage("ERR_FORM"));
         }
     }
-
-
 }

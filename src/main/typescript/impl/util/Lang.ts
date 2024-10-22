@@ -174,13 +174,19 @@ export module ExtLang {
             }
         }
 
+        //no direct form is found we look for parent/child relationships as fallback
+        //(90% case)
         let form = queryElem.firstParent(HTML_TAG_FORM)
             .orElseLazy(() => queryElem.byTagName(HTML_TAG_FORM, true))
             .orElseLazy(() => eventTarget.firstParent(HTML_TAG_FORM))
             .orElseLazy(() => eventTarget.byTagName(HTML_TAG_FORM))
-            .orElseLazy(() => DQ.byTagName(HTML_TAG_FORM))
             .first();
 
+        //either a form is found within parent child - nearest form (aka first)
+        //or we look for a single form
+        form = form.orElseLazy(() => DQ.byTagName(HTML_TAG_FORM));
+
+        //the end result must be a found form otherwise - Exception
         assertOnlyOneFormExists(form);
 
         return form;

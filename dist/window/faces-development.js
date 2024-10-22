@@ -6508,12 +6508,17 @@ var ExtLang;
                 return foundForm;
             }
         }
+        //no direct form is found we look for parent/child relationships as fallback
+        //(90% case)
         let form = queryElem.firstParent(Const_1.HTML_TAG_FORM)
             .orElseLazy(() => queryElem.byTagName(Const_1.HTML_TAG_FORM, true))
             .orElseLazy(() => eventTarget.firstParent(Const_1.HTML_TAG_FORM))
             .orElseLazy(() => eventTarget.byTagName(Const_1.HTML_TAG_FORM))
-            .orElseLazy(() => mona_dish_1.DQ.byTagName(Const_1.HTML_TAG_FORM))
             .first();
+        //either a form is found within parent child - nearest form (aka first)
+        //or we look for a single form
+        form = form.orElseLazy(() => mona_dish_1.DQ.byTagName(Const_1.HTML_TAG_FORM));
+        //the end result must be a found form otherwise - Exception
         assertOnlyOneFormExists(form);
         return form;
     }

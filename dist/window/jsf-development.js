@@ -4478,7 +4478,7 @@ var Implementation;
      * b) passThrough handling with a map copy with a filter map block map
      */
     function request(el, event, opts) {
-        var _a, _b, _c, _d, _e;
+        var _a, _b, _c, _d, _e, _f, _g;
         const { options, elem, elementId, windowId, isResetValues } = (0, RequestDataResolver_1.resolveDefaults)(event, opts, el);
         const requestCtx = new ExtDomQuery_1.ExtConfig({});
         const internalCtx = new ExtDomQuery_1.ExtConfig({});
@@ -4544,6 +4544,11 @@ var Implementation;
         // additional meta information to speed things up, note internal non jsf
         // pass through options are stored under _mfInternal in the context
         internalCtx.assign(Const_1.CTX_PARAM_SRC_FRM_ID).value = formId;
+        /**
+         * special myfaces only internal parameter for onProgress until we have an official api
+         * that way we can track the progress of a xhr request (useful for file uploads)
+         */
+        internalCtx.assign(Const_1.CTX_PARAM_ON_PROGRESS).value = (_e = (_d = options.value) === null || _d === void 0 ? void 0 : _d.myfaces) === null || _e === void 0 ? void 0 : _e.onProgress;
         // mojarra compatibility, mojarra is sending the form id as well
         // this is not documented behavior but can be determined by running
         // mojarra under blackbox conditions.
@@ -4552,7 +4557,7 @@ var Implementation;
         requestCtx.assign(Const_1.CTX_PARAM_REQ_PASS_THR, formId).value = formId;
         internalCtx.assign(Const_1.CTX_PARAM_SRC_CTL_ID).value = elementId;
         // reintroduction of PPS as per myfaces 2.3 (myfaces.pps = true, only the executes are submitted)
-        internalCtx.assign(Const_1.CTX_PARAM_PPS).value = (_e = (_d = extractMyFacesParams(options.value)) === null || _d === void 0 ? void 0 : _d[Const_1.MYFACES_OPTION_PPS]) !== null && _e !== void 0 ? _e : false;
+        internalCtx.assign(Const_1.CTX_PARAM_PPS).value = (_g = (_f = extractMyFacesParams(options.value)) === null || _f === void 0 ? void 0 : _f[Const_1.MYFACES_OPTION_PPS]) !== null && _g !== void 0 ? _g : false;
         assignClientWindowId(form, requestCtx);
         assignExecute(options, requestCtx, form, elementId);
         assignRender(options, requestCtx, form, elementId);
@@ -5304,8 +5309,8 @@ var PushImpl;
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CTX_OPTIONS_PARAMS = exports.TIMEOUT_EVENT = exports.CLIENT_ERROR = exports.SERVER_ERROR = exports.MALFORMEDXML = exports.EMPTY_RESPONSE = exports.HTTP_ERROR = exports.RESPONSE_XML = exports.RESPONSE_TEXT = exports.ERROR_MESSAGE = exports.ERROR_NAME = exports.STATUS = exports.SOURCE = exports.SUCCESS = exports.COMPLETE = exports.BEGIN = exports.ON_EVENT = exports.ON_ERROR = exports.EVENT = exports.ERROR = exports.WINDOW_ID = exports.CTX_PARAM_RENDER = exports.P_BEHAVIOR_EVENT = exports.P_WINDOW_ID = exports.P_RESET_VALUES = exports.P_EVT = exports.P_RENDER_OVERRIDE = exports.P_RENDER = exports.P_EXECUTE = exports.P_AJAX = exports.IDENT_FORM = exports.IDENT_THIS = exports.IDENT_NONE = exports.IDENT_ALL = exports.HTML_CLIENT_WINDOW = exports.HTML_VIEWSTATE = exports.EMPTY_MAP = exports.EMPTY_STR = exports.EMPTY_FUNC = exports.P_RESOURCE = exports.P_VIEWBODY = exports.P_VIEWHEAD = exports.P_VIEWROOT = exports.P_CLIENT_WINDOW = exports.P_VIEWSTATE = exports.VIEW_ID = exports.NAMING_CONTAINER_ID = exports.P_AJAX_SOURCE = exports.NAMED_VIEWROOT = exports.XML_ATTR_NAMED_VIEWROOT = void 0;
-exports.XML_TAG_REDIRECT = exports.XML_TAG_EXTENSION = exports.XML_TAG_ATTRIBUTES = exports.XML_TAG_ERROR = exports.XML_TAG_EVAL = exports.XML_TAG_INSERT = exports.XML_TAG_DELETE = exports.XML_TAG_UPDATE = exports.XML_TAG_CHANGES = exports.XML_TAG_PARTIAL_RESP = exports.ATTR_ID = exports.ATTR_VALUE = exports.ATTR_NAME = exports.ATTR_URL = exports.MYFACES_OPTION_PPS = exports.ERR_NO_PARTIAL_RESPONSE = exports.PHASE_PROCESS_RESPONSE = exports.SEL_RESPONSE_XML = exports.SEL_CLIENT_WINDOW_ELEM = exports.SEL_VIEWSTATE_ELEM = exports.HTML_TAG_STYLE = exports.HTML_TAG_SCRIPT = exports.HTML_TAG_LINK = exports.HTML_TAG_BODY = exports.HTML_TAG_FORM = exports.HTML_TAG_HEAD = exports.STD_ACCEPT = exports.NO_TIMEOUT = exports.MULTIPART = exports.URL_ENCODED = exports.STATE_EVT_COMPLETE = exports.STATE_EVT_TIMEOUT = exports.STATE_EVT_BEGIN = exports.REQ_TYPE_POST = exports.REQ_TYPE_GET = exports.ENCODED_URL = exports.VAL_AJAX = exports.REQ_ACCEPT = exports.HEAD_FACES_REQ = exports.CONTENT_TYPE = exports.CTX_PARAM_PPS = exports.CTX_PARAM_REQ_PASS_THR = exports.CTX_PARAM_SRC_CTL_ID = exports.CTX_PARAM_SRC_FRM_ID = exports.CTX_PARAM_MF_INTERNAL = exports.CTX_OPTIONS_EXECUTE = exports.CTX_OPTIONS_RESET = exports.CTX_OPTIONS_TIMEOUT = exports.DELAY_NONE = exports.CTX_OPTIONS_DELAY = void 0;
-exports.$nsp = exports.$faces = exports.UNKNOWN = exports.MAX_RECONNECT_ATTEMPTS = exports.RECONNECT_INTERVAL = exports.APPLIED_CLIENT_WINDOW = exports.APPLIED_VST = exports.REASON_EXPIRED = exports.MF_NONE = exports.MYFACES = exports.DEFERRED_HEAD_INSERTS = exports.UPDATE_ELEMS = exports.UPDATE_FORMS = exports.XML_TAG_ATTR = exports.XML_TAG_AFTER = exports.XML_TAG_BEFORE = void 0;
+exports.XML_TAG_EXTENSION = exports.XML_TAG_ATTRIBUTES = exports.XML_TAG_ERROR = exports.XML_TAG_EVAL = exports.XML_TAG_INSERT = exports.XML_TAG_DELETE = exports.XML_TAG_UPDATE = exports.XML_TAG_CHANGES = exports.XML_TAG_PARTIAL_RESP = exports.ATTR_ID = exports.ATTR_VALUE = exports.ATTR_NAME = exports.ATTR_URL = exports.MYFACES_OPTION_PPS = exports.ERR_NO_PARTIAL_RESPONSE = exports.PHASE_PROCESS_RESPONSE = exports.SEL_RESPONSE_XML = exports.SEL_CLIENT_WINDOW_ELEM = exports.SEL_VIEWSTATE_ELEM = exports.HTML_TAG_STYLE = exports.HTML_TAG_SCRIPT = exports.HTML_TAG_LINK = exports.HTML_TAG_BODY = exports.HTML_TAG_FORM = exports.HTML_TAG_HEAD = exports.STD_ACCEPT = exports.NO_TIMEOUT = exports.MULTIPART = exports.URL_ENCODED = exports.STATE_EVT_COMPLETE = exports.STATE_EVT_TIMEOUT = exports.STATE_EVT_BEGIN = exports.REQ_TYPE_POST = exports.REQ_TYPE_GET = exports.ENCODED_URL = exports.VAL_AJAX = exports.REQ_ACCEPT = exports.HEAD_FACES_REQ = exports.CONTENT_TYPE = exports.CTX_PARAM_PPS = exports.CTX_PARAM_REQ_PASS_THR = exports.CTX_PARAM_SRC_CTL_ID = exports.CTX_PARAM_ON_PROGRESS = exports.CTX_PARAM_SRC_FRM_ID = exports.CTX_PARAM_MF_INTERNAL = exports.CTX_OPTIONS_EXECUTE = exports.CTX_OPTIONS_RESET = exports.CTX_OPTIONS_TIMEOUT = exports.DELAY_NONE = exports.CTX_OPTIONS_DELAY = void 0;
+exports.$nsp = exports.$faces = exports.UNKNOWN = exports.MAX_RECONNECT_ATTEMPTS = exports.RECONNECT_INTERVAL = exports.APPLIED_CLIENT_WINDOW = exports.APPLIED_VST = exports.REASON_EXPIRED = exports.MF_NONE = exports.MYFACES = exports.DEFERRED_HEAD_INSERTS = exports.UPDATE_ELEMS = exports.UPDATE_FORMS = exports.XML_TAG_ATTR = exports.XML_TAG_AFTER = exports.XML_TAG_BEFORE = exports.XML_TAG_REDIRECT = void 0;
 /*
  * [export const] constants
  */
@@ -5373,6 +5378,7 @@ exports.CTX_OPTIONS_RESET = "resetValues";
 exports.CTX_OPTIONS_EXECUTE = "execute";
 exports.CTX_PARAM_MF_INTERNAL = "myfaces.internal";
 exports.CTX_PARAM_SRC_FRM_ID = "myfaces.source.formId";
+exports.CTX_PARAM_ON_PROGRESS = "myfaces.onProgress";
 exports.CTX_PARAM_SRC_CTL_ID = "myfaces.source.controlId";
 exports.CTX_PARAM_REQ_PASS_THR = "myfaces.request.passThrough";
 exports.CTX_PARAM_PPS = "myfaces.request.pps";
@@ -5773,6 +5779,7 @@ class AsyncRunnable {
          */
         this.catchFunctions = [];
         this.thenFunctions = [];
+        this.progressListeners = [];
     }
     /**
      * resolve handler function which calls the then chain
@@ -5794,11 +5801,26 @@ class AsyncRunnable {
         }, data);
     }
     /**
+     * on progress handler which can show a progress of the current runnable
+     * @param data
+     */
+    onProgress(data) {
+        this.progressListeners.forEach((listener) => listener(data));
+    }
+    /**
      * register a catch functor
      * @param func the functor for the catch monad
      */
     catch(func) {
         this.catchFunctions.push(func);
+        return this;
+    }
+    /**
+     * register a catch functor
+     * @param func the functor for the catch monad
+     */
+    progress(func) {
+        this.progressListeners.push(func);
         return this;
     }
     /**
@@ -8078,7 +8100,7 @@ class XhrRequest extends AsyncRunnable_1.AsyncRunnable {
         // we omit promises here because we have to deal with cancel functionality,
         // and promises to not provide that (yet) instead we have our async queue
         // which uses an api internally, which is very close to promises
-        this.registerXhrCallbacks((data) => this.resolve(data), (data) => this.reject(data));
+        this.registerXhrCallbacks((data) => this.resolve(data), (data) => this.reject(data), (data) => this.onProgress(data));
     }
     start() {
         let ignoreErr = failSaveExecute;
@@ -8170,7 +8192,7 @@ class XhrRequest extends AsyncRunnable_1.AsyncRunnable {
      * @param resolve
      * @param reject
      */
-    registerXhrCallbacks(resolve, reject) {
+    registerXhrCallbacks(resolve, reject, progress) {
         const xhrObject = this.xhrObject;
         xhrObject.onabort = () => {
             this.onAbort(resolve, reject);
@@ -8183,6 +8205,10 @@ class XhrRequest extends AsyncRunnable_1.AsyncRunnable {
         };
         xhrObject.onloadend = () => {
             this.onResponseProcessed(this.xhrObject, resolve);
+        };
+        this.registerProgressListeners();
+        xhrObject.onprogress = (event) => {
+            progress(event);
         };
         xhrObject.onerror = (errorData) => {
             // Safari in rare cases triggers an error when cancelling a request internally, or when
@@ -8208,6 +8234,12 @@ class XhrRequest extends AsyncRunnable_1.AsyncRunnable {
             }
             this.handleError(errorData);
         };
+    }
+    registerProgressListeners() {
+        let onProgress = this.internalContext.getIf(Const_1.CTX_PARAM_ON_PROGRESS);
+        if (onProgress.isPresent()) {
+            this.progress(onProgress.value);
+        }
     }
     isCancelledResponse(currentTarget) {
         return (currentTarget === null || currentTarget === void 0 ? void 0 : currentTarget.status) === 0 && // cancelled internally by browser

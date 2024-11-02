@@ -106,6 +106,7 @@ export const CTX_OPTIONS_EXECUTE = "execute";
 
 export const CTX_PARAM_MF_INTERNAL = "myfaces.internal";
 export const CTX_PARAM_SRC_FRM_ID = "myfaces.source.formId";
+export const CTX_PARAM_ON_PROGRESS = "myfaces.onProgress";
 export const CTX_PARAM_SRC_CTL_ID = "myfaces.source.controlId";
 export const CTX_PARAM_REQ_PASS_THR = "myfaces.request.passThrough";
 export const CTX_PARAM_PPS = "myfaces.request.pps";

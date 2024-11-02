@@ -83,6 +83,7 @@ export abstract class AsyncRunnable<T> implements IAsyncRunnable<T>{
      */
     private catchFunctions: Array<Function> = [];
     private thenFunctions: Array<Function> = [];
+    private progressListeners: Array<Function> = [];
 
     /**
      * cancel the run of the runnable (which then depending on the implementation
@@ -117,6 +118,14 @@ export abstract class AsyncRunnable<T> implements IAsyncRunnable<T>{
     }
 
     /**
+     * on progress handler which can show a progress of the current runnable
+     * @param data
+     */
+    onProgress(data: any) {
+        this.progressListeners.forEach((listener: Function) => listener(data));
+    }
+
+    /**
      * register a catch functor
      * @param func the functor for the catch monad
      */
@@ -124,6 +133,16 @@ export abstract class AsyncRunnable<T> implements IAsyncRunnable<T>{
         this.catchFunctions.push(func);
         return this;
     }
+
+    /**
+     * register a catch functor
+     * @param func the functor for the catch monad
+     */
+    progress(func: (data: any) => void): IAsyncRunnable<T> {
+        this.progressListeners.push(func);
+        return this;
+    }
+
 
     /**
      * registers a finally functor

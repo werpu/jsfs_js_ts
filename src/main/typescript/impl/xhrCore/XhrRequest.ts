@@ -49,7 +49,7 @@ import {
     CTX_PARAM_SRC_CTL_ID,
     CTX_PARAM_PPS,
     EMPTY_RESPONSE, HTTP_ERROR,
-    EMPTY_STR, $nsp, P_BEHAVIOR_EVENT
+    EMPTY_STR, $nsp, P_BEHAVIOR_EVENT, CTX_PARAM_ON_PROGRESS
 } from "../core/Const";
 import {
     resolveFinalUrl,
@@ -108,7 +108,7 @@ export class XhrRequest extends AsyncRunnable<XMLHttpRequest> {
         // we omit promises here because we have to deal with cancel functionality,
         // and promises to not provide that (yet) instead we have our async queue
         // which uses an api internally, which is very close to promises
-        this.registerXhrCallbacks((data: any) => this.resolve(data), (data: any) => this.reject(data));
+        this.registerXhrCallbacks((data: any) => this.resolve(data), (data: any) => this.reject(data), (data: ProgressEvent) => this.onProgress(data));
     }
 
     start(): IAsyncRunnable<XMLHttpRequest> {
@@ -116,6 +116,7 @@ export class XhrRequest extends AsyncRunnable<XMLHttpRequest> {
         let ignoreErr = failSaveExecute;
         let xhrObject = this.xhrObject;
         let sourceForm = DQ.byId(this.internalContext.getIf(CTX_PARAM_SRC_FRM_ID).value)
+
 
         let executesArr = () => {
             return this.requestContext.getIf(CTX_PARAM_REQ_PASS_THR, P_EXECUTE).get(IDENT_NONE).value.split(/\s+/gi);
@@ -224,7 +225,7 @@ export class XhrRequest extends AsyncRunnable<XMLHttpRequest> {
      * @param resolve
      * @param reject
      */
-    private registerXhrCallbacks(resolve: Consumer<any>, reject: Consumer<any>) {
+    private registerXhrCallbacks(resolve: Consumer<any>, reject: Consumer<any>, progress: Consumer<ProgressEvent>) {
         const xhrObject = this.xhrObject;
 
         xhrObject.onabort = () => {
@@ -239,6 +240,12 @@ export class XhrRequest extends AsyncRunnable<XMLHttpRequest> {
         xhrObject.onloadend = () => {
             this.onResponseProcessed(this.xhrObject, resolve);
         };
+
+        this.registerProgressListeners();
+        xhrObject.onprogress = (event: ProgressEvent) => {
+            progress(event);
+        };
+
         xhrObject.onerror = (errorData: any) => {
             // Safari in rare cases triggers an error when cancelling a request internally, or when
             // in this case we simply ignore the request and clear up the queue, because
@@ -264,6 +271,13 @@ export class XhrRequest extends AsyncRunnable<XMLHttpRequest> {
             }
             this.handleError(errorData);
         };
+    }
+
+    private registerProgressListeners() {
+        let onProgress = this.internalContext.getIf(CTX_PARAM_ON_PROGRESS);
+        if (onProgress.isPresent()) {
+            this.progress(onProgress.value);
+        }
     }
 
     private isCancelledResponse(currentTarget: XMLHttpRequest): boolean {

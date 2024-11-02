@@ -55,7 +55,7 @@ import {
     NAMING_CONTAINER_ID,
     CTX_PARAM_PPS,
     MYFACES_OPTION_PPS,
-    $nsp
+    $nsp, CTX_PARAM_ON_PROGRESS
 } from "./core/Const";
 import {
     resolveDefaults,
@@ -337,6 +337,12 @@ export module Implementation {
         // additional meta information to speed things up, note internal non jsf
         // pass through options are stored under _mfInternal in the context
         internalCtx.assign(CTX_PARAM_SRC_FRM_ID).value = formId;
+
+        /**
+         * special myfaces only internal parameter for onProgress until we have an official api
+         * that way we can track the progress of a xhr request (useful for file uploads)
+         */
+        internalCtx.assign(CTX_PARAM_ON_PROGRESS).value = options.value?.myfaces?.onProgress;
 
         // mojarra compatibility, mojarra is sending the form id as well
         // this is not documented behavior but can be determined by running

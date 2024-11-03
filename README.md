@@ -173,10 +173,12 @@ faces.ajax.request(document.getElementById("cmd_eval"), null, {
     render: '@form',
     execute: '@form',
     myfaces: {
-          onProgress: (event: ProgressEvent) => {
-          caughtProgressEvents.push(event);
+          upload: {
+                onProgress: (upload: XMLHttpRequestUpload,event: ProgressEvent) => {
+                      caughtProgressEvents.push(event);
+                }
+          }
     }
-  }
 });
 ```
 

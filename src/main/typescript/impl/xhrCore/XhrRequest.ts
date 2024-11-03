@@ -48,8 +48,19 @@ import {
     CTX_PARAM_SRC_FRM_ID,
     CTX_PARAM_SRC_CTL_ID,
     CTX_PARAM_PPS,
-    EMPTY_RESPONSE, HTTP_ERROR,
-    EMPTY_STR, $nsp, P_BEHAVIOR_EVENT, CTX_PARAM_ON_PROGRESS
+    EMPTY_RESPONSE,
+    HTTP_ERROR,
+    EMPTY_STR,
+    $nsp,
+    P_BEHAVIOR_EVENT,
+    CTX_PARAM_UPLOAD_ON_PROGRESS,
+    CTX_PARAM_UPLOAD_LOAD,
+    CTX_PARAM_UPLOAD_LOADSTART,
+    CTX_PARAM_UPLOAD_LOADEND,
+    CTX_PARAM_UPLOAD_ABORT,
+    CTX_PARAM_UPLOAD_TIMEOUT,
+    CTX_PARAM_UPLOAD_ERROR,
+    CTX_PARAM_UPLOAD_PREINIT
 } from "../core/Const";
 import {
     resolveFinalUrl,
@@ -108,7 +119,7 @@ export class XhrRequest extends AsyncRunnable<XMLHttpRequest> {
         // we omit promises here because we have to deal with cancel functionality,
         // and promises to not provide that (yet) instead we have our async queue
         // which uses an api internally, which is very close to promises
-        this.registerXhrCallbacks((data: any) => this.resolve(data), (data: any) => this.reject(data), (data: ProgressEvent) => this.onProgress(data));
+        this.registerXhrCallbacks((data: any) => this.resolve(data), (data: any) => this.reject(data));
     }
 
     start(): IAsyncRunnable<XMLHttpRequest> {
@@ -225,7 +236,7 @@ export class XhrRequest extends AsyncRunnable<XMLHttpRequest> {
      * @param resolve
      * @param reject
      */
-    private registerXhrCallbacks(resolve: Consumer<any>, reject: Consumer<any>, progress: Consumer<ProgressEvent>) {
+    private registerXhrCallbacks(resolve: Consumer<any>, reject: Consumer<any>) {
         const xhrObject = this.xhrObject;
 
         xhrObject.onabort = () => {
@@ -241,10 +252,34 @@ export class XhrRequest extends AsyncRunnable<XMLHttpRequest> {
             this.onResponseProcessed(this.xhrObject, resolve);
         };
 
-        this.registerProgressListeners();
-        xhrObject.onprogress = (event: ProgressEvent) => {
-            progress(event);
-        };
+        if(xhrObject?.upload) {
+            //this is an  extension so that we can send the upload object of the current
+            //request before any operation
+            this.internalContext.getIf(CTX_PARAM_UPLOAD_PREINIT).value?.(xhrObject.upload);
+            //now we hook in the upload events
+            xhrObject.upload.addEventListener("progress", (event: ProgressEvent) => {
+                this.internalContext.getIf(CTX_PARAM_UPLOAD_ON_PROGRESS).value?.(xhrObject.upload, event);
+            });
+            xhrObject.upload.addEventListener("load", (event: ProgressEvent) => {
+                this.internalContext.getIf(CTX_PARAM_UPLOAD_LOAD).value?.(xhrObject.upload, event);
+            });
+            xhrObject.upload.addEventListener("loadstart", (event: ProgressEvent) => {
+                this.internalContext.getIf(CTX_PARAM_UPLOAD_LOADSTART).value?.(xhrObject.upload, event);
+            });
+            xhrObject.upload.addEventListener("loadend", (event: ProgressEvent) => {
+                this.internalContext.getIf(CTX_PARAM_UPLOAD_LOADEND).value?.(xhrObject.upload, event);
+            });
+            xhrObject.upload.addEventListener("abort", (event: ProgressEvent) => {
+                this.internalContext.getIf(CTX_PARAM_UPLOAD_ABORT).value?.(xhrObject.upload, event);
+            });
+            xhrObject.upload.addEventListener("timeout", (event: ProgressEvent) => {
+                this.internalContext.getIf(CTX_PARAM_UPLOAD_TIMEOUT).value?.(xhrObject.upload, event);
+            });
+            xhrObject.upload.addEventListener("error", (event: ProgressEvent) => {
+                this.internalContext.getIf(CTX_PARAM_UPLOAD_ERROR).value?.(xhrObject.upload, event);
+            });
+
+        }
 
         xhrObject.onerror = (errorData: any) => {
             // Safari in rare cases triggers an error when cancelling a request internally, or when
@@ -271,13 +306,6 @@ export class XhrRequest extends AsyncRunnable<XMLHttpRequest> {
             }
             this.handleError(errorData);
         };
-    }
-
-    private registerProgressListeners() {
-        let onProgress = this.internalContext.getIf(CTX_PARAM_ON_PROGRESS);
-        if (onProgress.isPresent()) {
-            this.progress(onProgress.value);
-        }
     }
 
     private isCancelledResponse(currentTarget: XMLHttpRequest): boolean {

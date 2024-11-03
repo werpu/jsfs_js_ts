@@ -55,7 +55,12 @@ import {
     NAMING_CONTAINER_ID,
     CTX_PARAM_PPS,
     MYFACES_OPTION_PPS,
-    $nsp, CTX_PARAM_ON_PROGRESS
+    $nsp,
+    CTX_PARAM_UPLOAD_ON_PROGRESS,
+    CTX_PARAM_UPLOAD_PREINIT,
+    CTX_PARAM_UPLOAD_LOADSTART,
+    CTX_PARAM_UPLOAD_LOADEND,
+    CTX_PARAM_UPLOAD_LOAD, CTX_PARAM_UPLOAD_ERROR, CTX_PARAM_UPLOAD_ABORT, CTX_PARAM_UPLOAD_TIMEOUT
 } from "./core/Const";
 import {
     resolveDefaults,
@@ -342,7 +347,14 @@ export module Implementation {
          * special myfaces only internal parameter for onProgress until we have an official api
          * that way we can track the progress of a xhr request (useful for file uploads)
          */
-        internalCtx.assign(CTX_PARAM_ON_PROGRESS).value = options.value?.myfaces?.onProgress;
+        internalCtx.assign(CTX_PARAM_UPLOAD_PREINIT).value = options.value?.myfaces?.upload?.preInit;
+        internalCtx.assign(CTX_PARAM_UPLOAD_LOADSTART).value = options.value?.myfaces?.upload?.loadStart;
+        internalCtx.assign(CTX_PARAM_UPLOAD_ON_PROGRESS).value = options.value?.myfaces?.upload?.onProgress;
+        internalCtx.assign(CTX_PARAM_UPLOAD_LOADEND).value = options.value?.myfaces?.upload?.loadEnd;
+        internalCtx.assign(CTX_PARAM_UPLOAD_LOAD).value = options.value?.myfaces?.upload?.load;
+        internalCtx.assign(CTX_PARAM_UPLOAD_ERROR).value = options.value?.myfaces?.upload?.error;
+        internalCtx.assign(CTX_PARAM_UPLOAD_ABORT).value = options.value?.myfaces?.upload?.abort;
+        internalCtx.assign(CTX_PARAM_UPLOAD_TIMEOUT).value = options.value?.myfaces?.upload?.timeout;
 
         // mojarra compatibility, mojarra is sending the form id as well
         // this is not documented behavior but can be determined by running

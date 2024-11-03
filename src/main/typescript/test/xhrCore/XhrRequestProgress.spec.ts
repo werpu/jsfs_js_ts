@@ -45,17 +45,19 @@ describe("Should trigger the progress on xhr request", function () {
                 render: '@form',
                 execute: '@form',
                 myfaces: {
-                    onProgress: (event: ProgressEvent) => {
-                        caughtProgressEvents.push(event);
+                    upload: {
+                        onProgress: (upload: XMLHttpRequestUpload, event: ProgressEvent) => {
+                            caughtProgressEvents.push(event);
+                        }
                     }
                 }
             });
 
-        let progressEvent = {};
-        let progressEvent2 = {};
+        let progressEvent = new ProgressEvent("progress");
+        let progressEvent2 =  new ProgressEvent("progress");
         let xhr = this.requests.shift();
-        xhr.onprogress(progressEvent);
-        xhr.onprogress(progressEvent2);
+        xhr.upload.dispatchEvent(progressEvent);
+        xhr.upload.dispatchEvent(progressEvent2);
         expect(caughtProgressEvents.length).to.eq(2);
         expect(caughtProgressEvents[0] === progressEvent).to.eq(true);
         expect(caughtProgressEvents[1] === progressEvent2).to.eq(true);

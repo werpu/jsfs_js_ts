@@ -135,7 +135,10 @@ and adjusts the references in the resource accordingly to the request patterns</
 <li>Elimination of Streams in favor of native arrays</li>
 <li>Providing an internal non intrusive shim for browsers which do not have array map and flapMap
 (older Edge and Chromium versions) - done in mona-dish</li>
+<li>Adding a progress monitoring functionality under the myfaces namespace</li>
 </ul>
+<pre><code class="language-json"><span class="hl-2">faces.ajax.request(document.getElementById(</span><span class="hl-3">&quot;cmd_eval&quot;</span><span class="hl-2">), </span><span class="hl-4">null</span><span class="hl-2">, {</span><br/><span class="hl-2">    </span><span class="hl-5">render</span><span class="hl-2">: </span><span class="hl-5">&#39;@form&#39;</span><span class="hl-2">,</span><br/><span class="hl-2">    </span><span class="hl-5">execute</span><span class="hl-2">: </span><span class="hl-5">&#39;@form&#39;</span><span class="hl-2">,</span><br/><span class="hl-2">    </span><span class="hl-5">myfaces</span><span class="hl-2">: {</span><br/><span class="hl-2">          </span><span class="hl-5">upload</span><span class="hl-2">: {</span><br/><span class="hl-2">                </span><span class="hl-5">onProgress</span><span class="hl-2">: </span><span class="hl-5">(upload:</span><span class="hl-2"> </span><span class="hl-5">XMLHttpRequestUpload</span><span class="hl-2">,</span><span class="hl-5">event</span><span class="hl-2">: </span><span class="hl-5">ProgressEvent)</span><span class="hl-2"> </span><span class="hl-5">=&gt;</span><span class="hl-2"> {</span><br/><span class="hl-2">                      </span><span class="hl-5">caughtProgressEvents.push(event);</span><br/><span class="hl-2">                }</span><br/><span class="hl-2">          }</span><br/><span class="hl-2">    }</span><br/><span class="hl-2">});</span>
+</code><button>Copy</button></pre>
 </div></div>
 <div class="col-sidebar">
 <div class="page-menu">

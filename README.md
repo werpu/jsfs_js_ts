@@ -58,12 +58,6 @@ In fact the *contextpath* attribute is not present there.
 All other attributes behave the same in both versions as in the original legacy codebase.
 
 
-## Usage
-
-It still is code complete and in bugfixing phase, for testing purposes
-it can be used (check the dist directory for builds, I consider
-stable enough for testing, or your own builds)
-
 
 ### General build 
 

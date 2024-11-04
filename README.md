@@ -188,5 +188,8 @@ faces.ajax.request(document.getElementById("cmd_eval"), null,
 * Providing an internal non intrusive shim for browsers which do not have array map and flapMap
 (older Edge and Chromium versions) - done in mona-dish
 * Adding a progress monitoring functionality under the myfaces namespace
+* Bugfixes which improve tck compliance
+* Integration in myfaces 4.0+ as default faces.js implementation
+
 
 

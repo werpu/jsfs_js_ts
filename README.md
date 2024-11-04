@@ -162,23 +162,38 @@ Usage *faces-config.xml*
 This resource decorator detects automatically a faces*.js file coming from a resource library
 and adjusts the references in the resource accordingly to the request patterns
 
+## Upload Support
+
+As non standard extension XMLHttpRequestUpload support is added
+
+```json
+faces.ajax.request(document.getElementById("cmd_eval"), null,
+{
+    render: '@form',
+    execute: '@form',
+    myfaces: {
+        upload: {
+            progress: (upload: XMLHttpRequestUpload, event: ProgressEvent) => {
+                caughtProgressEvents.push(event);
+            },
+            preinit: (upload: XMLHttpRequestUpload) => preinitTriggered = true,
+            loadstart: (upload: XMLHttpRequestUpload, event: ProgressEvent) => loadstartTriggered = true,
+            load: (upload: XMLHttpRequestUpload,  event: ProgressEvent) => loadTriggered = true,
+            loadend: (upload: XMLHttpRequestUpload,  event: ProgressEvent) => loadendTriggered = true,
+            error: (upload: XMLHttpRequestUpload,  event: ProgressEvent) => errorTriggered = true,
+            abort: (upload: XMLHttpRequestUpload,  event: ProgressEvent) => abortTriggered = true,
+            timeout: (upload: XMLHttpRequestUpload,  event: ProgressEvent) => timeoutTriggered = true,
+            
+        }
+    }
+});
+```
+
 ## Changes since 4.0
 
 * Elimination of Streams in favor of native arrays
 * Providing an internal non intrusive shim for browsers which do not have array map and flapMap
 (older Edge and Chromium versions) - done in mona-dish
 * Adding a progress monitoring functionality under the myfaces namespace
-```json
-faces.ajax.request(document.getElementById("cmd_eval"), null, {
-    render: '@form',
-    execute: '@form',
-    myfaces: {
-          upload: {
-                onProgress: (upload: XMLHttpRequestUpload,event: ProgressEvent) => {
-                      caughtProgressEvents.push(event);
-                }
-          }
-    }
-});
-```
+
 

@@ -4548,10 +4548,10 @@ var Implementation;
          * special myfaces only internal parameter for onProgress until we have an official api
          * that way we can track the progress of a xhr request (useful for file uploads)
          */
-        internalCtx.assign(Const_1.CTX_PARAM_UPLOAD_PREINIT).value = (_f = (_e = (_d = options.value) === null || _d === void 0 ? void 0 : _d.myfaces) === null || _e === void 0 ? void 0 : _e.upload) === null || _f === void 0 ? void 0 : _f.preInit;
-        internalCtx.assign(Const_1.CTX_PARAM_UPLOAD_LOADSTART).value = (_j = (_h = (_g = options.value) === null || _g === void 0 ? void 0 : _g.myfaces) === null || _h === void 0 ? void 0 : _h.upload) === null || _j === void 0 ? void 0 : _j.loadStart;
-        internalCtx.assign(Const_1.CTX_PARAM_UPLOAD_ON_PROGRESS).value = (_m = (_l = (_k = options.value) === null || _k === void 0 ? void 0 : _k.myfaces) === null || _l === void 0 ? void 0 : _l.upload) === null || _m === void 0 ? void 0 : _m.onProgress;
-        internalCtx.assign(Const_1.CTX_PARAM_UPLOAD_LOADEND).value = (_q = (_p = (_o = options.value) === null || _o === void 0 ? void 0 : _o.myfaces) === null || _p === void 0 ? void 0 : _p.upload) === null || _q === void 0 ? void 0 : _q.loadEnd;
+        internalCtx.assign(Const_1.CTX_PARAM_UPLOAD_PREINIT).value = (_f = (_e = (_d = options.value) === null || _d === void 0 ? void 0 : _d.myfaces) === null || _e === void 0 ? void 0 : _e.upload) === null || _f === void 0 ? void 0 : _f.preinit;
+        internalCtx.assign(Const_1.CTX_PARAM_UPLOAD_LOADSTART).value = (_j = (_h = (_g = options.value) === null || _g === void 0 ? void 0 : _g.myfaces) === null || _h === void 0 ? void 0 : _h.upload) === null || _j === void 0 ? void 0 : _j.loadstart;
+        internalCtx.assign(Const_1.CTX_PARAM_UPLOAD_ON_PROGRESS).value = (_m = (_l = (_k = options.value) === null || _k === void 0 ? void 0 : _k.myfaces) === null || _l === void 0 ? void 0 : _l.upload) === null || _m === void 0 ? void 0 : _m.progress;
+        internalCtx.assign(Const_1.CTX_PARAM_UPLOAD_LOADEND).value = (_q = (_p = (_o = options.value) === null || _o === void 0 ? void 0 : _o.myfaces) === null || _p === void 0 ? void 0 : _p.upload) === null || _q === void 0 ? void 0 : _q.loadend;
         internalCtx.assign(Const_1.CTX_PARAM_UPLOAD_LOAD).value = (_t = (_s = (_r = options.value) === null || _r === void 0 ? void 0 : _r.myfaces) === null || _s === void 0 ? void 0 : _s.upload) === null || _t === void 0 ? void 0 : _t.load;
         internalCtx.assign(Const_1.CTX_PARAM_UPLOAD_ERROR).value = (_w = (_v = (_u = options.value) === null || _u === void 0 ? void 0 : _u.myfaces) === null || _v === void 0 ? void 0 : _v.upload) === null || _w === void 0 ? void 0 : _w.error;
         internalCtx.assign(Const_1.CTX_PARAM_UPLOAD_ABORT).value = (_z = (_y = (_x = options.value) === null || _x === void 0 ? void 0 : _x.myfaces) === null || _y === void 0 ? void 0 : _y.upload) === null || _z === void 0 ? void 0 : _z.abort;
@@ -5385,10 +5385,10 @@ exports.CTX_OPTIONS_RESET = "resetValues";
 exports.CTX_OPTIONS_EXECUTE = "execute";
 exports.CTX_PARAM_MF_INTERNAL = "myfaces.internal";
 exports.CTX_PARAM_SRC_FRM_ID = "myfaces.source.formId";
-exports.CTX_PARAM_UPLOAD_ON_PROGRESS = "myfaces.upload.onProgress";
-exports.CTX_PARAM_UPLOAD_PREINIT = "myfaces.upload.preInit";
-exports.CTX_PARAM_UPLOAD_LOADSTART = "myfaces.upload.loadStart";
-exports.CTX_PARAM_UPLOAD_LOADEND = "myfaces.upload.loadEnd";
+exports.CTX_PARAM_UPLOAD_ON_PROGRESS = "myfaces.upload.progress";
+exports.CTX_PARAM_UPLOAD_PREINIT = "myfaces.upload.preinit";
+exports.CTX_PARAM_UPLOAD_LOADSTART = "myfaces.upload.loadstart";
+exports.CTX_PARAM_UPLOAD_LOADEND = "myfaces.upload.loadend";
 exports.CTX_PARAM_UPLOAD_LOAD = "myfaces.upload.load";
 exports.CTX_PARAM_UPLOAD_ERROR = "myfaces.upload.error";
 exports.CTX_PARAM_UPLOAD_ABORT = "myfaces.upload.abort";

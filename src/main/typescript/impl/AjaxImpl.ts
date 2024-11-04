@@ -347,10 +347,10 @@ export module Implementation {
          * special myfaces only internal parameter for onProgress until we have an official api
          * that way we can track the progress of a xhr request (useful for file uploads)
          */
-        internalCtx.assign(CTX_PARAM_UPLOAD_PREINIT).value = options.value?.myfaces?.upload?.preInit;
-        internalCtx.assign(CTX_PARAM_UPLOAD_LOADSTART).value = options.value?.myfaces?.upload?.loadStart;
-        internalCtx.assign(CTX_PARAM_UPLOAD_ON_PROGRESS).value = options.value?.myfaces?.upload?.onProgress;
-        internalCtx.assign(CTX_PARAM_UPLOAD_LOADEND).value = options.value?.myfaces?.upload?.loadEnd;
+        internalCtx.assign(CTX_PARAM_UPLOAD_PREINIT).value = options.value?.myfaces?.upload?.preinit;
+        internalCtx.assign(CTX_PARAM_UPLOAD_LOADSTART).value = options.value?.myfaces?.upload?.loadstart;
+        internalCtx.assign(CTX_PARAM_UPLOAD_ON_PROGRESS).value = options.value?.myfaces?.upload?.progress;
+        internalCtx.assign(CTX_PARAM_UPLOAD_LOADEND).value = options.value?.myfaces?.upload?.loadend;
         internalCtx.assign(CTX_PARAM_UPLOAD_LOAD).value = options.value?.myfaces?.upload?.load;
         internalCtx.assign(CTX_PARAM_UPLOAD_ERROR).value = options.value?.myfaces?.upload?.error;
         internalCtx.assign(CTX_PARAM_UPLOAD_ABORT).value = options.value?.myfaces?.upload?.abort;

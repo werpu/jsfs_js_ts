@@ -183,7 +183,6 @@ faces.ajax.request(document.getElementById("cmd_eval"), null,
             error: (upload: XMLHttpRequestUpload,  event: ProgressEvent) => errorTriggered = true,
             abort: (upload: XMLHttpRequestUpload,  event: ProgressEvent) => abortTriggered = true,
             timeout: (upload: XMLHttpRequestUpload,  event: ProgressEvent) => timeoutTriggered = true,
-            
         }
     }
 });

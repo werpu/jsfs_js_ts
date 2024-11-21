@@ -743,7 +743,7 @@ export module Implementation {
             // and no prepend (aka tobago testcase "must handle ':' in IDs properly", scenario 3,
             // in this case we return the component id, and be happy
             // we can roll a dom check here
-            return (!!document.getElementById(finalIdentifier)) ? finalIdentifier : componentIdToTransform;
+            return DQ.byId(finalIdentifier).isPresent() ? finalIdentifier : componentIdToTransform;
         };
 
         // in this case we do not use lazy stream because it won´t bring any code reduction

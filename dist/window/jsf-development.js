@@ -4916,7 +4916,7 @@ var Implementation;
             // and no prepend (aka tobago testcase "must handle ':' in IDs properly", scenario 3,
             // in this case we return the component id, and be happy
             // we can roll a dom check here
-            return (!!document.getElementById(finalIdentifier)) ? finalIdentifier : componentIdToTransform;
+            return mona_dish_1.DQ.byId(finalIdentifier).isPresent() ? finalIdentifier : componentIdToTransform;
         };
         // in this case we do not use lazy stream because it won´t bring any code reduction
         // or speedup
@@ -6069,7 +6069,13 @@ class ExtDomQuery extends mona_dish_1.DQ {
      * @return a DomQuery containing the found elements
      */
     static byId(selector, deep = false) {
+        var _a, _b, _c;
         const ret = mona_dish_1.DomQuery.byId(selector, deep);
+        if ((0, Const_1.$faces)().getProjectStage().toLowerCase() == "development" &&
+            (window === null || window === void 0 ? void 0 : window.console) && ret.isAbsent() && selector) {
+            let identifier = (_c = (_b = (_a = selector === null || selector === void 0 ? void 0 : selector.id) === null || _a === void 0 ? void 0 : _a.value) !== null && _b !== void 0 ? _b : selector === null || selector === void 0 ? void 0 : selector.id) !== null && _c !== void 0 ? _c : selector.toString();
+            console.error("Element  " + identifier + "not found");
+        }
         return new ExtDomQuery(ret);
     }
     filter(func) {

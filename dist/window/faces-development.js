@@ -6758,6 +6758,7 @@ exports.ErrorData = exports.ErrorType = void 0;
  * limitations under the License.
  */
 const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
+const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const EventData_1 = __webpack_require__(/*! ./EventData */ "./src/main/typescript/impl/xhrCore/EventData.ts");
 const Lang_1 = __webpack_require__(/*! ../util/Lang */ "./src/main/typescript/impl/util/Lang.ts");
 var getMessage = Lang_1.ExtLang.getMessage;
@@ -6781,7 +6782,9 @@ class ErrorData extends EventData_1.EventData {
     constructor(source, errorName, errorMessage, responseText = null, responseXML = null, responseCode = -1, statusOverride = null, type = ErrorType.CLIENT_ERROR) {
         super();
         this.type = "error";
-        this.source = source;
+        ///MYFACES-4676 error payload expects an element if possible
+        //this code remaps the string in an element and if not existing just passes as is what comes in
+        this.source = mona_dish_1.DQ.byId(source).value.orElse(source).value;
         this.type = Const_1.ERROR;
         this.errorName = errorName;
         //tck requires that the type is prefixed to the message itself (jsdoc also) in case of a server error

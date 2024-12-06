@@ -6789,7 +6789,7 @@ class ErrorData extends EventData_1.EventData {
         this.errorName = errorName;
         //tck requires that the type is prefixed to the message itself (jsdoc also) in case of a server error
         this.errorMessage = errorMessage;
-        this.responseCode = `${responseCode}`;
+        this.responseCode = responseCode;
         this.responseText = responseText;
         this.responseXML = responseXML;
         this.status = statusOverride;
@@ -6857,7 +6857,6 @@ const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-di
 const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 class EventData {
     static createFromRequest(request, context, /*event name*/ name) {
-        var _a;
         let eventData = new EventData();
         eventData.type = Const_1.EVENT;
         eventData.status = name;
@@ -6869,7 +6868,7 @@ class EventData {
             eventData.source = mona_dish_1.DQ.byId(sourceId, true).first().value.value;
         }
         if (name !== Const_1.BEGIN) {
-            eventData.responseCode = (_a = request === null || request === void 0 ? void 0 : request.status) === null || _a === void 0 ? void 0 : _a.toString();
+            eventData.responseCode = request === null || request === void 0 ? void 0 : request.status;
             eventData.responseText = request === null || request === void 0 ? void 0 : request.responseText;
             eventData.responseXML = request === null || request === void 0 ? void 0 : request.responseXML;
         }

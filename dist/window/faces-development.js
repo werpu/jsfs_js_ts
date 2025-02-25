@@ -6856,16 +6856,26 @@ exports.EventData = void 0;
 const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 class EventData {
-    static createFromRequest(request, context, /*event name*/ name) {
+    static createFromRequest(request, internalContext, context, /*event name*/ name) {
         let eventData = new EventData();
+        let internalSource = "_internal._source";
         eventData.type = Const_1.EVENT;
         eventData.status = name;
-        let sourceId = context.getIf(Const_1.SOURCE)
-            .orElseLazy(() => context.getIf(Const_1.P_AJAX_SOURCE).value)
-            .orElseLazy(() => context.getIf(Const_1.CTX_PARAM_REQ_PASS_THR, Const_1.P_AJAX_SOURCE).value)
-            .value;
-        if (sourceId) {
-            eventData.source = mona_dish_1.DQ.byId(sourceId, true).first().value.value;
+        eventData.source = internalContext.getIf("_source", "_element").value;
+        // this fixes the issue that the source element is not present anymore at done
+        // at page transitions
+        if (!eventData.source) {
+            let sourceId = context.getIf(Const_1.SOURCE)
+                .orElseLazy(() => context.getIf(Const_1.P_AJAX_SOURCE).value)
+                .orElseLazy(() => context.getIf(Const_1.CTX_PARAM_REQ_PASS_THR, Const_1.P_AJAX_SOURCE).value)
+                .value;
+            if (sourceId) {
+                eventData.source = mona_dish_1.DQ.byId(sourceId, true).first().value.value;
+            }
+            if (eventData.source) {
+                //we store the event source for later references
+                internalContext.assign("_source", "_element").value = eventData.source;
+            }
         }
         if (name !== Const_1.BEGIN) {
             eventData.responseCode = request === null || request === void 0 ? void 0 : request.status;
@@ -7704,7 +7714,7 @@ class ResponseProcessor {
      * all processing done we can close the request and send the appropriate events
      */
     done() {
-        const eventData = EventData_1.EventData.createFromRequest(this.request.value, this.externalContext, Const_1.SUCCESS);
+        const eventData = EventData_1.EventData.createFromRequest(this.request.value, this.internalContext, this.externalContext, Const_1.SUCCESS);
         //because some frameworks might decorate them over the context in the response
         const eventHandler = this.externalContext.getIf(Const_1.ON_EVENT).orElseLazy(() => this.internalContext.getIf(Const_1.ON_EVENT).value).orElse(Const_1.EMPTY_FUNC).value;
         AjaxImpl_1.Implementation.sendEvent(eventData, eventHandler);
@@ -8409,7 +8419,7 @@ class XhrRequest extends AsyncRunnable_1.AsyncRunnable {
      */
     sendEvent(evtType) {
         var _a;
-        const eventData = EventData_1.EventData.createFromRequest(this.xhrObject, this.requestContext, evtType);
+        const eventData = EventData_1.EventData.createFromRequest(this.xhrObject, this.internalContext, this.requestContext, evtType);
         try {
             // User code error, we might cover
             // this in onError, but also we cannot swallow it.

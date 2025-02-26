@@ -246,12 +246,19 @@ export module myfaces {
      *
      * @param source the event source
      * @param event the event
-     * @param eventName event name for java.jakarta.faces.behavior.evemnt
+     * @param eventName event name for java.jakarta.faces.behavior.event
      * @param execute execute list as passed down in faces.ajax.request
      * @param render the render list as string
-     * @param options the options which need to be mered in
+     * @param options the options which need to be merged in
+     * @param userParameters a set of user parameters which go into the final options under params, they can overide whatever is passed via options
      */
-    export function ab(source: Element, event: Event, eventName: string, execute: string, render: string, options: Options = {}): void {
+    export function ab(source: Element, event: Event, eventName: string, execute: string, render: string, options: Options = {}, userParameters: Options = {}): void {
+        if(!options) {
+            options = {};
+        }
+        if(!userParameters) {
+            userParameters = {};
+        }
         if (eventName) {
            options[CTX_OPTIONS_PARAMS] = options?.[CTX_OPTIONS_PARAMS] ?? {};
            options[CTX_OPTIONS_PARAMS][$nsp(P_BEHAVIOR_EVENT)] = eventName;
@@ -261,6 +268,15 @@ export module myfaces {
         }
         if (render) {
             options[CTX_PARAM_RENDER] = render;
+        }
+
+        //we push the users parameters in
+        if (!options["params"]) {
+            options["params"] = {};
+        }
+
+        for (let key in userParameters) {
+            options["params"][key] = userParameters[key];
         }
 
         (window?.faces ?? window.jsf).ajax.request(source, event, options);

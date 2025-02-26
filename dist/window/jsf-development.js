@@ -4202,12 +4202,13 @@ var myfaces;
      *
      * @param source the event source
      * @param event the event
-     * @param eventName event name for java.jakarta.faces.behavior.evemnt
+     * @param eventName event name for java.jakarta.faces.behavior.event
      * @param execute execute list as passed down in faces.ajax.request
      * @param render the render list as string
-     * @param options the options which need to be mered in
+     * @param options the options which need to be merged in
+     * @param userParameters a set of user parameters which go into the final options under params, they can overide whatever is passed via options
      */
-    function ab(source, event, eventName, execute, render, options = {}) {
+    function ab(source, event, eventName, execute, render, options = {}, userParameters = {}) {
         var _a, _b;
         if (eventName) {
             options[Const_1.CTX_OPTIONS_PARAMS] = (_a = options === null || options === void 0 ? void 0 : options[Const_1.CTX_OPTIONS_PARAMS]) !== null && _a !== void 0 ? _a : {};
@@ -4218,6 +4219,13 @@ var myfaces;
         }
         if (render) {
             options[Const_1.CTX_PARAM_RENDER] = render;
+        }
+        //we push the users parameters in
+        if (!options["params"]) {
+            options["params"] = {};
+        }
+        for (let key in userParameters) {
+            options["params"][key] = userParameters[key];
         }
         ((_b = window === null || window === void 0 ? void 0 : window.faces) !== null && _b !== void 0 ? _b : window.jsf).ajax.request(source, event, options);
     }

@@ -33,8 +33,8 @@ function build(env: {[key:string]: string}, argv: {[key:string]: string}) {
     const config: webpack.Configuration = {
         context: __dirname,
         entry: {
-            jsf: "./src/main/typescript/api/jsf.ts",
-            faces: "./src/main/typescript/api/faces.ts"
+            jsf: path.resolve(__dirname, "./src/main/typescript/api/jsf.ts"),
+            faces: path.resolve("./src/main/typescript/api/faces.ts")
         },
         devtool: "source-map",
 

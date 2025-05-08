@@ -206,14 +206,14 @@ export module faces {
          * @param autoConnect Whether or not to automatically open the socket. Defaults to <code>false</code>.
          */
         export function init(socketClientId: string,
-                    url: string,
-                    channel: string,
-                    onopen: Function,
-                    onmessage: Function,
-                    onerror: Function,
-                    onclose: Function,
-                    behaviors: any,
-                    autoConnect: boolean): void {
+                             url: string,
+                             channel: string,
+                             onopen: Function,
+                             onmessage: Function,
+                             onerror: Function,
+                             onclose: Function,
+                             behaviors: any,
+                             autoConnect: boolean): void {
             PushImpl.init(socketClientId, url, channel, onopen, onmessage, onerror, onclose, behaviors, autoConnect);
         }
 
@@ -260,8 +260,8 @@ export module myfaces {
             userParameters = {};
         }
         if (eventName) {
-           options[CTX_OPTIONS_PARAMS] = options?.[CTX_OPTIONS_PARAMS] ?? {};
-           options[CTX_OPTIONS_PARAMS][$nsp(P_BEHAVIOR_EVENT)] = eventName;
+            options[CTX_OPTIONS_PARAMS] = options?.[CTX_OPTIONS_PARAMS] ?? {};
+            options[CTX_OPTIONS_PARAMS][$nsp(P_BEHAVIOR_EVENT)] = eventName;
         }
         if (execute) {
             options[CTX_OPTIONS_EXECUTE] = execute;

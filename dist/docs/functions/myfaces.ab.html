@@ -18,7 +18,7 @@
 <h1>Function ab</h1></div>
 <section class="tsd-panel">
 <ul class="tsd-signatures">
-<li class="tsd-signature tsd-anchor-link" id="ab"><span class="tsd-kind-call-signature">ab</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">source</span>, <span class="tsd-kind-parameter">event</span>, <span class="tsd-kind-parameter">eventName</span>, <span class="tsd-kind-parameter">execute</span>, <span class="tsd-kind-parameter">render</span>, <span class="tsd-kind-parameter">options</span><span class="tsd-signature-symbol">?</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span><a href="#ab" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><g stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" id="icon-anchor"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5"></path><path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5"></path></g></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="ab"><span class="tsd-kind-call-signature">ab</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">source</span>, <span class="tsd-kind-parameter">event</span>, <span class="tsd-kind-parameter">eventName</span>, <span class="tsd-kind-parameter">execute</span>, <span class="tsd-kind-parameter">render</span>, <span class="tsd-kind-parameter">options</span><span class="tsd-signature-symbol">?</span>, <span class="tsd-kind-parameter">userParameters</span><span class="tsd-signature-symbol">?</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span><a href="#ab" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><g stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" id="icon-anchor"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5"></path><path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5"></path></g></svg></a></li>
 <li class="tsd-description">
 <div class="tsd-comment tsd-typography"><p>AB function similar to mojarra and Primefaces
 not part of the spec but a convenience accessor method
@@ -39,7 +39,7 @@ Code provided by Thomas Andraschko</p>
 <div class="tsd-comment tsd-typography"></div></li>
 <li>
 <h5><span class="tsd-kind-parameter">eventName</span>: <span class="tsd-signature-type">string</span></h5>
-<div class="tsd-comment tsd-typography"><p>event name for java.jakarta.faces.behavior.evemnt</p>
+<div class="tsd-comment tsd-typography"><p>event name for java.jakarta.faces.behavior.event</p>
 </div>
 <div class="tsd-comment tsd-typography"></div></li>
 <li>
@@ -54,7 +54,12 @@ Code provided by Thomas Andraschko</p>
 <div class="tsd-comment tsd-typography"></div></li>
 <li>
 <h5><span class="tsd-kind-parameter">options</span>: <span class="tsd-signature-type ">Options</span><span class="tsd-signature-symbol"> = {}</span></h5>
-<div class="tsd-comment tsd-typography"><p>the options which need to be mered in</p>
+<div class="tsd-comment tsd-typography"><p>the options which need to be merged in</p>
+</div>
+<div class="tsd-comment tsd-typography"></div></li>
+<li>
+<h5><span class="tsd-kind-parameter">userParameters</span>: <span class="tsd-signature-type ">Options</span><span class="tsd-signature-symbol"> = {}</span></h5>
+<div class="tsd-comment tsd-typography"><p>a set of user parameters which go into the final options under params, they can overide whatever is passed via options</p>
 </div>
 <div class="tsd-comment tsd-typography"></div></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>

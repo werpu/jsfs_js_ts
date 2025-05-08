@@ -4210,6 +4210,12 @@ var myfaces;
      */
     function ab(source, event, eventName, execute, render, options = {}, userParameters = {}) {
         var _a, _b;
+        if (!options) {
+            options = {};
+        }
+        if (!userParameters) {
+            userParameters = {};
+        }
         if (eventName) {
             options[Const_1.CTX_OPTIONS_PARAMS] = (_a = options === null || options === void 0 ? void 0 : options[Const_1.CTX_OPTIONS_PARAMS]) !== null && _a !== void 0 ? _a : {};
             options[Const_1.CTX_OPTIONS_PARAMS][(0, Const_1.$nsp)(Const_1.P_BEHAVIOR_EVENT)] = eventName;

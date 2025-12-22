@@ -16,8 +16,11 @@
 
 import { expect } from 'chai';
 import { describe, it } from 'mocha';
-import {Lang} from "mona-dish";
+import monadish from "mona-dish";
+const { Lang } = monadish;
 
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
 
 const jsdom = require("jsdom");
 const { JSDOM } = jsdom;
@@ -117,7 +120,7 @@ describe('Lang tests', () => {
 
     it('equals ignore case test', () => {
         const lang = Lang;
-        expect(lang.equalsIgnoreCase(<any>null, <any>null)).to.be.true;
+        expect(lang.equalsIgnoreCase(null, null as any)).to.be.true;
         expect(lang.equalsIgnoreCase("", "")).to.be.true;
         expect(lang.equalsIgnoreCase("null", "NuLL")).to.be.true;
         expect(lang.equalsIgnoreCase("null ", "NuLL")).to.be.false;

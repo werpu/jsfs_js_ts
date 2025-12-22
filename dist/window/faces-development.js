@@ -2,11 +2,11 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
-/***/ "./node_modules/mona-dish/src/main/typescript/AssocArray.ts":
+/***/ "./node_modules/mona-dish/src/main/typescript/AssocArray.ts"
 /*!******************************************************************!*\
   !*** ./node_modules/mona-dish/src/main/typescript/AssocArray.ts ***!
   \******************************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+(__unused_webpack_module, exports, __webpack_require__) {
 
 
 /*!
@@ -367,13 +367,13 @@ function deepEqual(obj1, obj2) {
 exports.deepEqual = deepEqual;
 
 
-/***/ }),
+/***/ },
 
-/***/ "./node_modules/mona-dish/src/main/typescript/Config.ts":
+/***/ "./node_modules/mona-dish/src/main/typescript/Config.ts"
 /*!**************************************************************!*\
   !*** ./node_modules/mona-dish/src/main/typescript/Config.ts ***!
   \**************************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+(__unused_webpack_module, exports, __webpack_require__) {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
@@ -381,7 +381,7 @@ exports.Config = exports.CONFIG_ANY = exports.CONFIG_VALUE = void 0;
 const Es2019Array_1 = __webpack_require__(/*! ./Es2019Array */ "./node_modules/mona-dish/src/main/typescript/Es2019Array.ts");
 const Monad_1 = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
 const Lang_1 = __webpack_require__(/*! ./Lang */ "./node_modules/mona-dish/src/main/typescript/Lang.ts");
-var objAssign = Lang_1.Lang.objAssign;
+const objAssign = Lang_1.Lang.objAssign;
 const AssocArray_1 = __webpack_require__(/*! ./AssocArray */ "./node_modules/mona-dish/src/main/typescript/AssocArray.ts");
 /**
  * specialized value embedder
@@ -611,13 +611,13 @@ class Config extends Monad_1.Optional {
 exports.Config = Config;
 
 
-/***/ }),
+/***/ },
 
-/***/ "./node_modules/mona-dish/src/main/typescript/DomQuery.ts":
+/***/ "./node_modules/mona-dish/src/main/typescript/DomQuery.ts"
 /*!****************************************************************!*\
   !*** ./node_modules/mona-dish/src/main/typescript/DomQuery.ts ***!
   \****************************************************************/
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+(__unused_webpack_module, exports, __webpack_require__) {
 
 
 /*!
@@ -652,10 +652,10 @@ const SourcesCollectors_1 = __webpack_require__(/*! ./SourcesCollectors */ "./no
 const Lang_1 = __webpack_require__(/*! ./Lang */ "./node_modules/mona-dish/src/main/typescript/Lang.ts");
 const Global_1 = __webpack_require__(/*! ./Global */ "./node_modules/mona-dish/src/main/typescript/Global.ts");
 const Es2019Array_1 = __webpack_require__(/*! ./Es2019Array */ "./node_modules/mona-dish/src/main/typescript/Es2019Array.ts");
-var trim = Lang_1.Lang.trim;
-var isString = Lang_1.Lang.isString;
-var eqi = Lang_1.Lang.equalsIgnoreCase;
-var objToArray = Lang_1.Lang.objToArray;
+const trim = Lang_1.Lang.trim;
+const isString = Lang_1.Lang.isString;
+const eqi = Lang_1.Lang.equalsIgnoreCase;
+const objToArray = Lang_1.Lang.objToArray;
 const AssocArray_1 = __webpack_require__(/*! ./AssocArray */ "./node_modules/mona-dish/src/main/typescript/AssocArray.ts");
 class NonceValueEmbedder extends Monad_1.ValueEmbedder {
     constructor(rootElems) {
@@ -993,7 +993,7 @@ class DomQuery {
         this.id.value = value;
     }
     get checked() {
-        return new Es2019Array_1.Es2019Array(...this.values).every(el => !!el.checked);
+        return new Es2019Array_1.Es2019Array(...this.values).every(el => !!(el).checked);
     }
     set checked(newChecked) {
         this.eachElem(el => el.checked = newChecked);
@@ -1442,7 +1442,7 @@ class DomQuery {
     filterSelector(selector) {
         let matched = [];
         this.eachElem(item => {
-            if (this._mozMatchesSelector(item, selector)) {
+            if (this._matchesSelector(item, selector)) {
                 matched.push(item);
             }
         });
@@ -1456,7 +1456,7 @@ class DomQuery {
      */
     matchesSelector(selector) {
         return this.asArray
-            .some(item => this._mozMatchesSelector(item.getAsElem(0).value, selector));
+            .some(item => this._matchesSelector(item.getAsElem(0).value, selector));
     }
     /**
      * easy node traversal, you can pass
@@ -2201,7 +2201,7 @@ class DomQuery {
         }).filter(item => {
             return item?.value?.value?.nodeType == TYPE_CDATA_BLOCK;
         }).reduce((reduced: Array<any>, item: DomQuery) => {
-            reduced.push((<any>item?.value?.value)?.data ?? "");
+            reduced.push((item?.value?.value)?.data ?? "" as any);
             return reduced;
         }, []).value;*/
         // response may contain several blocks
@@ -2249,8 +2249,9 @@ class DomQuery {
     attachShadow(params = { mode: "open" }) {
         let shadowRoots = [];
         this.eachElem((item) => {
+            var _a;
             let shadowElement;
-            if (item === null || item === void 0 ? void 0 : item.attachShadow) {
+            if ((_a = (item)) === null || _a === void 0 ? void 0 : _a.attachShadow) {
                 shadowElement = DomQuery.byId(item.attachShadow(params));
                 shadowRoots.push(shadowElement);
             }
@@ -2471,8 +2472,6 @@ class DomQuery {
         }
         return foundNodes;
     }
-    // source: https:// developer.mozilla.org/en-US/docs/Web/API/Element/matches
-    // code snippet license: https:// creativecommons.org/licenses/by-sa/2.5/
     /**
      * matches selector call in a browser independent manner
      *
@@ -2480,21 +2479,12 @@ class DomQuery {
      * @param selector
      * @private
      */
-    _mozMatchesSelector(toMatch, selector) {
-        let prototypeOwner = toMatch;
-        let matchesSelector = prototypeOwner.matches ||
-            prototypeOwner.matchesSelector ||
-            prototypeOwner.mozMatchesSelector ||
-            prototypeOwner.msMatchesSelector ||
-            prototypeOwner.oMatchesSelector ||
-            prototypeOwner.webkitMatchesSelector ||
-            function (s) {
-                let matches = (document || ownerDocument).querySelectorAll(s), i = matches.length;
-                while (--i >= 0 && matches.item(i) !== toMatch) {
-                }
-                return i > -1;
-            };
-        return matchesSelector.call(toMatch, selector);
+    _matchesSelector(toMatch, selector) {
+        if (toMatch.matches) {
+            return toMatch.matches(selector);
+        }
+        var foundElements = (document || ownerDocument).querySelectorAll(selector);
+        return Array.prototype.indexOf.call(foundElements, toMatch) !== -1;
     }
     /**
      * sticky non-sticky unified code of the load script eval
@@ -2621,13 +2611,13 @@ exports.DQ = DomQuery;
 exports.DQ$ = DomQuery.querySelectorAll;
 
 
-/***/ }),
+/***/ },
 
-/***/ "./node_modules/mona-dish/src/main/typescript/Es2019Array.ts":
+/***/ "./node_modules/mona-dish/src/main/typescript/Es2019Array.ts"
 /*!*******************************************************************!*\
   !*** ./node_modules/mona-dish/src/main/typescript/Es2019Array.ts ***!
   \*******************************************************************/
-/***/ ((__unused_webpack_module, exports) => {
+(__unused_webpack_module, exports) {
 
 
 /**
@@ -2650,10 +2640,10 @@ class Es2019Array_ extends Array {
             this._another = another;
         }
         //for testing it definitely runs into this branch because we are on es5 level
-        //if (!(<any>Array.prototype).flatMap) {
+        //if (!(Array.prototype).flatMap as any) {
         this.flatMap = (flatMapFun) => this._flatMap(flatMapFun);
         //}
-        //if (!(<any>Array.prototype).flat) {
+        //if (!(Array.prototype).flat as any) {
         this.flat = (flatLevel = 1) => this._flat(flatLevel);
         //}
     }
@@ -2752,13 +2742,13 @@ exports.Es2019Array = (Array.prototype.flatMap) ? function (...data) {
 } : _Es2019Array;
 
 
-/***/ }),
+/***/ },
 
-/***/ "./node_modules/mona-dish/src/main/typescript/Global.ts":
+/***/ "./node_modules/mona-dish/src/main/typescript/Global.ts"
 /*!**************************************************************!*\
   !*** ./node_modules/mona-dish/src/main/typescript/Global.ts ***!
   \**************************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+(__unused_webpack_module, exports, __webpack_require__) {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
@@ -2799,13 +2789,13 @@ function _global$() {
 exports._global$ = _global$;
 
 
-/***/ }),
+/***/ },
 
-/***/ "./node_modules/mona-dish/src/main/typescript/Lang.ts":
+/***/ "./node_modules/mona-dish/src/main/typescript/Lang.ts"
 /*!************************************************************!*\
   !*** ./node_modules/mona-dish/src/main/typescript/Lang.ts ***!
   \************************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+(__unused_webpack_module, exports, __webpack_require__) {
 
 
 /*!
@@ -2919,7 +2909,7 @@ var Lang;
         }
         //since offset is numeric we cannot use the shortcut due to 0 being false
         //special condition array delivered no offset no pack
-        if (obj instanceof Array && !offset && !pack)
+        if ((obj) instanceof Array && !offset && !pack)
             return obj;
         return new Es2019Array_1.Es2019Array(...pack.concat(Array.prototype.slice.call(obj, offset)));
     }
@@ -2975,8 +2965,8 @@ var Lang;
             throw new TypeError('Cannot convert undefined or null to object');
         }
         let to = Object(target);
-        if (Object.assign) {
-            theArgs.forEach(item => Object.assign(to, item));
+        if ((Object).assign) {
+            theArgs.forEach(item => (Object).assign(to, item));
             return to;
         }
         theArgs.filter(item => item != null).forEach(item => {
@@ -2991,13 +2981,13 @@ var Lang;
 })(Lang || (exports.Lang = Lang = {}));
 
 
-/***/ }),
+/***/ },
 
-/***/ "./node_modules/mona-dish/src/main/typescript/Monad.ts":
+/***/ "./node_modules/mona-dish/src/main/typescript/Monad.ts"
 /*!*************************************************************!*\
   !*** ./node_modules/mona-dish/src/main/typescript/Monad.ts ***!
   \*************************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+(__unused_webpack_module, exports, __webpack_require__) {
 
 
 /*!
@@ -3330,13 +3320,13 @@ exports.ValueEmbedder = ValueEmbedder;
 ValueEmbedder.absent = ValueEmbedder.fromNullable(null);
 
 
-/***/ }),
+/***/ },
 
-/***/ "./node_modules/mona-dish/src/main/typescript/SourcesCollectors.ts":
+/***/ "./node_modules/mona-dish/src/main/typescript/SourcesCollectors.ts"
 /*!*************************************************************************!*\
   !*** ./node_modules/mona-dish/src/main/typescript/SourcesCollectors.ts ***!
   \*************************************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+(__unused_webpack_module, exports, __webpack_require__) {
 
 
 /*!
@@ -3783,13 +3773,13 @@ class ArrayCollector {
 exports.ArrayCollector = ArrayCollector;
 
 
-/***/ }),
+/***/ },
 
-/***/ "./node_modules/mona-dish/src/main/typescript/XmlQuery.ts":
+/***/ "./node_modules/mona-dish/src/main/typescript/XmlQuery.ts"
 /*!****************************************************************!*\
   !*** ./node_modules/mona-dish/src/main/typescript/XmlQuery.ts ***!
   \****************************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+(__unused_webpack_module, exports, __webpack_require__) {
 
 
 /*!
@@ -3812,7 +3802,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.XQ = exports.XMLQuery = void 0;
 const Lang_1 = __webpack_require__(/*! ./Lang */ "./node_modules/mona-dish/src/main/typescript/Lang.ts");
 const DomQuery_1 = __webpack_require__(/*! ./DomQuery */ "./node_modules/mona-dish/src/main/typescript/DomQuery.ts");
-var isString = Lang_1.Lang.isString;
+const isString = Lang_1.Lang.isString;
 const Global_1 = __webpack_require__(/*! ./Global */ "./node_modules/mona-dish/src/main/typescript/Global.ts");
 /**
  * xml query as specialized case for DomQuery
@@ -3876,13 +3866,13 @@ exports.XMLQuery = XMLQuery;
 exports.XQ = XMLQuery;
 
 
-/***/ }),
+/***/ },
 
-/***/ "./node_modules/mona-dish/src/main/typescript/index_core.ts":
+/***/ "./node_modules/mona-dish/src/main/typescript/index_core.ts"
 /*!******************************************************************!*\
   !*** ./node_modules/mona-dish/src/main/typescript/index_core.ts ***!
   \******************************************************************/
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+(__unused_webpack_module, exports, __webpack_require__) {
 
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
@@ -3961,13 +3951,13 @@ Object.defineProperty(exports, "Es2019Array", ({ enumerable: true, get: function
 Object.defineProperty(exports, "_Es2019Array", ({ enumerable: true, get: function () { return Es2019Array_1._Es2019Array; } }));
 
 
-/***/ }),
+/***/ },
 
-/***/ "./src/main/typescript/api/_api.ts":
+/***/ "./src/main/typescript/api/_api.ts"
 /*!*****************************************!*\
   !*** ./src/main/typescript/api/_api.ts ***!
   \*****************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+(__unused_webpack_module, exports, __webpack_require__) {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
@@ -4279,13 +4269,13 @@ var myfaces;
 })(myfaces || (exports.myfaces = myfaces = {}));
 
 
-/***/ }),
+/***/ },
 
-/***/ "./src/main/typescript/impl/AjaxImpl.ts":
+/***/ "./src/main/typescript/impl/AjaxImpl.ts"
 /*!**********************************************!*\
   !*** ./src/main/typescript/impl/AjaxImpl.ts ***!
   \**********************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+(__unused_webpack_module, exports, __webpack_require__) {
 
 
 /*! Licensed to the Apache Software Foundation (ASF) under one or more
@@ -4395,12 +4385,12 @@ var Implementation;
      Note the inclusion of this library uses a reduced build which only includes the part of it, which we really use
     
      */
-    var trim = mona_dish_1.Lang.trim;
-    var getMessage = Lang_1.ExtLang.getMessage;
-    var getGlobalConfig = Lang_1.ExtLang.getGlobalConfig;
+    const trim = mona_dish_1.Lang.trim;
+    const getMessage = Lang_1.ExtLang.getMessage;
+    const getGlobalConfig = Lang_1.ExtLang.getGlobalConfig;
     var assert = Assertions_1.Assertions.assert;
-    var ofAssoc = Lang_1.ExtLang.ofAssoc;
-    var collectAssoc = Lang_1.ExtLang.collectAssoc;
+    const ofAssoc = Lang_1.ExtLang.ofAssoc;
+    const collectAssoc = Lang_1.ExtLang.collectAssoc;
     let projectStage = null;
     let separator = null;
     let eventQueue = [];
@@ -5036,13 +5026,13 @@ var Implementation;
 })(Implementation || (exports.Implementation = Implementation = {}));
 
 
-/***/ }),
+/***/ },
 
-/***/ "./src/main/typescript/impl/PushImpl.ts":
+/***/ "./src/main/typescript/impl/PushImpl.ts"
 /*!**********************************************!*\
   !*** ./src/main/typescript/impl/PushImpl.ts ***!
   \**********************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+(__unused_webpack_module, exports, __webpack_require__) {
 
 
 /*! Licensed to the Apache Software Foundation (ASF) under one or more
@@ -5304,13 +5294,13 @@ var PushImpl;
 })(PushImpl || (exports.PushImpl = PushImpl = {}));
 
 
-/***/ }),
+/***/ },
 
-/***/ "./src/main/typescript/impl/core/Const.ts":
+/***/ "./src/main/typescript/impl/core/Const.ts"
 /*!************************************************!*\
   !*** ./src/main/typescript/impl/core/Const.ts ***!
   \************************************************/
-/***/ ((__unused_webpack_module, exports) => {
+(__unused_webpack_module, exports) {
 
 
 /*! Licensed to the Apache Software Foundation (ASF) under one or more
@@ -5490,13 +5480,13 @@ function $nsp(inputNamespace) {
 exports.$nsp = $nsp;
 
 
-/***/ }),
+/***/ },
 
-/***/ "./src/main/typescript/impl/core/ImplTypes.ts":
+/***/ "./src/main/typescript/impl/core/ImplTypes.ts"
 /*!****************************************************!*\
   !*** ./src/main/typescript/impl/core/ImplTypes.ts ***!
   \****************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+(__unused_webpack_module, exports, __webpack_require__) {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
@@ -5537,13 +5527,13 @@ class StateHolder {
 exports.StateHolder = StateHolder;
 
 
-/***/ }),
+/***/ },
 
-/***/ "./src/main/typescript/impl/i18n/Messages.ts":
+/***/ "./src/main/typescript/impl/i18n/Messages.ts"
 /*!***************************************************!*\
   !*** ./src/main/typescript/impl/i18n/Messages.ts ***!
   \***************************************************/
-/***/ ((__unused_webpack_module, exports) => {
+(__unused_webpack_module, exports) {
 
 
 /*! Licensed to the Apache Software Foundation (ASF) under one or more
@@ -5659,13 +5649,13 @@ class Messages {
 exports.Messages = Messages;
 
 
-/***/ }),
+/***/ },
 
-/***/ "./src/main/typescript/impl/util/Assertions.ts":
+/***/ "./src/main/typescript/impl/util/Assertions.ts"
 /*!*****************************************************!*\
   !*** ./src/main/typescript/impl/util/Assertions.ts ***!
   \*****************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+(__unused_webpack_module, exports, __webpack_require__) {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
@@ -5769,13 +5759,13 @@ var Assertions;
 })(Assertions || (exports.Assertions = Assertions = {}));
 
 
-/***/ }),
+/***/ },
 
-/***/ "./src/main/typescript/impl/util/AsyncRunnable.ts":
+/***/ "./src/main/typescript/impl/util/AsyncRunnable.ts"
 /*!********************************************************!*\
   !*** ./src/main/typescript/impl/util/AsyncRunnable.ts ***!
   \********************************************************/
-/***/ ((__unused_webpack_module, exports) => {
+(__unused_webpack_module, exports) {
 
 
 /*! Licensed to the Apache Software Foundation (ASF) under one or more
@@ -5856,13 +5846,13 @@ class AsyncRunnable {
 exports.AsyncRunnable = AsyncRunnable;
 
 
-/***/ }),
+/***/ },
 
-/***/ "./src/main/typescript/impl/util/ExtDomQuery.ts":
+/***/ "./src/main/typescript/impl/util/ExtDomQuery.ts"
 /*!******************************************************!*\
   !*** ./src/main/typescript/impl/util/ExtDomQuery.ts ***!
   \******************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+(__unused_webpack_module, exports, __webpack_require__) {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
@@ -6171,13 +6161,13 @@ class ExtConfig extends mona_dish_1.Config {
 exports.ExtConfig = ExtConfig;
 
 
-/***/ }),
+/***/ },
 
-/***/ "./src/main/typescript/impl/util/FileUtils.ts":
+/***/ "./src/main/typescript/impl/util/FileUtils.ts"
 /*!****************************************************!*\
   !*** ./src/main/typescript/impl/util/FileUtils.ts ***!
   \****************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+(__unused_webpack_module, exports, __webpack_require__) {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
@@ -6279,13 +6269,13 @@ function getFormInputsAsArr(parentItem) {
 exports.getFormInputsAsArr = getFormInputsAsArr;
 
 
-/***/ }),
+/***/ },
 
-/***/ "./src/main/typescript/impl/util/HiddenInputBuilder.ts":
+/***/ "./src/main/typescript/impl/util/HiddenInputBuilder.ts"
 /*!*************************************************************!*\
   !*** ./src/main/typescript/impl/util/HiddenInputBuilder.ts ***!
   \*************************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+(__unused_webpack_module, exports, __webpack_require__) {
 
 
 /*! Licensed to the Apache Software Foundation (ASF) under one or more
@@ -6371,13 +6361,13 @@ class HiddenInputBuilder {
 exports.HiddenInputBuilder = HiddenInputBuilder;
 
 
-/***/ }),
+/***/ },
 
-/***/ "./src/main/typescript/impl/util/Lang.ts":
+/***/ "./src/main/typescript/impl/util/Lang.ts"
 /*!***********************************************!*\
   !*** ./src/main/typescript/impl/util/Lang.ts ***!
   \***********************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+(__unused_webpack_module, exports, __webpack_require__) {
 
 
 /*! Licensed to the Apache Software Foundation (ASF) under one or more
@@ -6644,19 +6634,19 @@ var ExtLang;
 })(ExtLang || (exports.ExtLang = ExtLang = {}));
 
 
-/***/ }),
+/***/ },
 
-/***/ "./src/main/typescript/impl/util/XhrQueueController.ts":
+/***/ "./src/main/typescript/impl/util/XhrQueueController.ts"
 /*!*************************************************************!*\
   !*** ./src/main/typescript/impl/util/XhrQueueController.ts ***!
   \*************************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+(__unused_webpack_module, exports, __webpack_require__) {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.XhrQueueController = void 0;
 const Lang_1 = __webpack_require__(/*! ./Lang */ "./src/main/typescript/impl/util/Lang.ts");
-var debounce = Lang_1.ExtLang.debounce;
+const debounce = Lang_1.ExtLang.debounce;
 /**
  * A simple XHR queue controller
  * following the async op -> next pattern
@@ -6745,13 +6735,13 @@ class XhrQueueController {
 exports.XhrQueueController = XhrQueueController;
 
 
-/***/ }),
+/***/ },
 
-/***/ "./src/main/typescript/impl/xhrCore/ErrorData.ts":
+/***/ "./src/main/typescript/impl/xhrCore/ErrorData.ts"
 /*!*******************************************************!*\
   !*** ./src/main/typescript/impl/xhrCore/ErrorData.ts ***!
   \*******************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+(__unused_webpack_module, exports, __webpack_require__) {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
@@ -6775,7 +6765,7 @@ const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/
 const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const EventData_1 = __webpack_require__(/*! ./EventData */ "./src/main/typescript/impl/xhrCore/EventData.ts");
 const Lang_1 = __webpack_require__(/*! ../util/Lang */ "./src/main/typescript/impl/util/Lang.ts");
-var getMessage = Lang_1.ExtLang.getMessage;
+const getMessage = Lang_1.ExtLang.getMessage;
 var ErrorType;
 (function (ErrorType) {
     ErrorType["SERVER_ERROR"] = "serverError";
@@ -6841,13 +6831,13 @@ class ErrorData extends EventData_1.EventData {
 exports.ErrorData = ErrorData;
 
 
-/***/ }),
+/***/ },
 
-/***/ "./src/main/typescript/impl/xhrCore/EventData.ts":
+/***/ "./src/main/typescript/impl/xhrCore/EventData.ts"
 /*!*******************************************************!*\
   !*** ./src/main/typescript/impl/xhrCore/EventData.ts ***!
   \*******************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+(__unused_webpack_module, exports, __webpack_require__) {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
@@ -6902,13 +6892,13 @@ class EventData {
 exports.EventData = EventData;
 
 
-/***/ }),
+/***/ },
 
-/***/ "./src/main/typescript/impl/xhrCore/RequestDataResolver.ts":
+/***/ "./src/main/typescript/impl/xhrCore/RequestDataResolver.ts"
 /*!*****************************************************************!*\
   !*** ./src/main/typescript/impl/xhrCore/RequestDataResolver.ts ***!
   \*****************************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+(__unused_webpack_module, exports, __webpack_require__) {
 
 
 /*! Licensed to the Apache Software Foundation (ASF) under one or more
@@ -7098,13 +7088,13 @@ function resolveDefaults(event, opts, el = null) {
 exports.resolveDefaults = resolveDefaults;
 
 
-/***/ }),
+/***/ },
 
-/***/ "./src/main/typescript/impl/xhrCore/ResonseDataResolver.ts":
+/***/ "./src/main/typescript/impl/xhrCore/ResonseDataResolver.ts"
 /*!*****************************************************************!*\
   !*** ./src/main/typescript/impl/xhrCore/ResonseDataResolver.ts ***!
   \*****************************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+(__unused_webpack_module, exports, __webpack_require__) {
 
 
 /*! Licensed to the Apache Software Foundation (ASF) under one or more
@@ -7212,13 +7202,13 @@ function resolveSourceElementId(context, internalContext) {
 }
 
 
-/***/ }),
+/***/ },
 
-/***/ "./src/main/typescript/impl/xhrCore/Response.ts":
+/***/ "./src/main/typescript/impl/xhrCore/Response.ts"
 /*!******************************************************!*\
   !*** ./src/main/typescript/impl/xhrCore/Response.ts ***!
   \******************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+(__unused_webpack_module, exports, __webpack_require__) {
 
 
 /*! Licensed to the Apache Software Foundation (ASF) under one or more
@@ -7407,13 +7397,13 @@ var Response;
 })(Response || (exports.Response = Response = {}));
 
 
-/***/ }),
+/***/ },
 
-/***/ "./src/main/typescript/impl/xhrCore/ResponseProcessor.ts":
+/***/ "./src/main/typescript/impl/xhrCore/ResponseProcessor.ts"
 /*!***************************************************************!*\
   !*** ./src/main/typescript/impl/xhrCore/ResponseProcessor.ts ***!
   \***************************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+(__unused_webpack_module, exports, __webpack_require__) {
 
 
 /*! Licensed to the Apache Software Foundation (ASF) under one or more
@@ -7442,9 +7432,9 @@ const EventData_1 = __webpack_require__(/*! ./EventData */ "./src/main/typescrip
 const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 const ExtDomQuery_1 = __webpack_require__(/*! ../util/ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
 const HiddenInputBuilder_1 = __webpack_require__(/*! ../util/HiddenInputBuilder */ "./src/main/typescript/impl/util/HiddenInputBuilder.ts");
-var trim = mona_dish_1.Lang.trim;
+const trim = mona_dish_1.Lang.trim;
 const Lang_1 = __webpack_require__(/*! ../util/Lang */ "./src/main/typescript/impl/util/Lang.ts");
-var ofAssoc = Lang_1.ExtLang.ofAssoc;
+const ofAssoc = Lang_1.ExtLang.ofAssoc;
 /**
  * Response processor
  *
@@ -7884,13 +7874,13 @@ class ResponseProcessor {
 exports.ResponseProcessor = ResponseProcessor;
 
 
-/***/ }),
+/***/ },
 
-/***/ "./src/main/typescript/impl/xhrCore/XhrFormData.ts":
+/***/ "./src/main/typescript/impl/xhrCore/XhrFormData.ts"
 /*!*********************************************************!*\
   !*** ./src/main/typescript/impl/xhrCore/XhrFormData.ts ***!
   \*********************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+(__unused_webpack_module, exports, __webpack_require__) {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
@@ -7914,7 +7904,7 @@ const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-di
 const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 const FileUtils_1 = __webpack_require__(/*! ../util/FileUtils */ "./src/main/typescript/impl/util/FileUtils.ts");
 const Lang_1 = __webpack_require__(/*! ../util/Lang */ "./src/main/typescript/impl/util/Lang.ts");
-var ofAssoc = Lang_1.ExtLang.ofAssoc;
+const ofAssoc = Lang_1.ExtLang.ofAssoc;
 const mona_dish_2 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 const defaultParamsMapper = (key, item) => [key, item];
 /**
@@ -8056,13 +8046,13 @@ class XhrFormData extends mona_dish_1.Config {
 exports.XhrFormData = XhrFormData;
 
 
-/***/ }),
+/***/ },
 
-/***/ "./src/main/typescript/impl/xhrCore/XhrRequest.ts":
+/***/ "./src/main/typescript/impl/xhrCore/XhrRequest.ts"
 /*!********************************************************!*\
   !*** ./src/main/typescript/impl/xhrCore/XhrRequest.ts ***!
   \********************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+(__unused_webpack_module, exports, __webpack_require__) {
 
 
 /*! Licensed to the Apache Software Foundation (ASF) under one or more
@@ -8091,7 +8081,7 @@ const EventData_1 = __webpack_require__(/*! ./EventData */ "./src/main/typescrip
 const Lang_1 = __webpack_require__(/*! ../util/Lang */ "./src/main/typescript/impl/util/Lang.ts");
 const Const_1 = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
 const RequestDataResolver_1 = __webpack_require__(/*! ./RequestDataResolver */ "./src/main/typescript/impl/xhrCore/RequestDataResolver.ts");
-var failSaveExecute = Lang_1.ExtLang.failSaveExecute;
+const failSaveExecute = Lang_1.ExtLang.failSaveExecute;
 const ExtDomQuery_1 = __webpack_require__(/*! ../util/ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
 /**
  * Faces XHR Request Wrapper
@@ -8493,13 +8483,13 @@ XhrRequest.TYPE_CHECKBOX = "checkbox";
 XhrRequest.TYPE_RADIO = "radio";
 
 
-/***/ }),
+/***/ },
 
-/***/ "./src/main/typescript/myfaces/OamSubmit.ts":
+/***/ "./src/main/typescript/myfaces/OamSubmit.ts"
 /*!**************************************************!*\
   !*** ./src/main/typescript/myfaces/OamSubmit.ts ***!
   \**************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+(__unused_webpack_module, exports, __webpack_require__) {
 
 
 /*! Licensed to the Apache Software Foundation (ASF) under one or more
@@ -8534,7 +8524,7 @@ const Lang_1 = __webpack_require__(/*! ../impl/util/Lang */ "./src/main/typescri
  */
 var oam;
 (function (oam) {
-    var ofAssoc = Lang_1.ExtLang.ofAssoc;
+    const ofAssoc = Lang_1.ExtLang.ofAssoc;
     /**
      * sets a hidden input field
      * @param formName the formName
@@ -8630,7 +8620,7 @@ var oam;
 })(oam || (exports.oam = oam = {}));
 
 
-/***/ })
+/***/ }
 
 /******/ 	});
 /************************************************************************/
@@ -8643,6 +8633,12 @@ var oam;
 /******/ 		var cachedModule = __webpack_module_cache__[moduleId];
 /******/ 		if (cachedModule !== undefined) {
 /******/ 			return cachedModule.exports;
+/******/ 		}
+/******/ 		// Check if module exists (development only)
+/******/ 		if (__webpack_modules__[moduleId] === undefined) {
+/******/ 			var e = new Error("Cannot find module '" + moduleId + "'");
+/******/ 			e.code = 'MODULE_NOT_FOUND';
+/******/ 			throw e;
 /******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = __webpack_module_cache__[moduleId] = {
@@ -8673,7 +8669,7 @@ var oam;
 /******/ 	
 /************************************************************************/
 var __webpack_exports__ = {};
-// This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
+// This entry needs to be wrapped in an IIFE because it needs to be isolated against other modules in the chunk.
 (() => {
 var exports = __webpack_exports__;
 /*!******************************************!*\
@@ -8727,7 +8723,7 @@ exports.myfaces = window.myfaces;
 })();
 
 var __webpack_export_target__ = window;
-for(var i in __webpack_exports__) __webpack_export_target__[i] = __webpack_exports__[i];
+for(var __webpack_i__ in __webpack_exports__) __webpack_export_target__[__webpack_i__] = __webpack_exports__[__webpack_i__];
 if(__webpack_exports__.__esModule) Object.defineProperty(__webpack_export_target__, "__esModule", { value: true });
 /******/ })()
 ;

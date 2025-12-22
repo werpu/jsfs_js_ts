@@ -16,7 +16,8 @@
 
 import { expect } from 'chai';
 import { describe, it } from 'mocha';
-import {Config, Optional} from "mona-dish";
+import monadish from "mona-dish";
+const {Config, Optional} = monadish;
 
 //TODO saveResolveTest
 describe('optional tests', () => {
@@ -33,8 +34,8 @@ describe('optional tests', () => {
     });
 
     it('flatmap/map test', () => {
-        expect(Optional.fromNullable(Optional.fromNullable(1)).value).to.be.eq(<any>1);
-        expect(Optional.fromNullable(Optional.fromNullable(1)).value).to.be.eq(<any>1);
+        expect(Optional.fromNullable(Optional.fromNullable(1)).value).to.be.eq(1 as any);
+        expect(Optional.fromNullable(Optional.fromNullable(1)).value).to.be.eq(1 as any);
     });
 
     it('flatmap2/map test', () => {
@@ -69,7 +70,7 @@ describe('optional tests', () => {
 
 
 describe('Config tests', () => {
-    var setup = function ():Config {
+    var setup = function ():any  {
         return new Config({
             data: {
                 value: 1,

@@ -5,7 +5,7 @@
   "main": "dist/window/faces.js",
   "scripts": {
     "doc": "npx typedoc --tsconfig src/main/typescript/tsconfig-typedoc.json",
-    "test": "cross-env TS_NODE_PROJECT=./src/main/typescript/tsconfig.json mocha",
+    "test": "cross-env NODE_OPTIONS='--no-experimental-strip-types' TS_NODE_PROJECT=./src/main/typescript/tsconfig-test.json mocha",
     "coverage": "cross-env TS_NODE_PROJECT=./src/main/typescript/tsconfig.json nyc --reporter=html --reporter=text mocha",
     "build-production": "webpack --mode production --env FILE_NAME=jsf  && ts-node ./remap.ts --production",
     "build-development": "webpack --mode development --env FILE_NAME=jsf-development  && ts-node ./remap.ts --development",
@@ -41,6 +41,7 @@
     "terser-webpack-plugin": "^5.3.9",
     "ts-loader": "^9.5.4",
     "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "typedoc": "^0.24.8",
     "typescript": "^5.1.6",
     "webpack": "^5.88.1",

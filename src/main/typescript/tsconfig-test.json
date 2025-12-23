@@ -15,6 +15,13 @@
  * limitations under the License.
  */
 {
+  "ts-node": {
+    "moduleTypes": {
+      "node_modules/mona-dish/**": "cjs"
+    },
+    "transpileOnly": true,
+    "preferTsExts": true
+  },
   "compilerOptions": {
     "target": "es2015",
     "lib": [
@@ -24,15 +31,17 @@
     "sourceMap": false,
     "outDir": "../../../target",
     "moduleResolution": "node",
+    "allowJs": true,
     "esModuleInterop": true,
     "module": "commonjs",
     "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "mona-dish": ["../../../node_modules/mona-dish/dist/js/umd"]
+    },
     "typeRoots": [
       "../../../node_modules/@types",
       "./@types/"
     ]
-  },
-  "exclude": [
-    "**/*.spec.*"
-  ]
+  }
 }

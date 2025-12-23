@@ -16,8 +16,7 @@
 
 import { expect } from 'chai';
 import { describe, it } from 'mocha';
-import monadish from "mona-dish";
-const {Config, Optional} = monadish;
+import { Config, Optional } from "mona-dish";
 
 //TODO saveResolveTest
 describe('optional tests', () => {

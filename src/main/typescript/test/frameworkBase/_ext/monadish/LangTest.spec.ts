@@ -16,12 +16,7 @@
 
 import { expect } from 'chai';
 import { describe, it } from 'mocha';
-import monadish from "mona-dish";
-const { Lang } = monadish;
-
-import { createRequire } from 'module';
-// @ts-ignore
-const require = createRequire(import.meta.url);
+import { Lang } from "mona-dish";
 
 const jsdom = require("jsdom");
 const { JSDOM } = jsdom;

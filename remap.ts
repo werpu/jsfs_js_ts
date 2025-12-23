@@ -36,12 +36,16 @@ let option = {
     files: 'dist/**/*.js',
     from: (buildStage == "-development") ? /jsf-development.js\.map/g : /jsf.js\.map/g,
     to: `jsf${buildStage}.js.map\n//# sourceMappingURL=jsf${buildStage}.js.map.jsf?ln=javax.faces`
-}
+};
 
-try {
-    const result = replace.sync(option);
-    console.log("mapping file references fixed!");
-    console.log('Replacement results:', result);
-} catch (error) {
-    console.error('Error occurred:', error);
-}
+
+(async () => {
+    try {
+        const result = await replace.replaceInFile(option);
+        // Handle your result here
+        console.log('Replacement results:', result);
+    } catch (error) {
+        console.error('Error occurred:', error);
+    }
+})();
+

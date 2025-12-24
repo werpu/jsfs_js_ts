@@ -28,7 +28,6 @@ import {
     SUCCESS
 } from "../../impl/core/Const";
 import * as nise from "nise";
-import * as nise from "nise";
 
 /**
  * wherever we reference the namespaces they must be mapped to javax instead of jakarta

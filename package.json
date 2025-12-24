@@ -5,10 +5,10 @@
   "main": "dist/window/faces.js",
   "scripts": {
     "doc": "npx typedoc --tsconfig src/main/typescript/tsconfig-typedoc.json",
-    "test": "cross-env NODE_OPTIONS='--no-experimental-strip-types' TS_NODE_PROJECT=./src/main/typescript/tsconfig-test.json mocha",
-    "coverage": "cross-env TS_NODE_PROJECT=./src/main/typescript/tsconfig.json nyc --reporter=html --reporter=text mocha",
-    "build-production": "webpack --mode production --env FILE_NAME=jsf  && ts-node ./remap.ts --production",
-    "build-development": "webpack --mode development --env FILE_NAME=jsf-development  && ts-node ./remap.ts --development",
+    "test": "cross-env  mocha",
+    "coverage": "cross-env nyc --reporter=html --reporter=text mocha",
+    "build-production": "NODE_OPTIONS='--import tsx' webpack --mode production --env FILE_NAME=jsf  && tsx ./remap.ts --production",
+    "build-development": "NODE_OPTIONS='--import tsx' webpack --mode development --env FILE_NAME=jsf-development  && tsx ./remap.ts --development",
     "build": "npm run doc && npm run build-development && npm run build-production",
     "serve": "npx http-server -p 8900 -b -g -o ./dist/"
   },
@@ -41,13 +41,13 @@
     "sinon": "^21.0.1",
     "terser-webpack-plugin": "^5.3.16",
     "ts-loader": "^9.5.4",
-    "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typedoc": "^0.28.15",
     "typescript": "^5.9.3",
     "webpack": "^5.104.1",
     "webpack-cli": "^6.0.1",
-    "webpack-dev-server": "^5.2.2"
+    "webpack-dev-server": "^5.2.2",
+    "tsx": "^4.21.0"
   },
   "dependencies": {
     "mona-dish": "0.28.13"

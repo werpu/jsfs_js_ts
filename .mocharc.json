@@ -5,9 +5,6 @@
   "spec": [
     "src/**/*.spec.*"
   ],
-  "require": [
-    "ts-node/register",
-    "tsconfig-paths/register"
-  ],
+  "node-option": ["import=tsx"],
   "license": "Apache-2.0"
 }

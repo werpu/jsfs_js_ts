@@ -31,7 +31,7 @@ const args = process.argv.slice(2);
 const buildStage = (args[0] == "--development") ? "-development" : "";
 console.log("fixing mapping file references for jsf");
 
-let option = {
+const option = {
     //development
     files: 'dist/**/*.js',
     from: (buildStage == "-development") ? /jsf-development.js\.map/g : /jsf.js\.map/g,

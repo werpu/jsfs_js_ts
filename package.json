@@ -32,7 +32,7 @@
     "http-server": "^14.1.1",
     "jsdom": "^27.3.0",
     "jsdom-global": "^3.0.2",
-    "mocha": "^11.7.5",
+    "mocha": "^11.3.0",
     "nise": "^6.1.1",
     "npm-check-updates": "^19.2.0",
     "nyc": "^17.1.0",
@@ -42,12 +42,12 @@
     "terser-webpack-plugin": "^5.3.16",
     "ts-loader": "^9.5.4",
     "tsconfig-paths": "^4.2.0",
+    "tsx": "^4.21.0",
     "typedoc": "^0.28.15",
     "typescript": "^5.9.3",
     "webpack": "^5.104.1",
     "webpack-cli": "^6.0.1",
-    "webpack-dev-server": "^5.2.2",
-    "tsx": "^4.21.0"
+    "webpack-dev-server": "^5.2.2"
   },
   "dependencies": {
     "mona-dish": "0.28.13"

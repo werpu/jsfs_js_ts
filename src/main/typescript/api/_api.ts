@@ -317,6 +317,10 @@ export module myfaces {
 
     }
 
+    /**
+     * reserve a namespace for the given string
+     * @param namespace the namespace to reserve with '.' as separator
+     */
     export function reserveNamespace(namespace: string): void {
         let current: any = window;
         Stream.of(...namespace.split("."))

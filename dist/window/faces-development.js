@@ -4003,7 +4003,6 @@ var faces;
      * <li>middle two digits minor spec release number</li>
      * <li>right two digits bug release number</li>
      * </ul>
-     * @constant
      */
     faces.specversion = 400000;
     /**
@@ -4012,7 +4011,6 @@ var faces;
      * A number increased with every implementation version
      * and reset by moving to a new spec release number
      *
-     * @constant
      */
     faces.implversion = 0;
     /**
@@ -4271,6 +4269,10 @@ var myfaces;
         }
     }
     myfaces.onDomReady = onDomReady;
+    /**
+     * reserve a namespace for the given string
+     * @param namespace the namespace to reserve with '.' as separator
+     */
     function reserveNamespace(namespace) {
         let current = window;
         mona_dish_1.Stream.of(...namespace.split("."))

@@ -3989,6 +3989,7 @@ const AjaxImpl_1 = __webpack_require__(/*! ../impl/AjaxImpl */ "./src/main/types
 const PushImpl_1 = __webpack_require__(/*! ../impl/PushImpl */ "./src/main/typescript/impl/PushImpl.ts");
 const OamSubmit_1 = __webpack_require__(/*! ../myfaces/OamSubmit */ "./src/main/typescript/myfaces/OamSubmit.ts");
 const Const_1 = __webpack_require__(/*! ../impl/core/Const */ "./src/main/typescript/impl/core/Const.ts");
+const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 //we use modules to get a proper jsdoc and static/map structure in the calls
 //as per spec requirement
 var faces;
@@ -4270,6 +4271,15 @@ var myfaces;
         }
     }
     myfaces.onDomReady = onDomReady;
+    function reserveNamespace(namespace) {
+        let current = window;
+        mona_dish_1.Stream.of(...namespace.split("."))
+            .each(part => {
+            current[part] = current[part] || {};
+            current = current[part];
+        });
+    }
+    myfaces.reserveNamespace = reserveNamespace;
     /**
      * legacy oam functions
      */
@@ -5070,6 +5080,8 @@ const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-di
  */
 var PushImpl;
 (function (PushImpl) {
+    // @deprecated because we can assume at least for the newer versions
+    // that the protocol is properly set!
     const URL_PROTOCOL = mona_dish_1.DQ.global().location.protocol.replace("http", "ws") + "//";
     // we expose the member variables for testing purposes
     // they are not directly touched outside of tests
@@ -5270,6 +5282,10 @@ var PushImpl;
         }
     }
     // Private static functions ---------------------------------------------------------------------------------------
+    // @deprecated because we can assume at least for the newer versions
+    // that the protocol is properly set!
+    // https://issues.apache.org/jira/browse/MYFACES-4718
+    // This needs further investigation
     function getBaseURL(url) {
         if (url.indexOf("://") < 0) {
             let base = mona_dish_1.DQ.global().location.hostname + ":" + mona_dish_1.DQ.global().location.port;

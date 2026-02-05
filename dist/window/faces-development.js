@@ -3989,7 +3989,6 @@ const AjaxImpl_1 = __webpack_require__(/*! ../impl/AjaxImpl */ "./src/main/types
 const PushImpl_1 = __webpack_require__(/*! ../impl/PushImpl */ "./src/main/typescript/impl/PushImpl.ts");
 const OamSubmit_1 = __webpack_require__(/*! ../myfaces/OamSubmit */ "./src/main/typescript/myfaces/OamSubmit.ts");
 const Const_1 = __webpack_require__(/*! ../impl/core/Const */ "./src/main/typescript/impl/core/Const.ts");
-const mona_dish_1 = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 //we use modules to get a proper jsdoc and static/map structure in the calls
 //as per spec requirement
 var faces;
@@ -4275,11 +4274,11 @@ var myfaces;
      */
     function reserveNamespace(namespace) {
         let current = window;
-        mona_dish_1.Stream.of(...namespace.split("."))
-            .each(part => {
+        const namespaces = namespace.split(".");
+        for (const part of namespaces) {
             current[part] = current[part] || {};
             current = current[part];
-        });
+        }
     }
     myfaces.reserveNamespace = reserveNamespace;
     /**

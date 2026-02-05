@@ -19,7 +19,6 @@ import {oam as _oam} from "../myfaces/OamSubmit";
 import {$nsp, CTX_OPTIONS_EXECUTE, CTX_OPTIONS_PARAMS, CTX_PARAM_RENDER, P_BEHAVIOR_EVENT} from "../impl/core/Const";
 import {ErrorData} from "../impl/xhrCore/ErrorData";
 import {EventData} from "../impl/xhrCore/EventData";
-import {Stream} from "mona-dish";
 
 //we use modules to get a proper jsdoc and static/map structure in the calls
 //as per spec requirement
@@ -323,12 +322,11 @@ export module myfaces {
      */
     export function reserveNamespace(namespace: string): void {
         let current: any = window;
-        Stream.of(...namespace.split("."))
-            .each(part => {
-                current[part] = current[part] || {};
-                current = current[part];
-            }
-        );
+        const namespaces = namespace.split(".");
+        for(const part of namespaces) {
+            current[part] = current[part] || {};
+            current = current[part];
+        }
     }
 
     /**

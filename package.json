@@ -1,6 +1,6 @@
 {
   "name": "jsf.js_next_gen",
-  "version": "4.0.5-beta.3",
+  "version": "4.0.5-beta.4",
   "description": "A next generation typescript reimplementation of jsf.js",
   "main": "dist/window/faces.js",
   "scripts": {
@@ -50,6 +50,6 @@
     "webpack-dev-server": "^5.2.2"
   },
   "dependencies": {
-    "mona-dish": "0.28.14"
+    "mona-dish": "0.28.15"
   }
 }

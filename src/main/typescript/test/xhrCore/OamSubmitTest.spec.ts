@@ -23,7 +23,7 @@ import {_Es2019Array, DQ, DQ$} from "mona-dish";
 import {expect} from "chai";
 import * as nise from "nise";
 
-describe('Tests for the MyFaces specifig oam submit', function () {
+describe('Tests for the MyFaces specific oam submit', function () {
     let oldFlatMap = null;
     beforeEach(async function () {
 
@@ -147,7 +147,7 @@ describe('Tests for the MyFaces specifig oam submit', function () {
             return false;
         };
         try {
-        myfaces.oam.submitForm("blarg", "bla");
+            myfaces.oam.submitForm("blarg", "bla");
         } catch(e) {
             done(e);
         }

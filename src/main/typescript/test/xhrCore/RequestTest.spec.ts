@@ -62,7 +62,7 @@ let issueStdPPSReq = function (element) {
             pps: true
         },
         /*
-         * params is the spec conform way to pass additional request paramerters
+         * params is the spec conform way to pass additional request parameters
          */
         params: {
             pass1: "pass1",
@@ -281,7 +281,7 @@ describe('Tests after core when it hits response', function () {
             expect(requestBody.indexOf("message=Hello%20World")).not.to.eq(-1);
 
             expect(this.jsfAjaxResponse.callCount).to.eq(1);
-            //success ommitted due to fake response
+            //success omitted due to fake response
             expect(globalCnt == 3).to.eq(true);
             expect(localCnt == 3).to.eq(true);
             done();
@@ -634,7 +634,7 @@ describe('Tests after core when it hits response', function () {
 
 
             // TODO the request map only has the params and input1_ and input_2 passed no matter now many other values
-            // we might have to add some input elements into the form which are filetered out
+            // we might have to add some input elements into the form which are filtered out
         } finally {
             send.restore();
         }
@@ -871,7 +871,7 @@ describe('Tests after core when it hits response', function () {
             expect(requestBody.indexOf("message=Hello%20World")).not.to.eq(-1);
 
             expect(this.jsfAjaxResponse.callCount).to.eq(1);
-            //success ommitted due to fake response
+            //success omitted due to fake response
             expect(globalCnt == 3).to.eq(true);
             expect(localCnt == 3).to.eq(true);
             done();

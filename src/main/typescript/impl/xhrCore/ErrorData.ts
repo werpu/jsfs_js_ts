@@ -33,7 +33,7 @@ const getMessage = ExtLang.getMessage;
 export enum ErrorType {
     SERVER_ERROR = "serverError",
     HTTP_ERROR = "httpError",
-    CLIENT_ERROR = "clientErrror",
+    CLIENT_ERROR = "clientError",
     TIMEOUT = "timeout"
 }
 

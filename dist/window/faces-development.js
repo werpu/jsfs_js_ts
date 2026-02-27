@@ -8362,30 +8362,35 @@ class XhrRequest extends AsyncRunnable_1.AsyncRunnable {
         }
     }
     processRequestErrors(resolve) {
-        var _a, _b, _c;
+        var _a, _b, _c, _d, _e;
         const responseXML = new mona_dish_1.XMLQuery((_a = this.xhrObject) === null || _a === void 0 ? void 0 : _a.responseXML);
-        const responseCode = (_c = (_b = this.xhrObject) === null || _b === void 0 ? void 0 : _b.status) !== null && _c !== void 0 ? _c : -1;
+        const responseText = (_c = (_b = this.xhrObject) === null || _b === void 0 ? void 0 : _b.responseText) !== null && _c !== void 0 ? _c : "";
+        const responseCode = (_e = (_d = this.xhrObject) === null || _d === void 0 ? void 0 : _d.status) !== null && _e !== void 0 ? _e : -1;
         if (responseXML.isXMLParserError()) {
-            // invalid response
+            // Firefox: malformed XML produces a Document with <parsererror>
+            const errorName = "Invalid Response";
+            const errorMessage = "The response xml is invalid";
+            this.handleGenericResponseError(errorName, errorMessage, Const_1.MALFORMEDXML, resolve);
+            return true;
+        }
+        else if (responseXML.isAbsent() && responseText.trim().length > 0) {
+            // Chrome: responseXML is null for unparseable XML, but responseText has content
             const errorName = "Invalid Response";
             const errorMessage = "The response xml is invalid";
             this.handleGenericResponseError(errorName, errorMessage, Const_1.MALFORMEDXML, resolve);
             return true;
         }
         else if (responseXML.isAbsent()) {
-            // empty response
+            // Truly empty response
             const errorName = "Empty Response";
             const errorMessage = "The response has provided no data";
             this.handleGenericResponseError(errorName, errorMessage, Const_1.EMPTY_RESPONSE, resolve);
             return true;
         }
         else if (responseCode >= 300 || responseCode < 200) {
-            // other server errors
-            // all errors from the server are resolved without interfering in the queue
             this.handleHttpError(resolve);
             return true;
         }
-        //additional errors are application errors and must be handled within the response
         return false;
     }
     handleGenericResponseError(errorName, errorMessage, responseStatus, resolve) {

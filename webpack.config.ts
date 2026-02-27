@@ -22,8 +22,8 @@ function build(env: { [key: string]: string }, argv: { [key: string]: string }) 
         resolve: {
             extensions: [".tsx", ".ts", ".json"],
             alias: {
-                // use reduced core
-               "mona-dish": path.resolve(
+                // use reduced core for production bundle (named imports only)
+                "mona-dish$": path.resolve(
                     __dirname,
                     "node_modules/mona-dish/src/main/typescript/index_core.ts"
                 ),
@@ -36,7 +36,10 @@ function build(env: { [key: string]: string }, argv: { [key: string]: string }) 
                     use: [
                         {
                             loader: "ts-loader",
-                            options: { allowTsInNodeModules: true },
+                            options: {
+                                allowTsInNodeModules: true,
+                                configFile: path.resolve(__dirname, "src/main/typescript/tsconfig.json"),
+                            },
                         },
                     ],
                 },

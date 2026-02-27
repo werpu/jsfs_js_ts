@@ -410,6 +410,4 @@ describe('Tests of the various aspects of the response protocol functionality', 
         done();
 
     });
-
-
 });

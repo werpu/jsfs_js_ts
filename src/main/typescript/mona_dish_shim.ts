@@ -1,5 +1,5 @@
-/*!
- * Licensed to the Apache Software Foundation (ASF) under one or more
+
+/*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to you under the Apache License, Version 2.0
@@ -14,26 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-{
-  "compilerOptions": {
-    "target": "es2015",
-    "lib": [
-      "es2015.collection",
-      "dom"
-    ],
-    "sourceMap": false,
-    "outDir": "../../../target",
-    "moduleResolution": "node",
-    "esModuleInterop": true,
-    "module": "commonjs",
-    "sourceMap": true,
-    "baseUrl": ".",
-    "paths": {
-      "mona-dish": ["./mona_dish_shim"]
-    },
-    "typeRoots": [
-      "../../../node_modules/@types",
-      "./@types/"
-    ]
-  }
-}
+
+/**
+ * Shim to provide a default export for mona-dish.
+ *
+ * The npm package only has named exports, which breaks the pattern:
+ *   import pkg from 'mona-dish'; const { Lang } = pkg;
+ *
+ * Used via tsconfig paths (for tests/tsx). Webpack keeps its own alias to
+ * index_core.ts for the reduced-core production bundle.
+ *
+ * Both import styles work:
+ *   import { Lang } from 'mona-dish'                    // named import
+ *   import pkg from 'mona-dish'; const { Lang } = pkg   // default import
+ */
+export * from "mona-dish/src/main/typescript/index";
+import * as _monaDish from "mona-dish/src/main/typescript/index";
+export default _monaDish;

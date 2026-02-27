@@ -1,0 +1,9 @@
+{
+  "used for the mona-dish shim": true,
+  "compilerOptions": {
+    "baseUrl": "src/main/typescript",
+    "paths": {
+      "mona-dish": ["./mona_dish_shim"]
+    }
+  }
+}

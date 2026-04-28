@@ -39,6 +39,7 @@ function build(env: { [key: string]: string }, argv: { [key: string]: string }) 
                             options: {
                                 allowTsInNodeModules: true,
                                 configFile: path.resolve(__dirname, "src/main/typescript/tsconfig.json"),
+                                reportFiles: ["src/**/*.ts", "src/**/*.tsx", "!src/**/*.spec.ts", "!node_modules/**"],
                             },
                         },
                     ],

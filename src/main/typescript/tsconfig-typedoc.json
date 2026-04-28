@@ -21,7 +21,6 @@ Special config to generate the tsdocs
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "skipLibCheck": true,
-
   },
   "typedocOptions": {
     "entryPoints": ["api/_api.ts"],

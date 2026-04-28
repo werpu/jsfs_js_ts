@@ -36,7 +36,7 @@ declare let myfaces: any;
  * This is a pattern pretty much for every test which iterates over
  * multiple doms
  */
-export module StandardInits {
+export namespace StandardInits {
 
     export const HTML_DEFAULT = `<!DOCTYPE html>
 <html lang="en">

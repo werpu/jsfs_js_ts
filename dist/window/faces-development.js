@@ -166,9 +166,9 @@ function alloc(arr, length, defaultVal = {}) {
     arr.push(...toAdd);
 }
 function flattenAccessPath(accessPath) {
-    return new Es2019Array_1.Es2019Array(...accessPath).flatMap(path => path.split("["))
-        .map(path => path.indexOf("]") != -1 ? "[" + path : path)
-        .filter(path => path != "");
+    return new Es2019Array_1.Es2019Array(...accessPath).flatMap((path) => path.split("["))
+        .map((path) => path.indexOf("]") != -1 ? "[" + path : path)
+        .filter((path) => path != "");
 }
 /**
  * builds up a path, only done if no data is present!
@@ -263,7 +263,7 @@ function _appendWithOverwrite(withAppend, target, key, arr, toAssign) {
             let newVals = [];
             //TODO maybe deep deep compare here, but on the other hand it is
             //shallow
-            toAssign.forEach(item => {
+            toAssign.forEach((item) => {
                 if (oldVal != item) {
                     newVals.push(item);
                 }
@@ -276,7 +276,7 @@ function _appendWithOverwrite(withAppend, target, key, arr, toAssign) {
             let oldVal = target[key];
             let newVals = [];
             //TODO deep compare here
-            toAssign.forEach(item => {
+            toAssign.forEach((item) => {
                 if (oldVal.indexOf(item) == -1) {
                     newVals.push(item);
                 }
@@ -316,10 +316,10 @@ function _appendWithoutOverwrite(withAppend, target, key, arr, toAssign) {
  */
 function shallowMerge(overwrite = true, withAppend = false, ...assocArrays) {
     let target = {};
-    new Es2019Array_1.Es2019Array(...assocArrays).map(arr => {
+    new Es2019Array_1.Es2019Array(...assocArrays).map((arr) => {
         return { arr, keys: Object.keys(arr) };
     }).forEach(({ arr, keys }) => {
-        keys.forEach(key => {
+        keys.forEach((key) => {
             let toAssign = arr[key];
             if (!Array.isArray(toAssign) && withAppend) {
                 toAssign = new Es2019Array_1.Es2019Array(...[toAssign]);
@@ -2664,7 +2664,7 @@ class Es2019Array_ extends Array {
         return new _Es2019Array(...ret);
     }
     splice(start, deleteCount) {
-        const ret = Array.prototype.splice.call(this._another, start, deleteCount);
+        const ret = Array.prototype.splice.call(this._another, start, deleteCount !== null && deleteCount !== void 0 ? deleteCount : 0);
         return new _Es2019Array(...ret);
     }
     filter(predicate, thisArg) {
@@ -2688,7 +2688,7 @@ class Es2019Array_ extends Array {
             return arr;
         }
         let res = [];
-        let reFlat = item => {
+        let reFlat = (item) => {
             item = Array.isArray(item) ? item : [item];
             let mapped = this._flatResolve(item, flatDepth - 1);
             res = res.concat(mapped);
@@ -2731,6 +2731,7 @@ function _Es2019Array(...data) {
  * the shim is only provided in case the native browser
  * does not yet have flatMap support on arrays
  */
+// Runtime check for browser compatibility — TypeScript knows flatMap exists in lib but older browsers may not have it.
 exports.Es2019Array = (Array.prototype.flatMap) ? function (...data) {
     // sometimes the typescript compiler produces
     // an array without flatmap between boundaries (the result produces True for Array.isArray
@@ -4423,8 +4424,8 @@ var Implementation;
      * @return {string} the separator char for the given script tags
      */
     function getSeparatorChar() {
-        var _a, _b, _c;
-        return (_c = (_b = (_a = resolveGlobalConfig()) === null || _a === void 0 ? void 0 : _a.separator) !== null && _b !== void 0 ? _b : this === null || this === void 0 ? void 0 : this.separator) !== null && _c !== void 0 ? _c : (separator = ExtDomQuery_1.ExtDomQuery.searchJsfJsFor(/separator=([^&;]*)/).orElse(":").value);
+        var _a, _b;
+        return (_b = (_a = resolveGlobalConfig()) === null || _a === void 0 ? void 0 : _a.separator) !== null && _b !== void 0 ? _b : (separator !== null && separator !== void 0 ? separator : (separator = ExtDomQuery_1.ExtDomQuery.searchJsfJsFor(/separator=([^&;]*)/).orElse(":").value));
     }
     Implementation.getSeparatorChar = getSeparatorChar;
     /**
@@ -4445,8 +4446,8 @@ var Implementation;
      * The value for it comes from the requestInternal parameter of the faces.js script called "stage".
      */
     function getProjectStage() {
-        var _a, _b, _c;
-        return (_c = (_b = (_a = resolveGlobalConfig()) === null || _a === void 0 ? void 0 : _a.projectStage) !== null && _b !== void 0 ? _b : this === null || this === void 0 ? void 0 : this.projectStage) !== null && _c !== void 0 ? _c : (projectStage = resolveProjectStateFromURL());
+        var _a, _b;
+        return (_b = (_a = resolveGlobalConfig()) === null || _a === void 0 ? void 0 : _a.projectStage) !== null && _b !== void 0 ? _b : (projectStage !== null && projectStage !== void 0 ? projectStage : (projectStage = resolveProjectStateFromURL()));
     }
     Implementation.getProjectStage = getProjectStage;
     /**
@@ -8660,12 +8661,6 @@ var oam;
 /******/ 		if (cachedModule !== undefined) {
 /******/ 			return cachedModule.exports;
 /******/ 		}
-/******/ 		// Check if module exists (development only)
-/******/ 		if (__webpack_modules__[moduleId] === undefined) {
-/******/ 			var e = new Error("Cannot find module '" + moduleId + "'");
-/******/ 			e.code = 'MODULE_NOT_FOUND';
-/******/ 			throw e;
-/******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = __webpack_module_cache__[moduleId] = {
 /******/ 			// no module.id needed
@@ -8674,6 +8669,12 @@ var oam;
 /******/ 		};
 /******/ 	
 /******/ 		// Execute the module function
+/******/ 		if (!(moduleId in __webpack_modules__)) {
+/******/ 			delete __webpack_module_cache__[moduleId];
+/******/ 			var e = new Error("Cannot find module '" + moduleId + "'");
+/******/ 			e.code = 'MODULE_NOT_FOUND';
+/******/ 			throw e;
+/******/ 		}
 /******/ 		__webpack_modules__[moduleId].call(module.exports, module, module.exports, __webpack_require__);
 /******/ 	
 /******/ 		// Return the exports of the module

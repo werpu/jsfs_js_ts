@@ -19,14 +19,22 @@
     "target": "es2015",
     "lib": [
       "es2015.collection",
+      "es2019.array",
       "dom"
     ],
-    "sourceMap": false,
+    "types": ["node"],
     "outDir": "../../../target",
     "moduleResolution": "node",
     "esModuleInterop": true,
     "module": "commonjs",
     "sourceMap": true,
+    "ignoreDeprecations": "6.0",
+    "rootDir": "../../..",
+    "strictNullChecks": false,
+    "noImplicitAny": false,
+    "noImplicitThis": false,
+    "strictFunctionTypes": false,
+    "useUnknownInCatchVariables": false,
     "baseUrl": ".",
     "paths": {
       "mona-dish": ["./mona_dish_shim"]

@@ -20,7 +20,7 @@
   "author": "Werner Punz werpu@apache.org",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@istanbuljs/nyc-config-typescript": "^1.0.2",
+    "@istanbuljs/nyc-config-typescript": "^1.0.0",
     "@types/chai": "^5.2.3",
     "@types/mocha": "^10.0.10",
     "@types/node": "^25.0.3",
@@ -35,7 +35,7 @@
     "mocha": "^11.3.0",
     "nise": "^6.1.1",
     "npm-check-updates": "^19.2.0",
-    "nyc": "^17.1.0",
+    "nyc": "^17.0.0",
     "replace-in-file": "^8.4.0",
     "rxjs": "^7.8.2",
     "sinon": "^21.0.1",
@@ -46,8 +46,12 @@
     "typedoc": "^0.28.15",
     "typescript": "^5.9.3",
     "webpack": "^5.104.1",
-    "webpack-cli": "^6.0.1",
-    "webpack-dev-server": "^5.2.2"
+    "webpack-cli": "^6.0.1"
+  },
+  "overrides": {
+    "diff": "^9.0.0",
+    "serialize-javascript": "^7.0.5",
+    "uuid": "^14.0.0"
   },
   "dependencies": {
     "mona-dish": "0.28.16"

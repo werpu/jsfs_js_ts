@@ -46,6 +46,42 @@ export namespace StandardInits {
         return typeof domIt === "function" ? domIt : domIt.default;
     }
 
+    function createStorageMock(): Storage {
+        const data: Record<string, string> = {};
+
+        return {
+            get length() {
+                return Object.keys(data).length;
+            },
+            clear() {
+                Object.keys(data).forEach(key => delete data[key]);
+            },
+            getItem(key: string) {
+                return Object.prototype.hasOwnProperty.call(data, key) ? data[key] : null;
+            },
+            key(index: number) {
+                return Object.keys(data)[index] ?? null;
+            },
+            removeItem(key: string) {
+                delete data[key];
+            },
+            setItem(key: string, value: string) {
+                data[key] = `${value}`;
+            }
+        };
+    }
+
+    function installStorageMocks(window: Window) {
+        Object.defineProperty(window, "localStorage", {
+            configurable: true,
+            value: createStorageMock()
+        });
+        Object.defineProperty(window, "sessionStorage", {
+            configurable: true,
+            value: createStorageMock()
+        });
+    }
+
     export const HTML_DEFAULT = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -651,7 +687,8 @@ function triggerRequestChain(event) {
                 contentType: "text/html",
                 runScripts: "dangerously",
                 resources: "usable",
-                url: `file://${__dirname}/index.html`
+                url: `file://${__dirname}/index.html`,
+                beforeParse: installStorageMocks
             };
             //we have two different apis depending whether we allow module interop with sinon or not
             return resolveGlobalJsdom(domIt)(template, params);
@@ -710,7 +747,10 @@ function triggerRequestChain(event) {
         } else {
             // @ts-ignore
             await import('global-jsdom').then((domIt) => {
-                clean = resolveGlobalJsdom(domIt)(template);
+                clean = resolveGlobalJsdom(domIt)(template, {
+                    url: `file://${__dirname}/index.html`,
+                    beforeParse: installStorageMocks
+                });
             });
         }
         //the async is returning a promise on the caller level

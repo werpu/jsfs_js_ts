@@ -24,9 +24,9 @@
     ],
     "types": ["node"],
     "outDir": "../../../target",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
-    "module": "commonjs",
+    "module": "esnext",
     "sourceMap": true,
     "ignoreDeprecations": "6.0",
     "rootDir": "../../..",
@@ -35,7 +35,6 @@
     "noImplicitThis": false,
     "strictFunctionTypes": false,
     "useUnknownInCatchVariables": false,
-    "baseUrl": ".",
     "paths": {
       "mona-dish": ["./mona_dish_shim"]
     },

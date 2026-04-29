@@ -114,7 +114,7 @@ export class ErrorData extends EventData implements IErrorData {
         return new ErrorData(source, errorName, errorMessage, responseText, responseXML, errorCode, status, errorType);
     }
 
-    private static getMsg(context, param) {
+    private static getMsg(context: Config, param: string) {
         return getMessage(context.getIf(param).orElse(EMPTY_STR).value);
     }
 

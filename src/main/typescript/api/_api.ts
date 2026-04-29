@@ -282,7 +282,7 @@ export namespace myfaces {
 
 
     const onReadyChain: Array<() => void> = [];
-    let readyStateListener = null;
+    let readyStateListener: (() => void) | null = null;
     // noinspection JSUnusedGlobalSymbols
     /**
      * Helper function in the myfaces namespace to handle document ready properly for the load case
@@ -334,5 +334,4 @@ export namespace myfaces {
      */
     export const oam = _oam;
 }
-
 

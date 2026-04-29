@@ -485,12 +485,12 @@ export class XhrRequest extends AsyncRunnable<XMLHttpRequest> {
         }
     }
 
-    private handleErrorAndClearQueue(e, responseFormatError: boolean = false) {
+    private handleErrorAndClearQueue(e: any, responseFormatError: boolean = false) {
         this.handleError(e, responseFormatError);
         this.reject(e);
     }
 
-    private handleError(exception, responseFormatError: boolean = false) {
+    private handleError(exception: any, responseFormatError: boolean = false) {
         const errorData = (responseFormatError) ? ErrorData.fromHttpConnection(exception.source, exception.type, exception.message ?? EMPTY_STR, exception.responseText, exception.responseXML, exception.responseCode, exception.status) : ErrorData.fromClient(exception);
         const eventHandler = resolveHandlerFunc(this.requestContext, this.responseContext, ON_ERROR);
 

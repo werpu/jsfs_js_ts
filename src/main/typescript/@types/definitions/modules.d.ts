@@ -1,4 +1,3 @@
-
 /*! Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,19 +14,23 @@
  * limitations under the License.
  */
 
-/**
- * Shim to provide a default export for mona-dish.
- *
- * The npm package only has named exports, which breaks the pattern:
- *   import pkg from 'mona-dish'; const { Lang } = pkg;
- *
- * Used via tsconfig paths (for tests/tsx). Webpack keeps its own alias to
- * index_core.ts for the reduced-core production bundle.
- *
- * Both import styles work:
- *   import { Lang } from 'mona-dish'                    // named import
- *   import pkg from 'mona-dish'; const { Lang } = pkg   // default import
- */
-export * from "mona-dish/dist/js/umd/index.js";
-import * as _monaDish from "mona-dish/dist/js/umd/index.js";
-export default _monaDish;
+declare module "mona-dish" {
+    export * from "mona-dish/dist/types/index";
+}
+
+declare module "mona-dish/dist/js/umd/index.js" {
+    export * from "mona-dish/dist/types/index";
+}
+
+declare module "nise" {
+    const nise: any;
+    export = nise;
+}
+
+declare module "jsdom" {
+    export const JSDOM: any;
+    export const VirtualConsole: any;
+    export const CookieJar: any;
+    export const ResourceLoader: any;
+    export function toughCookie(...args: any[]): any;
+}

@@ -34,11 +34,21 @@ export namespace PushImpl {
     // they are not directly touched outside of tests
 
     /* socket map by token */
-    export let sockets = {};
+    type ComponentData = {
+        channelToken: string;
+        onopen: Function;
+        onmessage: Function;
+        onerror: Function;
+        onclose: Function;
+        behaviors: any;
+        autoconnect: boolean;
+    };
+
+    export let sockets: {[key: string]: Socket} = {};
     /* component attributes by clientId */
-    export let components = {};
+    export let components: {[key: string]: ComponentData} = {};
     /* client ids by token (share websocket connection) */
-    export let clientIdsByTokens = {};
+    export let clientIdsByTokens: {[key: string]: string[]} = {};
 
 
     // needed for testing

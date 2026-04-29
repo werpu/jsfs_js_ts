@@ -161,8 +161,8 @@ export namespace Implementation {
 
     let projectStage: string = null;
     let separator: string = null;
-    let eventQueue = [];
-    let errorQueue = [];
+    let eventQueue: Function[] = [];
+    let errorQueue: Function[] = [];
     export let requestQueue: XhrQueueController<XhrRequest> = null;
     /*error reporting threshold*/
     let threshold = "ERROR";
@@ -472,7 +472,7 @@ export namespace Implementation {
         errorQueue.forEach((errorCallback: Function) => {
             errorCallback(errorData);
         });
-        let displayError: (string) => void = getGlobalConfig("defaultErrorOutput", (console ? console.error : alert));
+        let displayError: (message: any) => void = getGlobalConfig("defaultErrorOutput", (console ? console.error : alert));
         displayError(errorData);
     }
 
@@ -696,7 +696,7 @@ export namespace Implementation {
         //a cleaner implementation of the transform list method
         const SEP = $faces().separatorchar;
         let iterValues: string[] = (userValues) ? trim(userValues).split(/\s+/gi) : [];
-        let ret = [];
+        let ret: string[] = [];
         let processed: {[key: string]: boolean} = {};
 
         /**
@@ -706,7 +706,7 @@ export namespace Implementation {
          * apparently the RI does not, so we have to follow the RI behavior here)
          * @param componentIdToTransform the componentId which needs post-processing
          */
-        const remapNamingContainer = componentIdToTransform => {
+        const remapNamingContainer = (componentIdToTransform: string) => {
             // pattern :<anything> must be prepended by viewRoot if there is one,
             // otherwise we are in a not namespaced then only the id has to match
             const rootNamingContainerPrefix = (rootNamingContainerId.length) ? rootNamingContainerId+SEP : EMPTY_STR;
@@ -795,7 +795,7 @@ export namespace Implementation {
         //we now can use the full code reduction given by our stream api
         //to filter
         return ofAssoc(mappedOpts)
-            .filter((item => !(item[0] in BlockFilter)))
+            .filter(((item: [string, any]) => !(item[0] in BlockFilter)))
             .reduce(collectAssoc, {});
     }
 
@@ -810,7 +810,7 @@ export namespace Implementation {
         //we now can use the full code reduction given by our stream api
         //to filter
         return ofAssoc(mappedOpts)
-            .filter((item => (item[0] == "myfaces")))
+            .filter(((item: [string, any]) => (item[0] == "myfaces")))
             .reduce(collectAssoc, {})?.[MYFACES];
     }
 

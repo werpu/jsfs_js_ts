@@ -746,15 +746,15 @@ function waitUntilDom(root, condition, options = {
                 return root;
             }
             if (options.childList) {
-                found = (condition(root)) ? root : root.childNodes.filter(item => condition(item)).first().value.value;
+                found = (condition(root)) ? root.value.value : root.childNodes.filter(item => condition(item)).first().value.value;
             }
             else if (options.subtree) {
-                found = (condition(root)) ? root : root.querySelectorAll(" * ").filter(item => condition(item)).first().value.value;
+                found = (condition(root)) ? root.value.value : root.querySelectorAll(" * ").filter(item => condition(item)).first().value.value;
             }
             else {
-                found = (condition(root)) ? root : null;
+                found = (condition(root)) ? root.value.value : null;
             }
-            return found;
+            return found ? new DomQuery(found) : null;
         }
         let foundElement = root;
         if (!!(foundElement = findElement(foundElement, condition))) {
@@ -763,14 +763,14 @@ function waitUntilDom(root, condition, options = {
         }
         if ('undefined' != typeof MutationObserver) {
             const mutTimeout = setTimeout(() => {
-                observer.disconnect();
+                observer === null || observer === void 0 ? void 0 : observer.disconnect();
                 return error(MUT_ERROR);
             }, options.timeout);
             const callback = (mutationList) => {
                 const found = new DomQuery(mutationList.map((mut) => mut.target)).filter(item => condition(item)).first();
                 if (found.isPresent()) {
                     clearTimeout(mutTimeout);
-                    observer.disconnect();
+                    observer === null || observer === void 0 ? void 0 : observer.disconnect();
                     success(new DomQuery(found || root));
                 }
             };
@@ -1010,7 +1010,7 @@ class DomQuery {
         this.id.value = value;
     }
     get checked() {
-        return new _Es2019Array__WEBPACK_IMPORTED_MODULE_4__.Es2019Array(...this.values).every(el => !!(el).checked);
+        return new _Es2019Array__WEBPACK_IMPORTED_MODULE_4__.Es2019Array(...this.values).every(el => !!el.checked);
     }
     set checked(newChecked) {
         this.eachElem(el => el.checked = newChecked);
@@ -1305,7 +1305,7 @@ class DomQuery {
         let res = [];
         if (includeRoot) {
             res = res.concat(...new _Es2019Array__WEBPACK_IMPORTED_MODULE_4__.Es2019Array(...((this === null || this === void 0 ? void 0 : this.rootNode) || []))
-                .filter(((item) => id == item.id))
+                .filter((item) => id == item.id)
                 .map(item => new DomQuery(item)));
         }
         // for some strange kind of reason the # selector fails
@@ -1618,7 +1618,7 @@ class DomQuery {
     globalEvalSticky(code, nonce) {
         let head = document.getElementsByTagName("head")[0] || document.documentElement;
         let script = document.createElement("script");
-        this.applyNonce(nonce, script);
+        this.applyNonce(nonce !== null && nonce !== void 0 ? nonce : "", script);
         script.type = "text/javascript";
         script.innerHTML = code;
         head.appendChild(script);
@@ -1631,7 +1631,8 @@ class DomQuery {
      */
     detach() {
         this.eachElem((item) => {
-            item.parentNode.removeChild(item);
+            var _a;
+            (_a = item.parentNode) === null || _a === void 0 ? void 0 : _a.removeChild(item);
         });
         return this;
     }
@@ -1686,11 +1687,11 @@ class DomQuery {
                 let nextSibling = existingElement.nextSibling;
                 toInsertParams[cnt].eachElem(insertElem => {
                     if (nextSibling) {
-                        rootNode.insertBefore(insertElem, nextSibling);
+                        rootNode === null || rootNode === void 0 ? void 0 : rootNode.insertBefore(insertElem, nextSibling);
                         existingElement = nextSibling;
                     }
                     else {
-                        rootNode.appendChild(insertElem);
+                        rootNode === null || rootNode === void 0 ? void 0 : rootNode.appendChild(insertElem);
                     }
                 });
             }
@@ -1706,7 +1707,7 @@ class DomQuery {
             let rootNode = existingElement.parentNode;
             for (let cnt = 0; cnt < toInsertParams.length; cnt++) {
                 toInsertParams[cnt].eachElem(insertElem => {
-                    rootNode.insertBefore(insertElem, existingElement);
+                    rootNode === null || rootNode === void 0 ? void 0 : rootNode.insertBefore(insertElem, existingElement);
                 });
             }
         });
@@ -1827,7 +1828,7 @@ class DomQuery {
     outerHTML(markup, runEmbeddedScripts, runEmbeddedCss, deep = false) {
         var _a;
         if (this.isAbsent()) {
-            return;
+            return this;
         }
         let focusElementId = (_a = document === null || document === void 0 ? void 0 : document.activeElement) === null || _a === void 0 ? void 0 : _a.id;
         let caretPosition = (focusElementId) ? DomQuery.getCaretPosition(document.activeElement) : null;
@@ -1837,7 +1838,7 @@ class DomQuery {
         let firstInsert = nodes.get(0);
         let parentNode = toReplace.parentNode;
         let replaced = firstInsert.getAsElem(0).value;
-        parentNode.replaceChild(replaced, toReplace);
+        parentNode === null || parentNode === void 0 ? void 0 : parentNode.replaceChild(replaced, toReplace);
         res.push(new DomQuery(replaced));
         // no replacement possible
         if (this.isAbsent()) {
@@ -1854,7 +1855,7 @@ class DomQuery {
         if (runEmbeddedCss) {
             this.runCss();
         }
-        let focusElement = DomQuery.byId(focusElementId);
+        let focusElement = DomQuery.byId(focusElementId !== null && focusElementId !== void 0 ? focusElementId : "");
         if (focusElementId && focusElement.isPresent() &&
             caretPosition != null && "undefined" != typeof caretPosition) {
             focusElement.eachElem(item => DomQuery.setCaretPosition(item, caretPosition));
@@ -1908,7 +1909,7 @@ class DomQuery {
                 if ('undefined' != typeof src
                     && null != src
                     && src.length > 0) {
-                    let nonce = (_b = item === null || item === void 0 ? void 0 : item.nonce) !== null && _b !== void 0 ? _b : item.getAttribute('nonce').value;
+                    let nonce = (_b = item === null || item === void 0 ? void 0 : item.nonce) !== null && _b !== void 0 ? _b : item.getAttribute('nonce');
                     // we have to move this into an inner if because chrome otherwise chokes
                     // due to changing the and order instead of relying on left to right
                     // if jsf.js is already registered we do not replace it anymore
@@ -1947,7 +1948,7 @@ class DomQuery {
                             go = true;
                         }
                     }
-                    let nonce = (_d = (_c = item === null || item === void 0 ? void 0 : item.nonce) !== null && _c !== void 0 ? _c : item.getAttribute('nonce').value) !== null && _d !== void 0 ? _d : '';
+                    let nonce = (_d = (_c = item === null || item === void 0 ? void 0 : item.nonce) !== null && _c !== void 0 ? _c : item.getAttribute('nonce')) !== null && _d !== void 0 ? _d : '';
                     // we have to run the script under a global context
                     // we store the script for fewer calls to eval
                     finalScripts.push({
@@ -1974,7 +1975,8 @@ class DomQuery {
                 // because in the head appendix
                 // method only a console
                 // error would be raised as well
-                console.error(e.message || e.description);
+                const error = e;
+                console.error(error.message || error.description);
             }
         }
         finally {
@@ -2126,7 +2128,7 @@ class DomQuery {
         // browser behavior no element name no encoding (normal submit fails in that case)
         // https:// issues.apache.org/jira/browse/MYFACES-2847
         if (this.name.isAbsent()) {
-            return;
+            return {};
         }
         // let´s keep it side-effects free
         let target = (0,_AssocArray__WEBPACK_IMPORTED_MODULE_5__.simpleShallowMerge)(toMerge);
@@ -2301,7 +2303,9 @@ class DomQuery {
     get shadowElements() {
         let shadowElements = this.querySelectorAll("*")
             .filter(item => item.hasShadow);
-        let mapped = (shadowElements.allElems() || []).map(element => element.shadowRoot);
+        let mapped = (shadowElements.allElems() || [])
+            .map(element => element.shadowRoot)
+            .filter((root) => !!root);
         return new DomQuery(...mapped);
     }
     get shadowRoot() {
@@ -2464,8 +2468,10 @@ class DomQuery {
             if (!((_b = this.rootNode[cnt]) === null || _b === void 0 ? void 0 : _b.closest)) {
                 continue;
             }
-            let res = [this.rootNode[cnt].closest(selector)];
-            nodes = nodes.concat(...res);
+            let res = this.rootNode[cnt].closest(selector);
+            if (res) {
+                nodes = nodes.concat(res);
+            }
         }
         return new DomQuery(...nodes);
     }
@@ -2743,20 +2749,14 @@ function _Es2019Array(...data) {
     return proxied;
 }
 ;
-/**
- * this is the switch between normal array and our shim
- * the shim is only provided in case the native browser
- * does not yet have flatMap support on arrays
- */
-// Runtime check for browser compatibility — TypeScript knows flatMap exists in lib but older browsers may not have it.
-var Es2019Array = (Array.prototype.flatMap) ? function (...data) {
+var Es2019Array = ((Array.prototype.flatMap) ? function (...data) {
     // sometimes the typescript compiler produces
     // an array without flatmap between boundaries (the result produces True for Array.isArray
     // but has no flatMap function, could be a node issue also or Typescript!
     // we remap that (could be related to: https://github.com/microsoft/TypeScript/issues/31033
     // the check and remap fixes the issue which should not exist in the first place
     return (data === null || data === void 0 ? void 0 : data.flatMap) ? data : _Es2019Array(...data);
-} : _Es2019Array;
+} : _Es2019Array);
 
 
 /***/ },
@@ -2880,7 +2880,7 @@ var Lang;
     function saveResolveLazy(resolverProducer, defaultValue = null) {
         try {
             let result = resolverProducer();
-            return _Monad__WEBPACK_IMPORTED_MODULE_0__.Optional.fromNullable(result !== null && result !== void 0 ? result : defaultValue());
+            return _Monad__WEBPACK_IMPORTED_MODULE_0__.Optional.fromNullable(result !== null && result !== void 0 ? result : defaultValue === null || defaultValue === void 0 ? void 0 : defaultValue());
         }
         catch (e) {
             return _Monad__WEBPACK_IMPORTED_MODULE_0__.Optional.absent;
@@ -3455,6 +3455,9 @@ class MultiStreamDatasource {
         const all_strms = [...strms];
         while (all_strms.length) {
             let next_strm = all_strms.shift();
+            if (!next_strm) {
+                return ITERATION_STATUS.EO_STRM;
+            }
             let lookAhead = next_strm.lookAhead(cnt);
             if (lookAhead != ITERATION_STATUS.EO_STRM) {
                 return lookAhead;
@@ -3612,7 +3615,7 @@ class FilteredStreamDatasource {
      */
     lookAhead(cnt = 1) {
         var _a;
-        let lookupVal;
+        let lookupVal = ITERATION_STATUS.EO_STRM;
         for (let loop = 1; cnt > 0 && (lookupVal = this.inputDataSource.lookAhead(loop)) != ITERATION_STATUS.EO_STRM; loop++) {
             let inCache = (_a = this._filterIdx) === null || _a === void 0 ? void 0 : _a[this._unfilteredPos + loop];
             if (inCache || this.filterFunc(lookupVal)) {
@@ -3776,7 +3779,7 @@ class QueryFormStringCollector {
     }
     get finalValue() {
         return new _Es2019Array__WEBPACK_IMPORTED_MODULE_0__.Es2019Array(...this.formData)
-            .map(keyVal => keyVal.join("="))
+            .map((keyVal) => keyVal.join("="))
             .reduce((item1, item2) => [item1, item2].join("&"));
     }
 }
@@ -4927,7 +4930,7 @@ var Implementation;
          * apparently the RI does not, so we have to follow the RI behavior here)
          * @param componentIdToTransform the componentId which needs post-processing
          */
-        const remapNamingContainer = componentIdToTransform => {
+        const remapNamingContainer = (componentIdToTransform) => {
             // pattern :<anything> must be prepended by viewRoot if there is one,
             // otherwise we are in a not namespaced then only the id has to match
             const rootNamingContainerPrefix = (rootNamingContainerId.length) ? rootNamingContainerId + SEP : _core_Const__WEBPACK_IMPORTED_MODULE_7__.EMPTY_STR;
@@ -5013,7 +5016,7 @@ var Implementation;
         //we now can use the full code reduction given by our stream api
         //to filter
         return ofAssoc(mappedOpts)
-            .filter((item => !(item[0] in BlockFilter)))
+            .filter(((item) => !(item[0] in BlockFilter)))
             .reduce(collectAssoc, {});
     }
     /**
@@ -5028,7 +5031,7 @@ var Implementation;
         //we now can use the full code reduction given by our stream api
         //to filter
         return (_a = ofAssoc(mappedOpts)
-            .filter((item => (item[0] == "myfaces")))
+            .filter(((item) => (item[0] == "myfaces")))
             .reduce(collectAssoc, {})) === null || _a === void 0 ? void 0 : _a[_core_Const__WEBPACK_IMPORTED_MODULE_7__.MYFACES];
     }
     function remapArrayToAssocArr(arrayedParams) {
@@ -5110,9 +5113,6 @@ var PushImpl;
     // @deprecated because we can assume at least for the newer versions
     // that the protocol is properly set!
     const URL_PROTOCOL = mona_dish__WEBPACK_IMPORTED_MODULE_1__.DQ.global().location.protocol.replace("http", "ws") + "//";
-    // we expose the member variables for testing purposes
-    // they are not directly touched outside of tests
-    /* socket map by token */
     PushImpl.sockets = {};
     /* component attributes by clientId */
     PushImpl.components = {};
@@ -6335,7 +6335,7 @@ class ExtConfig extends mona_dish__WEBPACK_IMPORTED_MODULE_0__.Config {
         if (!this.$nspEnabled) {
             return accessPath;
         }
-        return new mona_dish__WEBPACK_IMPORTED_MODULE_0__.Es2019Array(...accessPath).map(key => (0,_core_Const__WEBPACK_IMPORTED_MODULE_1__.$nsp)(key));
+        return new mona_dish__WEBPACK_IMPORTED_MODULE_0__.Es2019Array(...accessPath).map((key) => (0,_core_Const__WEBPACK_IMPORTED_MODULE_1__.$nsp)(key));
     }
 }
 
@@ -6377,10 +6377,10 @@ function encodeFormData(formData, paramsMapper = (inStr, inVal) => [inStr, inVal
         return defaultStr;
     }
     const assocValues = formData.value;
-    const expandValueArrAndRename = key => assocValues[key].map(val => paramsMapper(key, val));
-    const isPropertyKey = key => assocValues.hasOwnProperty(key);
+    const expandValueArrAndRename = (key) => assocValues[key].map((val) => paramsMapper(key, val));
+    const isPropertyKey = (key) => assocValues.hasOwnProperty(key);
     const isNotFile = ([, value]) => !(value instanceof _ExtDomQuery__WEBPACK_IMPORTED_MODULE_1__.ExtDomQuery.global().File);
-    const mapIntoUrlParam = keyVal => `${encodeURIComponent(keyVal[0])}=${encodeURIComponent(keyVal[1])}`;
+    const mapIntoUrlParam = (keyVal) => `${encodeURIComponent(keyVal[0])}=${encodeURIComponent(keyVal[1])}`;
     return new mona_dish__WEBPACK_IMPORTED_MODULE_0__.Es2019Array(...Object.keys(assocValues))
         .filter(isPropertyKey)
         .flatMap(expandValueArrAndRename)
@@ -6393,8 +6393,8 @@ function encodeFormData(formData, paramsMapper = (inStr, inVal) => [inStr, inVal
  * @param encoded encoded string
  */
 function decodeEncodedValues(encoded) {
-    const filterBlanks = item => !!(item || '').replace(/\s+/g, '');
-    const splitKeyValuePair = _line => {
+    const filterBlanks = (item) => !!(item || '').replace(/\s+/g, '');
+    const splitKeyValuePair = (_line) => {
         let line = decodeURIComponent(_line);
         let index = line.indexOf("=");
         if (index == -1) {
@@ -6411,9 +6411,9 @@ function decodeEncodedValues(encoded) {
  */
 function resolveFiles(dataSource) {
     const expandFilesArr = ([key, files]) => {
-        return [...files].map(file => [key, file]);
+        return [...files].map((file) => [key, file]);
     };
-    const remapFileInput = fileInput => {
+    const remapFileInput = (fileInput) => {
         return [fileInput.name.value || fileInput.id.value, fileInput.filesFromElem(0)];
     };
     const files = dataSource
@@ -6764,7 +6764,7 @@ var ExtLang;
      */
     function ofAssoc(value) {
         return new mona_dish__WEBPACK_IMPORTED_MODULE_0__.Es2019Array(...Object.keys(value))
-            .map(key => [key, value[key]]);
+            .map((key) => [key, value[key]]);
     }
     ExtLang.ofAssoc = ofAssoc;
     function collectAssoc(target, item) {
@@ -7157,9 +7157,10 @@ function resolveHandlerFunc(requestContext, responseContext, funcName) {
         .orElse(_core_Const__WEBPACK_IMPORTED_MODULE_1__.EMPTY_FUNC).value;
 }
 function resolveTargetUrl(srcFormElement) {
-    return (typeof srcFormElement.elements[_core_Const__WEBPACK_IMPORTED_MODULE_1__.ENCODED_URL] == 'undefined') ?
+    const formElements = srcFormElement.elements;
+    return (typeof formElements[_core_Const__WEBPACK_IMPORTED_MODULE_1__.ENCODED_URL] == 'undefined') ?
         srcFormElement.action :
-        srcFormElement.elements[_core_Const__WEBPACK_IMPORTED_MODULE_1__.ENCODED_URL].value;
+        formElements[_core_Const__WEBPACK_IMPORTED_MODULE_1__.ENCODED_URL].value;
 }
 function resolveFinalUrl(sourceForm, formData, ajaxType = _core_Const__WEBPACK_IMPORTED_MODULE_1__.REQ_TYPE_POST) {
     let targetUrl = resolveTargetUrl(sourceForm.getAsElem(0).value);
@@ -8060,7 +8061,7 @@ class ResponseProcessor {
             .orElseLazy(() => this.externalContext.getIf((0,_core_Const__WEBPACK_IMPORTED_MODULE_6__.$nsp)(_core_Const__WEBPACK_IMPORTED_MODULE_6__.P_RENDER)).value)
             .orElse(_core_Const__WEBPACK_IMPORTED_MODULE_6__.IDENT_NONE).value.split(/\s+/gi);
         const executeAndRenders = executes.concat(...renders);
-        return [...executeAndRenders].filter(nameOrId => {
+        return [...executeAndRenders].filter((nameOrId) => {
             if ([_core_Const__WEBPACK_IMPORTED_MODULE_6__.IDENT_ALL, _core_Const__WEBPACK_IMPORTED_MODULE_6__.IDENT_NONE].indexOf(nameOrId) != -1) {
                 return true;
             }
@@ -8189,7 +8190,7 @@ class XhrFormData extends mona_dish__WEBPACK_IMPORTED_MODULE_0__.Config {
            */
         let expandValueArrays = ([key, item]) => {
             if (Array.isArray(item)) {
-                return new mona_dish__WEBPACK_IMPORTED_MODULE_0__.Es2019Array(...item).map(value => {
+                return new mona_dish__WEBPACK_IMPORTED_MODULE_0__.Es2019Array(...item).map((value) => {
                     return { key, value };
                 });
             }
@@ -8775,7 +8776,8 @@ var oam;
      * @param value the value to be rendered
      */
     oam.setHiddenInput = function (formName, name, value) {
-        mona_dish__WEBPACK_IMPORTED_MODULE_0__.DQ.byId(document.forms[formName])
+        const forms = document.forms;
+        mona_dish__WEBPACK_IMPORTED_MODULE_0__.DQ.byId(forms[formName])
             .each(form => {
             const input = form.querySelectorAll(`input[type='hidden'][name='${name}']`);
             if (input.isPresent()) {
@@ -8795,8 +8797,10 @@ var oam;
      * @param name the name of the input field
      */
     oam.clearHiddenInput = function (formName, name) {
-        var _a, _b, _c;
-        let element = (_c = (_b = (_a = document.forms) === null || _a === void 0 ? void 0 : _a[formName]) === null || _b === void 0 ? void 0 : _b.elements) === null || _c === void 0 ? void 0 : _c[name];
+        var _a;
+        const forms = document.forms;
+        const elements = (_a = forms === null || forms === void 0 ? void 0 : forms[formName]) === null || _a === void 0 ? void 0 : _a.elements;
+        let element = elements === null || elements === void 0 ? void 0 : elements[name];
         if (!element) {
             return;
         }
@@ -8814,7 +8818,7 @@ var oam;
      * @param params
      */
     oam.submitForm = function (formName, linkId = null, target = null, params = {}) {
-        var _a, _b, _c, _d, _e, _f;
+        var _a, _b, _c, _d, _e;
         //handle a possible incoming null, not sure if this is used that way anywhere, but we allow it
         params = (!params) ? {} : params;
         let clearFn = 'clearFormHiddenParams_' + formName.replace(/-/g, '\$:').replace(/:/g, '_');
@@ -8827,7 +8831,8 @@ var oam;
         paramsStream.forEach(([key, data]) => myfaces.oam.setHiddenInput(formName, key, data));
         //we call the namespaced function, to allow decoration, via a direct call we would
         myfaces.oam.setHiddenInput(formName, `${formName}:_idcl`, linkId !== null && linkId !== void 0 ? linkId : '');
-        mona_dish__WEBPACK_IMPORTED_MODULE_0__.DQ.byId((_f = (_e = document.forms) === null || _e === void 0 ? void 0 : _e[formName]) !== null && _f !== void 0 ? _f : document.getElementById(formName)).each(form => {
+        const forms = document.forms;
+        mona_dish__WEBPACK_IMPORTED_MODULE_0__.DQ.byId((_e = forms === null || forms === void 0 ? void 0 : forms[formName]) !== null && _e !== void 0 ? _e : document.getElementById(formName)).each(form => {
             var _a;
             const ATTR_TARGET = "target";
             const formElement = form.getAsElem(0).value;

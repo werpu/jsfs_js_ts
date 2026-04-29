@@ -22,16 +22,16 @@
       "es2019.array",
       "dom"
     ],
-    "types": ["node"],
+    "types": ["node", "definitions"],
     "outDir": "../../../target",
     "moduleResolution": "bundler",
     "esModuleInterop": true,
     "module": "esnext",
     "sourceMap": true,
     "ignoreDeprecations": "6.0",
+    "skipLibCheck": true,
     "rootDir": "../../..",
     "strictNullChecks": false,
-    "noImplicitAny": false,
     "noImplicitThis": false,
     "strictFunctionTypes": false,
     "useUnknownInCatchVariables": false,
@@ -42,5 +42,12 @@
       "../../../node_modules/@types",
       "./@types/"
     ]
-  }
+  },
+  "include": [
+    "api/**/*.ts",
+    "impl/**/*.ts",
+    "myfaces/**/*.ts",
+    "@types/**/*.d.ts",
+    "mona_dish_shim.ts"
+  ]
 }

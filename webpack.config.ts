@@ -4,20 +4,23 @@ import * as path from "path";
 
 const __dirname = process.cwd();
 
-function build(env: { [key: string]: string }, argv: { [key: string]: string }) {
+type BuildMode = "development" | "production";
+
+function createConfig(env: { [key: string]: string }, mode: BuildMode): webpack.Configuration {
     const libraryTarget = env.TARGET_TYPE ?? "window";
 
-    const config: webpack.Configuration = {
+    return {
+        mode,
         context: __dirname,
         entry: {
             jsf: path.resolve(__dirname, "./src/main/typescript/api/jsf.ts"),
             faces: path.resolve("./src/main/typescript/api/faces.ts"),
         },
-        devtool: "source-map",
+        devtool: false,
         output: {
             path: path.resolve(__dirname, "./dist/" + libraryTarget),
             libraryTarget: libraryTarget as any,
-            filename: argv.mode == "production" ? "[name].js" : "[name]-development.js",
+            filename: mode == "production" ? "[name].js" : "[name]-development.js",
         },
         resolve: {
             extensions: [".tsx", ".ts", ".json"],
@@ -46,9 +49,30 @@ function build(env: { [key: string]: string }, argv: { [key: string]: string }) 
                 },
             ],
         },
-    };
+        plugins: [
+            new webpack.SourceMapDevToolPlugin({
+                filename: "[file].map",
+                append: ({filename}) => {
+                    const sourceMapUrl = "\n//# sourceMappingURL=[url]";
 
-    return config;
+                    return filename?.startsWith("jsf")
+                        ? `${sourceMapUrl}${sourceMapUrl}.jsf?ln=javax.faces`
+                        : sourceMapUrl;
+                },
+            }),
+        ],
+    };
+}
+
+function build(env: { [key: string]: string }, argv: { [key: string]: string }) {
+    if (argv.mode == "development" || argv.mode == "production") {
+        return createConfig(env, argv.mode);
+    }
+
+    return [
+        createConfig(env, "development"),
+        createConfig(env, "production"),
+    ];
 }
 
 export default build;

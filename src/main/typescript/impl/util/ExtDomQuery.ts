@@ -183,7 +183,7 @@ export class ExtDomQuery extends DQ {
     runHeadInserts(suppressDoubleIncludes = true): void {
         let head = ExtDomQuery.byId(document.head);
         //automated nonce handling
-        let processedScripts = [];
+        let processedScripts: DomQuery[] = [];
 
         // the idea is only to run head inserts on resources
         // which do not exist already, that way
@@ -264,26 +264,26 @@ export class ExtConfig extends  Config {
         super(root);
     }
 
-    assignIf(condition: boolean, ...accessPath): IValueHolder<any> {
+    assignIf(condition: boolean, ...accessPath: string[]): IValueHolder<any> {
         const accessPathMapped = this.remap(accessPath);
         return super.assignIf(condition, ...accessPathMapped);
     }
 
-    assign(...accessPath): IValueHolder<any> {
+    assign(...accessPath: string[]): IValueHolder<any> {
         const accessPathMapped = this.remap(accessPath);
         return super.assign(...accessPathMapped);
     }
 
-    append(...accessPath): IValueHolder<any> {
+    append(...accessPath: string[]): IValueHolder<any> {
         return super.append(...accessPath);
     }
 
-    appendIf(condition: boolean, ...accessPath): IValueHolder<any> {
+    appendIf(condition: boolean, ...accessPath: string[]): IValueHolder<any> {
         const accessPathMapped = this.remap(accessPath);
         return super.appendIf(condition, ...accessPathMapped);
     }
 
-    getIf(...accessPath): Config {
+    getIf(...accessPath: string[]): Config {
         const accessPathMapped = this.remap(accessPath);
         return super.getIf(...accessPathMapped);
     }
@@ -333,6 +333,6 @@ export class ExtConfig extends  Config {
         if(!this.$nspEnabled) {
             return accessPath;
         }
-        return new Es2019Array(...accessPath).map(key => $nsp(key));
+        return new Es2019Array(...accessPath).map((key: string) => $nsp(key));
     }
 }

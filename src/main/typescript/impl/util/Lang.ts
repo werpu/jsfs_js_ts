@@ -85,7 +85,7 @@ export namespace ExtLang {
     export function getMessage(key: string, defaultMessage?: string, ...templateParams: Array<string>): string {
         installedLocale = installedLocale ?? new Messages();
 
-        let msg = installedLocale[key] ?? defaultMessage ?? key;
+        let msg = (installedLocale as any)[key] ?? defaultMessage ?? key;
         templateParams.forEach((param, cnt) => {
             msg = msg.replace(new RegExp(["\\{", cnt, "\\}"].join(EMPTY_STR), "g"), param);
         })
@@ -216,7 +216,7 @@ export namespace ExtLang {
      */
     export function ofAssoc(value: {[key: string]: any}) {
         return new Es2019Array(...Object.keys(value))
-            .map(key => [key, value[key]]);
+            .map((key: string) => [key, value[key]]);
     }
 
     export function collectAssoc(target: any, item: any) {
@@ -229,7 +229,7 @@ export namespace ExtLang {
      * Since we only use it in the XhrController
      * we can use a local module variable here
      */
-    let activeTimeouts = {};
+    let activeTimeouts: {[key: string]: ReturnType<typeof setTimeout>} = {};
 
 
 
@@ -242,7 +242,7 @@ export namespace ExtLang {
      * @param runnable a runnable which should go under debounce control
      * @param timeout a timeout for the debounce window
      */
-    export function debounce(key, runnable, timeout) {
+    export function debounce(key: string, runnable: Function, timeout: number) {
         function clearActiveTimeout() {
             clearTimeout(activeTimeouts[key]);
             delete activeTimeouts[key];

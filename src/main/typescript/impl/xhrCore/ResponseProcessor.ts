@@ -349,7 +349,7 @@ export class ResponseProcessor implements IResponseProcessor {
      */
     fixViewStates() {
         ofAssoc(this.internalContext.getIf(APPLIED_VST).orElse({}).value)
-            .forEach(([, value]) => {
+            .forEach(([, value]: [string, Config]) => {
                 const namingContainerId = this.internalContext.getIf(NAMING_CONTAINER_ID);
                 const namedViewRoot = !!this.internalContext.getIf(NAMED_VIEWROOT).value
                 const affectedForms = this.getContainerForms(namingContainerId)
@@ -367,7 +367,7 @@ export class ResponseProcessor implements IResponseProcessor {
      */
     fixClientWindow() {
         ofAssoc(this.internalContext.getIf(APPLIED_CLIENT_WINDOW).orElse({}).value)
-            .forEach(([, value]) => {
+            .forEach(([, value]: [string, Config]) => {
                 const namingContainerId = this.internalContext.getIf(NAMING_CONTAINER_ID);
                 const namedViewRoot = !!this.internalContext.getIf(NAMED_VIEWROOT).value;
                 const affectedForms = this.getContainerForms(namingContainerId)
@@ -518,13 +518,13 @@ export class ResponseProcessor implements IResponseProcessor {
      * @param affectedForm
      * @private
      */
-    private isInExecuteOrRender(affectedForm) {
+    private isInExecuteOrRender(affectedForm: DQ) {
         const executes = this.externalContext.getIf($nsp(P_EXECUTE)).orElse("@none").value.split(/\s+/gi);
         const renders = this.externalContext.getIf(P_RENDER_OVERRIDE)
             .orElseLazy(() => this.externalContext.getIf($nsp(P_RENDER)).value)
             .orElse(IDENT_NONE).value.split(/\s+/gi);
         const executeAndRenders = executes.concat(...renders);
-        return [...executeAndRenders].filter(nameOrId => {
+        return [...executeAndRenders].filter((nameOrId: string) => {
             if ([IDENT_ALL, IDENT_NONE].indexOf(nameOrId) != -1) {
                 return true;
             }
@@ -555,7 +555,7 @@ export class ResponseProcessor implements IResponseProcessor {
         }
     }
 
-    private getNameOrIdSelector(nameOrId) {
+    private getNameOrIdSelector(nameOrId: string) {
         return `[id='${nameOrId}'], [name='${nameOrId}']`;
     }
 }

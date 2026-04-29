@@ -57,9 +57,10 @@ export function resolveHandlerFunc(requestContext: Config, responseContext: Conf
 }
 
 export function resolveTargetUrl(srcFormElement: HTMLFormElement) {
-    return (typeof srcFormElement.elements[ENCODED_URL] == 'undefined') ?
+    const formElements = srcFormElement.elements as HTMLFormControlsCollection & {[key: string]: HTMLInputElement};
+    return (typeof formElements[ENCODED_URL] == 'undefined') ?
         srcFormElement.action :
-        srcFormElement.elements[ENCODED_URL].value;
+        formElements[ENCODED_URL].value;
 }
 
 export function resolveFinalUrl(sourceForm: DomQuery, formData: XhrFormData, ajaxType = REQ_TYPE_POST) {

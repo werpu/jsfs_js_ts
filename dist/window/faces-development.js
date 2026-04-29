@@ -5195,7 +5195,6 @@ var PushImpl;
             this.channelToken = channelToken;
             this.url = url;
             this.channel = channel;
-            this.socket = null;
             this.reconnectAttempts = 0;
         }
         open() {
@@ -5303,14 +5302,10 @@ var PushImpl;
          * bind the callbacks to the socket callbacks
          */
         bindCallbacks() {
-            const socket = this.socket;
-            if (!socket) {
-                return;
-            }
-            socket.onopen = (event) => this.onopen(event);
-            socket.onmessage = (event) => this.onmmessage(event);
-            socket.onclose = (event) => this.onclose(event);
-            socket.onerror = (event) => this.onerror(event);
+            this.socket.onopen = (event) => this.onopen(event);
+            this.socket.onmessage = (event) => this.onmmessage(event);
+            this.socket.onclose = (event) => this.onclose(event);
+            this.socket.onerror = (event) => this.onerror(event);
         }
     }
     // Private static functions ---------------------------------------------------------------------------------------
@@ -8361,7 +8356,6 @@ class XhrRequest extends _util_AsyncRunnable__WEBPACK_IMPORTED_MODULE_0__.AsyncR
         this.timeout = timeout;
         this.ajaxType = ajaxType;
         this.contentType = contentType;
-        this.responseContext = new mona_dish__WEBPACK_IMPORTED_MODULE_1__.Config({});
         this.stopProgress = false;
         this.xhrObject = new XMLHttpRequest();
         // we omit promises here because we have to deal with cancel functionality,

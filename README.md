@@ -191,5 +191,9 @@ faces.ajax.request(document.getElementById("cmd_eval"), null,
 * Bugfixes which improve tck compliance
 * Integration in myfaces 4.0+ as default faces.js implementation
 
+* update to typescript 6 in preparation for 7, fixed code to remove some ts6 compatibility overrides
+* streamlined the build process which was partially still relying on custom scripts and the old npm ts plugin stack
+
+
 
 

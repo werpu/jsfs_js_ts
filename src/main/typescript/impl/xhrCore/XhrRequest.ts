@@ -87,7 +87,7 @@ import {ExtConfig} from "../util/ExtDomQuery";
 
 export class XhrRequest extends AsyncRunnable<XMLHttpRequest> {
 
-    private responseContext: Config = new Config({});
+    private responseContext!: Config;
 
     private stopProgress = false;
 

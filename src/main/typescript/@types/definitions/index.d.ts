@@ -58,7 +58,7 @@ declare global {
      */
     interface IErrorData {
         type: any;
-        status: string;
+        status: string | null;
         serverErrorName: string;
         serverErrorMessage: string;
         source: any;
@@ -73,7 +73,7 @@ declare global {
      * </ul>
      */
     interface IEventData {
-        status: String;
+        status: string | null;
         source: any;
     }
 

@@ -137,7 +137,7 @@ export namespace PushImpl {
 
     class Socket {
 
-        socket: WebSocket;
+        socket: WebSocket | null = null;
         reconnectAttempts = 0;
 
         constructor(private channelToken: string, private url: string, private channel: string) {
@@ -244,10 +244,14 @@ export namespace PushImpl {
          * bind the callbacks to the socket callbacks
          */
         private bindCallbacks() {
-            this.socket.onopen = (event: Event) => this.onopen(event);
-            this.socket.onmessage = (event: Event) => this.onmmessage(event);
-            this.socket.onclose = (event: Event) => this.onclose(event);
-            this.socket.onerror = (event: Event) => this.onerror(event);
+            const socket = this.socket;
+            if (!socket) {
+                return;
+            }
+            socket.onopen = (event: Event) => this.onopen(event);
+            socket.onmessage = (event: Event) => this.onmmessage(event);
+            socket.onclose = (event: Event) => this.onclose(event);
+            socket.onerror = (event: Event) => this.onerror(event);
         }
     }
 

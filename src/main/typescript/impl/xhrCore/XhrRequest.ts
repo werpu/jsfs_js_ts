@@ -87,7 +87,7 @@ import {ExtConfig} from "../util/ExtDomQuery";
 
 export class XhrRequest extends AsyncRunnable<XMLHttpRequest> {
 
-    private responseContext: Config;
+    private responseContext: Config = new Config({});
 
     private stopProgress = false;
 
@@ -368,7 +368,7 @@ export class XhrRequest extends AsyncRunnable<XMLHttpRequest> {
     }
 
     private processRequestErrors(resolve: Consumer<any>): boolean {
-        const responseXML = new XMLQuery(this.xhrObject?.responseXML);
+        const responseXML = new XMLQuery(this.xhrObject?.responseXML as any);
         const responseText = this.xhrObject?.responseText ?? "";
         const responseCode = this.xhrObject?.status ?? -1;
         if(responseXML.isXMLParserError()) {

@@ -4690,7 +4690,7 @@ var Implementation;
         }
         finally {
             if (clearRequestQueue) {
-                Implementation.requestQueue.clear();
+                Implementation.requestQueue === null || Implementation.requestQueue === void 0 ? void 0 : Implementation.requestQueue.clear();
             }
         }
     }
@@ -5195,6 +5195,7 @@ var PushImpl;
             this.channelToken = channelToken;
             this.url = url;
             this.channel = channel;
+            this.socket = null;
             this.reconnectAttempts = 0;
         }
         open() {
@@ -5302,10 +5303,14 @@ var PushImpl;
          * bind the callbacks to the socket callbacks
          */
         bindCallbacks() {
-            this.socket.onopen = (event) => this.onopen(event);
-            this.socket.onmessage = (event) => this.onmmessage(event);
-            this.socket.onclose = (event) => this.onclose(event);
-            this.socket.onerror = (event) => this.onerror(event);
+            const socket = this.socket;
+            if (!socket) {
+                return;
+            }
+            socket.onopen = (event) => this.onopen(event);
+            socket.onmessage = (event) => this.onmmessage(event);
+            socket.onclose = (event) => this.onclose(event);
+            socket.onerror = (event) => this.onerror(event);
         }
     }
     // Private static functions ---------------------------------------------------------------------------------------
@@ -5873,7 +5878,7 @@ var Assertions;
     Assertions.assertRequestIntegrity = assertRequestIntegrity;
     function assertUrlExists(node) {
         if (node.attr(_core_Const__WEBPACK_IMPORTED_MODULE_1__.ATTR_URL).isAbsent()) {
-            throw Assertions.raiseError(new Error(), _Lang__WEBPACK_IMPORTED_MODULE_2__.ExtLang.getMessage("ERR_RED_URL", null, "processRedirect"), "processRedirect");
+            throw Assertions.raiseError(new Error(), _Lang__WEBPACK_IMPORTED_MODULE_2__.ExtLang.getMessage("ERR_RED_URL", undefined, "processRedirect"), "processRedirect");
         }
     }
     Assertions.assertUrlExists = assertUrlExists;
@@ -6064,7 +6069,7 @@ __webpack_require__.r(__webpack_exports__);
  */
 const IS_FACES_SOURCE = (source) => {
     //spec version smaller 4 we have to deal with the jsf namespace
-    return source && !!((source === null || source === void 0 ? void 0 : source.search(/\/jakarta\.faces\.resource.*\/faces\.js.*/)) != -1 ||
+    return !!source && !!(source.search(/\/jakarta\.faces\.resource.*\/faces\.js.*/) != -1 ||
         (source === null || source === void 0 ? void 0 : source.search(/\/faces-development\.js.*/)) != -1 ||
         (source === null || source === void 0 ? void 0 : source.search(/\/faces-uncompressed\.js.*/)) != -1 ||
         (source === null || source === void 0 ? void 0 : source.search(/\/faces[^.]*\.js.*ln=jakarta.faces.*/gi)) != -1 ||
@@ -6089,6 +6094,9 @@ const IS_INTERNAL_SOURCE = (source) => {
     return source.search(/\/faces[^.]*\.js.*ln=myfaces.testscripts.*/gi) != -1 || source.search(/\/jsf[^.]*\.js.*ln=myfaces.testscripts.*/gi) != -1;
 };
 const ATTR_SRC = 'src';
+function isRegExpMatchArray(value) {
+    return value != null && value.length > 1;
+}
 /**
  * Extension which adds implementation specific
  * meta-data to our dom query
@@ -6151,8 +6159,8 @@ class ExtDomQuery extends mona_dish__WEBPACK_IMPORTED_MODULE_0__.DQ {
         // the last possibility
         let nonceScript = mona_dish__WEBPACK_IMPORTED_MODULE_0__.Optional.fromNullable((_a = mona_dish__WEBPACK_IMPORTED_MODULE_0__.DQ
             .querySelectorAll("script[src], link[src]").asArray
-            .filter((item) => item.nonce.isPresent() && item.attr(ATTR_SRC) != null)
-            .filter(item => IS_FACES_SOURCE(item.attr(ATTR_SRC).value))) === null || _a === void 0 ? void 0 : _a[0]);
+            .filter((item) => item.nonce.isPresent() && item.attr(ATTR_SRC).value != null)
+            .filter(item => { var _a; return IS_FACES_SOURCE((_a = item.attr(ATTR_SRC).value) !== null && _a !== void 0 ? _a : undefined); })) === null || _a === void 0 ? void 0 : _a[0]);
         if (!(nonceScript === null || nonceScript === void 0 ? void 0 : nonceScript.value)) {
             return mona_dish__WEBPACK_IMPORTED_MODULE_0__.ValueEmbedder.absent;
         }
@@ -6170,9 +6178,9 @@ class ExtDomQuery extends mona_dish__WEBPACK_IMPORTED_MODULE_0__.DQ {
         var _a;
         //perfect application for lazy stream
         return mona_dish__WEBPACK_IMPORTED_MODULE_0__.Optional.fromNullable((_a = mona_dish__WEBPACK_IMPORTED_MODULE_0__.DQ.querySelectorAll("script[src], link[src]").asArray
-            .filter(item => IS_FACES_SOURCE(item.attr(ATTR_SRC).value))
-            .map(item => item.attr(ATTR_SRC).value.match(regExp))
-            .filter(item => item != null && item.length > 1)
+            .filter(item => { var _a; return IS_FACES_SOURCE((_a = item.attr(ATTR_SRC).value) !== null && _a !== void 0 ? _a : undefined); })
+            .map(item => { var _a; return ((_a = item.attr(ATTR_SRC).value) !== null && _a !== void 0 ? _a : "").match(regExp); })
+            .filter(isRegExpMatchArray)
             .map((result) => {
             return decodeURIComponent(result[1]);
         })) === null || _a === void 0 ? void 0 : _a[0]);
@@ -7882,6 +7890,7 @@ class ResponseProcessor {
             this.internalContext.assign(_core_Const__WEBPACK_IMPORTED_MODULE_6__.APPLIED_CLIENT_WINDOW, node.id.value).value = new _core_ImplTypes__WEBPACK_IMPORTED_MODULE_4__.StateHolder((0,_core_Const__WEBPACK_IMPORTED_MODULE_6__.$nsp)(node.id.value), state);
             return true;
         }
+        return false;
     }
     /**
      * generic global eval which runs the embedded css and scripts
@@ -8352,6 +8361,7 @@ class XhrRequest extends _util_AsyncRunnable__WEBPACK_IMPORTED_MODULE_0__.AsyncR
         this.timeout = timeout;
         this.ajaxType = ajaxType;
         this.contentType = contentType;
+        this.responseContext = new mona_dish__WEBPACK_IMPORTED_MODULE_1__.Config({});
         this.stopProgress = false;
         this.xhrObject = new XMLHttpRequest();
         // we omit promises here because we have to deal with cancel functionality,

@@ -31,8 +31,6 @@
     "ignoreDeprecations": "6.0",
     "skipLibCheck": true,
     "rootDir": "../../..",
-    "strictNullChecks": false,
-    "noImplicitThis": false,
     "strictFunctionTypes": false,
     "useUnknownInCatchVariables": false,
     "paths": {

@@ -108,7 +108,7 @@ export namespace oam {
                 (form.getAsElem(0).value as HTMLFormElement).setAttribute("target", target);
             }
 
-            const result = formElement?.onsubmit?.(null);
+            const result = formElement?.onsubmit?.(null as any);
 
             try {
                 if ((!!result) || 'undefined' == typeof result) {

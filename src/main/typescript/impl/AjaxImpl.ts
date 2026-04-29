@@ -159,11 +159,11 @@ export namespace Implementation {
     const ofAssoc = ExtLang.ofAssoc;
     const collectAssoc = ExtLang.collectAssoc;
 
-    let projectStage: string = null;
-    let separator: string = null;
+    let projectStage: string | null = null;
+    let separator: string | null = null;
     let eventQueue: Function[] = [];
     let errorQueue: Function[] = [];
-    export let requestQueue: XhrQueueController<XhrRequest> = null;
+    export let requestQueue: XhrQueueController<XhrRequest> | null = null;
     /*error reporting threshold*/
     let threshold = "ERROR";
 
@@ -217,7 +217,7 @@ export namespace Implementation {
      * @param event
      * @param funcs
      */
-    export function chain(source: any, event: Event, ...funcs: EvalFuncs): boolean {
+    export function chain(source: any, event: Event | null, ...funcs: EvalFuncs): boolean {
         // we can use our lazy stream each functionality to run our chain here.
         // by passing a boolean as return value into the onElem call
         // we can stop early at the first false, just like the spec requests
@@ -444,7 +444,7 @@ export namespace Implementation {
             }
         } finally {
             if (clearRequestQueue) {
-                requestQueue.clear();
+                requestQueue?.clear();
             }
         }
     }
@@ -497,12 +497,12 @@ export namespace Implementation {
         /*
          * lazy helper to fetch the window id from the included faces.js
          */
-        let fetchWindowIdFromJSFJS = (): Optional<string> => ExtDomQuery.searchJsfJsFor(/jfwid=([^&;]*)/).orElse(null);
+        let fetchWindowIdFromJSFJS = (): Optional<string | null> => ExtDomQuery.searchJsfJsFor(/jfwid=([^&;]*)/).orElse(null);
 
         /*
          * fetch window id from the url
          */
-        let fetchWindowIdFromURL = function (): Optional<string> {
+        let fetchWindowIdFromURL = function (): Optional<string | null> {
             const href = window.location.href, windowId = "jfwid";
             const regex = new RegExp("[\\?&]" + windowId + "=([^&#\\;]*)");
             const results = regex.exec(href);
@@ -835,7 +835,7 @@ export namespace Implementation {
      * caller is basically notified that the execution can now stop (JSF requirement for chain)
      * @private
      */
-    function resolveAndExecute(source: any, event: Event, func: Function | string): boolean {
+    function resolveAndExecute(source: any, event: Event | null, func: Function | string): boolean {
         if ("string" != typeof func) {
             //function is passed down as chain parameter, can be executed as is
             return (<Function>func).call(source, event) !== false;

@@ -77,7 +77,7 @@ export function resolveFinalUrl(sourceForm: DomQuery, formData: XhrFormData, aja
  * @param elem
  * @param event
  */
-export function resolveForm(elem: DQ, event: Event): DQ {
+export function resolveForm(elem: DQ, event?: Event): DQ {
     return ExtLang.getForm(elem.getAsElem(0).value, event);
 }
 
@@ -183,9 +183,9 @@ export function getEventTarget(evt: Event): Element {
  * @param opts
  * @param el
  */
-export function resolveDefaults(event: Event, opts: Options | [[string, any]] , el: Element | string = null): any {
+export function resolveDefaults(event?: Event, opts?: Options | [[string, any]] , el: Element | string | null = null): any {
     //deep copy the options, so that further transformations to not backfire into the callers
-    const elem = DQ.byId(el || <Element>event.target, true);
+    const elem = DQ.byId(el || (event as Event).target as Element, true);
     const options = new ExtConfig(opts).deepCopy as ExtConfig;
     return {
         options: options,

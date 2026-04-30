@@ -1,5 +1,4 @@
 # Source & build config
-test/
 target/
 out/
 coverage/

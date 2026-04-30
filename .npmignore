@@ -1,0 +1,31 @@
+# Source & build config
+test/
+target/
+out/
+coverage/
+webpack.config.ts
+tsconfig.json
+build.cmd
+build.sh
+mvnw
+mvnw.cmd
+
+# Test & coverage artifacts
+.nyc_output/
+.nycrc
+.mocharc.json
+
+# CI / tooling
+.github/
+.claude/
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+
+# Misc
+node_modules/
+package-lock.json
+plans*.txt
+HELP.md

@@ -33,9 +33,6 @@
     "rootDir": "../../..",
     "strictFunctionTypes": false,
     "useUnknownInCatchVariables": false,
-    "paths": {
-      "mona-dish": ["./mona_dish_shim"]
-    },
     "typeRoots": [
       "../../../node_modules/@types",
       "./@types/"
@@ -45,7 +42,6 @@
     "api/**/*.ts",
     "impl/**/*.ts",
     "myfaces/**/*.ts",
-    "@types/**/*.d.ts",
-    "mona_dish_shim.ts"
+    "@types/**/*.d.ts"
   ]
 }

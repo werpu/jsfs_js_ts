@@ -3340,6 +3340,313 @@ ValueEmbedder.absent = ValueEmbedder.fromNullable(null);
 
 /***/ },
 
+/***/ "./node_modules/mona-dish/src/main/typescript/Promise.ts"
+/*!***************************************************************!*\
+  !*** ./node_modules/mona-dish/src/main/typescript/Promise.ts ***!
+  \***************************************************************/
+(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   CancellablePromise: () => (/* binding */ CancellablePromise),
+/* harmony export */   Promise: () => (/* binding */ Promise),
+/* harmony export */   PromiseStatus: () => (/* binding */ PromiseStatus),
+/* harmony export */   interval: () => (/* binding */ interval),
+/* harmony export */   timeout: () => (/* binding */ timeout)
+/* harmony export */ });
+/* harmony import */ var _Monad__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
+/*!
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+var PromiseStatus;
+(function (PromiseStatus) {
+    PromiseStatus[PromiseStatus["PENDING"] = 0] = "PENDING";
+    PromiseStatus[PromiseStatus["FULFILLED"] = 1] = "FULFILLED";
+    PromiseStatus[PromiseStatus["REJECTED"] = 2] = "REJECTED";
+})(PromiseStatus || (PromiseStatus = {}));
+/*
+ * Promise wrappers for timeout and interval
+ */
+function timeout(timeout) {
+    let handler = null;
+    return new CancellablePromise((apply, reject) => {
+        handler = setTimeout(() => apply(), timeout);
+    }, () => {
+        if (handler) {
+            clearTimeout(handler);
+            handler = null;
+        }
+    });
+}
+function interval(timeout) {
+    let handler = null;
+    return new CancellablePromise((apply, reject) => {
+        handler = setInterval(() => {
+            apply();
+        }, timeout);
+    }, () => {
+        if (handler) {
+            clearInterval(handler);
+            handler = null;
+        }
+    });
+}
+/**
+ * a small (probably not 100% correct, although I tried to be correct as possible) Promise implementation
+ * for systems which do not have a promise implemented
+ * Note, although an internal state is kept, this is sideffect free since
+ * is value is a function to operate on, hence no real state is kept internally, except for the then
+ * and catch calling order
+ */
+class Promise {
+    constructor(executor) {
+        this.status = PromiseStatus.PENDING;
+        this.allFuncs = [];
+        //super(executor);
+        this.value = executor;
+        this.value((data) => this.resolve(data), (data) => this.reject(data));
+    }
+    static all(...promises) {
+        let promiseCnt = 0;
+        let myapply;
+        let myPromise = new Promise((apply, reject) => {
+            myapply = apply;
+        });
+        let executor = () => {
+            promiseCnt++;
+            if (promises.length == promiseCnt) {
+                myapply();
+            }
+        };
+        executor.__last__ = true;
+        for (let cnt = 0; cnt < promises.length; cnt++) {
+            promises[cnt].finally(executor);
+        }
+        return myPromise;
+    }
+    static race(...promises) {
+        let promiseCnt = 0;
+        let myapply;
+        let myreject;
+        let myPromise = new Promise((apply, reject) => {
+            myapply = apply;
+            myreject = reject;
+        });
+        let thenexecutor = () => {
+            if (!!myapply) {
+                myapply();
+            }
+            myapply = null;
+            myreject = null;
+            return null;
+        };
+        thenexecutor.__last__ = true;
+        let catchexeutor = () => {
+            if (!!myreject) {
+                myreject();
+            }
+            myreject = null;
+            myapply = null;
+            return null;
+        };
+        catchexeutor.__last__ = true;
+        for (let cnt = 0; cnt < promises.length; cnt++) {
+            promises[cnt].then(thenexecutor);
+            promises[cnt].catch(catchexeutor);
+        }
+        return myPromise;
+    }
+    static reject(reason) {
+        let retVal = new Promise((resolve, reject) => {
+            //not really doable without a hack
+            if (reason instanceof Promise) {
+                reason.then((val) => {
+                    reject(val);
+                });
+            }
+            else {
+                setTimeout(() => {
+                    reject(reason);
+                }, 1);
+            }
+        });
+        return retVal;
+    }
+    static resolve(reason) {
+        let retVal = new Promise((resolve, reject) => {
+            //not really doable without a hack
+            if (reason instanceof Promise) {
+                reason.then((val) => resolve(val));
+            }
+            else {
+                setTimeout(() => {
+                    resolve(reason);
+                }, 1);
+            }
+        });
+        return retVal;
+    }
+    then(executorFunc, catchfunc) {
+        this.allFuncs.push({ "then": executorFunc });
+        if (catchfunc) {
+            this.allFuncs.push({ "catch": catchfunc });
+        }
+        this.spliceLastFuncs();
+        return this;
+    }
+    catch(executorFunc) {
+        this.allFuncs.push({ "catch": executorFunc });
+        this.spliceLastFuncs();
+        return this;
+    }
+    finally(executorFunc) {
+        if (this.__reason__) {
+            this.__reason__.finally(executorFunc);
+            return undefined;
+        }
+        this.allFuncs.push({ "finally": executorFunc });
+        this.spliceLastFuncs();
+        return this;
+    }
+    resolve(val) {
+        while (this.allFuncs.length) {
+            if (!this.allFuncs[0].then) {
+                break;
+            }
+            let fn = this.allFuncs.shift();
+            let funcResult = _Monad__WEBPACK_IMPORTED_MODULE_0__.Optional.fromNullable(fn.then(val));
+            if (funcResult.isPresent()) {
+                funcResult = funcResult.flatMap();
+                val = funcResult.value;
+                if (val instanceof Promise) {
+                    //let func = (newVal: any) => {this.resolve(newVal)};
+                    //func.__last__  = true;
+                    //val.then(func);
+                    this.transferIntoNewPromise(val);
+                    return;
+                }
+            }
+            else {
+                break;
+            }
+        }
+        this.appyFinally();
+        this.status = PromiseStatus.FULFILLED;
+    }
+    reject(val) {
+        while (this.allFuncs.length) {
+            if (this.allFuncs[0].finally) {
+                break;
+            }
+            let fn = this.allFuncs.shift();
+            if (fn.catch) {
+                let funcResult = _Monad__WEBPACK_IMPORTED_MODULE_0__.Optional.fromNullable(fn.catch(val));
+                if (funcResult.isPresent()) {
+                    funcResult = funcResult.flatMap();
+                    val = funcResult.value;
+                    if (val instanceof Promise) {
+                        //val.then((newVal: any) => {this.resolve(newVal)});
+                        this.transferIntoNewPromise(val);
+                        return;
+                    }
+                    this.status = PromiseStatus.REJECTED;
+                    break;
+                }
+                else {
+                    break;
+                }
+            }
+        }
+        this.status = PromiseStatus.REJECTED;
+        this.appyFinally();
+    }
+    appyFinally() {
+        while (this.allFuncs.length) {
+            let fn = this.allFuncs.shift();
+            if (fn.finally) {
+                fn.finally();
+            }
+        }
+    }
+    spliceLastFuncs() {
+        let lastFuncs = [];
+        let rest = [];
+        for (let cnt = 0; cnt < this.allFuncs.length; cnt++) {
+            for (let key in this.allFuncs[cnt]) {
+                if (this.allFuncs[cnt][key].__last__) {
+                    lastFuncs.push(this.allFuncs[cnt]);
+                }
+                else {
+                    rest.push(this.allFuncs[cnt]);
+                }
+            }
+        }
+        this.allFuncs = rest.concat(lastFuncs);
+    }
+    transferIntoNewPromise(val) {
+        for (let cnt = 0; cnt < this.allFuncs.length; cnt++) {
+            for (let key in this.allFuncs[cnt]) {
+                val[key](this.allFuncs[cnt][key]);
+            }
+        }
+    }
+}
+/**
+ * a cancellable promise
+ * a Promise with a cancel function, which can be cancellend any time
+ * this is useful for promises which use cancellable asynchronous operations
+ * note, even in a cancel state, the finally of the promise is executed, however
+ * subsequent thens are not anymore.
+ * The current then however is fished or a catch is called depending on how the outer
+ * operation reacts to a cancel order.
+ */
+class CancellablePromise extends Promise {
+    /**
+     * @param executor asynchronous callback operation which triggers the callback
+     * @param cancellator cancel operation, separate from the trigger operation
+     */
+    constructor(executor, cancellator) {
+        super(executor);
+        this.cancellator = () => {
+        };
+        this.cancellator = cancellator;
+    }
+    cancel() {
+        this.status = PromiseStatus.REJECTED;
+        this.appyFinally();
+        //lets terminate it once and for all, the finally has been applied
+        this.allFuncs = [];
+    }
+    then(executorFunc, catchfunc) {
+        return super.then(executorFunc, catchfunc);
+    }
+    catch(executorFunc) {
+        return super.catch(executorFunc);
+    }
+    finally(executorFunc) {
+        return super.finally(executorFunc);
+    }
+}
+
+
+/***/ },
+
 /***/ "./node_modules/mona-dish/src/main/typescript/SourcesCollectors.ts"
 /*!*************************************************************************!*\
   !*** ./node_modules/mona-dish/src/main/typescript/SourcesCollectors.ts ***!
@@ -3796,6 +4103,778 @@ class ArrayCollector {
 
 /***/ },
 
+/***/ "./node_modules/mona-dish/src/main/typescript/Stream.ts"
+/*!**************************************************************!*\
+  !*** ./node_modules/mona-dish/src/main/typescript/Stream.ts ***!
+  \**************************************************************/
+(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   FlatMapStreamDataSource: () => (/* binding */ FlatMapStreamDataSource),
+/* harmony export */   LazyStream: () => (/* binding */ LazyStream),
+/* harmony export */   Stream: () => (/* binding */ Stream)
+/* harmony export */ });
+/* harmony import */ var _Monad__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
+/* harmony import */ var _SourcesCollectors__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./SourcesCollectors */ "./node_modules/mona-dish/src/main/typescript/SourcesCollectors.ts");
+/* harmony import */ var _DomQuery__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./DomQuery */ "./node_modules/mona-dish/src/main/typescript/DomQuery.ts");
+/*!
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+/*
+ * A small stream implementation
+ */
+
+
+
+/**
+ * Same for flatmap to deal with element -> stream mappings
+ */
+class FlatMapStreamDataSource {
+    constructor(func, parent) {
+        /**
+         * the currently active stream
+         * coming from an incoming element
+         * once the end of this one is reached
+         * it is swapped out by another one
+         * from the next element
+         */
+        this.activeDataSource = null;
+        this.walkedDataSources = [];
+        this._currPos = 0;
+        this.mapFunc = func;
+        this.inputDataSource = parent;
+    }
+    hasNext() {
+        return this.resolveActiveHasNext() || this.resolveNextHasNext();
+    }
+    resolveActiveHasNext() {
+        let next = false;
+        if (this.activeDataSource) {
+            next = this.activeDataSource.hasNext();
+        }
+        return next;
+    }
+    lookAhead(cnt = 1) {
+        var _a;
+        let lookAhead = (_a = this === null || this === void 0 ? void 0 : this.activeDataSource) === null || _a === void 0 ? void 0 : _a.lookAhead(cnt);
+        if ((this === null || this === void 0 ? void 0 : this.activeDataSource) && lookAhead != _SourcesCollectors__WEBPACK_IMPORTED_MODULE_1__.ITERATION_STATUS.EO_STRM) {
+            //this should cover 95% of all cases
+            return lookAhead;
+        }
+        if (this.activeDataSource) {
+            cnt -= (0,_SourcesCollectors__WEBPACK_IMPORTED_MODULE_1__.calculateSkips)(this.activeDataSource);
+        }
+        //the idea is basically to look into the streams sub-sequentially for a match
+        //after each stream we have to take into consideration that the skipCnt is
+        //reduced by the number of datasets we already have looked into in the previous stream/datasource
+        //unfortunately for now we have to loop into them, so we introduce a small o2 here
+        for (let dsLoop = 1; true; dsLoop++) {
+            let datasourceData = this.inputDataSource.lookAhead(dsLoop);
+            //we have looped out
+            //no embedded data anymore? we are done, data
+            //can either be a scalar an array or another datasource
+            if (datasourceData === _SourcesCollectors__WEBPACK_IMPORTED_MODULE_1__.ITERATION_STATUS.EO_STRM) {
+                return _SourcesCollectors__WEBPACK_IMPORTED_MODULE_1__.ITERATION_STATUS.EO_STRM;
+            }
+            let mappedData = this.mapFunc(datasourceData);
+            //it either comes in as datasource or as array
+            //both cases must be unified into a datasource
+            let currentDataSource = this.toDatasource(mappedData);
+            //we now run again  a lookahead
+            let ret = currentDataSource.lookAhead(cnt);
+            //if the value is found then we are set
+            if (ret != _SourcesCollectors__WEBPACK_IMPORTED_MODULE_1__.ITERATION_STATUS.EO_STRM) {
+                return ret;
+            }
+            //reduce the next lookahead by the number of elements
+            //we are now skipping in the current data source
+            cnt -= (0,_SourcesCollectors__WEBPACK_IMPORTED_MODULE_1__.calculateSkips)(currentDataSource);
+        }
+    }
+    toDatasource(mapped) {
+        let ds = Array.isArray(mapped) ? new _SourcesCollectors__WEBPACK_IMPORTED_MODULE_1__.ArrayStreamDataSource(...mapped) : mapped;
+        this.walkedDataSources.push(ds);
+        return ds;
+    }
+    resolveNextHasNext() {
+        let next = false;
+        while (!next && this.inputDataSource.hasNext()) {
+            let mapped = this.mapFunc(this.inputDataSource.next());
+            this.activeDataSource = this.toDatasource(mapped);
+            next = this.activeDataSource.hasNext();
+        }
+        return next;
+    }
+    next() {
+        if (this.hasNext()) {
+            this._currPos++;
+            return this.activeDataSource.next();
+        }
+        return undefined;
+    }
+    reset() {
+        this.inputDataSource.reset();
+        this.walkedDataSources.forEach(ds => ds.reset());
+        this.walkedDataSources = [];
+        this._currPos = 0;
+        this.activeDataSource = null;
+    }
+    current() {
+        if (!this.activeDataSource) {
+            this.hasNext();
+        }
+        return this.activeDataSource.current();
+    }
+}
+/**
+ * A simple typescript based reimplementation of streams
+ *
+ * This is the early eval version
+ * for a lazy eval version check, LazyStream, which is api compatible
+ * to this implementation, however with the benefit of being able
+ * to provide infinite data sources and generic data providers, the downside
+ * is, it might be a tad slower in some situations
+ */
+class Stream {
+    constructor(...value) {
+        this._limits = -1;
+        this.pos = -1;
+        this.value = value;
+    }
+    static of(...data) {
+        return new Stream(...data);
+    }
+    static ofAssoc(data) {
+        return this.of(...Object.keys(data)).map(key => [key, data[key]]);
+    }
+    static ofDataSource(dataSource) {
+        let value = [];
+        while (dataSource.hasNext()) {
+            value.push(dataSource.next());
+        }
+        return new Stream(...value);
+    }
+    static ofDomQuery(value) {
+        return Stream.of(...value.asArray);
+    }
+    static ofConfig(value) {
+        return Stream.of(...Object.keys(value.value)).map(key => [key, value.value[key]]);
+    }
+    current() {
+        if (this.pos == -1) {
+            return _SourcesCollectors__WEBPACK_IMPORTED_MODULE_1__.ITERATION_STATUS.BEF_STRM;
+        }
+        if (this.pos >= this.value.length) {
+            return _SourcesCollectors__WEBPACK_IMPORTED_MODULE_1__.ITERATION_STATUS.EO_STRM;
+        }
+        return this.value[this.pos];
+    }
+    limits(end) {
+        this._limits = end;
+        return this;
+    }
+    /**
+     * concat for streams, so that you can concat two streams together
+     * @param toAppend
+     */
+    concat(...toAppend) {
+        let toConcat = [this].concat(toAppend);
+        return Stream.of(...toConcat).flatMap(item => item);
+    }
+    onElem(fn) {
+        for (let cnt = 0; cnt < this.value.length && (this._limits == -1 || cnt < this._limits); cnt++) {
+            if (fn(this.value[cnt], cnt) === false) {
+                break;
+            }
+        }
+        return this;
+    }
+    each(fn) {
+        this.onElem(fn);
+        this.reset();
+    }
+    map(fn) {
+        if (!fn) {
+            fn = (inval) => inval;
+        }
+        let res = [];
+        this.each((item) => {
+            res.push(fn(item));
+        });
+        return new Stream(...res);
+    }
+    /*
+     * we need to implement it to fulfill the contract, although it is used only internally
+     * all values are flattened when accessed anyway, so there is no need to call this method
+     */
+    flatMap(fn) {
+        let ret = [];
+        this.each(item => {
+            let strmR = fn(item);
+            ret = Array.isArray(strmR) ? ret.concat(strmR) : ret.concat(strmR.value);
+        });
+        return Stream.of(...ret);
+    }
+    filter(fn) {
+        let res = [];
+        this.each((data) => {
+            if (fn(data)) {
+                res.push(data);
+            }
+        });
+        return new Stream(...res);
+    }
+    reduce(fn, startVal = null) {
+        let offset = startVal != null ? 0 : 1;
+        let val1 = startVal != null ? startVal : this.value.length ? this.value[0] : null;
+        for (let cnt = offset; cnt < this.value.length && (this._limits == -1 || cnt < this._limits); cnt++) {
+            val1 = fn(val1, this.value[cnt]);
+        }
+        this.reset();
+        return _Monad__WEBPACK_IMPORTED_MODULE_0__.Optional.fromNullable(val1);
+    }
+    first() {
+        this.reset();
+        return this.value && this.value.length ? _Monad__WEBPACK_IMPORTED_MODULE_0__.Optional.fromNullable(this.value[0]) : _Monad__WEBPACK_IMPORTED_MODULE_0__.Optional.absent;
+    }
+    last() {
+        //could be done via reduce, but is faster this way
+        let length = this._limits > 0 ? Math.min(this._limits, this.value.length) : this.value.length;
+        this.reset();
+        return _Monad__WEBPACK_IMPORTED_MODULE_0__.Optional.fromNullable(length ? this.value[length - 1] : null);
+    }
+    anyMatch(fn) {
+        for (let cnt = 0; cnt < this.value.length && (this._limits == -1 || cnt < this._limits); cnt++) {
+            if (fn(this.value[cnt])) {
+                return true;
+            }
+        }
+        this.reset();
+        return false;
+    }
+    allMatch(fn) {
+        if (!this.value.length) {
+            return false;
+        }
+        let matches = 0;
+        for (let cnt = 0; cnt < this.value.length; cnt++) {
+            if (fn(this.value[cnt])) {
+                matches++;
+            }
+        }
+        this.reset();
+        return matches == this.value.length;
+    }
+    noneMatch(fn) {
+        let matches = 0;
+        for (let cnt = 0; cnt < this.value.length; cnt++) {
+            if (!fn(this.value[cnt])) {
+                matches++;
+            }
+        }
+        this.reset();
+        return matches == this.value.length;
+    }
+    sort(comparator) {
+        let newArr = this.value.slice().sort(comparator);
+        return Stream.of(...newArr);
+    }
+    collect(collector) {
+        this.each(data => collector.collect(data));
+        this.reset();
+        return collector.finalValue;
+    }
+    //-- internally exposed methods needed for the interconnectivity
+    hasNext() {
+        let isLimitsReached = this._limits != -1 && this.pos >= this._limits - 1;
+        let isEndOfArray = this.pos >= this.value.length - 1;
+        return !(isLimitsReached || isEndOfArray);
+    }
+    next() {
+        if (!this.hasNext()) {
+            return null;
+        }
+        this.pos++;
+        return this.value[this.pos];
+    }
+    lookAhead(cnt = 1) {
+        if ((this.pos + cnt) >= this.value.length) {
+            return _SourcesCollectors__WEBPACK_IMPORTED_MODULE_1__.ITERATION_STATUS.EO_STRM;
+        }
+        return this.value[this.pos + cnt];
+    }
+    [Symbol.iterator]() {
+        return {
+            next: () => {
+                let done = !this.hasNext();
+                let val = this.next();
+                return {
+                    done: done,
+                    value: val
+                };
+            }
+        };
+    }
+    /*get observable(): Observable<T> {
+        return from(this);
+    }*/
+    reset() {
+        this.pos = -1;
+    }
+}
+/**
+ * Lazy implementation of a Stream
+ * The idea is to connect the intermediate
+ * streams as datasources like a linked list
+ * with reverse referencing and for special
+ * operations like filtering flatmapping
+ * have intermediate datasources in the list
+ * with specialized functions.
+ *
+ * Sort of a modified pipe valve pattern
+ * the streams are the pipes the intermediate
+ * data sources are the valves
+ *
+ * We then can use passed in functions to control
+ * the flow in the valves
+ *
+ * That way we can have a lazy evaluating stream
+ *
+ * So if an endpoint requests data
+ * a callback trace goes back the stream list
+ * which triggers an operation upwards
+ * which sends data down the drain which then is processed
+ * and filtered until one element hits the endpoint.
+ *
+ * That is repeated, until all elements are processed
+ * or an internal limit is hit.
+ *
+ */
+class LazyStream {
+    static of(...values) {
+        return new LazyStream(new _SourcesCollectors__WEBPACK_IMPORTED_MODULE_1__.ArrayStreamDataSource(...values));
+    }
+    static ofAssoc(data) {
+        return this.of(...Object.keys(data)).map(key => [key, data[key]]);
+    }
+    static ofStreamDataSource(value) {
+        return new LazyStream(value);
+    }
+    static ofDomQuery(value) {
+        return LazyStream.of(...value.asArray);
+    }
+    static ofConfig(value) {
+        return LazyStream.of(...Object.keys(value.value)).map(key => [key, value.value[key]]);
+    }
+    constructor(parent) {
+        this._limits = -1;
+        /*
+         * needed to have the limits check working
+         * we need to keep track of the current position
+         * in the stream
+         */
+        this.pos = -1;
+        this.dataSource = parent;
+    }
+    hasNext() {
+        if (this.isOverLimits()) {
+            return false;
+        }
+        return this.dataSource.hasNext();
+    }
+    next() {
+        let next = this.dataSource.next();
+        // @ts-ignore
+        this.pos++;
+        return next;
+    }
+    lookAhead(cnt = 1) {
+        return this.dataSource.lookAhead(cnt);
+    }
+    current() {
+        return this.dataSource.current();
+    }
+    reset() {
+        this.dataSource.reset();
+        this.pos = -1;
+        this._limits = -1;
+    }
+    /**
+     * concat for streams, so that you can concat two streams together
+     * @param toAppend
+     */
+    concat(...toAppend) {
+        //this.dataSource =  new MultiStreamDatasource<T>(this, ... toAppend);
+        //return this;
+        return LazyStream.ofStreamDataSource(new _SourcesCollectors__WEBPACK_IMPORTED_MODULE_1__.MultiStreamDatasource(this, toAppend));
+        //return LazyStream.of(<IStream<T>>this, ...toAppend).flatMap(item => item);
+    }
+    nextFilter(fn) {
+        if (this.hasNext()) {
+            let newVal = this.next();
+            if (!fn(newVal)) {
+                return this.nextFilter(fn);
+            }
+            return newVal;
+        }
+        return null;
+    }
+    limits(max) {
+        this._limits = max;
+        return this;
+    }
+    //main stream methods
+    collect(collector) {
+        while (this.hasNext()) {
+            let t = this.next();
+            collector.collect(t);
+        }
+        this.reset();
+        return collector.finalValue;
+    }
+    onElem(fn) {
+        return new LazyStream(new _SourcesCollectors__WEBPACK_IMPORTED_MODULE_1__.MappedStreamDataSource((el) => {
+            if (fn(el, this.pos) === false) {
+                this.stop();
+            }
+            return el;
+        }, this));
+    }
+    filter(fn) {
+        return new LazyStream(new _SourcesCollectors__WEBPACK_IMPORTED_MODULE_1__.FilteredStreamDatasource(fn, this));
+    }
+    map(fn) {
+        return new LazyStream(new _SourcesCollectors__WEBPACK_IMPORTED_MODULE_1__.MappedStreamDataSource(fn, this));
+    }
+    flatMap(fn) {
+        return new LazyStream(new FlatMapStreamDataSource(fn, this));
+    }
+    //endpoint
+    each(fn) {
+        while (this.hasNext()) {
+            if (fn(this.next()) === false) {
+                this.stop();
+            }
+        }
+        this.reset();
+    }
+    reduce(fn, startVal = null) {
+        if (!this.hasNext()) {
+            return _Monad__WEBPACK_IMPORTED_MODULE_0__.Optional.absent;
+        }
+        let value1;
+        let value2 = _SourcesCollectors__WEBPACK_IMPORTED_MODULE_1__.ITERATION_STATUS.EO_STRM;
+        if (startVal != null) {
+            value1 = startVal;
+            value2 = this.next();
+        }
+        else {
+            value1 = this.next();
+            if (!this.hasNext()) {
+                return _Monad__WEBPACK_IMPORTED_MODULE_0__.Optional.fromNullable(value1);
+            }
+            value2 = this.next();
+        }
+        value1 = fn(value1, value2);
+        while (this.hasNext()) {
+            value2 = this.next();
+            value1 = fn(value1, value2);
+        }
+        this.reset();
+        return _Monad__WEBPACK_IMPORTED_MODULE_0__.Optional.fromNullable(value1);
+    }
+    last() {
+        if (!this.hasNext()) {
+            return _Monad__WEBPACK_IMPORTED_MODULE_0__.Optional.absent;
+        }
+        return this.reduce((el1, el2) => el2);
+    }
+    first() {
+        this.reset();
+        if (!this.hasNext()) {
+            return _Monad__WEBPACK_IMPORTED_MODULE_0__.Optional.absent;
+        }
+        return _Monad__WEBPACK_IMPORTED_MODULE_0__.Optional.fromNullable(this.next());
+    }
+    anyMatch(fn) {
+        while (this.hasNext()) {
+            if (fn(this.next())) {
+                return true;
+            }
+        }
+        return false;
+    }
+    allMatch(fn) {
+        while (this.hasNext()) {
+            if (!fn(this.next())) {
+                return false;
+            }
+        }
+        return true;
+    }
+    noneMatch(fn) {
+        while (this.hasNext()) {
+            if (fn(this.next())) {
+                return false;
+            }
+        }
+        return true;
+    }
+    sort(comparator) {
+        let arr = this.collect(new _SourcesCollectors__WEBPACK_IMPORTED_MODULE_1__.ArrayCollector());
+        arr = arr.sort(comparator);
+        return LazyStream.of(...arr);
+    }
+    get value() {
+        return this.collect(new _SourcesCollectors__WEBPACK_IMPORTED_MODULE_1__.ArrayCollector());
+    }
+    [Symbol.iterator]() {
+        return {
+            next: () => {
+                let done = !this.hasNext();
+                let val = this.next();
+                return {
+                    done: done,
+                    value: val
+                };
+            }
+        };
+    }
+    /*get observable(): Observable<T> {
+        return from(this);
+    }*/
+    stop() {
+        this.pos = this._limits + 1000000000;
+        this._limits = 0;
+    }
+    isOverLimits() {
+        return this._limits != -1 && this.pos >= this._limits - 1;
+    }
+}
+/**
+ * 1.0 backwards compatibility functions
+ *
+ * this restores the stream and lazy stream
+ * property on DomQuery on prototype level
+ *
+ */
+Object.defineProperty(_DomQuery__WEBPACK_IMPORTED_MODULE_2__.DomQuery.prototype, "stream", {
+    get: function stream() {
+        return Stream.ofDomQuery(this);
+    }
+});
+Object.defineProperty(_DomQuery__WEBPACK_IMPORTED_MODULE_2__.DomQuery.prototype, "lazyStream", {
+    get: function lazyStream() {
+        return LazyStream.ofDomQuery(this);
+    }
+});
+
+
+/***/ },
+
+/***/ "./node_modules/mona-dish/src/main/typescript/TagBuilder.ts"
+/*!******************************************************************!*\
+  !*** ./node_modules/mona-dish/src/main/typescript/TagBuilder.ts ***!
+  \******************************************************************/
+(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   TagBuilder: () => (/* binding */ TagBuilder)
+/* harmony export */ });
+/* harmony import */ var _DomQuery__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./DomQuery */ "./node_modules/mona-dish/src/main/typescript/DomQuery.ts");
+/* harmony import */ var _Global__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Global */ "./node_modules/mona-dish/src/main/typescript/Global.ts");
+/*!
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+//poliyfill from @webcomponents/webcomponentsjs
+
+
+if ("undefined" != typeof _Global__WEBPACK_IMPORTED_MODULE_1__._global$) {
+    (function () {
+        if (void 0 === (0,_Global__WEBPACK_IMPORTED_MODULE_1__._global$)().Reflect || void 0 === (0,_Global__WEBPACK_IMPORTED_MODULE_1__._global$)().customElements || ((0,_Global__WEBPACK_IMPORTED_MODULE_1__._global$)().customElements).polyfillWrapFlushCallback)
+            return;
+        const a = HTMLElement;
+        (0,_Global__WEBPACK_IMPORTED_MODULE_1__._global$)().HTMLElement = {
+            HTMLElement: function HTMLElement() {
+                return Reflect.construct(a, [], this.constructor);
+            }
+        }.HTMLElement, HTMLElement.prototype = a.prototype, HTMLElement.prototype.constructor = HTMLElement, Object.setPrototypeOf(HTMLElement, a);
+    })();
+}
+/**
+ * beginning custom tag support
+ *
+ * This api is still experimental
+ * and might be interwoven with DomQuery
+ * so it is bound to change
+ *
+ * it follows a builder pattern to allow easier creations
+ * with less code of custom tags
+ */
+class TagBuilder {
+    // noinspection JSUnusedGlobalSymbols
+    static withTagName(tagName) {
+        return new TagBuilder(tagName);
+    }
+    // noinspection JSUnusedGlobalSymbols
+    constructor(tagName) {
+        this.extendsType = HTMLElement;
+        this.observedAttrs = [];
+        this.tagName = tagName;
+    }
+    // noinspection JSUnusedGlobalSymbols
+    withObservedAttributes(...oAttrs) {
+        this.observedAttrs = oAttrs;
+    }
+    // noinspection JSUnusedGlobalSymbols
+    withConnectedCallback(callback) {
+        this.connectedCallback = callback;
+        return this;
+    }
+    // noinspection JSUnusedGlobalSymbols
+    withDisconnectedCallback(callback) {
+        this.disconnectedCallback = callback;
+        return this;
+    }
+    // noinspection JSUnusedGlobalSymbols
+    withAdoptedCallback(callback) {
+        this.adoptedCallback = callback;
+        return this;
+    }
+    // noinspection JSUnusedGlobalSymbols
+    withAttributeChangedCallback(callback) {
+        this.attributeChangedCallback = callback;
+        return this;
+    }
+    // noinspection JSUnusedGlobalSymbols
+    withExtendsType(extendsType) {
+        this.extendsType = extendsType;
+        return this;
+    }
+    // noinspection JSUnusedGlobalSymbols
+    withOptions(theOptions) {
+        this.theOptions = theOptions;
+        return this;
+    }
+    // noinspection JSUnusedGlobalSymbols
+    withClass(clazz) {
+        if (this.markup) {
+            throw Error("Markup already defined, markup must be set in the class");
+        }
+        this.clazz = clazz;
+        return this;
+    }
+    // noinspection JSUnusedGlobalSymbols
+    withMarkup(markup) {
+        if (this.clazz) {
+            throw Error("Class already defined, markup must be set in the class");
+        }
+        this.markup = markup;
+        return this;
+    }
+    // noinspection JSUnusedGlobalSymbols
+    register() {
+        if (!this.clazz && !this.markup) {
+            throw Error("Class or markup must be defined");
+        }
+        if (this.clazz) {
+            let applyCallback = (name) => {
+                let outerCallback = this[name];
+                let protoCallback = this.clazz.prototype[name];
+                let finalCallback = outerCallback || protoCallback;
+                if (finalCallback) {
+                    this.clazz.prototype[name] = function () {
+                        if (outerCallback) {
+                            finalCallback.apply(_DomQuery__WEBPACK_IMPORTED_MODULE_0__.DomQuery.byId(this));
+                        }
+                        else {
+                            protoCallback.apply(this);
+                        }
+                    };
+                }
+            };
+            applyCallback("connectedCallback");
+            applyCallback("disconnectedCallback");
+            applyCallback("adoptedCallback");
+            applyCallback("attributeChangedCallback");
+            //TODO how do we handle the oAttrs?
+            if (this.observedAttrs.length) {
+                Object.defineProperty(this.clazz.prototype, "observedAttributes", {
+                    get() {
+                        return this.observedAttrs;
+                    }
+                });
+            }
+            (0,_Global__WEBPACK_IMPORTED_MODULE_1__._global$)().customElements.define(this.tagName, this.clazz, this.theOptions || null);
+        }
+        else {
+            let _t_ = this;
+            let applyCallback = (name, scope) => {
+                if (_t_[name]) {
+                    _t_[name].apply(_DomQuery__WEBPACK_IMPORTED_MODULE_0__.DomQuery.byId(scope));
+                }
+            };
+            (0,_Global__WEBPACK_IMPORTED_MODULE_1__._global$)().customElements.define(this.tagName, class extends this.extendsType {
+                constructor() {
+                    super();
+                    this.innerHTML = _t_.markup;
+                }
+                // noinspection JSUnusedGlobalSymbols
+                static get observedAttributes() {
+                    return _t_.observedAttrs;
+                }
+                // noinspection JSUnusedGlobalSymbols
+                connectedCallback() {
+                    applyCallback("connectedCallback", this);
+                }
+                // noinspection JSUnusedGlobalSymbols
+                disconnectedCallback() {
+                    applyCallback("disconnectedCallback", this);
+                }
+                // noinspection JSUnusedGlobalSymbols
+                adoptedCallback() {
+                    applyCallback("adoptedCallback", this);
+                }
+                // noinspection JSUnusedGlobalSymbols
+                attributeChangedCallback() {
+                    applyCallback("attributeChangedCallback", this);
+                }
+            }, this.theOptions || null);
+        }
+    }
+}
+
+
+/***/ },
+
 /***/ "./node_modules/mona-dish/src/main/typescript/XmlQuery.ts"
 /*!****************************************************************!*\
   !*** ./node_modules/mona-dish/src/main/typescript/XmlQuery.ts ***!
@@ -3901,36 +4980,57 @@ const XQ = XMLQuery;
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Assoc: () => (/* reexport module object */ _AssocArray__WEBPACK_IMPORTED_MODULE_4__),
-/* harmony export */   CONFIG_ANY: () => (/* reexport safe */ _Config__WEBPACK_IMPORTED_MODULE_5__.CONFIG_ANY),
-/* harmony export */   CONFIG_VALUE: () => (/* reexport safe */ _Config__WEBPACK_IMPORTED_MODULE_5__.CONFIG_VALUE),
-/* harmony export */   Config: () => (/* reexport safe */ _Config__WEBPACK_IMPORTED_MODULE_5__.Config),
+/* harmony export */   ArrayCollector: () => (/* reexport safe */ _SourcesCollectors__WEBPACK_IMPORTED_MODULE_6__.ArrayCollector),
+/* harmony export */   ArrayStreamDataSource: () => (/* reexport safe */ _SourcesCollectors__WEBPACK_IMPORTED_MODULE_6__.ArrayStreamDataSource),
+/* harmony export */   Assoc: () => (/* reexport module object */ _AssocArray__WEBPACK_IMPORTED_MODULE_7__),
+/* harmony export */   AssocArrayCollector: () => (/* reexport safe */ _SourcesCollectors__WEBPACK_IMPORTED_MODULE_6__.AssocArrayCollector),
+/* harmony export */   CONFIG_ANY: () => (/* reexport safe */ _Config__WEBPACK_IMPORTED_MODULE_8__.CONFIG_ANY),
+/* harmony export */   CONFIG_VALUE: () => (/* reexport safe */ _Config__WEBPACK_IMPORTED_MODULE_8__.CONFIG_VALUE),
+/* harmony export */   CancellablePromise: () => (/* reexport safe */ _Promise__WEBPACK_IMPORTED_MODULE_3__.CancellablePromise),
+/* harmony export */   Config: () => (/* reexport safe */ _Config__WEBPACK_IMPORTED_MODULE_8__.Config),
+/* harmony export */   ConfigCollector: () => (/* reexport safe */ _SourcesCollectors__WEBPACK_IMPORTED_MODULE_6__.ConfigCollector),
 /* harmony export */   DQ: () => (/* reexport safe */ _DomQuery__WEBPACK_IMPORTED_MODULE_0__.DQ),
 /* harmony export */   DQ$: () => (/* reexport safe */ _DomQuery__WEBPACK_IMPORTED_MODULE_0__.DQ$),
 /* harmony export */   DomQuery: () => (/* reexport safe */ _DomQuery__WEBPACK_IMPORTED_MODULE_0__.DomQuery),
 /* harmony export */   DomQueryCollector: () => (/* reexport safe */ _DomQuery__WEBPACK_IMPORTED_MODULE_0__.DomQueryCollector),
 /* harmony export */   ElementAttribute: () => (/* reexport safe */ _DomQuery__WEBPACK_IMPORTED_MODULE_0__.ElementAttribute),
-/* harmony export */   Es2019Array: () => (/* reexport safe */ _Es2019Array__WEBPACK_IMPORTED_MODULE_6__.Es2019Array),
+/* harmony export */   Es2019Array: () => (/* reexport safe */ _Es2019Array__WEBPACK_IMPORTED_MODULE_9__.Es2019Array),
+/* harmony export */   FilteredStreamDatasource: () => (/* reexport safe */ _SourcesCollectors__WEBPACK_IMPORTED_MODULE_6__.FilteredStreamDatasource),
+/* harmony export */   FlatMapStreamDataSource: () => (/* reexport safe */ _Stream__WEBPACK_IMPORTED_MODULE_5__.FlatMapStreamDataSource),
+/* harmony export */   FormDataCollector: () => (/* reexport safe */ _SourcesCollectors__WEBPACK_IMPORTED_MODULE_6__.FormDataCollector),
 /* harmony export */   Lang: () => (/* reexport safe */ _Lang__WEBPACK_IMPORTED_MODULE_1__.Lang),
+/* harmony export */   LazyStream: () => (/* reexport safe */ _Stream__WEBPACK_IMPORTED_MODULE_5__.LazyStream),
+/* harmony export */   MappedStreamDataSource: () => (/* reexport safe */ _SourcesCollectors__WEBPACK_IMPORTED_MODULE_6__.MappedStreamDataSource),
 /* harmony export */   Monad: () => (/* reexport safe */ _Monad__WEBPACK_IMPORTED_MODULE_2__.Monad),
+/* harmony export */   MultiStreamDatasource: () => (/* reexport safe */ _SourcesCollectors__WEBPACK_IMPORTED_MODULE_6__.MultiStreamDatasource),
 /* harmony export */   Optional: () => (/* reexport safe */ _Monad__WEBPACK_IMPORTED_MODULE_2__.Optional),
+/* harmony export */   PromiseStatus: () => (/* reexport safe */ _Promise__WEBPACK_IMPORTED_MODULE_3__.PromiseStatus),
+/* harmony export */   QueryFormDataCollector: () => (/* reexport safe */ _SourcesCollectors__WEBPACK_IMPORTED_MODULE_6__.QueryFormDataCollector),
+/* harmony export */   QueryFormStringCollector: () => (/* reexport safe */ _SourcesCollectors__WEBPACK_IMPORTED_MODULE_6__.QueryFormStringCollector),
+/* harmony export */   SequenceDataSource: () => (/* reexport safe */ _SourcesCollectors__WEBPACK_IMPORTED_MODULE_6__.SequenceDataSource),
+/* harmony export */   Stream: () => (/* reexport safe */ _Stream__WEBPACK_IMPORTED_MODULE_5__.Stream),
+/* harmony export */   TagBuilder: () => (/* reexport safe */ _TagBuilder__WEBPACK_IMPORTED_MODULE_10__.TagBuilder),
 /* harmony export */   ValueEmbedder: () => (/* reexport safe */ _Monad__WEBPACK_IMPORTED_MODULE_2__.ValueEmbedder),
-/* harmony export */   XMLQuery: () => (/* reexport safe */ _XmlQuery__WEBPACK_IMPORTED_MODULE_3__.XMLQuery),
-/* harmony export */   XQ: () => (/* reexport safe */ _XmlQuery__WEBPACK_IMPORTED_MODULE_3__.XQ),
-/* harmony export */   _Es2019Array: () => (/* reexport safe */ _Es2019Array__WEBPACK_IMPORTED_MODULE_6__._Es2019Array),
-/* harmony export */   append: () => (/* reexport safe */ _AssocArray__WEBPACK_IMPORTED_MODULE_4__.append),
-/* harmony export */   assign: () => (/* reexport safe */ _AssocArray__WEBPACK_IMPORTED_MODULE_4__.assign),
-/* harmony export */   assignIf: () => (/* reexport safe */ _AssocArray__WEBPACK_IMPORTED_MODULE_4__.assignIf),
-/* harmony export */   shallowMerge: () => (/* reexport safe */ _AssocArray__WEBPACK_IMPORTED_MODULE_4__.shallowMerge),
-/* harmony export */   simpleShallowMerge: () => (/* reexport safe */ _AssocArray__WEBPACK_IMPORTED_MODULE_4__.simpleShallowMerge)
+/* harmony export */   XMLQuery: () => (/* reexport safe */ _XmlQuery__WEBPACK_IMPORTED_MODULE_4__.XMLQuery),
+/* harmony export */   XQ: () => (/* reexport safe */ _XmlQuery__WEBPACK_IMPORTED_MODULE_4__.XQ),
+/* harmony export */   _Es2019Array: () => (/* reexport safe */ _Es2019Array__WEBPACK_IMPORTED_MODULE_9__._Es2019Array),
+/* harmony export */   append: () => (/* reexport safe */ _AssocArray__WEBPACK_IMPORTED_MODULE_7__.append),
+/* harmony export */   assign: () => (/* reexport safe */ _AssocArray__WEBPACK_IMPORTED_MODULE_7__.assign),
+/* harmony export */   assignIf: () => (/* reexport safe */ _AssocArray__WEBPACK_IMPORTED_MODULE_7__.assignIf),
+/* harmony export */   shallowMerge: () => (/* reexport safe */ _AssocArray__WEBPACK_IMPORTED_MODULE_7__.shallowMerge),
+/* harmony export */   simpleShallowMerge: () => (/* reexport safe */ _AssocArray__WEBPACK_IMPORTED_MODULE_7__.simpleShallowMerge)
 /* harmony export */ });
 /* harmony import */ var _DomQuery__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./DomQuery */ "./node_modules/mona-dish/src/main/typescript/DomQuery.ts");
 /* harmony import */ var _Lang__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Lang */ "./node_modules/mona-dish/src/main/typescript/Lang.ts");
 /* harmony import */ var _Monad__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./Monad */ "./node_modules/mona-dish/src/main/typescript/Monad.ts");
-/* harmony import */ var _XmlQuery__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./XmlQuery */ "./node_modules/mona-dish/src/main/typescript/XmlQuery.ts");
-/* harmony import */ var _AssocArray__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./AssocArray */ "./node_modules/mona-dish/src/main/typescript/AssocArray.ts");
-/* harmony import */ var _Config__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./Config */ "./node_modules/mona-dish/src/main/typescript/Config.ts");
-/* harmony import */ var _Es2019Array__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./Es2019Array */ "./node_modules/mona-dish/src/main/typescript/Es2019Array.ts");
+/* harmony import */ var _Promise__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./Promise */ "./node_modules/mona-dish/src/main/typescript/Promise.ts");
+/* harmony import */ var _XmlQuery__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./XmlQuery */ "./node_modules/mona-dish/src/main/typescript/XmlQuery.ts");
+/* harmony import */ var _Stream__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./Stream */ "./node_modules/mona-dish/src/main/typescript/Stream.ts");
+/* harmony import */ var _SourcesCollectors__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./SourcesCollectors */ "./node_modules/mona-dish/src/main/typescript/SourcesCollectors.ts");
+/* harmony import */ var _AssocArray__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./AssocArray */ "./node_modules/mona-dish/src/main/typescript/AssocArray.ts");
+/* harmony import */ var _Config__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./Config */ "./node_modules/mona-dish/src/main/typescript/Config.ts");
+/* harmony import */ var _Es2019Array__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./Es2019Array */ "./node_modules/mona-dish/src/main/typescript/Es2019Array.ts");
+/* harmony import */ var _TagBuilder__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./TagBuilder */ "./node_modules/mona-dish/src/main/typescript/TagBuilder.ts");
 /*!
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -3949,6 +5049,10 @@ __webpack_require__.r(__webpack_exports__);
  * specific language governing permissions and limitations
  * under the License.
  */
+
+
+
+
 
 
 

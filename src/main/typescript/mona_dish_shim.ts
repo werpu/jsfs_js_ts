@@ -24,10 +24,14 @@
  * Used via tsconfig paths (for tests/tsx). Webpack keeps its own alias to
  * index_core.ts for the reduced-core production bundle.
  *
+ * Points to dist/typescript/index_core so that TypeScript 6 with
+ * moduleResolution:bundler can find the .ts source (no .d.ts alongside the
+ * UMD bundles). Uses index_core to avoid the optional crypto-js dependency.
+ *
  * Both import styles work:
  *   import { Lang } from 'mona-dish'                    // named import
  *   import pkg from 'mona-dish'; const { Lang } = pkg   // default import
  */
-export * from "mona-dish/dist/js/umd/index.js";
-import * as _monaDish from "mona-dish/dist/js/umd/index.js";
+export * from "../../../node_modules/mona-dish/src/main/typescript/index_core";
+import * as _monaDish from "../../../node_modules/mona-dish/src/main/typescript/index_core";
 export default _monaDish;

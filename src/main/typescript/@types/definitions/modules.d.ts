@@ -14,12 +14,8 @@
  * limitations under the License.
  */
 
-declare module "mona-dish" {
-    export * from "mona-dish/dist/types/index";
-}
-
 declare module "mona-dish/dist/js/umd/index.js" {
-    export * from "mona-dish/dist/types/index";
+    export * from "mona-dish";
 }
 
 declare module "nise" {

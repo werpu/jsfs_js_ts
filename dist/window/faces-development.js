@@ -746,15 +746,15 @@ function waitUntilDom(root, condition, options = {
                 return root;
             }
             if (options.childList) {
-                found = (condition(root)) ? root.value.value : root.childNodes.filter(item => condition(item)).first().value.value;
+                found = (condition(root)) ? root : root.childNodes.filter(item => condition(item)).first().value.value;
             }
             else if (options.subtree) {
-                found = (condition(root)) ? root.value.value : root.querySelectorAll(" * ").filter(item => condition(item)).first().value.value;
+                found = (condition(root)) ? root : root.querySelectorAll(" * ").filter(item => condition(item)).first().value.value;
             }
             else {
-                found = (condition(root)) ? root.value.value : null;
+                found = (condition(root)) ? root : null;
             }
-            return found ? new DomQuery(found) : null;
+            return found;
         }
         let foundElement = root;
         if (!!(foundElement = findElement(foundElement, condition))) {
@@ -763,14 +763,14 @@ function waitUntilDom(root, condition, options = {
         }
         if ('undefined' != typeof MutationObserver) {
             const mutTimeout = setTimeout(() => {
-                observer === null || observer === void 0 ? void 0 : observer.disconnect();
+                observer.disconnect();
                 return error(MUT_ERROR);
             }, options.timeout);
             const callback = (mutationList) => {
                 const found = new DomQuery(mutationList.map((mut) => mut.target)).filter(item => condition(item)).first();
                 if (found.isPresent()) {
                     clearTimeout(mutTimeout);
-                    observer === null || observer === void 0 ? void 0 : observer.disconnect();
+                    observer.disconnect();
                     success(new DomQuery(found || root));
                 }
             };
@@ -1618,7 +1618,7 @@ class DomQuery {
     globalEvalSticky(code, nonce) {
         let head = document.getElementsByTagName("head")[0] || document.documentElement;
         let script = document.createElement("script");
-        this.applyNonce(nonce !== null && nonce !== void 0 ? nonce : "", script);
+        this.applyNonce(nonce, script);
         script.type = "text/javascript";
         script.innerHTML = code;
         head.appendChild(script);
@@ -1631,8 +1631,7 @@ class DomQuery {
      */
     detach() {
         this.eachElem((item) => {
-            var _a;
-            (_a = item.parentNode) === null || _a === void 0 ? void 0 : _a.removeChild(item);
+            item.parentNode.removeChild(item);
         });
         return this;
     }
@@ -1687,11 +1686,11 @@ class DomQuery {
                 let nextSibling = existingElement.nextSibling;
                 toInsertParams[cnt].eachElem(insertElem => {
                     if (nextSibling) {
-                        rootNode === null || rootNode === void 0 ? void 0 : rootNode.insertBefore(insertElem, nextSibling);
+                        rootNode.insertBefore(insertElem, nextSibling);
                         existingElement = nextSibling;
                     }
                     else {
-                        rootNode === null || rootNode === void 0 ? void 0 : rootNode.appendChild(insertElem);
+                        rootNode.appendChild(insertElem);
                     }
                 });
             }
@@ -1707,7 +1706,7 @@ class DomQuery {
             let rootNode = existingElement.parentNode;
             for (let cnt = 0; cnt < toInsertParams.length; cnt++) {
                 toInsertParams[cnt].eachElem(insertElem => {
-                    rootNode === null || rootNode === void 0 ? void 0 : rootNode.insertBefore(insertElem, existingElement);
+                    rootNode.insertBefore(insertElem, existingElement);
                 });
             }
         });
@@ -1828,7 +1827,7 @@ class DomQuery {
     outerHTML(markup, runEmbeddedScripts, runEmbeddedCss, deep = false) {
         var _a;
         if (this.isAbsent()) {
-            return this;
+            return undefined;
         }
         let focusElementId = (_a = document === null || document === void 0 ? void 0 : document.activeElement) === null || _a === void 0 ? void 0 : _a.id;
         let caretPosition = (focusElementId) ? DomQuery.getCaretPosition(document.activeElement) : null;
@@ -1838,7 +1837,7 @@ class DomQuery {
         let firstInsert = nodes.get(0);
         let parentNode = toReplace.parentNode;
         let replaced = firstInsert.getAsElem(0).value;
-        parentNode === null || parentNode === void 0 ? void 0 : parentNode.replaceChild(replaced, toReplace);
+        parentNode.replaceChild(replaced, toReplace);
         res.push(new DomQuery(replaced));
         // no replacement possible
         if (this.isAbsent()) {
@@ -1855,7 +1854,7 @@ class DomQuery {
         if (runEmbeddedCss) {
             this.runCss();
         }
-        let focusElement = DomQuery.byId(focusElementId !== null && focusElementId !== void 0 ? focusElementId : "");
+        let focusElement = DomQuery.byId(focusElementId);
         if (focusElementId && focusElement.isPresent() &&
             caretPosition != null && "undefined" != typeof caretPosition) {
             focusElement.eachElem(item => DomQuery.setCaretPosition(item, caretPosition));
@@ -1909,7 +1908,7 @@ class DomQuery {
                 if ('undefined' != typeof src
                     && null != src
                     && src.length > 0) {
-                    let nonce = (_b = item === null || item === void 0 ? void 0 : item.nonce) !== null && _b !== void 0 ? _b : item.getAttribute('nonce');
+                    let nonce = (_b = item === null || item === void 0 ? void 0 : item.nonce) !== null && _b !== void 0 ? _b : item.getAttribute('nonce').value;
                     // we have to move this into an inner if because chrome otherwise chokes
                     // due to changing the and order instead of relying on left to right
                     // if jsf.js is already registered we do not replace it anymore
@@ -1948,7 +1947,7 @@ class DomQuery {
                             go = true;
                         }
                     }
-                    let nonce = (_d = (_c = item === null || item === void 0 ? void 0 : item.nonce) !== null && _c !== void 0 ? _c : item.getAttribute('nonce')) !== null && _d !== void 0 ? _d : '';
+                    let nonce = (_d = (_c = item === null || item === void 0 ? void 0 : item.nonce) !== null && _c !== void 0 ? _c : item.getAttribute('nonce').value) !== null && _d !== void 0 ? _d : '';
                     // we have to run the script under a global context
                     // we store the script for fewer calls to eval
                     finalScripts.push({
@@ -2128,7 +2127,7 @@ class DomQuery {
         // browser behavior no element name no encoding (normal submit fails in that case)
         // https:// issues.apache.org/jira/browse/MYFACES-2847
         if (this.name.isAbsent()) {
-            return {};
+            return undefined;
         }
         // let´s keep it side-effects free
         let target = (0,_AssocArray__WEBPACK_IMPORTED_MODULE_5__.simpleShallowMerge)(toMerge);
@@ -2468,10 +2467,8 @@ class DomQuery {
             if (!((_b = this.rootNode[cnt]) === null || _b === void 0 ? void 0 : _b.closest)) {
                 continue;
             }
-            let res = this.rootNode[cnt].closest(selector);
-            if (res) {
-                nodes = nodes.concat(res);
-            }
+            let res = [this.rootNode[cnt].closest(selector)];
+            nodes = nodes.concat(...res);
         }
         return new DomQuery(...nodes);
     }
@@ -2880,7 +2877,7 @@ var Lang;
     function saveResolveLazy(resolverProducer, defaultValue = null) {
         try {
             let result = resolverProducer();
-            return _Monad__WEBPACK_IMPORTED_MODULE_0__.Optional.fromNullable(result !== null && result !== void 0 ? result : defaultValue === null || defaultValue === void 0 ? void 0 : defaultValue());
+            return _Monad__WEBPACK_IMPORTED_MODULE_0__.Optional.fromNullable(result !== null && result !== void 0 ? result : defaultValue());
         }
         catch (e) {
             return _Monad__WEBPACK_IMPORTED_MODULE_0__.Optional.absent;
@@ -3455,9 +3452,6 @@ class MultiStreamDatasource {
         const all_strms = [...strms];
         while (all_strms.length) {
             let next_strm = all_strms.shift();
-            if (!next_strm) {
-                return ITERATION_STATUS.EO_STRM;
-            }
             let lookAhead = next_strm.lookAhead(cnt);
             if (lookAhead != ITERATION_STATUS.EO_STRM) {
                 return lookAhead;

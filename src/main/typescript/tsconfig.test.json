@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "noImplicitAny": false,
+    "noImplicitThis": false,
+    "strictNullChecks": false,
+    "types": ["node", "mocha", "chai", "sinon", "definitions"]
+  },
+  "include": [
+    "api/**/*.ts",
+    "impl/**/*.ts",
+    "myfaces/**/*.ts",
+    "@types/**/*.d.ts",
+    "test/**/*.ts"
+  ]
+}

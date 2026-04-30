@@ -5,7 +5,8 @@
   "main": "dist/window/faces.js",
   "scripts": {
     "doc": "npx typedoc --tsconfig src/main/typescript/tsconfig-typedoc.json",
-    "test": "cross-env  mocha",
+    "typecheck": "tsc --noEmit --project src/main/typescript/tsconfig.test.json",
+    "test": "npm run typecheck && cross-env mocha",
     "coverage": "cross-env nyc --reporter=html --reporter=text mocha",
     "build-bundles": "cross-env NODE_OPTIONS=\"--import tsx\" webpack",
     "build-production": "cross-env NODE_OPTIONS=\"--import tsx\" webpack --mode production",

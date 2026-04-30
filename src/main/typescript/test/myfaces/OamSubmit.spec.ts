@@ -147,7 +147,7 @@ describe('Tests on the xhr core when it starts to call the request', function ()
 
         expect(onsumbit.calledOnce).to.eq(true);
         expect(onsumbit.firstCall.args.length).to.eq(1);
-        expect(onsumbit.firstCall.args[0]).to.eq(null);
+        expect((onsumbit.firstCall.args as any[])[0]).to.eq(null);
         expect(submit_spy.called).to.eq(false);
     })
 

@@ -137,26 +137,61 @@ and adjusts the references in the resource accordingly to the request patterns</
 <h2 id="changes-since-40" class="tsd-anchor-link">Changes since 4.0<a href="#changes-since-40" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <ul>
 <li>
-<p>Elimination of Streams in favor of native arrays</p>
+<p>Core fixes</p>
+<ul>
+<li>Codebase build to Typescript 6,</li>
+<li>Typescript 6 stronger type enforcement rules code fixes</li>
+<li>Fixes cases like <code>404</code>/<code>500</code> with empty, HTML, invalid XML, or otherwise non-partial-response bodies being incorrectly reported as <code>malformedXML</code> or
+<code>emptyResponse</code>.</li>
+<li>Malformed XML is now only reported as <code>malformedXML</code> for successful HTTP responses.</li>
+<li>XHR timeout now emits the timeout event and reports <code>httpError</code>.</li>
+<li>XHR abort now reports <code>httpError</code>.</li>
+<li>Fixed handling of browser-cancelled XHRs: cancellation-style responses (<code>status=0</code>, <code>readyState=4</code>, empty response text, and null XML), observed in older Safari/
+WebKit and Chrome/Chromium versions during navigation or download handoff, are treated as queue cleanup and do not fire user <code>onerror</code>.</li>
+<li>Multipart requests no longer get an explicit URL-encoded <code>Content-Type</code>; the browser can set the proper multipart boundary.</li>
+<li>WebSocket Faces <code>onerror</code> now matches the spec: reconnectable abnormal closes call <code>onerror</code> before reconnecting.</li>
+<li>Terminal WebSocket closes now call <code>onclose</code>.</li>
+<li>WebSocket reconnect scheduling now keeps the correct <code>this</code> binding.</li>
+<li>WebSocket reconnect now increments attempts before scheduling, clears the stale socket, and creates a fresh socket on reconnect.</li>
+<li><code>PushImpl.reset()</code> now closes existing sockets before clearing socket/component registries.</li>
+<li>Pending WebSocket callbacks now return cleanly if the channel registry has already been torn down.</li>
+<li>Preserved stale WebSocket component pruning when moving Faces <code>onerror</code> handling from native <code>WebSocket.onerror</code> to reconnectable close handling.</li>
+<li>The JSF 2.3 compatibility shim now adapts the old <code>jsf.push.init</code> signature without mutating the shared Faces 4 <code>faces.push</code> object.</li>
+<li>Push typings now include both the Faces 4 signature with <code>onerror</code> and the legacy JSF-compatible signature without it.</li>
+<li>Renamed the reference to the shared api to myFacesApi for code clarity</li>
+<li>Cleanup of  myfaces.ab init code in jsf.ts to match the faces.ts init code</li>
+</ul>
 </li>
 <li>
-<p>Providing an internal non intrusive shim for browsers which do not have array map and flapMap
-(older Edge and Chromium versions) - done in mona-dish</p>
+<p>Core improvements</p>
+<ul>
+<li>Refactored upload callback registration in <code>XhrRequest</code> into <code>registerUploadCallbacks()</code>.</li>
+<li>Simplified timeout/header setup.</li>
+<li>Code Cleanup and simplification of XHRFormData</li>
+<li>Clarified view state ordering so it is applied after field encoding and not double-counted. .</li>
+</ul>
 </li>
 <li>
-<p>Adding a progress monitoring functionality under the myfaces namespace</p>
-</li>
-<li>
-<p>Bugfixes which improve tck compliance</p>
-</li>
-<li>
-<p>Integration in myfaces 4.0+ as default faces.js implementation</p>
-</li>
-<li>
-<p>update to typescript 6 in preparation for 7, fixed code to remove some ts6 compatibility overrides</p>
-</li>
-<li>
-<p>streamlined the build process which was partially still relying on custom scripts and the old npm ts plugin stack</p>
+<p>Tests added or expanded</p>
+<ul>
+<li>Added tests for <code>4xx</code> non-XML responses returning <code>httpError</code>.</li>
+<li>Added tests for <code>5xx</code> valid XML responses still returning <code>httpError</code>.</li>
+<li>Added tests for successful empty responses returning <code>emptyResponse</code>.</li>
+<li>Added tests for successful malformed XML returning <code>malformedXML</code>.</li>
+<li>Added tests for XHR timeout behavior.</li>
+<li>Added tests for XHR abort behavior.</li>
+<li>Added tests for browser-cancelled XHR handling using the observed <code>status=0</code> cancellation fingerprint.</li>
+<li>Added or expanded <code>XhrFormData</code> tests for normal encoding, multi-value fields, view state, view state de-duplication, partial IDs, multipart detection,
+<code>FormData</code> output, and naming-container remapping.</li>
+<li>Expanded WebSocket tests for Faces 4 <code>onerror</code>.</li>
+<li>Expanded WebSocket tests for abnormal-close reconnect behavior.</li>
+<li>Expanded WebSocket tests for terminal expired-close behavior.</li>
+<li>Expanded WebSocket tests for stale component cleanup.</li>
+<li>Expanded WebSocket tests for idempotent init.</li>
+<li>Expanded WebSocket tests for behavior dispatch.</li>
+<li>Expanded WebSocket tests for shared socket fan-out.</li>
+<li>Renamed websocket test file from <code>WebsocketTest.ts</code> to <code>WebsocketTest.spec.ts</code>. This has prevented the tests to be run!</li>
+</ul>
 </li>
 </ul>
 </div></div><div class="col-sidebar"><div class="page-menu"><div class="tsd-navigation settings"><details class="tsd-accordion"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="assets/icons.svg#icon-chevronDown"></use></svg><h3>Settings</h3></summary><div class="tsd-accordion-details"><div class="tsd-filter-visibility"><span class="settings-label">Member Visibility</span><ul id="tsd-filter-options"><li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li></ul></div><div class="tsd-theme-toggle"><label class="settings-label" for="tsd-theme">Theme</label><select id="tsd-theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div><details open class="tsd-accordion tsd-page-navigation"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="assets/icons.svg#icon-chevronDown"></use></svg><h3>On This Page</h3></summary><div class="tsd-accordion-details"><a href="#🚀-scratchpad-for-the-typescript-based-reimplementation-of-jsf-js"><span>🚀 <wbr/>Scratchpad for the typescript based reimplementation of jsf js</span></a><ul><li><a href="#what-is-this"><span>What is this?</span></a></li><li><a href="#status"><span>Status</span></a></li><li><ul><li><a href="#special-info"><span>Special info</span></a></li><li><a href="#general-build"><span>General build</span></a></li><li><ul><li><a href="#on-windows"><span>On <wbr/>Windows</span></a></li></ul></li><li><a href="#tests"><span>Tests</span></a></li><li><a href="#test-coverage"><span>Test <wbr/>Coverage</span></a></li><li><a href="#changelist-compared-to-the-original-implementation"><span>Changelist compared to the original implementation</span></a></li></ul></li><li><a href="#upload-support"><span>Upload <wbr/>Support</span></a></li><li><a href="#changes-since-40"><span>Changes since 4.0</span></a></li></ul></div></details></div><div class="site-menu"><nav class="tsd-navigation"><a href="modules.html">jsf.js_next_gen</a><ul class="tsd-small-nested-navigation" id="tsd-nav-container"><li>Loading...</li></ul></nav></div></div></div><footer><p class="tsd-generator">Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></footer><div class="overlay"></div></body></html>

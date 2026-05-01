@@ -53,9 +53,10 @@ export namespace PushImpl {
 
     // needed for testing
     export function reset() {
+        Object.values(sockets).forEach(s => { try { s.close(); } catch(e) { /* ignore */ } });
         sockets = {};
-        components = {}
-        clientIdsByTokens = {}
+        components = {};
+        clientIdsByTokens = {};
     }
 
     /*
@@ -156,6 +157,7 @@ export namespace PushImpl {
         onopen(event: any) {
             if (!this.reconnectAttempts) {
                 let clientIds = clientIdsByTokens[this.channelToken];
+                if (!clientIds) return; // socket was torn down (reset()) while timer was pending
                 for (let i = clientIds.length - 1; i >= 0; i--) {
                     let socketClientId = clientIds[i];
                     components[socketClientId]?.['onopen']?.(this.channel);
@@ -165,24 +167,8 @@ export namespace PushImpl {
         }
 
         onerror(event: any) {
-            let message = JSON.parse(event?.data ?? null);
-            //TODO replace this with a more readable Stream code
-            for (let i = clientIdsByTokens[this.channelToken].length - 1; i >= 0; i--) {
-                let socketClientId = clientIdsByTokens[this.channelToken][i];
-                if (document.getElementById(socketClientId)) {
-                    try {
-                        components[socketClientId]?.['onerror']?.(message, this.channel, event);
-                    } catch (e) {
-                        //Ignore
-                    }
-                } else {
-                    clientIdsByTokens[this.channelToken].splice(i, 1);
-                }
-            }
-            if (clientIdsByTokens[this.channelToken].length == 0) {
-                // tag disappeared
-                this.close();
-            }
+            // Native WebSocket error events do not expose the close reason code.
+            // Faces onerror is fired from onclose only when a reconnect is attempted.
         }
 
         onmmessage(event: any) {
@@ -220,15 +206,36 @@ export namespace PushImpl {
             if (!this.socket
                 || (event.code == 1000 && event.reason == REASON_EXPIRED)
                 || (event.code == 1008)
-                || (!this.reconnectAttempts)
                 || (this.reconnectAttempts >= MAX_RECONNECT_ATTEMPTS)) {
                 let clientIds = clientIdsByTokens[this.channelToken];
+                if (!clientIds) return; // already torn down (reset() called while socket was open)
                 for (let i = clientIds.length - 1; i >= 0; i--) {
                     let socketClientId = clientIds[i];
                     components?.[socketClientId]?.['onclose']?.(event?.code, this?.channel, event);
                 }
             } else {
-                setTimeout(this.open, RECONNECT_INTERVAL * this.reconnectAttempts++);
+                let clientIds = clientIdsByTokens[this.channelToken];
+                if (!clientIds) return; // already torn down (reset() called while socket was open)
+                for (let i = clientIds.length - 1; i >= 0; i--) {
+                    let socketClientId = clientIds[i];
+                    if (document.getElementById(socketClientId)) {
+                        try {
+                            components?.[socketClientId]?.['onerror']?.(event?.code, this?.channel, event);
+                        } catch (e) {
+                            //Ignore
+                        }
+                    } else {
+                        clientIds.splice(i, 1);
+                    }
+                }
+                if (clientIds.length == 0) {
+                    // tag disappeared
+                    this.close();
+                    return;
+                }
+                const reconnectAttempt = ++this.reconnectAttempts;
+                this.socket = null as any;
+                setTimeout(() => this.open(), RECONNECT_INTERVAL * reconnectAttempt);
             }
         };
 

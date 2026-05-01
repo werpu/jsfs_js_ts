@@ -6218,6 +6218,10 @@ var PushImpl;
     PushImpl.clientIdsByTokens = {};
     // needed for testing
     function reset() {
+        Object.values(PushImpl.sockets).forEach(s => { try {
+            s.close();
+        }
+        catch (e) { /* ignore */ } });
         PushImpl.sockets = {};
         PushImpl.components = {};
         PushImpl.clientIdsByTokens = {};
@@ -6307,6 +6311,8 @@ var PushImpl;
             var _a, _b;
             if (!this.reconnectAttempts) {
                 let clientIds = PushImpl.clientIdsByTokens[this.channelToken];
+                if (!clientIds)
+                    return; // socket was torn down (reset()) while timer was pending
                 for (let i = clientIds.length - 1; i >= 0; i--) {
                     let socketClientId = clientIds[i];
                     (_b = (_a = PushImpl.components[socketClientId]) === null || _a === void 0 ? void 0 : _a['onopen']) === null || _b === void 0 ? void 0 : _b.call(_a, this.channel);
@@ -6315,27 +6321,8 @@ var PushImpl;
             this.reconnectAttempts = 0;
         }
         onerror(event) {
-            var _a, _b, _c;
-            let message = JSON.parse((_a = event === null || event === void 0 ? void 0 : event.data) !== null && _a !== void 0 ? _a : null);
-            //TODO replace this with a more readable Stream code
-            for (let i = PushImpl.clientIdsByTokens[this.channelToken].length - 1; i >= 0; i--) {
-                let socketClientId = PushImpl.clientIdsByTokens[this.channelToken][i];
-                if (document.getElementById(socketClientId)) {
-                    try {
-                        (_c = (_b = PushImpl.components[socketClientId]) === null || _b === void 0 ? void 0 : _b['onerror']) === null || _c === void 0 ? void 0 : _c.call(_b, message, this.channel, event);
-                    }
-                    catch (e) {
-                        //Ignore
-                    }
-                }
-                else {
-                    PushImpl.clientIdsByTokens[this.channelToken].splice(i, 1);
-                }
-            }
-            if (PushImpl.clientIdsByTokens[this.channelToken].length == 0) {
-                // tag disappeared
-                this.close();
-            }
+            // Native WebSocket error events do not expose the close reason code.
+            // Faces onerror is fired from onclose only when a reconnect is attempted.
         }
         onmmessage(event) {
             var _a, _b, _c;
@@ -6372,20 +6359,45 @@ var PushImpl;
             }
         }
         onclose(event) {
-            var _a, _b;
+            var _a, _b, _c, _d;
             if (!this.socket
                 || (event.code == 1000 && event.reason == _core_Const__WEBPACK_IMPORTED_MODULE_0__.REASON_EXPIRED)
                 || (event.code == 1008)
-                || (!this.reconnectAttempts)
                 || (this.reconnectAttempts >= _core_Const__WEBPACK_IMPORTED_MODULE_0__.MAX_RECONNECT_ATTEMPTS)) {
                 let clientIds = PushImpl.clientIdsByTokens[this.channelToken];
+                if (!clientIds)
+                    return; // already torn down (reset() called while socket was open)
                 for (let i = clientIds.length - 1; i >= 0; i--) {
                     let socketClientId = clientIds[i];
                     (_b = (_a = PushImpl.components === null || PushImpl.components === void 0 ? void 0 : PushImpl.components[socketClientId]) === null || _a === void 0 ? void 0 : _a['onclose']) === null || _b === void 0 ? void 0 : _b.call(_a, event === null || event === void 0 ? void 0 : event.code, this === null || this === void 0 ? void 0 : this.channel, event);
                 }
             }
             else {
-                setTimeout(this.open, _core_Const__WEBPACK_IMPORTED_MODULE_0__.RECONNECT_INTERVAL * this.reconnectAttempts++);
+                let clientIds = PushImpl.clientIdsByTokens[this.channelToken];
+                if (!clientIds)
+                    return; // already torn down (reset() called while socket was open)
+                for (let i = clientIds.length - 1; i >= 0; i--) {
+                    let socketClientId = clientIds[i];
+                    if (document.getElementById(socketClientId)) {
+                        try {
+                            (_d = (_c = PushImpl.components === null || PushImpl.components === void 0 ? void 0 : PushImpl.components[socketClientId]) === null || _c === void 0 ? void 0 : _c['onerror']) === null || _d === void 0 ? void 0 : _d.call(_c, event === null || event === void 0 ? void 0 : event.code, this === null || this === void 0 ? void 0 : this.channel, event);
+                        }
+                        catch (e) {
+                            //Ignore
+                        }
+                    }
+                    else {
+                        clientIds.splice(i, 1);
+                    }
+                }
+                if (clientIds.length == 0) {
+                    // tag disappeared
+                    this.close();
+                    return;
+                }
+                const reconnectAttempt = ++this.reconnectAttempts;
+                this.socket = null;
+                setTimeout(() => this.open(), _core_Const__WEBPACK_IMPORTED_MODULE_0__.RECONNECT_INTERVAL * reconnectAttempt);
             }
         }
         ;
@@ -10088,8 +10100,8 @@ var _a, _b, _c;
  */
 if (!window.faces) {
     //we lazily load the code to prevent ram bloat
-    const faces = (__webpack_require__(/*! ./_api */ "./src/main/typescript/api/_api.ts").faces);
-    window['faces'] = (_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : faces;
+    const myfacesApi = (__webpack_require__(/*! ./_api */ "./src/main/typescript/api/_api.ts").faces);
+    window['faces'] = (_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : myfacesApi;
 }
 if (!((_b = window === null || window === void 0 ? void 0 : window.myfaces) === null || _b === void 0 ? void 0 : _b.ab)) {
     const myfaces = (__webpack_require__(/*! ./_api */ "./src/main/typescript/api/_api.ts").myfaces);

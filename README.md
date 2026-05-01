@@ -184,16 +184,50 @@ faces.ajax.request(document.getElementById("cmd_eval"), null,
 
 ## Changes since 4.0
 
-* Elimination of Streams in favor of native arrays
-* Providing an internal non intrusive shim for browsers which do not have array map and flapMap
-(older Edge and Chromium versions) - done in mona-dish
-* Adding a progress monitoring functionality under the myfaces namespace
-* Bugfixes which improve tck compliance
-* Integration in myfaces 4.0+ as default faces.js implementation
+* Core fixes
+    * Codebase build to Typescript 6, 
+    * Typescript 6 stronger type enforcement rules code fixes
+    * Fixes cases like `404`/`500` with empty, HTML, invalid XML, or otherwise non-partial-response bodies being incorrectly reported as `malformedXML` or
+      `emptyResponse`.
+    * Malformed XML is now only reported as `malformedXML` for successful HTTP responses.
+    * XHR timeout now emits the timeout event and reports `httpError`.
+    * XHR abort now reports `httpError`.
+    * Fixed handling of browser-cancelled XHRs: cancellation-style responses (`status=0`, `readyState=4`, empty response text, and null XML), observed in older Safari/
+      WebKit and Chrome/Chromium versions during navigation or download handoff, are treated as queue cleanup and do not fire user `onerror`.
+    * Multipart requests no longer get an explicit URL-encoded `Content-Type`; the browser can set the proper multipart boundary.
+    * WebSocket Faces `onerror` now matches the spec: reconnectable abnormal closes call `onerror` before reconnecting.
+    * WebSocket reconnect scheduling now keeps the correct `this` binding.
+    * WebSocket reconnect now increments attempts before scheduling, clears the stale socket, and creates a fresh socket on reconnect.
+    * `PushImpl.reset()` now closes existing sockets before clearing socket/component registries.
+    * Pending WebSocket callbacks now return cleanly if the channel registry has already been torn down.
+    * Preserved stale WebSocket component pruning when moving Faces `onerror` handling from native `WebSocket.onerror` to reconnectable close handling.
+    * The JSF 2.3 compatibility shim now adapts the old `jsf.push.init` signature without mutating the shared Faces 4 `faces.push` object.
+    * Push typings now include both the Faces 4 signature with `onerror` and the legacy JSF-compatible signature without it.
+    * Renamed the reference to the shared api to myFacesApi for code clarity
+    * Cleanup of  myfaces.ab init code in jsf.ts to match the faces.ts init code
 
-* update to typescript 6 in preparation for 7, fixed code to remove some ts6 compatibility overrides
-* streamlined the build process which was partially still relying on custom scripts and the old npm ts plugin stack
+* Core improvements
+    * Refactored upload callback registration in `XhrRequest` into `registerUploadCallbacks()`.
+    * Simplified timeout/header setup.
+    * Code Cleanup and simplification of XHRFormData
+    * Clarified view state ordering so it is applied after field encoding and not double-counted. .
 
-
-
-
+* Tests added or expanded
+    * Added tests for `4xx` non-XML responses returning `httpError`.
+    * Added tests for `5xx` valid XML responses still returning `httpError`.
+    * Added tests for successful empty responses returning `emptyResponse`.
+    * Added tests for successful malformed XML returning `malformedXML`.
+    * Added tests for XHR timeout behavior.
+    * Added tests for XHR abort behavior.
+    * Added tests for browser-cancelled XHR handling using the observed `status=0` cancellation fingerprint.
+    * Added or expanded `XhrFormData` tests for normal encoding, multi-value fields, view state, view state de-duplication, partial IDs, multipart detection,
+      `FormData` output, and naming-container remapping.
+    * Expanded WebSocket tests for Faces 4 `onerror`.
+    * Expanded WebSocket tests for abnormal-close reconnect behavior.
+    * Expanded WebSocket tests for cumulative reconnect delays and stale socket cleanup across consecutive failed reconnect attempts.
+    * Expanded WebSocket tests for terminal expired-close behavior.
+    * Expanded WebSocket tests for stale component cleanup.
+    * Expanded WebSocket tests for idempotent init.
+    * Expanded WebSocket tests for behavior dispatch.
+    * Expanded WebSocket tests for shared socket fan-out.
+    * Renamed websocket test file from `WebsocketTest.ts` to `WebsocketTest.spec.ts`. This has prevented the tests to be run!

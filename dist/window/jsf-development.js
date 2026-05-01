@@ -7623,9 +7623,8 @@ __webpack_require__.r(__webpack_exports__);
  */
 class HiddenInputBuilder {
     constructor(selector) {
-        this.selector = selector;
         this.namedViewRoot = false;
-        const isViewState = selector.indexOf((0,_core_Const__WEBPACK_IMPORTED_MODULE_1__.$nsp)(_core_Const__WEBPACK_IMPORTED_MODULE_1__.P_VIEWSTATE)) != -1;
+        const isViewState = selector.includes((0,_core_Const__WEBPACK_IMPORTED_MODULE_1__.$nsp)(_core_Const__WEBPACK_IMPORTED_MODULE_1__.P_VIEWSTATE));
         this.name = isViewState ? _core_Const__WEBPACK_IMPORTED_MODULE_1__.P_VIEWSTATE : _core_Const__WEBPACK_IMPORTED_MODULE_1__.P_CLIENT_WINDOW;
         this.template = isViewState ? _core_Const__WEBPACK_IMPORTED_MODULE_1__.HTML_VIEWSTATE : _core_Const__WEBPACK_IMPORTED_MODULE_1__.HTML_CLIENT_WINDOW;
     }
@@ -7642,36 +7641,38 @@ class HiddenInputBuilder {
         return this;
     }
     build() {
-        var _a, _b, _c;
-        const SEP = (0,_core_Const__WEBPACK_IMPORTED_MODULE_1__.$faces)().separatorchar;
-        let existingStates = (0,mona_dish__WEBPACK_IMPORTED_MODULE_0__.DQ$)(`[name*='${(0,_core_Const__WEBPACK_IMPORTED_MODULE_1__.$nsp)(this.name)}']`);
-        let cnt = existingStates.asArray.map(state => {
-            let ident = state.id.orElse("0").value;
-            ident = ident.substring(ident.lastIndexOf(SEP) + 1);
-            return parseInt(ident);
-        })
-            .filter(item => {
-            return !isNaN(item);
-        })
-            .reduce((item1, item2) => {
-            return Math.max(item1, item2);
-        }, 0); //we start with 1 (see cnt++)
-        //the maximum  new ident is the current max + 1
-        cnt++;
+        var _a;
         const newElement = mona_dish__WEBPACK_IMPORTED_MODULE_0__.DQ.fromMarkup((0,_core_Const__WEBPACK_IMPORTED_MODULE_1__.$nsp)(this.template));
-        newElement.id.value = (((_a = this.namingContainerId) === null || _a === void 0 ? void 0 : _a.length) ?
-            [this.namingContainerId, (0,_core_Const__WEBPACK_IMPORTED_MODULE_1__.$nsp)(this.name), cnt] :
-            [(0,_core_Const__WEBPACK_IMPORTED_MODULE_1__.$nsp)(this.name), cnt]).join(SEP);
-        //name must be prefixed with the naming container id as well according to the jsdocs
-        if (this.namedViewRoot) {
-            newElement.name.value = ((_b = this.namingContainerId) === null || _b === void 0 ? void 0 : _b.length) ?
-                [this.namingContainerId, (0,_core_Const__WEBPACK_IMPORTED_MODULE_1__.$nsp)(this.name)].join(SEP) : (0,_core_Const__WEBPACK_IMPORTED_MODULE_1__.$nsp)(this.name);
-        }
-        else {
-            newElement.name.value = (0,_core_Const__WEBPACK_IMPORTED_MODULE_1__.$nsp)(this.name);
-        }
-        (_c = this === null || this === void 0 ? void 0 : this.parent) === null || _c === void 0 ? void 0 : _c.append(newElement);
+        newElement.id.value = this.buildId();
+        newElement.name.value = this.buildName();
+        (_a = this.parent) === null || _a === void 0 ? void 0 : _a.append(newElement);
         return newElement;
+    }
+    buildId() {
+        var _a;
+        const separator = (0,_core_Const__WEBPACK_IMPORTED_MODULE_1__.$faces)().separatorchar;
+        const parts = ((_a = this.namingContainerId) === null || _a === void 0 ? void 0 : _a.length) ?
+            [this.namingContainerId, (0,_core_Const__WEBPACK_IMPORTED_MODULE_1__.$nsp)(this.name), this.nextIndex()] :
+            [(0,_core_Const__WEBPACK_IMPORTED_MODULE_1__.$nsp)(this.name), this.nextIndex()];
+        return parts.join(separator);
+    }
+    buildName() {
+        var _a;
+        if (!this.namedViewRoot) {
+            return (0,_core_Const__WEBPACK_IMPORTED_MODULE_1__.$nsp)(this.name);
+        }
+        return ((_a = this.namingContainerId) === null || _a === void 0 ? void 0 : _a.length) ?
+            [this.namingContainerId, (0,_core_Const__WEBPACK_IMPORTED_MODULE_1__.$nsp)(this.name)].join((0,_core_Const__WEBPACK_IMPORTED_MODULE_1__.$faces)().separatorchar) :
+            (0,_core_Const__WEBPACK_IMPORTED_MODULE_1__.$nsp)(this.name);
+    }
+    nextIndex() {
+        const separator = (0,_core_Const__WEBPACK_IMPORTED_MODULE_1__.$faces)().separatorchar;
+        return (0,mona_dish__WEBPACK_IMPORTED_MODULE_0__.DQ$)(`[name*='${(0,_core_Const__WEBPACK_IMPORTED_MODULE_1__.$nsp)(this.name)}']`).asArray
+            .map(state => state.id.orElse("0").value)
+            .map(id => id.substring(id.lastIndexOf(separator) + 1))
+            .map(idSuffix => parseInt(idSuffix))
+            .filter(idSuffix => !isNaN(idSuffix))
+            .reduce((max, idSuffix) => Math.max(max, idSuffix), 0) + 1;
     }
 }
 
@@ -7716,13 +7717,12 @@ __webpack_require__.r(__webpack_exports__);
 var ExtLang;
 (function (ExtLang) {
     let installedLocale;
-    let nameSpace = "impl/util/Lang/";
+    const nameSpace = "impl/util/Lang/";
     function getLanguage() {
         //TODO global config override
-        var _a, _b;
-        let language = (_b = (_a = navigator.languages) === null || _a === void 0 ? void 0 : _a[0]) !== null && _b !== void 0 ? _b : navigator === null || navigator === void 0 ? void 0 : navigator.language;
-        language = language.split("-")[0];
-        return language;
+        var _a, _b, _c;
+        const language = (_c = (_b = (_a = navigator.languages) === null || _a === void 0 ? void 0 : _a[0]) !== null && _b !== void 0 ? _b : navigator === null || navigator === void 0 ? void 0 : navigator.language) !== null && _c !== void 0 ? _c : "en";
+        return language.split("-")[0];
     }
     ExtLang.getLanguage = getLanguage;
     //should be in lang, but for now here to avoid recursive imports, not sure if typescript still has a problem with those
@@ -7844,15 +7844,15 @@ var ExtLang;
      * @param event
      */
     function getForm(elem, event) {
-        let queryElem = new mona_dish__WEBPACK_IMPORTED_MODULE_0__.DQ(elem);
-        let eventTarget = (event) ? new mona_dish__WEBPACK_IMPORTED_MODULE_0__.DQ((0,_xhrCore_RequestDataResolver__WEBPACK_IMPORTED_MODULE_3__.getEventTarget)(event)) : mona_dish__WEBPACK_IMPORTED_MODULE_0__.DomQuery.absent;
+        const queryElem = new mona_dish__WEBPACK_IMPORTED_MODULE_0__.DQ(elem);
+        const eventTarget = (event) ? new mona_dish__WEBPACK_IMPORTED_MODULE_0__.DQ((0,_xhrCore_RequestDataResolver__WEBPACK_IMPORTED_MODULE_3__.getEventTarget)(event)) : mona_dish__WEBPACK_IMPORTED_MODULE_0__.DomQuery.absent;
         if (queryElem.isTag(_core_Const__WEBPACK_IMPORTED_MODULE_2__.HTML_TAG_FORM)) {
             return queryElem;
         }
         //html 5 for handling
         if (queryElem.attr(_core_Const__WEBPACK_IMPORTED_MODULE_2__.HTML_TAG_FORM).isPresent()) {
-            let formId = queryElem.attr(_core_Const__WEBPACK_IMPORTED_MODULE_2__.HTML_TAG_FORM).value;
-            let foundForm = mona_dish__WEBPACK_IMPORTED_MODULE_0__.DQ.byId(formId, true);
+            const formId = queryElem.attr(_core_Const__WEBPACK_IMPORTED_MODULE_2__.HTML_TAG_FORM).value;
+            const foundForm = mona_dish__WEBPACK_IMPORTED_MODULE_0__.DQ.byId(formId, true);
             if (foundForm.isPresent()) {
                 return foundForm;
             }

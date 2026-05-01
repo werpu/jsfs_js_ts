@@ -669,6 +669,24 @@ describe('Tests the jsf websocket client side api on high level (generic test wi
         expect(closeCount, "late onclose must not call component callbacks after reset").to.eq(closeCountAfterReset);
     });
 
+    it("must ignore pending onmessage callback after reset tears down the channel registry", function () {
+        let messageCount = 0;
+
+        faces.push.init("blarg", "booga.ws", "mychannel",
+            () => {},
+            () => { messageCount++; },
+            () => {},
+            () => {},
+            "",
+            true
+        );
+
+        this.pushImpl.reset();
+
+        expect(() => this.fakeWebsocket._respond({data: JSON.stringify("message")})).not.to.throw();
+        expect(messageCount, "late onmessage must not call component callbacks after reset").to.eq(0);
+    });
+
     it("must ignore native WebSocket error events", function () {
         let errorCalled = false;
 

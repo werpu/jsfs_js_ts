@@ -138,8 +138,8 @@ export namespace PushImpl {
 
     class Socket {
 
-        socket: WebSocket | null = null;
-        reconnectAttempts = 0;
+        private socket: WebSocket | null = null;
+        private reconnectAttempts = 0;
         private hasEverConnected = false;
         private hasNotifiedInitialOpenAttempt = false;
 

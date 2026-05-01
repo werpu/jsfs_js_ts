@@ -251,3 +251,4 @@ faces.ajax.request(document.getElementById("cmd_eval"), null,
   * Added tests that max reconnect exhaustion calls `onclose`.
   * Added tests that close code `1008` is terminal and does not reconnect.
   * Added tests that explicit `open()` after a terminal close fires `onopen` again as a fresh connection.
+  * JSF 2.3 jsf.push.init compatibility test added

@@ -17,16 +17,22 @@ import {describe} from "mocha";
 import * as sinon from "sinon";
 import {expect} from "chai";
 import {StandardInits} from "../frameworkBase/_ext/shared/StandardInits";
+import {FakeWebsocket} from "../xhrCore/FakeWebsocket";
 
 const defaultMyFaces23 = StandardInits.defaultMyFaces23;
 
 describe("JSF 2.3 push compatibility shim", function () {
     beforeEach(async function () {
         return defaultMyFaces23().then((close) => {
+            this.fakeWebsocket = new FakeWebsocket();
+            this.socket = sinon.stub(window, 'WebSocket').returns(this.fakeWebsocket);
+            (global as any).WebSocket = this.socket;
             this.pushImpl = (global as any).PushImpl;
             this.initSpy = sinon.spy(this.pushImpl, "init");
             this.closeIt = () => {
                 this.initSpy.restore();
+                this.socket.restore();
+                delete (global as any).WebSocket;
                 this.pushImpl.reset();
                 close();
             };
@@ -43,7 +49,7 @@ describe("JSF 2.3 push compatibility shim", function () {
         const onclose = () => {};
         const behaviors = {"event": [() => {}]};
 
-        window.jsf.push.init("clientId1", "booga.ws", "mychannel",
+        window.jsf.push.init("blarg", "booga.ws", "mychannel",
             onopen,
             onmessage,
             onclose,
@@ -53,7 +59,7 @@ describe("JSF 2.3 push compatibility shim", function () {
 
         expect(this.initSpy.calledOnce).to.be.true;
         const args = this.initSpy.firstCall.args;
-        expect(args[0]).to.eq("clientId1");
+        expect(args[0]).to.eq("blarg");
         expect(args[1]).to.eq("booga.ws");
         expect(args[2]).to.eq("mychannel");
         expect(args[3]).to.eq(onopen);
@@ -62,5 +68,58 @@ describe("JSF 2.3 push compatibility shim", function () {
         expect(args[6]).to.eq(onclose);
         expect(args[7]).to.eq(behaviors);
         expect(args[8]).to.eq(false);
+        expect(args.length).to.eq(9);
+    });
+
+    it("must route legacy terminal close through onclose", function () {
+        let closeCalled = false;
+        let closeCode: any = null;
+        let closeChannel: any = null;
+        let closeEvent: any = null;
+
+        window.jsf.push.init("blarg", "booga.ws", "mychannel",
+            () => {},
+            () => {},
+            (code: number, channel: string, event: any) => {
+                closeCalled = true;
+                closeCode = code;
+                closeChannel = channel;
+                closeEvent = event;
+            },
+            "",
+            true
+        );
+
+        const event = {code: 1000, reason: "Normal Closure"};
+        this.fakeWebsocket._close(event);
+
+        expect(closeCalled, "legacy jsf.push terminal close must call onclose").to.be.true;
+        expect(closeCode).to.eq(1000);
+        expect(closeChannel).to.eq("mychannel");
+        expect(closeEvent).to.eq(event);
+    });
+
+    it("must keep legacy reconnectable broken connection internal without calling onclose", function () {
+        const clock = sinon.useFakeTimers();
+        let closeCalled = false;
+        let openCount = 0;
+
+        try {
+            window.jsf.push.init("blarg", "booga.ws", "mychannel",
+                () => { openCount++; },
+                () => {},
+                () => { closeCalled = true; },
+                "",
+                true
+            );
+
+            this.fakeWebsocket.onopen({});
+            this.fakeWebsocket._close({code: 1006, reason: "abnormal"});
+
+            expect(openCount, "legacy onopen must fire for the first connection attempt").to.eq(1);
+            expect(closeCalled, "legacy onclose must not fire while reconnect is possible").to.be.false;
+        } finally {
+            clock.restore();
+        }
     });
 });

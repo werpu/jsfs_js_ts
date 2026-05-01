@@ -150,7 +150,6 @@ and adjusts the references in the resource accordingly to the request patterns</
 WebKit and Chrome/Chromium versions during navigation or download handoff, are treated as queue cleanup and do not fire user <code>onerror</code>.</li>
 <li>Multipart requests no longer get an explicit URL-encoded <code>Content-Type</code>; the browser can set the proper multipart boundary.</li>
 <li>WebSocket Faces <code>onerror</code> now matches the spec: reconnectable abnormal closes call <code>onerror</code> before reconnecting.</li>
-<li>Terminal WebSocket closes now call <code>onclose</code>.</li>
 <li>WebSocket reconnect scheduling now keeps the correct <code>this</code> binding.</li>
 <li>WebSocket reconnect now increments attempts before scheduling, clears the stale socket, and creates a fresh socket on reconnect.</li>
 <li><code>PushImpl.reset()</code> now closes existing sockets before clearing socket/component registries.</li>
@@ -185,6 +184,7 @@ WebKit and Chrome/Chromium versions during navigation or download handoff, are t
 <code>FormData</code> output, and naming-container remapping.</li>
 <li>Expanded WebSocket tests for Faces 4 <code>onerror</code>.</li>
 <li>Expanded WebSocket tests for abnormal-close reconnect behavior.</li>
+<li>Expanded WebSocket tests for cumulative reconnect delays and stale socket cleanup across consecutive failed reconnect attempts.</li>
 <li>Expanded WebSocket tests for terminal expired-close behavior.</li>
 <li>Expanded WebSocket tests for stale component cleanup.</li>
 <li>Expanded WebSocket tests for idempotent init.</li>

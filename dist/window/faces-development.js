@@ -9064,6 +9064,7 @@ class ResponseProcessor {
      * proper viewState -> form assignment
      *
      * @param forms the forms to append the viewState to
+     * @param namedViewRoot if set to true, the name is also prefixed
      * @param viewState the final viewState
      * @param namingContainerId
      */
@@ -9074,6 +9075,7 @@ class ResponseProcessor {
      * proper clientWindow -> form assignment
      *
      * @param forms the forms to append the viewState to
+     * @param namedViewRoot if set to true, the name is also prefixed
      * @param clientWindow the final viewState
      * @param namingContainerId
      */
@@ -9272,9 +9274,7 @@ class XhrFormData extends mona_dish__WEBPACK_IMPORTED_MODULE_0__.Config {
      */
     constructor(dataSource, paramsMapper = defaultParamsMapper, executes, partialIds) {
         super({});
-        this.dataSource = dataSource;
         this.paramsMapper = paramsMapper;
-        this.partialIds = partialIds;
         /**
          * Checks if the given datasource is a multipart request source
          * multipart is only needed if one of the executes is a file input
@@ -9283,51 +9283,17 @@ class XhrFormData extends mona_dish__WEBPACK_IMPORTED_MODULE_0__.Config {
          * instead of an encoded string files cannot be sent that way
          */
         this.isMultipartRequest = false;
-        //encode and append the issuing item if not a partial ids array of ids is passed
         /*
-         * Spec. 13.3.1
-         * Collect and encode input elements.
-         * Additionally the hidden element jakarta.faces.ViewState
-         * Enhancement partial page submit
+         * Spec. 13.3.1 — order matters: detect multipart first, encode fields second,
+         * apply view state last (so it is not double-counted if already present in fields).
          */
-        this.resolveRequestType(this.dataSource, executes);
-        this.encodeSubmittableFields(this.dataSource, this.partialIds);
-        this.applyViewState(this.dataSource);
+        this.initFormData(dataSource, executes, partialIds);
     }
     /**
      * @returns a Form data representation, this is needed for file submits
      */
     toFormData() {
-        /*
-           * expands key: [item1, item2]
-           * to: [{key: key,  value: item1}, {key: key, value: item2}]
-           */
-        let expandValueArrays = ([key, item]) => {
-            if (Array.isArray(item)) {
-                return new mona_dish__WEBPACK_IMPORTED_MODULE_0__.Es2019Array(...item).map((value) => {
-                    return { key, value };
-                });
-            }
-            return [{ key, value: item }];
-        };
-        /*
-         * remaps the incoming {key, value} tuples
-         * to naming container prefixed keys and values
-         */
-        let remapForNamingContainer = ({ key, value }) => {
-            key = this.remapKeyForNamingContainer(key);
-            return { key, value };
-        };
-        /*
-         * collects everything into a FormData object
-         */
-        return ofAssoc(this.value)
-            .flatMap(expandValueArrays)
-            .map(remapForNamingContainer)
-            .reduce((formData, { key, value }) => {
-            formData.append(key, value);
-            return formData;
-        }, new FormData());
+        return this.buildFormData();
     }
     /**
      * returns an encoded string representation of our xhr form data
@@ -9338,13 +9304,18 @@ class XhrFormData extends mona_dish__WEBPACK_IMPORTED_MODULE_0__.Config {
         return (0,_util_FileUtils__WEBPACK_IMPORTED_MODULE_2__.encodeFormData)(this, this.paramsMapper, defaultStr);
     }
     /**
-     * generic post init code, for now, this performs some post assign data post-processing
-     * @param rootElement the root element which knows the request type (usually a form)
-     * @param executes the executable dom nodes which need to be processed into the form data, which we can send
-     * in our ajax request
+     * Drives the three-phase form data initialisation in the required order.
      */
-    resolveRequestType(rootElement, executes) {
-        if (!executes || executes.indexOf(_core_Const__WEBPACK_IMPORTED_MODULE_1__.IDENT_NONE) != -1) {
+    initFormData(dataSource, executes, partialIds) {
+        this.detectMultipartRequest(dataSource, executes);
+        this.encodeSubmittableFields(dataSource, partialIds);
+        this.applyViewState(dataSource);
+    }
+    /**
+     * Sets isMultipartRequest when any of the executed elements is a file input.
+     */
+    detectMultipartRequest(rootElement, executes) {
+        if (!executes || executes.includes(_core_Const__WEBPACK_IMPORTED_MODULE_1__.IDENT_NONE)) {
             return;
         }
         this.isMultipartRequest = rootElement.isMultipartCandidate(true);
@@ -9358,8 +9329,8 @@ class XhrFormData extends mona_dish__WEBPACK_IMPORTED_MODULE_0__.Config {
         if (this.getIf((0,_core_Const__WEBPACK_IMPORTED_MODULE_1__.$nsp)(_core_Const__WEBPACK_IMPORTED_MODULE_1__.P_VIEWSTATE)).isPresent()) {
             return;
         }
-        let viewStateElement = form.querySelectorAllDeep(`[name*='${(0,_core_Const__WEBPACK_IMPORTED_MODULE_1__.$nsp)(_core_Const__WEBPACK_IMPORTED_MODULE_1__.P_VIEWSTATE)}'`);
-        let viewState = viewStateElement.inputValue;
+        const viewStateElement = form.querySelectorAllDeep(`[name*='${(0,_core_Const__WEBPACK_IMPORTED_MODULE_1__.$nsp)(_core_Const__WEBPACK_IMPORTED_MODULE_1__.P_VIEWSTATE)}'`);
+        const viewState = viewStateElement.inputValue;
         this.appendIf(viewState.isPresent(), this.remapKeyForNamingContainer(viewStateElement.name.value)).value = viewState.value;
     }
     /**
@@ -9370,18 +9341,54 @@ class XhrFormData extends mona_dish__WEBPACK_IMPORTED_MODULE_0__.Config {
     encodeSubmittableFields(parentItem, partialIds = []) {
         const mergeIntoThis = ([key, value]) => this.append(key).value = value;
         const namingContainerRemap = ([key, value]) => this.paramsMapper(key, value);
-        const remappedPartialIds = partialIds.map(partialId => this.remapKeyForNamingContainer(partialId));
-        const partialIdsFilter = ([key, value]) => (!remappedPartialIds.length || key.indexOf("@") == 0) ? true :
-            remappedPartialIds.indexOf(key) != -1;
-        let inputs = (0,_util_FileUtils__WEBPACK_IMPORTED_MODULE_2__.getFormInputsAsArr)(parentItem);
-        inputs
+        const remappedPartialIds = partialIds.map(id => this.remapKeyForNamingContainer(id));
+        (0,_util_FileUtils__WEBPACK_IMPORTED_MODULE_2__.getFormInputsAsArr)(parentItem)
             .map(_util_FileUtils__WEBPACK_IMPORTED_MODULE_2__.fixEmptyParameters)
             .map(namingContainerRemap)
-            .filter(partialIdsFilter)
+            .filter(([key]) => this.isFieldIncluded(key, remappedPartialIds))
             .forEach(mergeIntoThis);
     }
+    /**
+     * Returns true when the field should be included in the submission.
+     * Special "@"-prefixed keys (internal markers) are always included.
+     * When no partial ids are specified, everything passes through.
+     */
+    isFieldIncluded(key, remappedPartialIds) {
+        if (!remappedPartialIds.length || key.startsWith("@")) {
+            return true;
+        }
+        return remappedPartialIds.includes(key);
+    }
+    /**
+     * Builds the FormData object from the internal key→value[] map.
+     * Arrays are expanded so each value becomes a separate FormData entry.
+     */
+    buildFormData() {
+        const expandValueArrays = ([key, item]) => {
+            if (Array.isArray(item)) {
+                return new mona_dish__WEBPACK_IMPORTED_MODULE_0__.Es2019Array(...item).map((value) => ({ key, value }));
+            }
+            return [{ key, value: item }];
+        };
+        const remapForNamingContainer = ({ key, value }) => ({
+            key: this.remapKeyForNamingContainer(key),
+            value
+        });
+        return ofAssoc(this.value)
+            .flatMap(expandValueArrays)
+            .map(remapForNamingContainer)
+            .reduce((formData, { key, value }) => {
+            formData.append(key, value);
+            return formData;
+        }, new FormData());
+    }
+    /**
+     * Applies paramsMapper to remap only the key, ignoring the value transformation.
+     * EMPTY_STR is passed as a placeholder since only the remapped key is used.
+     */
     remapKeyForNamingContainer(key) {
-        return this.paramsMapper(key, "")[0];
+        const [remappedKey] = this.paramsMapper(key, _core_Const__WEBPACK_IMPORTED_MODULE_1__.EMPTY_STR); // value is a required arg but irrelevant here; only the remapped key is used
+        return remappedKey;
     }
 }
 
@@ -9466,6 +9473,8 @@ class XhrRequest extends _util_AsyncRunnable__WEBPACK_IMPORTED_MODULE_0__.AsyncR
         this.timeout = timeout;
         this.ajaxType = ajaxType;
         this.contentType = contentType;
+        this.ERR_INVALID_RESPONSE = "Invalid Response";
+        this.ERR_EMPTY_RESPONSE = "Empty Response";
         this.stopProgress = false;
         this.xhrObject = new XMLHttpRequest();
         // we omit promises here because we have to deal with cancel functionality,
@@ -9474,12 +9483,9 @@ class XhrRequest extends _util_AsyncRunnable__WEBPACK_IMPORTED_MODULE_0__.AsyncR
         this.registerXhrCallbacks((data) => this.resolve(data), (data) => this.reject(data));
     }
     start() {
-        let ignoreErr = failSaveExecute;
-        let xhrObject = this.xhrObject;
-        let sourceForm = mona_dish__WEBPACK_IMPORTED_MODULE_1__.DQ.byId(this.internalContext.getIf(_core_Const__WEBPACK_IMPORTED_MODULE_7__.CTX_PARAM_SRC_FRM_ID).value);
-        let executesArr = () => {
-            return this.requestContext.getIf(_core_Const__WEBPACK_IMPORTED_MODULE_7__.CTX_PARAM_REQ_PASS_THR, _core_Const__WEBPACK_IMPORTED_MODULE_7__.P_EXECUTE).get(_core_Const__WEBPACK_IMPORTED_MODULE_7__.IDENT_NONE).value.split(/\s+/gi);
-        };
+        const ignoreErr = failSaveExecute;
+        const xhrObject = this.xhrObject;
+        const sourceForm = mona_dish__WEBPACK_IMPORTED_MODULE_1__.DQ.byId(this.internalContext.getIf(_core_Const__WEBPACK_IMPORTED_MODULE_7__.CTX_PARAM_SRC_FRM_ID).value);
         try {
             // encoded we need to decode
             // We generated a base representation of the current form
@@ -9489,10 +9495,9 @@ class XhrRequest extends _util_AsyncRunnable__WEBPACK_IMPORTED_MODULE_0__.AsyncR
             // whatever the formData object delivers
             // the partialIdsArray arr is almost deprecated legacy code where we allowed to send a separate list of partial
             // ids for reduced load and server processing, this will be removed soon, we can handle the same via execute
-            const executes = executesArr();
+            const executes = this.requestContext.getIf(_core_Const__WEBPACK_IMPORTED_MODULE_7__.CTX_PARAM_REQ_PASS_THR, _core_Const__WEBPACK_IMPORTED_MODULE_7__.P_EXECUTE).get(_core_Const__WEBPACK_IMPORTED_MODULE_7__.IDENT_NONE).value.split(/\s+/gi);
             const partialIdsArray = this.internalContext.getIf(_core_Const__WEBPACK_IMPORTED_MODULE_7__.CTX_PARAM_PPS).value === true ? executes : [];
             const formData = new _XhrFormData__WEBPACK_IMPORTED_MODULE_3__.XhrFormData(sourceForm, (0,_RequestDataResolver__WEBPACK_IMPORTED_MODULE_8__.resoveNamingContainerMapper)(this.internalContext), executes, partialIdsArray);
-            this.contentType = formData.isMultipartRequest ? "undefined" : this.contentType;
             // next step the pass through parameters are merged in for post params
             this.requestContext.$nspEnabled = false;
             const requestContext = this.requestContext;
@@ -9522,18 +9527,16 @@ class XhrRequest extends _util_AsyncRunnable__WEBPACK_IMPORTED_MODULE_0__.AsyncR
             responseContext.assign(_core_Const__WEBPACK_IMPORTED_MODULE_7__.ON_EVENT).value = requestContext.getIf(_core_Const__WEBPACK_IMPORTED_MODULE_7__.ON_EVENT).value;
             responseContext.assign(_core_Const__WEBPACK_IMPORTED_MODULE_7__.ON_ERROR).value = requestContext.getIf(_core_Const__WEBPACK_IMPORTED_MODULE_7__.ON_ERROR).value;
             xhrObject.open(this.ajaxType, (0,_RequestDataResolver__WEBPACK_IMPORTED_MODULE_8__.resolveFinalUrl)(sourceForm, formData, this.ajaxType), true);
-            // adding timeout
-            this.timeout ? xhrObject.timeout = this.timeout : null;
+            if (this.timeout)
+                xhrObject.timeout = this.timeout;
             // a bug in the xhr stub library prevents the setRequestHeader to be properly executed on fake xhr objects
             // normal browsers should resolve this
             // tests can quietly fail on this one
-            if (this.contentType != "undefined") {
+            if (!formData.isMultipartRequest) {
                 ignoreErr(() => xhrObject.setRequestHeader(_core_Const__WEBPACK_IMPORTED_MODULE_7__.CONTENT_TYPE, `${this.contentType}; charset=utf-8`));
             }
             ignoreErr(() => xhrObject.setRequestHeader(_core_Const__WEBPACK_IMPORTED_MODULE_7__.HEAD_FACES_REQ, _core_Const__WEBPACK_IMPORTED_MODULE_7__.VAL_AJAX));
-            // probably not needed anymore, will test this
-            // some webkit based mobile browsers do not follow the w3c spec of
-            // setting, they accept headers automatically
+            // some webkit based mobile browsers do not follow the w3c spec for Accept headers
             ignoreErr(() => xhrObject.setRequestHeader(_core_Const__WEBPACK_IMPORTED_MODULE_7__.REQ_ACCEPT, _core_Const__WEBPACK_IMPORTED_MODULE_7__.STD_ACCEPT));
             this.sendEvent(_core_Const__WEBPACK_IMPORTED_MODULE_7__.BEGIN);
             this.sendRequest(formData);
@@ -9564,7 +9567,6 @@ class XhrRequest extends _util_AsyncRunnable__WEBPACK_IMPORTED_MODULE_0__.AsyncR
      * @param reject
      */
     registerXhrCallbacks(resolve, reject) {
-        var _a, _b;
         const xhrObject = this.xhrObject;
         xhrObject.onabort = () => {
             this.onAbort(resolve, reject);
@@ -9578,50 +9580,11 @@ class XhrRequest extends _util_AsyncRunnable__WEBPACK_IMPORTED_MODULE_0__.AsyncR
         xhrObject.onloadend = () => {
             this.onResponseProcessed(this.xhrObject, resolve);
         };
-        if (xhrObject === null || xhrObject === void 0 ? void 0 : xhrObject.upload) {
-            //this is an  extension so that we can send the upload object of the current
-            //request before any operation
-            (_b = (_a = this.internalContext.getIf(_core_Const__WEBPACK_IMPORTED_MODULE_7__.CTX_PARAM_UPLOAD_PREINIT)).value) === null || _b === void 0 ? void 0 : _b.call(_a, xhrObject.upload);
-            //now we hook in the upload events
-            xhrObject.upload.addEventListener("progress", (event) => {
-                var _a, _b;
-                (_b = (_a = this.internalContext.getIf(_core_Const__WEBPACK_IMPORTED_MODULE_7__.CTX_PARAM_UPLOAD_ON_PROGRESS)).value) === null || _b === void 0 ? void 0 : _b.call(_a, xhrObject.upload, event);
-            });
-            xhrObject.upload.addEventListener("load", (event) => {
-                var _a, _b;
-                (_b = (_a = this.internalContext.getIf(_core_Const__WEBPACK_IMPORTED_MODULE_7__.CTX_PARAM_UPLOAD_LOAD)).value) === null || _b === void 0 ? void 0 : _b.call(_a, xhrObject.upload, event);
-            });
-            xhrObject.upload.addEventListener("loadstart", (event) => {
-                var _a, _b;
-                (_b = (_a = this.internalContext.getIf(_core_Const__WEBPACK_IMPORTED_MODULE_7__.CTX_PARAM_UPLOAD_LOADSTART)).value) === null || _b === void 0 ? void 0 : _b.call(_a, xhrObject.upload, event);
-            });
-            xhrObject.upload.addEventListener("loadend", (event) => {
-                var _a, _b;
-                (_b = (_a = this.internalContext.getIf(_core_Const__WEBPACK_IMPORTED_MODULE_7__.CTX_PARAM_UPLOAD_LOADEND)).value) === null || _b === void 0 ? void 0 : _b.call(_a, xhrObject.upload, event);
-            });
-            xhrObject.upload.addEventListener("abort", (event) => {
-                var _a, _b;
-                (_b = (_a = this.internalContext.getIf(_core_Const__WEBPACK_IMPORTED_MODULE_7__.CTX_PARAM_UPLOAD_ABORT)).value) === null || _b === void 0 ? void 0 : _b.call(_a, xhrObject.upload, event);
-            });
-            xhrObject.upload.addEventListener("timeout", (event) => {
-                var _a, _b;
-                (_b = (_a = this.internalContext.getIf(_core_Const__WEBPACK_IMPORTED_MODULE_7__.CTX_PARAM_UPLOAD_TIMEOUT)).value) === null || _b === void 0 ? void 0 : _b.call(_a, xhrObject.upload, event);
-            });
-            xhrObject.upload.addEventListener("error", (event) => {
-                var _a, _b;
-                (_b = (_a = this.internalContext.getIf(_core_Const__WEBPACK_IMPORTED_MODULE_7__.CTX_PARAM_UPLOAD_ERROR)).value) === null || _b === void 0 ? void 0 : _b.call(_a, xhrObject.upload, event);
-            });
-        }
+        this.registerUploadCallbacks(xhrObject);
         xhrObject.onerror = (errorData) => {
-            // Safari in rare cases triggers an error when cancelling a request internally, or when
-            // in this case we simply ignore the request and clear up the queue, because
-            // it is not safe anymore to proceed with the current queue
-            // This bypasses a Safari issue where it keeps requests hanging after page unload
-            // and then triggers a cancel error on then instead of just stopping
-            // and clearing the code
-            // in a page unload case it is safe to clear the queue
-            // in the exact safari case any request after this one in the queue is invalid
-            // because the queue references xhr requests to a page which already is gone!
+            // Older Safari/WebKit and Chrome/Chromium versions can cancel XHRs during
+            // navigation or download handoff by triggering onerror with status=0/readyState=4.
+            // Treat that as queue cleanup rather than reporting a user-facing Ajax error.
             if (this.isCancelledResponse(this.xhrObject)) {
                 /*
                  * this triggers the catch chain and after that finally
@@ -9637,6 +9600,42 @@ class XhrRequest extends _util_AsyncRunnable__WEBPACK_IMPORTED_MODULE_0__.AsyncR
             this.handleError(errorData);
         };
     }
+    registerUploadCallbacks(xhrObject) {
+        var _a, _b;
+        if (!(xhrObject === null || xhrObject === void 0 ? void 0 : xhrObject.upload)) {
+            return;
+        }
+        // fire the pre-init hook so callers can inspect the upload object before any transfer starts
+        (_b = (_a = this.internalContext.getIf(_core_Const__WEBPACK_IMPORTED_MODULE_7__.CTX_PARAM_UPLOAD_PREINIT)).value) === null || _b === void 0 ? void 0 : _b.call(_a, xhrObject.upload);
+        xhrObject.upload.addEventListener("progress", (event) => {
+            var _a, _b;
+            (_b = (_a = this.internalContext.getIf(_core_Const__WEBPACK_IMPORTED_MODULE_7__.CTX_PARAM_UPLOAD_ON_PROGRESS)).value) === null || _b === void 0 ? void 0 : _b.call(_a, xhrObject.upload, event);
+        });
+        xhrObject.upload.addEventListener("load", (event) => {
+            var _a, _b;
+            (_b = (_a = this.internalContext.getIf(_core_Const__WEBPACK_IMPORTED_MODULE_7__.CTX_PARAM_UPLOAD_LOAD)).value) === null || _b === void 0 ? void 0 : _b.call(_a, xhrObject.upload, event);
+        });
+        xhrObject.upload.addEventListener("loadstart", (event) => {
+            var _a, _b;
+            (_b = (_a = this.internalContext.getIf(_core_Const__WEBPACK_IMPORTED_MODULE_7__.CTX_PARAM_UPLOAD_LOADSTART)).value) === null || _b === void 0 ? void 0 : _b.call(_a, xhrObject.upload, event);
+        });
+        xhrObject.upload.addEventListener("loadend", (event) => {
+            var _a, _b;
+            (_b = (_a = this.internalContext.getIf(_core_Const__WEBPACK_IMPORTED_MODULE_7__.CTX_PARAM_UPLOAD_LOADEND)).value) === null || _b === void 0 ? void 0 : _b.call(_a, xhrObject.upload, event);
+        });
+        xhrObject.upload.addEventListener("abort", (event) => {
+            var _a, _b;
+            (_b = (_a = this.internalContext.getIf(_core_Const__WEBPACK_IMPORTED_MODULE_7__.CTX_PARAM_UPLOAD_ABORT)).value) === null || _b === void 0 ? void 0 : _b.call(_a, xhrObject.upload, event);
+        });
+        xhrObject.upload.addEventListener("timeout", (event) => {
+            var _a, _b;
+            (_b = (_a = this.internalContext.getIf(_core_Const__WEBPACK_IMPORTED_MODULE_7__.CTX_PARAM_UPLOAD_TIMEOUT)).value) === null || _b === void 0 ? void 0 : _b.call(_a, xhrObject.upload, event);
+        });
+        xhrObject.upload.addEventListener("error", (event) => {
+            var _a, _b;
+            (_b = (_a = this.internalContext.getIf(_core_Const__WEBPACK_IMPORTED_MODULE_7__.CTX_PARAM_UPLOAD_ERROR)).value) === null || _b === void 0 ? void 0 : _b.call(_a, xhrObject.upload, event);
+        });
+    }
     isCancelledResponse(currentTarget) {
         return (currentTarget === null || currentTarget === void 0 ? void 0 : currentTarget.status) === 0 && // cancelled internally by browser
             (currentTarget === null || currentTarget === void 0 ? void 0 : currentTarget.readyState) === 4 &&
@@ -9649,29 +9648,10 @@ class XhrRequest extends _util_AsyncRunnable__WEBPACK_IMPORTED_MODULE_0__.AsyncR
      * Those methods are the callbacks called by
      * the xhr object depending on its own state
      */
-    /**
-     * client side abort... also here for now we clean the queue
-     *
-     * @param resolve
-     * @param reject
-     * @private
-     */
-    onAbort(resolve, reject) {
-        // reject means clear queue, in this case we abort entirely the processing
-        // does not happen yet, we have to probably rethink this strategy in the future
-        // when we introduce cancel functionality
+    onAbort(_resolve, reject) {
         this.handleHttpError(reject);
     }
-    /**
-     * request timeout, this must be handled like a generic server error per spec
-     * unfortunately, so we have to jump to the next item (we cancelled before)
-     * @param resolve
-     * @param reject
-     * @private
-     */
-    onTimeout(resolve, reject) {
-        // timeout also means we we probably should clear the queue,
-        // the state is unsafe for the next requests
+    onTimeout(resolve, _reject) {
         this.sendEvent(_core_Const__WEBPACK_IMPORTED_MODULE_7__.STATE_EVT_TIMEOUT);
         this.handleHttpError(resolve);
     }
@@ -9696,29 +9676,26 @@ class XhrRequest extends _util_AsyncRunnable__WEBPACK_IMPORTED_MODULE_0__.AsyncR
         const responseXML = new mona_dish__WEBPACK_IMPORTED_MODULE_1__.XMLQuery((_a = this.xhrObject) === null || _a === void 0 ? void 0 : _a.responseXML);
         const responseText = (_c = (_b = this.xhrObject) === null || _b === void 0 ? void 0 : _b.responseText) !== null && _c !== void 0 ? _c : "";
         const responseCode = (_e = (_d = this.xhrObject) === null || _d === void 0 ? void 0 : _d.status) !== null && _e !== void 0 ? _e : -1;
+        // HTTP status takes priority: a non-2xx response is always an HTTP error,
+        // regardless of what the body contains (e.g. an HTML error page from a 404
+        // must not be misreported as malformedXML).
+        if (responseCode >= 300 || responseCode < 200) {
+            this.handleHttpError(resolve);
+            return true;
+        }
         if (responseXML.isXMLParserError()) {
             // Firefox: malformed XML produces a Document with <parsererror>
-            const errorName = "Invalid Response";
-            const errorMessage = "The response xml is invalid";
-            this.handleGenericResponseError(errorName, errorMessage, _core_Const__WEBPACK_IMPORTED_MODULE_7__.MALFORMEDXML, resolve);
+            this.handleGenericResponseError(this.ERR_INVALID_RESPONSE, "The response xml is invalid", _core_Const__WEBPACK_IMPORTED_MODULE_7__.MALFORMEDXML, resolve);
             return true;
         }
         else if (responseXML.isAbsent() && responseText.trim().length > 0) {
             // Chrome: responseXML is null for unparseable XML, but responseText has content
-            const errorName = "Invalid Response";
-            const errorMessage = "The response xml is invalid";
-            this.handleGenericResponseError(errorName, errorMessage, _core_Const__WEBPACK_IMPORTED_MODULE_7__.MALFORMEDXML, resolve);
+            this.handleGenericResponseError(this.ERR_INVALID_RESPONSE, "The response xml is invalid", _core_Const__WEBPACK_IMPORTED_MODULE_7__.MALFORMEDXML, resolve);
             return true;
         }
         else if (responseXML.isAbsent()) {
             // Truly empty response
-            const errorName = "Empty Response";
-            const errorMessage = "The response has provided no data";
-            this.handleGenericResponseError(errorName, errorMessage, _core_Const__WEBPACK_IMPORTED_MODULE_7__.EMPTY_RESPONSE, resolve);
-            return true;
-        }
-        else if (responseCode >= 300 || responseCode < 200) {
-            this.handleHttpError(resolve);
+            this.handleGenericResponseError(this.ERR_EMPTY_RESPONSE, "The response has provided no data", _core_Const__WEBPACK_IMPORTED_MODULE_7__.EMPTY_RESPONSE, resolve);
             return true;
         }
         return false;
@@ -9728,7 +9705,7 @@ class XhrRequest extends _util_AsyncRunnable__WEBPACK_IMPORTED_MODULE_0__.AsyncR
         const errorData = new _ErrorData__WEBPACK_IMPORTED_MODULE_4__.ErrorData(this.internalContext.getIf(_core_Const__WEBPACK_IMPORTED_MODULE_7__.CTX_PARAM_SRC_CTL_ID).value, errorName, errorMessage, (_b = (_a = this.xhrObject) === null || _a === void 0 ? void 0 : _a.responseText) !== null && _b !== void 0 ? _b : "", (_d = (_c = this.xhrObject) === null || _c === void 0 ? void 0 : _c.responseXML) !== null && _d !== void 0 ? _d : null, this.xhrObject.status, responseStatus);
         this.finalizeError(errorData, resolve);
     }
-    handleHttpError(resolveOrReject, errorMessage = "Generic HTTP Serror") {
+    handleHttpError(resolveOrReject, errorMessage = "Generic HTTP Error") {
         var _a, _b, _c, _d, _e, _f;
         this.stopProgress = true;
         const errorData = new _ErrorData__WEBPACK_IMPORTED_MODULE_4__.ErrorData(this.internalContext.getIf(_core_Const__WEBPACK_IMPORTED_MODULE_7__.CTX_PARAM_SRC_CTL_ID).value, _core_Const__WEBPACK_IMPORTED_MODULE_7__.HTTP_ERROR, errorMessage, (_b = (_a = this.xhrObject) === null || _a === void 0 ? void 0 : _a.responseText) !== null && _b !== void 0 ? _b : "", (_d = (_c = this.xhrObject) === null || _c === void 0 ? void 0 : _c.responseXML) !== null && _d !== void 0 ? _d : null, (_f = (_e = this.xhrObject) === null || _e === void 0 ? void 0 : _e.status) !== null && _f !== void 0 ? _f : -1, _core_Const__WEBPACK_IMPORTED_MODULE_7__.HTTP_ERROR);
@@ -9746,33 +9723,17 @@ class XhrRequest extends _util_AsyncRunnable__WEBPACK_IMPORTED_MODULE_0__.AsyncR
             this.stopProgress = true;
         }
     }
-    /**
-     * last minute cleanup, the request now either is fully done
-     * or not by having had a cancel or error event be
-     * @param data
-     * @param resolve
-     * @private
-     */
     onResponseProcessed(data, resolve) {
-        // if stop progress true, the cleanup already has been performed
-        if (this.stopProgress) {
-            return;
+        if (!this.stopProgress) {
+            resolve(data);
         }
-        /*
-         * normal case, cleanup == next item if possible
-         */
-        resolve(data);
     }
     sendRequest(formData) {
-        const isPost = this.ajaxType != _core_Const__WEBPACK_IMPORTED_MODULE_7__.REQ_TYPE_GET;
-        if (formData.isMultipartRequest) {
-            // in case of a multipart request we send in a formData object as body
-            this.xhrObject.send((isPost) ? formData.toFormData() : null);
+        if (this.ajaxType === _core_Const__WEBPACK_IMPORTED_MODULE_7__.REQ_TYPE_GET) {
+            this.xhrObject.send(null);
+            return;
         }
-        else {
-            // in case of a normal request we send it normally
-            this.xhrObject.send((isPost) ? formData.toString() : null);
-        }
+        this.xhrObject.send(formData.isMultipartRequest ? formData.toFormData() : formData.toString());
     }
     /*
      * other helpers
@@ -9785,7 +9746,7 @@ class XhrRequest extends _util_AsyncRunnable__WEBPACK_IMPORTED_MODULE_0__.AsyncR
             // this in onError, but also we cannot swallow it.
             // We need to resolve the local handlers lazily,
             // because some frameworks might decorate them over the context in the response
-            let eventHandler = (0,_RequestDataResolver__WEBPACK_IMPORTED_MODULE_8__.resolveHandlerFunc)(this.requestContext, this.responseContext, _core_Const__WEBPACK_IMPORTED_MODULE_7__.ON_EVENT);
+            const eventHandler = (0,_RequestDataResolver__WEBPACK_IMPORTED_MODULE_8__.resolveHandlerFunc)(this.requestContext, this.responseContext, _core_Const__WEBPACK_IMPORTED_MODULE_7__.ON_EVENT);
             _AjaxImpl__WEBPACK_IMPORTED_MODULE_2__.Implementation.sendEvent(eventData, eventHandler);
         }
         catch (e) {
@@ -9802,7 +9763,9 @@ class XhrRequest extends _util_AsyncRunnable__WEBPACK_IMPORTED_MODULE_0__.AsyncR
     }
     handleError(exception, responseFormatError = false) {
         var _a;
-        const errorData = (responseFormatError) ? _ErrorData__WEBPACK_IMPORTED_MODULE_4__.ErrorData.fromHttpConnection(exception.source, exception.type, (_a = exception.message) !== null && _a !== void 0 ? _a : _core_Const__WEBPACK_IMPORTED_MODULE_7__.EMPTY_STR, exception.responseText, exception.responseXML, exception.responseCode, exception.status) : _ErrorData__WEBPACK_IMPORTED_MODULE_4__.ErrorData.fromClient(exception);
+        const errorData = responseFormatError
+            ? _ErrorData__WEBPACK_IMPORTED_MODULE_4__.ErrorData.fromHttpConnection(exception.source, exception.type, (_a = exception.message) !== null && _a !== void 0 ? _a : _core_Const__WEBPACK_IMPORTED_MODULE_7__.EMPTY_STR, exception.responseText, exception.responseXML, exception.responseCode, exception.status)
+            : _ErrorData__WEBPACK_IMPORTED_MODULE_4__.ErrorData.fromClient(exception);
         const eventHandler = (0,_RequestDataResolver__WEBPACK_IMPORTED_MODULE_8__.resolveHandlerFunc)(this.requestContext, this.responseContext, _core_Const__WEBPACK_IMPORTED_MODULE_7__.ON_ERROR);
         _AjaxImpl__WEBPACK_IMPORTED_MODULE_2__.Implementation.sendError(errorData, eventHandler);
     }
@@ -9812,7 +9775,7 @@ class XhrRequest extends _util_AsyncRunnable__WEBPACK_IMPORTED_MODULE_0__.AsyncR
         //to avoid sideffects with buttons we only can append the issuing item if no behavior event is set
         //MYFACES-4679!
         const eventType = (_b = (_a = formData.getIf((0,_core_Const__WEBPACK_IMPORTED_MODULE_7__.$nsp)(_core_Const__WEBPACK_IMPORTED_MODULE_7__.P_BEHAVIOR_EVENT)).value) === null || _a === void 0 ? void 0 : _a[0]) !== null && _b !== void 0 ? _b : null;
-        const isBehaviorEvent = (!!eventType) && eventType != 'click';
+        const isBehaviorEvent = !!eventType && eventType !== 'click';
         //not encoded
         if (issuingItemId && formData.getIf(issuingItemId).isAbsent() && !isBehaviorEvent) {
             const issuingItem = mona_dish__WEBPACK_IMPORTED_MODULE_1__.DQ.byId(issuingItemId);
@@ -9821,10 +9784,11 @@ class XhrRequest extends _util_AsyncRunnable__WEBPACK_IMPORTED_MODULE_0__.AsyncR
             const type = issuingItem.type.orElse("").value.toLowerCase();
             //Checkbox and radio only value pass if checked is set, otherwise they should not show
             //up at all, and if checked is set, they either can have a value or simply being boolean
-            if ((type == XhrRequest.TYPE_CHECKBOX || type == XhrRequest.TYPE_RADIO) && !issuingItem.checked) {
+            const isCheckable = type === XhrRequest.TYPE_CHECKBOX || type === XhrRequest.TYPE_RADIO;
+            if (isCheckable && !issuingItem.checked) {
                 return;
             }
-            else if ((type == XhrRequest.TYPE_CHECKBOX || type == XhrRequest.TYPE_RADIO)) {
+            else if (isCheckable) {
                 arr.assign(issuingItemId).value = itemValue.orElse(true).value;
             }
             else if (itemValue.isPresent()) {

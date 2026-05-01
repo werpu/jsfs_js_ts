@@ -138,11 +138,8 @@ export namespace PushImpl {
 
     class Socket {
 
-        socket!: WebSocket;
+        socket: WebSocket | null = null;
         reconnectAttempts = 0;
-        // Tracks whether the socket has ever successfully opened. Set permanently on first
-        // onopen so that onclose can distinguish "first attempt failure" (terminal, no reconnect,
-        // no onerror) from "broken connection after first success" (reconnect + onerror).
         private hasEverConnected = false;
         private hasNotifiedInitialOpenAttempt = false;
 
@@ -154,17 +151,8 @@ export namespace PushImpl {
                 return;
             }
             this.socket = new WebSocket(this.url);
-
             this.bindCallbacks();
-            if (!this.reconnectAttempts && !this.hasNotifiedInitialOpenAttempt) {
-                this.hasNotifiedInitialOpenAttempt = true;
-                let clientIds = clientIdsByTokens[this.channelToken];
-                if (!clientIds) return; // socket was torn down (reset()) while timer was pending
-                for (let i = clientIds.length - 1; i >= 0; i--) {
-                    let socketClientId = clientIds[i];
-                    components[socketClientId]?.['onopen']?.(this.channel);
-                }
-            }
+            this.notifyInitialOpenAttempt();
         }
 
         // noinspection JSUnusedLocalSymbols
@@ -210,69 +198,104 @@ export namespace PushImpl {
         }
 
         onclose(event: any) {
-            if (!this.socket
-                // Spec: no reconnect when the very first connection attempt fails.
-                // onerror must also not be invoked in this case — only onclose.
-                || !this.hasEverConnected
-                // Spec: code 1000 (normal closure) is always terminal, regardless of reason.
-                || (event.code == 1000)
-                // 1008 = Policy Violation: server rejected the connection due to an authorization
-                // or security check (e.g. CSRF token mismatch, session not matching the channel).
-                // Reconnecting is pointless — the same rejection will recur until credentials change.
-                || (event.code == 1008)
-                || (this.reconnectAttempts >= MAX_RECONNECT_ATTEMPTS)) {
-                let clientIds = clientIdsByTokens[this.channelToken];
-                if (!clientIds) return; // already torn down (reset() called while socket was open)
-                for (let i = clientIds.length - 1; i >= 0; i--) {
-                    let socketClientId = clientIds[i];
-                    components?.[socketClientId]?.['onclose']?.(event?.code, this?.channel, event);
-                }
-                // Reset so a subsequent explicit open() starts as a fresh first connection.
-                this.reconnectAttempts = 0;
-                this.hasEverConnected = false;
-                this.hasNotifiedInitialOpenAttempt = false;
-            } else {
-                let clientIds = clientIdsByTokens[this.channelToken];
-                if (!clientIds) return; // already torn down (reset() called while socket was open)
-                for (let i = clientIds.length - 1; i >= 0; i--) {
-                    let socketClientId = clientIds[i];
-                    if (document.getElementById(socketClientId)) {
-                        try {
-                            components?.[socketClientId]?.['onerror']?.(event?.code, this?.channel, event);
-                        } catch (e) {
-                            //Ignore
-                        }
-                    } else {
-                        clientIds.splice(i, 1);
-                    }
-                }
-                if (clientIds.length == 0) {
-                    // tag disappeared
-                    this.close();
-                    return;
-                }
-                const reconnectAttempt = ++this.reconnectAttempts;
-                this.socket = null as any;
-                setTimeout(() => this.open(), RECONNECT_INTERVAL * reconnectAttempt);
+            if (this.isTerminalClose(event)) {
+                this.notifyClose(event);
+                this.resetConnectionState();
+                return;
             }
+
+            this.notifyErrorAndPruneMissingComponents(event);
+            if (this.closeIfChannelHasNoComponents()) return;
+
+            this.scheduleReconnect();
         };
 
         close() {
             if (this.socket) {
                 let s = this.socket;
-                this.socket = null as any;
+                this.socket = null;
                 s.close();
             }
+        }
+
+        private notifyInitialOpenAttempt() {
+            if (this.reconnectAttempts || this.hasNotifiedInitialOpenAttempt) return;
+
+            this.hasNotifiedInitialOpenAttempt = true;
+            let clientIds = clientIdsByTokens[this.channelToken];
+            if (!clientIds) return; // socket was torn down (reset()) while timer was pending
+            for (let i = clientIds.length - 1; i >= 0; i--) {
+                let socketClientId = clientIds[i];
+                components[socketClientId]?.['onopen']?.(this.channel);
+            }
+        }
+
+        private isTerminalClose(event: any): boolean {
+            return !this.socket
+                // Spec: no reconnect when the very first connection attempt fails.
+                // onerror must also not be invoked in this case, only onclose.
+                || !this.hasEverConnected
+                // Spec: code 1000 (normal closure) is always terminal, regardless of reason.
+                || event.code == 1000
+                // 1008 = Policy Violation. Reconnecting would hit the same rejection again.
+                || event.code == 1008
+                || this.reconnectAttempts >= MAX_RECONNECT_ATTEMPTS;
+        }
+
+        private notifyClose(event: any) {
+            let clientIds = clientIdsByTokens[this.channelToken];
+            if (!clientIds) return; // already torn down (reset() called while socket was open)
+            for (let i = clientIds.length - 1; i >= 0; i--) {
+                let socketClientId = clientIds[i];
+                components?.[socketClientId]?.['onclose']?.(event?.code, this?.channel, event);
+            }
+        }
+
+        private resetConnectionState() {
+            this.reconnectAttempts = 0;
+            this.hasEverConnected = false;
+            this.hasNotifiedInitialOpenAttempt = false;
+        }
+
+        private notifyErrorAndPruneMissingComponents(event: any) {
+            let clientIds = clientIdsByTokens[this.channelToken];
+            if (!clientIds) return; // already torn down (reset() called while socket was open)
+            for (let i = clientIds.length - 1; i >= 0; i--) {
+                let socketClientId = clientIds[i];
+                if (document.getElementById(socketClientId)) {
+                    try {
+                        components?.[socketClientId]?.['onerror']?.(event?.code, this?.channel, event);
+                    } catch (e) {
+                        //Ignore
+                    }
+                } else {
+                    clientIds.splice(i, 1);
+                }
+            }
+        }
+
+        private closeIfChannelHasNoComponents(): boolean {
+            if (clientIdsByTokens[this.channelToken]?.length != 0) return false;
+
+            // tag disappeared
+            this.close();
+            return true;
+        }
+
+        private scheduleReconnect() {
+            const reconnectAttempt = ++this.reconnectAttempts;
+            this.socket = null;
+            setTimeout(() => this.open(), RECONNECT_INTERVAL * reconnectAttempt);
         }
 
         /**
          * bind the callbacks to the socket callbacks
          */
         private bindCallbacks() {
-            this.socket.onopen = (event: Event) => this.onopen(event);
-            this.socket.onmessage = (event: Event) => this.onmmessage(event);
-            this.socket.onclose = (event: Event) => this.onclose(event);
-            this.socket.onerror = (event: Event) => this.onerror(event);
+            this.socket!.onopen = (event: Event) => this.onopen(event);
+            this.socket!.onmessage = (event: Event) => this.onmmessage(event);
+            this.socket!.onclose = (event: Event) => this.onclose(event);
+            this.socket!.onerror = (event: Event) => this.onerror(event);
         }
     }
 

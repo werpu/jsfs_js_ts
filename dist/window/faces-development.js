@@ -6298,18 +6298,21 @@ var PushImpl;
             this.url = url;
             this.channel = channel;
             this.reconnectAttempts = 0;
+            // Tracks whether the socket has ever successfully opened. Set permanently on first
+            // onopen so that onclose can distinguish "first attempt failure" (terminal, no reconnect,
+            // no onerror) from "broken connection after first success" (reconnect + onerror).
+            this.hasEverConnected = false;
+            this.hasNotifiedInitialOpenAttempt = false;
         }
         open() {
+            var _a, _b;
             if (this.socket && this.socket.readyState == 1) {
                 return;
             }
             this.socket = new WebSocket(this.url);
             this.bindCallbacks();
-        }
-        // noinspection JSUnusedLocalSymbols
-        onopen(event) {
-            var _a, _b;
-            if (!this.reconnectAttempts) {
+            if (!this.reconnectAttempts && !this.hasNotifiedInitialOpenAttempt) {
+                this.hasNotifiedInitialOpenAttempt = true;
                 let clientIds = PushImpl.clientIdsByTokens[this.channelToken];
                 if (!clientIds)
                     return; // socket was torn down (reset()) while timer was pending
@@ -6318,6 +6321,10 @@ var PushImpl;
                     (_b = (_a = PushImpl.components[socketClientId]) === null || _a === void 0 ? void 0 : _a['onopen']) === null || _b === void 0 ? void 0 : _b.call(_a, this.channel);
                 }
             }
+        }
+        // noinspection JSUnusedLocalSymbols
+        onopen(event) {
+            this.hasEverConnected = true;
             this.reconnectAttempts = 0;
         }
         onerror(event) {
@@ -6361,7 +6368,14 @@ var PushImpl;
         onclose(event) {
             var _a, _b, _c, _d;
             if (!this.socket
-                || (event.code == 1000 && event.reason == _core_Const__WEBPACK_IMPORTED_MODULE_0__.REASON_EXPIRED)
+                // Spec: no reconnect when the very first connection attempt fails.
+                // onerror must also not be invoked in this case — only onclose.
+                || !this.hasEverConnected
+                // Spec: code 1000 (normal closure) is always terminal, regardless of reason.
+                || (event.code == 1000)
+                // 1008 = Policy Violation: server rejected the connection due to an authorization
+                // or security check (e.g. CSRF token mismatch, session not matching the channel).
+                // Reconnecting is pointless — the same rejection will recur until credentials change.
                 || (event.code == 1008)
                 || (this.reconnectAttempts >= _core_Const__WEBPACK_IMPORTED_MODULE_0__.MAX_RECONNECT_ATTEMPTS)) {
                 let clientIds = PushImpl.clientIdsByTokens[this.channelToken];
@@ -6371,6 +6385,10 @@ var PushImpl;
                     let socketClientId = clientIds[i];
                     (_b = (_a = PushImpl.components === null || PushImpl.components === void 0 ? void 0 : PushImpl.components[socketClientId]) === null || _a === void 0 ? void 0 : _a['onclose']) === null || _b === void 0 ? void 0 : _b.call(_a, event === null || event === void 0 ? void 0 : event.code, this === null || this === void 0 ? void 0 : this.channel, event);
                 }
+                // Reset so a subsequent explicit open() starts as a fresh first connection.
+                this.reconnectAttempts = 0;
+                this.hasEverConnected = false;
+                this.hasNotifiedInitialOpenAttempt = false;
             }
             else {
                 let clientIds = PushImpl.clientIdsByTokens[this.channelToken];

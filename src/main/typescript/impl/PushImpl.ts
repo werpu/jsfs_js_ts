@@ -140,6 +140,11 @@ export namespace PushImpl {
 
         socket!: WebSocket;
         reconnectAttempts = 0;
+        // Tracks whether the socket has ever successfully opened. Set permanently on first
+        // onopen so that onclose can distinguish "first attempt failure" (terminal, no reconnect,
+        // no onerror) from "broken connection after first success" (reconnect + onerror).
+        private hasEverConnected = false;
+        private hasNotifiedInitialOpenAttempt = false;
 
         constructor(private channelToken: string, private url: string, private channel: string) {
         }
@@ -151,11 +156,8 @@ export namespace PushImpl {
             this.socket = new WebSocket(this.url);
 
             this.bindCallbacks();
-        }
-
-        // noinspection JSUnusedLocalSymbols
-        onopen(event: any) {
-            if (!this.reconnectAttempts) {
+            if (!this.reconnectAttempts && !this.hasNotifiedInitialOpenAttempt) {
+                this.hasNotifiedInitialOpenAttempt = true;
                 let clientIds = clientIdsByTokens[this.channelToken];
                 if (!clientIds) return; // socket was torn down (reset()) while timer was pending
                 for (let i = clientIds.length - 1; i >= 0; i--) {
@@ -163,6 +165,11 @@ export namespace PushImpl {
                     components[socketClientId]?.['onopen']?.(this.channel);
                 }
             }
+        }
+
+        // noinspection JSUnusedLocalSymbols
+        onopen(event: any) {
+            this.hasEverConnected = true;
             this.reconnectAttempts = 0;
         }
 
@@ -204,7 +211,14 @@ export namespace PushImpl {
 
         onclose(event: any) {
             if (!this.socket
-                || (event.code == 1000 && event.reason == REASON_EXPIRED)
+                // Spec: no reconnect when the very first connection attempt fails.
+                // onerror must also not be invoked in this case — only onclose.
+                || !this.hasEverConnected
+                // Spec: code 1000 (normal closure) is always terminal, regardless of reason.
+                || (event.code == 1000)
+                // 1008 = Policy Violation: server rejected the connection due to an authorization
+                // or security check (e.g. CSRF token mismatch, session not matching the channel).
+                // Reconnecting is pointless — the same rejection will recur until credentials change.
                 || (event.code == 1008)
                 || (this.reconnectAttempts >= MAX_RECONNECT_ATTEMPTS)) {
                 let clientIds = clientIdsByTokens[this.channelToken];
@@ -213,6 +227,10 @@ export namespace PushImpl {
                     let socketClientId = clientIds[i];
                     components?.[socketClientId]?.['onclose']?.(event?.code, this?.channel, event);
                 }
+                // Reset so a subsequent explicit open() starts as a fresh first connection.
+                this.reconnectAttempts = 0;
+                this.hasEverConnected = false;
+                this.hasNotifiedInitialOpenAttempt = false;
             } else {
                 let clientIds = clientIdsByTokens[this.channelToken];
                 if (!clientIds) return; // already torn down (reset() called while socket was open)

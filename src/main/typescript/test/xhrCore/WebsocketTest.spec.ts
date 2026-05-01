@@ -24,7 +24,7 @@ import {expect} from "chai";
 const defaultMyFaces = StandardInits.defaultMyFaces;
 import {_Es2019Array, Lang} from "mona-dish";
 import {FakeWebsocket} from "./FakeWebsocket";
-import {REASON_EXPIRED, RECONNECT_INTERVAL} from "../../impl/core/Const";
+import {MAX_RECONNECT_ATTEMPTS, REASON_EXPIRED, RECONNECT_INTERVAL} from "../../impl/core/Const";
 const assertType = Lang.assertType;
 
 declare var faces: any;
@@ -306,7 +306,12 @@ describe('Tests the jsf websocket client side api on high level (generic test wi
 
         new Promise<void>((resolve) => {
             faces.push.init("blarg", "booga.ws", "mychannel",
-                () => { this.fakeWebsocket._close({code: 1006, reason: "abnormal"}); resolve(); },
+                () => {
+                    setTimeout(() => {
+                        this.fakeWebsocket._close({code: 1006, reason: "abnormal"});
+                        resolve();
+                    }, 20);
+                },
                 () => {},
                 (code: number, channel: string) => { errorCalled = true; errorCode = code; errorChannel = channel; },
                 () => { closeCalled = true; },
@@ -375,6 +380,99 @@ describe('Tests the jsf websocket client side api on high level (generic test wi
         }
     });
 
+    it("must not fire onopen again when a reconnect succeeds after a prior working connection", function () {
+        // Spec (Jakarta Faces 3+): "This will be invoked on the very first connection attempt."
+        // "This will not be invoked when the web socket auto-reconnects a broken connection
+        // after the first successful connection."
+        // Also verifies reconnectAttempts resets to 0 so a further drop can start a fresh cycle.
+        const clock = sinon.useFakeTimers();
+        const firstSocket = new FakeWebsocket();
+        // Plain object instead of FakeWebsocket: we manually fire onopen so there is no
+        // constructor setTimeout that fires at an uncontrolled point in fake-timer time.
+        const reconnectWs: any = {
+            readyState: 0,
+            onopen: () => {}, onmessage: () => {}, onclose: () => {}, onerror: () => {},
+            send() {},
+            close() { this.readyState = 3; this.onclose({}); }
+        };
+
+        try {
+            this.socket.resetBehavior();
+            this.socket.onCall(0).returns(firstSocket);
+            this.socket.onCall(1).returns(reconnectWs);
+
+            let openCount = 0;
+            faces.push.init("blarg", "booga.ws", "mychannel",
+                () => { openCount++; },
+                () => {}, () => {}, () => {},
+                "",
+                true
+            );
+
+            // initial connection succeeds — onopen must fire exactly once
+            clock.tick(10);
+            expect(openCount, "onopen must fire on the initial connect").to.eq(1);
+
+            // abnormal close → reconnect scheduled, reconnectAttempts increments to 1
+            firstSocket._close({code: 1006, reason: "abnormal"});
+            clock.tick(RECONNECT_INTERVAL); // fires open() → reconnectWs bound via bindCallbacks
+
+            // reconnect succeeds: manually trigger onopen on the newly-bound socket
+            reconnectWs.readyState = 1;
+            reconnectWs.onopen({});
+
+            expect(openCount, "onopen must not fire again on a successful reconnect").to.eq(1);
+            expect(this.pushImpl.sockets["booga.ws"].reconnectAttempts,
+                "reconnectAttempts must reset to 0 after successful reconnect").to.eq(0);
+        } finally {
+            clock.restore();
+        }
+    });
+
+    it("must call onclose and stop reconnecting after MAX_RECONNECT_ATTEMPTS failed attempts", function () {
+        const clock = sinon.useFakeTimers();
+        // Create the initial socket AFTER installing fake timers so its constructor
+        // setTimeout is under fake-timer control — clock.tick(10) will fire onopen.
+        // All reconnect attempts return the same object; bindCallbacks() rebinds on each open().
+        const initialSocket = new FakeWebsocket();
+        this.socket.resetBehavior();
+        this.socket.returns(initialSocket);
+
+        let closeCalled = false;
+        let closeCode: any = null;
+
+        try {
+            faces.push.init("blarg", "booga.ws", "mychannel",
+                () => {},
+                () => {},
+                () => {},
+                (code: number) => { closeCalled = true; closeCode = code; },
+                "",
+                true
+            );
+
+            // tick past FakeWebsocket constructor setTimeout so initial onopen fires (hasEverConnected = true)
+            clock.tick(10);
+
+            // drive MAX_RECONNECT_ATTEMPTS abnormal closes; each close schedules the next open
+            // and the tick fires it, leaving reconnectAttempts = MAX_RECONNECT_ATTEMPTS after the loop
+            for (let attempt = 1; attempt <= MAX_RECONNECT_ATTEMPTS; attempt++) {
+                initialSocket._close({code: 1006, reason: "abnormal"});
+                clock.tick(RECONNECT_INTERVAL * attempt);
+            }
+
+            expect(closeCalled, "onclose must not fire while reconnect budget remains").to.be.false;
+
+            // this close tips reconnectAttempts over the limit → terminal path
+            initialSocket._close({code: 1006, reason: "abnormal"});
+
+            expect(closeCalled, "onclose must fire once all reconnect attempts are exhausted").to.be.true;
+            expect(closeCode).to.eq(1006);
+        } finally {
+            clock.restore();
+        }
+    });
+
     it("must call onclose callback when server closes with REASON_EXPIRED", function (done) {
         let closeCalled = false;
         let closeCode: any = null;
@@ -395,6 +493,128 @@ describe('Tests the jsf websocket client side api on high level (generic test wi
         });
     });
 
+    it("must treat any close code 1000 as terminal and not reconnect", function (done) {
+        let closeCalled = false;
+        let errorCalled = false;
+        let closeCode: any = null;
+        const wsCallCount = this.socket.callCount;
+
+        new Promise<void>((resolve) => {
+            faces.push.init("blarg", "booga.ws", "mychannel",
+                () => { this.fakeWebsocket._close({code: 1000, reason: "Normal Closure"}); },
+                () => {},
+                () => { errorCalled = true; },
+                (code: number) => { closeCalled = true; closeCode = code; resolve(); },
+                "",
+                true
+            );
+        }).then(() => {
+            expect(closeCalled, "onclose must be called for any 1000 terminal close").to.be.true;
+            expect(closeCode).to.eq(1000);
+            expect(errorCalled, "onerror must not be called for a normal terminal close").to.be.false;
+            expect(this.socket.callCount, "no reconnect WebSocket must be created after 1000").to.eq(wsCallCount + 1);
+            done();
+        });
+    });
+
+    it("must treat close code 1008 (Policy Violation) as terminal and not reconnect", function (done) {
+        // 1008 = server rejected due to authorization/security failure.
+        // Reconnecting would hit the same rejection, so it must be treated as terminal:
+        // onclose fires, onerror does not, no new WebSocket is created.
+        let closeCalled = false;
+        let errorCalled = false;
+        let closeCode: any = null;
+        const wsCallCount = this.socket.callCount;
+
+        new Promise<void>((resolve) => {
+            faces.push.init("blarg", "booga.ws", "mychannel",
+                () => { this.fakeWebsocket._close({code: 1008, reason: "Policy Violation"}); },
+                () => {},
+                () => { errorCalled = true; },
+                (code: number) => { closeCalled = true; closeCode = code; resolve(); },
+                "",
+                true
+            );
+        }).then(() => {
+            expect(closeCalled, "onclose must be called for a 1008 terminal close").to.be.true;
+            expect(closeCode).to.eq(1008);
+            expect(errorCalled, "onerror must not be called for a terminal close").to.be.false;
+            expect(this.socket.callCount, "no reconnect WebSocket must be created after 1008").to.eq(wsCallCount + 1);
+            done();
+        });
+    });
+
+    it("must treat failed first connection attempt as terminal and not reconnect", function () {
+        const firstSocket: any = {
+            readyState: 0,
+            onopen: () => {}, onmessage: () => {}, onclose: () => {}, onerror: () => {},
+            send() {},
+            close() { this.readyState = 3; this.onclose({}); }
+        };
+        this.socket.resetBehavior();
+        this.socket.returns(firstSocket);
+
+        let closeCalled = false;
+        let errorCalled = false;
+        let closeCode: any = null;
+
+        faces.push.init("blarg", "booga.ws", "mychannel",
+            () => {},
+            () => {},
+            () => { errorCalled = true; },
+            (code: number) => { closeCalled = true; closeCode = code; },
+            "",
+            true
+        );
+
+        firstSocket.readyState = 3;
+        firstSocket.onclose({code: 1006, reason: "initial failure"});
+
+        expect(closeCalled, "onclose must be called when the first connection attempt fails").to.be.true;
+        expect(closeCode).to.eq(1006);
+        expect(errorCalled, "onerror must not be called for a failed first connection attempt").to.be.false;
+        expect(this.socket.callCount, "no reconnect WebSocket must be created after first-attempt failure").to.eq(1);
+    });
+
+    it("must fire onopen again when open() is called after a terminal close", function (done) {
+        // After any terminal close (1000, 1008, max retries, first-attempt failure),
+        // a subsequent explicit faces.push.open() must treat the new attempt as a
+        // fresh first connection — onopen fires again and the error/reconnect state is reset.
+        let openCount = 0;
+        let closeCount = 0;
+
+        new Promise<void>((resolve) => {
+            faces.push.init("blarg", "booga.ws", "mychannel",
+                () => {
+                    openCount++;
+                    if (openCount === 1) {
+                        // trigger terminal close from within onopen of first connection
+                        this.fakeWebsocket._close({code: 1000, reason: "Normal"});
+                    } else {
+                        resolve();
+                    }
+                },
+                () => {},
+                () => {},
+                () => { closeCount++; },
+                "",
+                true
+            );
+        }).then(() => {
+            expect(openCount, "onopen must fire twice — once per explicit connection").to.eq(2);
+            expect(closeCount, "onclose must fire exactly once for the terminal close").to.eq(1);
+            done();
+        });
+
+        // Create secondSocket here so its constructor timer fires ~10ms AFTER bindCallbacks()
+        // is called by the explicit open(), not 50ms before it.
+        setTimeout(() => {
+            const secondSocket = new FakeWebsocket();
+            this.socket.onCall(1).returns(secondSocket);
+            faces.push.open("blarg");
+        }, 50);
+    });
+
     it("must close existing sockets when PushImpl.reset() is called", function () {
         faces.push.init("blarg", "booga.ws", "mychannel",
             () => {},
@@ -412,7 +632,7 @@ describe('Tests the jsf websocket client side api on high level (generic test wi
         expect(closeSpy.calledOnce, "reset must close the existing WebSocket").to.be.true;
     });
 
-    it("must ignore pending onopen callback after reset tears down the channel registry", function (done) {
+    it("must ignore late native onopen callback after reset tears down the channel registry", function () {
         let openCalled = false;
 
         faces.push.init("blarg", "booga.ws", "mychannel",
@@ -426,10 +646,8 @@ describe('Tests the jsf websocket client side api on high level (generic test wi
 
         this.pushImpl.reset();
 
-        setTimeout(() => {
-            expect(openCalled, "onopen must not be called after reset removed the channel registry").to.be.false;
-            done();
-        }, 20);
+        expect(() => this.fakeWebsocket.onopen({})).not.to.throw();
+        expect(openCalled, "user onopen must have fired for the initial connection attempt").to.be.true;
     });
 
     it("must ignore pending onclose callback after reset tears down the channel registry", function () {

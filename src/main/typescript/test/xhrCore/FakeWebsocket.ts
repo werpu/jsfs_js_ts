@@ -23,6 +23,7 @@ export class FakeWebsocket {
 
     constructor() {
         setTimeout(() => {
+            if (this.readyState !== 0) return;
             this.readyState = 1;
             this.onopen();
         }, 10);

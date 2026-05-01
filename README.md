@@ -230,3 +230,24 @@ faces.ajax.request(document.getElementById("cmd_eval"), null,
     * Expanded WebSocket tests for behavior dispatch.
     * Expanded WebSocket tests for shared socket fan-out.
     * Renamed the websocket test file from `WebsocketTest.ts` to `WebsocketTest.spec.ts`; the old name prevented the tests from running.
+
+
+## Changes since 4.1.0-beta-10
+
+* Core fixes
+
+  * Push/Websocket onOpen onClose callback lifecycle fixes according to spec behavior
+  * WebSocket `onopen` now fires only for the first connection attempt, not for automatic reconnects.
+  * Failed first WebSocket connection attempts are now treated as terminal: `onclose` is called, no reconnect is scheduled, and `onerror` is not called.
+  * WebSocket close code `1000` is now treated as terminal for any reason, not only `REASON_EXPIRED`.
+  * WebSocket close code `1008` (`Policy Violation`) is now treated as terminal and does not reconnect.
+  * WebSocket reconnect exhaustion now calls `onclose` and stops reconnecting after `MAX_RECONNECT_ATTEMPTS`.
+  * Terminal WebSocket closes now reset reconnect state so a later explicit `open()` starts as a fresh connection.
+
+* Tests added or expanded
+  * Added tests to verify the `onopen`/`onclose` callback lifecycle.
+  * Added tests that `onopen` is not fired again after a successful automatic reconnect.
+  * Added tests that reconnect attempts reset after a successful reconnect.
+  * Added tests that max reconnect exhaustion calls `onclose`.
+  * Added tests that close code `1008` is terminal and does not reconnect.
+  * Added tests that explicit `open()` after a terminal close fires `onopen` again as a fresh connection.

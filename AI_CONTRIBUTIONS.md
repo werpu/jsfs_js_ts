@@ -61,4 +61,6 @@ All new source files and substantial modifications introduced from the TypeScrip
 
 ## Nature of AI assistance
 
-The AI assistant was used interactively: the human author directed the work, reviewed all output, made corrections, and approved each change before it was applied. The AI did not commit code autonomously. All contributions remain under the Apache License 2.0.
+The AI assistant was used interactively: the human author directed the work, reviewed all output, made corrections, 
+and approved each change before it was applied. 
+The AI did not commit code autonomously. All contributions remain under the Apache License 2.0.

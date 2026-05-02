@@ -252,3 +252,36 @@ faces.ajax.request(document.getElementById("cmd_eval"), null,
   * Added tests that close code `1008` is terminal and does not reconnect.
   * Added tests that explicit `open()` after a terminal close fires `onopen` again as a fresh connection.
   * JSF 2.3 jsf.push.init compatibility test added
+
+4.1.0-beta.12
+
+Bug Fixes
+
+- WebSocket push spec alignment (PushImpl.ts): Full compliance with the Jakarta Faces push specification on 2,2 and 2.3 level
+  - hasEverConnected flag is now set before firing onopen callbacks (prevents re-entrant terminal-close edge case)
+  - Code 1000 (normal closure) is now always treated as terminal regardless of reason, per spec
+  - reconnectAttempts and hasEverConnected are reset after a terminal close, allowing faces.push.open() to re-establish a connection and fire onopen again
+- XhrQueueController debounce race condition: Each XhrQueueController instance now uses a unique debounce key — previously all instances shared one key, causing     
+  enqueues on separate instances to cancel each other's debounce window
+- Code cleanup: Removed dead exports from ResponseDataResolver.ts; minor cleanup in _api.ts and PushImpl.ts
+
+Improvements
+
+- PushImpl.ts readability: Lifecycle code refactored for clarity
+- FileUtils.ts: Minor code improvements (stricter equality, cleaner split)
+
+Tests
+
+- Added tests for WebSocket re-open after terminal close
+- Added XhrQueueController two-instance debounce isolation test
+- Added direct unit tests for FileUtils (encodeFormData, decodeEncodedValues, fixEmptyParameters)
+- Added tests for Assertions.ts — branch coverage up to ~88%
+- Added tests for ResponseDataResolver.resolveContexts
+- Added tests for ExtDomQuery (nonce DOM fallback, runHeadInserts text-node path) and ExtConfig (append, appendIf, deepCopy)
+- Added tests for HiddenInputBuilder, Lang, and async queue     
+
+Note as of Version 4.0 the code has been improved with the help of 
+generative AI Tooling, as per https://www.apache.org/legal/generative-tooling.html
+disclosures now are added!
+See AI_CONTRIBUTIONS.md for full disclosure
+

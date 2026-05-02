@@ -13,7 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+// AI-generated: this file was created with assistance from Claude (Anthropic) — see AI_CONTRIBUTIONS.md
 
+/**
+ * Compile-time type compatibility check for Push.init() overloads.
+ *
+ * This file is never executed. Its only purpose is to make the TypeScript
+ * compiler verify that both supported call signatures of Push.init() are
+ * accepted: the 4-callback form (onopen, onmessage, onerror, onclose) and
+ * the legacy 3-callback form (onmessage, onerror, onclose). If either
+ * overload is accidentally broken, tsc will reject this file.
+ */
 function verifyPushInitTypeCompatibility(push: Push): void {
     push.init("clientId1", "booga.ws", "mychannel",
         () => {},

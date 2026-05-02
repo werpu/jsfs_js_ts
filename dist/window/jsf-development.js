@@ -6297,30 +6297,18 @@ var PushImpl;
             this.channelToken = channelToken;
             this.url = url;
             this.channel = channel;
+            this.socket = null;
             this.reconnectAttempts = 0;
-            // Tracks whether the socket has ever successfully opened. Set permanently on first
-            // onopen so that onclose can distinguish "first attempt failure" (terminal, no reconnect,
-            // no onerror) from "broken connection after first success" (reconnect + onerror).
             this.hasEverConnected = false;
             this.hasNotifiedInitialOpenAttempt = false;
         }
         open() {
-            var _a, _b;
-            if (this.socket && this.socket.readyState == 1) {
+            if (this.socket && this.socket.readyState === 1) {
                 return;
             }
             this.socket = new WebSocket(this.url);
             this.bindCallbacks();
-            if (!this.reconnectAttempts && !this.hasNotifiedInitialOpenAttempt) {
-                this.hasNotifiedInitialOpenAttempt = true;
-                let clientIds = PushImpl.clientIdsByTokens[this.channelToken];
-                if (!clientIds)
-                    return; // socket was torn down (reset()) while timer was pending
-                for (let i = clientIds.length - 1; i >= 0; i--) {
-                    let socketClientId = clientIds[i];
-                    (_b = (_a = PushImpl.components[socketClientId]) === null || _a === void 0 ? void 0 : _a['onopen']) === null || _b === void 0 ? void 0 : _b.call(_a, this.channel);
-                }
-            }
+            this.notifyInitialOpenAttempt();
         }
         // noinspection JSUnusedLocalSymbols
         onopen(event) {
@@ -6331,11 +6319,14 @@ var PushImpl;
             // Native WebSocket error events do not expose the close reason code.
             // Faces onerror is fired from onclose only when a reconnect is attempted.
         }
-        onmmessage(event) {
+        onmessage(event) {
             var _a, _b, _c;
             let message = JSON.parse(event.data);
-            for (let i = PushImpl.clientIdsByTokens[this.channelToken].length - 1; i >= 0; i--) {
-                let socketClientId = PushImpl.clientIdsByTokens[this.channelToken][i];
+            let clientIds = PushImpl.clientIdsByTokens[this.channelToken];
+            if (!clientIds)
+                return; // socket was torn down (reset()) while message was pending
+            for (let i = clientIds.length - 1; i >= 0; i--) {
+                let socketClientId = clientIds[i];
                 if (document.getElementById(socketClientId)) {
                     try {
                         (_b = (_a = PushImpl.components[socketClientId]) === null || _a === void 0 ? void 0 : _a['onmessage']) === null || _b === void 0 ? void 0 : _b.call(_a, message, this.channel, event);
@@ -6357,66 +6348,25 @@ var PushImpl;
                     }
                 }
                 else {
-                    PushImpl.clientIdsByTokens[this.channelToken].splice(i, 1);
+                    clientIds.splice(i, 1);
                 }
             }
-            if (PushImpl.clientIdsByTokens[this.channelToken].length == 0) {
+            if (clientIds.length === 0) {
                 // tag disappeared
                 this.close();
             }
         }
         onclose(event) {
-            var _a, _b, _c, _d;
-            if (!this.socket
-                // Spec: no reconnect when the very first connection attempt fails.
-                // onerror must also not be invoked in this case — only onclose.
-                || !this.hasEverConnected
-                // Spec: code 1000 (normal closure) is always terminal, regardless of reason.
-                || (event.code == 1000)
-                // 1008 = Policy Violation: server rejected the connection due to an authorization
-                // or security check (e.g. CSRF token mismatch, session not matching the channel).
-                // Reconnecting is pointless — the same rejection will recur until credentials change.
-                || (event.code == 1008)
-                || (this.reconnectAttempts >= _core_Const__WEBPACK_IMPORTED_MODULE_0__.MAX_RECONNECT_ATTEMPTS)) {
-                let clientIds = PushImpl.clientIdsByTokens[this.channelToken];
-                if (!clientIds)
-                    return; // already torn down (reset() called while socket was open)
-                for (let i = clientIds.length - 1; i >= 0; i--) {
-                    let socketClientId = clientIds[i];
-                    (_b = (_a = PushImpl.components === null || PushImpl.components === void 0 ? void 0 : PushImpl.components[socketClientId]) === null || _a === void 0 ? void 0 : _a['onclose']) === null || _b === void 0 ? void 0 : _b.call(_a, event === null || event === void 0 ? void 0 : event.code, this === null || this === void 0 ? void 0 : this.channel, event);
-                }
-                // Reset so a subsequent explicit open() starts as a fresh first connection.
-                this.reconnectAttempts = 0;
-                this.hasEverConnected = false;
-                this.hasNotifiedInitialOpenAttempt = false;
+            if (this.isTerminalClose(event)) {
+                this.notifyClose(event);
+                this.resetConnectionState();
+                return;
             }
-            else {
-                let clientIds = PushImpl.clientIdsByTokens[this.channelToken];
-                if (!clientIds)
-                    return; // already torn down (reset() called while socket was open)
-                for (let i = clientIds.length - 1; i >= 0; i--) {
-                    let socketClientId = clientIds[i];
-                    if (document.getElementById(socketClientId)) {
-                        try {
-                            (_d = (_c = PushImpl.components === null || PushImpl.components === void 0 ? void 0 : PushImpl.components[socketClientId]) === null || _c === void 0 ? void 0 : _c['onerror']) === null || _d === void 0 ? void 0 : _d.call(_c, event === null || event === void 0 ? void 0 : event.code, this === null || this === void 0 ? void 0 : this.channel, event);
-                        }
-                        catch (e) {
-                            //Ignore
-                        }
-                    }
-                    else {
-                        clientIds.splice(i, 1);
-                    }
-                }
-                if (clientIds.length == 0) {
-                    // tag disappeared
-                    this.close();
-                    return;
-                }
-                const reconnectAttempt = ++this.reconnectAttempts;
-                this.socket = null;
-                setTimeout(() => this.open(), _core_Const__WEBPACK_IMPORTED_MODULE_0__.RECONNECT_INTERVAL * reconnectAttempt);
-            }
+            if (!this.notifyErrorAndPruneMissingComponents(event))
+                return;
+            if (this.closeIfChannelHasNoComponents())
+                return;
+            this.scheduleReconnect();
         }
         ;
         close() {
@@ -6426,12 +6376,85 @@ var PushImpl;
                 s.close();
             }
         }
+        notifyInitialOpenAttempt() {
+            var _a, _b;
+            if (this.reconnectAttempts || this.hasNotifiedInitialOpenAttempt)
+                return;
+            this.hasNotifiedInitialOpenAttempt = true;
+            let clientIds = PushImpl.clientIdsByTokens[this.channelToken];
+            if (!clientIds)
+                return; // socket was torn down (reset()) while timer was pending
+            for (let i = clientIds.length - 1; i >= 0; i--) {
+                let socketClientId = clientIds[i];
+                (_b = (_a = PushImpl.components[socketClientId]) === null || _a === void 0 ? void 0 : _a['onopen']) === null || _b === void 0 ? void 0 : _b.call(_a, this.channel);
+            }
+        }
+        isTerminalClose(event) {
+            return !this.socket
+                // Spec: no reconnect when the very first connection attempt fails.
+                // onerror must also not be invoked in this case, only onclose.
+                || !this.hasEverConnected
+                // Spec: code 1000 (normal closure) is always terminal, regardless of reason.
+                || event.code === 1000
+                // 1008 = Policy Violation. Reconnecting would hit the same rejection again.
+                || event.code === 1008
+                || this.reconnectAttempts >= _core_Const__WEBPACK_IMPORTED_MODULE_0__.MAX_RECONNECT_ATTEMPTS;
+        }
+        notifyClose(event) {
+            var _a, _b;
+            let clientIds = PushImpl.clientIdsByTokens[this.channelToken];
+            if (!clientIds)
+                return; // already torn down (reset() called while socket was open)
+            for (let i = clientIds.length - 1; i >= 0; i--) {
+                let socketClientId = clientIds[i];
+                (_b = (_a = PushImpl.components === null || PushImpl.components === void 0 ? void 0 : PushImpl.components[socketClientId]) === null || _a === void 0 ? void 0 : _a['onclose']) === null || _b === void 0 ? void 0 : _b.call(_a, event === null || event === void 0 ? void 0 : event.code, this === null || this === void 0 ? void 0 : this.channel, event);
+            }
+        }
+        resetConnectionState() {
+            this.reconnectAttempts = 0;
+            this.hasEverConnected = false;
+            this.hasNotifiedInitialOpenAttempt = false;
+        }
+        notifyErrorAndPruneMissingComponents(event) {
+            var _a, _b;
+            let clientIds = PushImpl.clientIdsByTokens[this.channelToken];
+            if (!clientIds)
+                return false; // already torn down (reset() called while socket was open)
+            for (let i = clientIds.length - 1; i >= 0; i--) {
+                let socketClientId = clientIds[i];
+                if (document.getElementById(socketClientId)) {
+                    try {
+                        (_b = (_a = PushImpl.components === null || PushImpl.components === void 0 ? void 0 : PushImpl.components[socketClientId]) === null || _a === void 0 ? void 0 : _a['onerror']) === null || _b === void 0 ? void 0 : _b.call(_a, event === null || event === void 0 ? void 0 : event.code, this === null || this === void 0 ? void 0 : this.channel, event);
+                    }
+                    catch (e) {
+                        //Ignore
+                    }
+                }
+                else {
+                    clientIds.splice(i, 1);
+                }
+            }
+            return true;
+        }
+        closeIfChannelHasNoComponents() {
+            var _a;
+            if (((_a = PushImpl.clientIdsByTokens[this.channelToken]) === null || _a === void 0 ? void 0 : _a.length) !== 0)
+                return false;
+            // tag disappeared
+            this.close();
+            return true;
+        }
+        scheduleReconnect() {
+            const reconnectAttempt = ++this.reconnectAttempts;
+            this.socket = null;
+            setTimeout(() => this.open(), _core_Const__WEBPACK_IMPORTED_MODULE_0__.RECONNECT_INTERVAL * reconnectAttempt);
+        }
         /**
          * bind the callbacks to the socket callbacks
          */
         bindCallbacks() {
             this.socket.onopen = (event) => this.onopen(event);
-            this.socket.onmessage = (event) => this.onmmessage(event);
+            this.socket.onmessage = (event) => this.onmessage(event);
             this.socket.onclose = (event) => this.onclose(event);
             this.socket.onerror = (event) => this.onerror(event);
         }
@@ -6466,9 +6489,12 @@ var PushImpl;
             throw new Error("Unknown channelToken: " + channelToken);
         }
     }
-    function resolveFunction(fn = () => {
-    }) {
-        return ((typeof fn !== "function") && (fn = mona_dish__WEBPACK_IMPORTED_MODULE_1__.DQ.global()[fn]), fn);
+    function resolveFunction(fn) {
+        if (typeof fn === "function")
+            return fn;
+        if (typeof fn === "string" && typeof mona_dish__WEBPACK_IMPORTED_MODULE_1__.DQ.global()[fn] === "function")
+            return mona_dish__WEBPACK_IMPORTED_MODULE_1__.DQ.global()[fn];
+        return (() => { });
     }
 })(PushImpl || (PushImpl = {}));
 
@@ -7308,9 +7334,6 @@ class ExtDomQuery extends mona_dish__WEBPACK_IMPORTED_MODULE_0__.DQ {
             return decodeURIComponent(result[1]);
         })) === null || _a === void 0 ? void 0 : _a[0]);
     }
-    globalEval(code, nonce) {
-        return new ExtDomQuery(super.globalEval(code, nonce !== null && nonce !== void 0 ? nonce : this.nonce.value));
-    }
     // called from base class runScripts, do not delete
     // noinspection JSUnusedGlobalSymbols
     globalEvalSticky(code, nonce) {
@@ -7528,12 +7551,12 @@ function decodeEncodedValues(encoded) {
     const splitKeyValuePair = (_line) => {
         let line = decodeURIComponent(_line);
         let index = line.indexOf("=");
-        if (index == -1) {
+        if (index === -1) {
             return [line];
         }
         return [line.substring(0, index), line.substring(index + 1)];
     };
-    let requestParamEntries = encoded.split(/&/gi);
+    let requestParamEntries = encoded.split("&");
     return requestParamEntries.filter(filterBlanks).map(splitKeyValuePair);
 }
 /**
@@ -7977,6 +8000,7 @@ class XhrQueueController {
     constructor() {
         this.queue = [];
         this.taskRunning = false;
+        this.debounceKey = `xhrQueue_${XhrQueueController.instanceCount++}`;
     }
     /**
      * executes or enqueues an element
@@ -7985,7 +8009,7 @@ class XhrQueueController {
      * until the debounce window for the timeout is closed.
      */
     enqueue(runnable, timeOut = 0) {
-        debounce("xhrQueue", () => {
+        debounce(this.debounceKey, () => {
             const requestHandler = this.enrichRunnable(runnable);
             if (!this.taskRunning) {
                 this.signalTaskRunning();
@@ -8053,6 +8077,9 @@ class XhrQueueController {
         this.taskRunning = !this.isEmpty;
     }
 }
+// Each instance needs its own debounce key: a shared key would cause enqueues
+// on separate instances to cancel each other's debounce window.
+XhrQueueController.instanceCount = 0;
 
 
 /***/ },
@@ -8633,9 +8660,7 @@ var Response;
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   resolveContexts: () => (/* binding */ resolveContexts),
-/* harmony export */   resolveResponseXML: () => (/* binding */ resolveResponseXML),
-/* harmony export */   resolveSourceElement: () => (/* binding */ resolveSourceElement),
-/* harmony export */   resolveSourceForm: () => (/* binding */ resolveSourceForm)
+/* harmony export */   resolveResponseXML: () => (/* binding */ resolveResponseXML)
 /* harmony export */ });
 /* harmony import */ var mona_dish__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 /* harmony import */ var _util_Assertions__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../util/Assertions */ "./src/main/typescript/impl/util/Assertions.ts");
@@ -8656,7 +8681,6 @@ __webpack_require__.r(__webpack_exports__);
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 
 
 
@@ -8705,38 +8729,6 @@ function resolveContexts(context) {
     internalContext.assign(_core_Const__WEBPACK_IMPORTED_MODULE_2__.UPDATE_FORMS).value = [];
     internalContext.assign(_core_Const__WEBPACK_IMPORTED_MODULE_2__.UPDATE_ELEMS).value = [];
     return { externalContext, internalContext };
-}
-/**
- * fetches the source element out of our contexts
- *
- * @param context the external context which should host the source id
- * @param internalContext internal pass-through fall back
- *
- */
-function resolveSourceElement(context, internalContext) {
-    let elemId = resolveSourceElementId(context, internalContext);
-    return mona_dish__WEBPACK_IMPORTED_MODULE_0__.DQ.byId(elemId.value, true);
-}
-/**
- * fetches the source form if it still exists
- * also embedded forms and parent forms are taken into consideration
- * as fallbacks
- *
- * @param internalContext
- * @param elem
- */
-function resolveSourceForm(internalContext, elem) {
-    let sourceFormId = internalContext.getIf(_core_Const__WEBPACK_IMPORTED_MODULE_2__.CTX_PARAM_SRC_FRM_ID);
-    let sourceForm = new mona_dish__WEBPACK_IMPORTED_MODULE_0__.DQ(sourceFormId.isPresent() ? document.forms[sourceFormId.value] : null);
-    sourceForm = sourceForm.orElseLazy(() => elem.firstParent(_core_Const__WEBPACK_IMPORTED_MODULE_2__.HTML_TAG_FORM))
-        .orElseLazy(() => elem.querySelectorAll(_core_Const__WEBPACK_IMPORTED_MODULE_2__.HTML_TAG_FORM))
-        .orElseLazy(() => mona_dish__WEBPACK_IMPORTED_MODULE_0__.DQ.querySelectorAll(_core_Const__WEBPACK_IMPORTED_MODULE_2__.HTML_TAG_FORM));
-    return sourceForm;
-}
-function resolveSourceElementId(context, internalContext) {
-    //?internal context?? used to be external one
-    return internalContext.getIf(_core_Const__WEBPACK_IMPORTED_MODULE_2__.CTX_PARAM_SRC_CTL_ID)
-        .orElseLazy(() => context.getIf(_core_Const__WEBPACK_IMPORTED_MODULE_2__.SOURCE, "id").value);
 }
 
 

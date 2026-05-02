@@ -8,7 +8,7 @@ In accordance with the [Apache Software Foundation policy on generative AI tooli
 
 ## Scope
 
-All new source files and substantial modifications introduced from the TypeScript 6 migration onwards (starting with commit `d609321`) were produced with AI assistance. This covers both production source code and test code.
+All new source files and substantial modifications introduced from the TypeScript 6 migration onwards (starting with commit `d609321` in http://github.com/werpu/jsf_js_ts) were produced with AI assistance. This covers both production source code and test code.
 
 ### Newly created files (AI-generated)
 

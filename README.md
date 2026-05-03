@@ -280,6 +280,11 @@ Tests
 - Added tests for ExtDomQuery (nonce DOM fallback, runHeadInserts text-node path) and ExtConfig (append, appendIf, deepCopy)
 - Added tests for HiddenInputBuilder, Lang, and async queue     
 
+
+## 4.1.0-beta.13
+
+- Added AI disclaimers to fulfill the ASF criteria for code being integrated into the Apache MyFaces codebase
+
 Note as of Version 4.0 the code has been improved with the help of 
 generative AI Tooling, as per https://www.apache.org/legal/generative-tooling.html
 disclosures now are added!

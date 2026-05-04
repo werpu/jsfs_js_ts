@@ -285,7 +285,7 @@ Tests
 
 - Added AI disclaimers to fulfill the ASF criteria for code being integrated into the Apache MyFaces codebase
 
-Note as of Version 4.0 the code has been improved with the help of 
+Note as of Version 4.0 starting with the ts6 conversion, the code has been improved with the help of 
 generative AI Tooling, as per https://www.apache.org/legal/generative-tooling.html
 disclosures now are added!
 See AI_CONTRIBUTIONS.md for full disclosure

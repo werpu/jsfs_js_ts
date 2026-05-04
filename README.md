@@ -257,7 +257,7 @@ faces.ajax.request(document.getElementById("cmd_eval"), null,
 
 Bug Fixes
 
-- WebSocket push spec alignment (PushImpl.ts): Full compliance with the Jakarta Faces push specification on 2,2 and 2.3 level
+- WebSocket push spec alignment (PushImpl.ts): Full compliance with the Jakarta Faces push specification on 4+ and 2.3 level
   - hasEverConnected flag is now set before firing onopen callbacks (prevents re-entrant terminal-close edge case)
   - Code 1000 (normal closure) is now always treated as terminal regardless of reason, per spec
   - reconnectAttempts and hasEverConnected are reset after a terminal close, allowing faces.push.open() to re-establish a connection and fire onopen again

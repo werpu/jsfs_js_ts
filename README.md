@@ -283,6 +283,13 @@ Tests
 
 ## 4.1.0-beta.15
 
+- Tests added or expanded
+  - Added tests for `ExtDomQuery.runHeadInserts(false)` — covers the `suppressDoubleIncludes=false` path in `resourceIsNew` that bypasses deduplication.
+  - Added test for checked checkbox as issuing element with `execute="@none"` — covers `XhrRequest.appendIssuingItem` adding the element keyed by its ID when it is absent from the encoded form data.
+  - Added test verifying `execute="@none"` deletes `P_EXECUTE` from the pass-through context via `AjaxImpl.remapDefaultConstants`.
+  - Added unit tests for `StateHolder.hasNameSpace` — covers the getter returning `false` (no namespace prefix) and `true` (namespace prefix present).
+  - Added test for `ExtLang.getMessage` with a key that exists in `Messages` — covers the left branch of the `??` fallback chain.
+
 - Type system improvements
   - `$faces()` in `Const.ts` now returns `typeof faces` instead of `any`, giving full type-safe access to the faces namespace throughout the implementation and catching typos at compile time.
   - Stale hand-written method interface definitions (`IErrorData`, `IEventData`, `Ajax`, `Util`, `Push`, `FacesAPI`, `OAM`, `MyFacesAPI`) removed from `index.d.ts`; the `Window` augmentation now derives its types directly from `_api.ts` via `typeof faces` / `typeof myfaces`.

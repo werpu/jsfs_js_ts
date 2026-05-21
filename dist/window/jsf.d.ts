@@ -1,4 +1,4 @@
-export declare namespace jsf {
+declare namespace jsf {
     /**
      * Project stage values, mirroring jakarta.faces.application.ProjectStage.
      */
@@ -54,7 +54,7 @@ export declare namespace jsf {
      * <li>right two digits bug release number</li>
      * </ul>
      */
-    var specversion: number;
+    export const specversion: number;
     /**
      * Implementation version as specified within the jsf specification.
      * <p />
@@ -62,11 +62,15 @@ export declare namespace jsf {
      * and reset by moving to a new spec release number
      *
      */
-    var implversion: number;
+    export const implversion: number;
     /**
      * SeparatorChar as defined by facesContext.getNamingContainerSeparatorChar()
      */
-    var separatorchar: string;
+    export const separatorchar: string;
+    /**
+     * Context Path as defined externalContext.requestContextPath
+     */
+    export const contextpath: string;
     /**
      * This method is responsible for the return of a given project stage as defined
      * by the jsf specification.
@@ -237,7 +241,7 @@ export declare namespace jsf {
     }
 }
 
-export declare namespace myfaces {
+declare namespace myfaces {
     /**
      * AB function similar to mojarra and Primefaces
      * not part of the spec but a convenience accessor method
@@ -268,46 +272,5 @@ export declare namespace myfaces {
     /**
      * legacy oam functions
      */
-    const oam: typeof oam;
+    export const oam: typeof oam;
 }
-
-/**
- * legacy code to enable various aspects
- * of myfaces, used to be rendered inline
- * for jsf 2.0 we can externalize it into its own custom resource
- *
- * note this is a straight 1:1 port from the existing codebase
- * (not too much work has been spent here, the important thing is, that
- * the namespace and functions need to be kept intact for legacy code)
- *
- * we might move the code over in the future, but for now a straight 1:1 port suffices
- */
-declare namespace oam {
-    /**
-     * sets a hidden input field
-     * @param formName the formName
-     * @param name the hidden field
-     * @param value the value to be rendered
-     */
-    const setHiddenInput: (formName: string, name: string, value: string) => void;
-    /**
-     * clears a hidden input field
-     *
-     * @param formName formName for the input
-     * @param name the name of the input field
-     */
-    const clearHiddenInput: (formName: string, name: string) => void;
-    /**
-     * does special form submit remapping
-     * re-maps the issuing command link into something,
-     * the "decode" of the command link on the server can understand
-     *
-     * @param formName
-     * @param linkId
-     * @param target
-     * @param params
-     */
-    const submitForm: (formName: string, linkId?: string | null, target?: string | null, params?: Record<string, any> | [string, any][] | null) => boolean;
-}
-
-export { }

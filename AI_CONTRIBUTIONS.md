@@ -13,6 +13,7 @@ All new source files and substantial modifications introduced from the TypeScrip
 ### Newly created files (AI-generated)
 
 - `src/main/typescript/@types/definitions/modules.d.ts`
+- `src/main/typescript/api/_api_ae_stub.d.ts`
 - `src/main/typescript/test/api/JsfPushShimTest.spec.ts`
 - `src/main/typescript/test/api/PushTypeCompatibility.ts`
 - `src/main/typescript/test/impl/AssertionsTest.spec.ts`
@@ -21,6 +22,8 @@ All new source files and substantial modifications introduced from the TypeScrip
 - `src/main/typescript/test/impl/util/ExtLangTest.spec.ts`
 - `src/main/typescript/test/impl/util/HiddenInputBuilderTest.spec.ts`
 - `src/main/typescript/test/xhrCore/WebsocketTest.spec.ts`
+- `src/main/typescript/tsconfig.ae.json`
+- `scripts/build-dts.mjs`
 
 ### Substantially modified files (AI-assisted)
 
@@ -29,6 +32,7 @@ All new source files and substantial modifications introduced from the TypeScrip
 - `src/main/typescript/api/jsf.ts`
 - `src/main/typescript/impl/AjaxImpl.ts`
 - `src/main/typescript/impl/PushImpl.ts`
+- `src/main/typescript/impl/core/Const.ts`
 - `src/main/typescript/impl/util/Assertions.ts`
 - `src/main/typescript/impl/util/AsyncRunnable.ts`
 - `src/main/typescript/impl/util/ExtDomQuery.ts`
@@ -58,6 +62,7 @@ All new source files and substantial modifications introduced from the TypeScrip
 - `src/main/typescript/test/xhrCore/TobagoFileUploadTest.spec.ts`
 - `src/main/typescript/test/xhrCore/XhrFormDataTest.spec.ts`
 - `src/main/typescript/@types/definitions/index.d.ts`
+- `api-extractor.faces.json`
 
 ## Nature of AI assistance
 

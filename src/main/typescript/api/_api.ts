@@ -84,7 +84,7 @@ export namespace faces {
      * <li>right two digits bug release number</li>
      * </ul>
      */
-    export var specversion = 400000;
+    export const specversion: number = 400000;
     /**
      * Implementation version as specified within the jsf specification.
      * <p />
@@ -92,18 +92,18 @@ export namespace faces {
      * and reset by moving to a new spec release number
      *
      */
-    export var implversion = 0;
+    export const implversion: number = 0;
 
     /**
      * SeparatorChar as defined by facesContext.getNamingContainerSeparatorChar()
      */
-    export var separatorchar: string = getSeparatorChar();
+    export const separatorchar: string = getSeparatorChar();
 
     // noinspection JSUnusedGlobalSymbols
     /**
      * Context Path as defined externalContext.requestContextPath
      */
-    export var contextpath: string = '#{facesContext.externalContext.requestContextPath}';
+    export const contextpath: string = '#{facesContext.externalContext.requestContextPath}';
     // we do not have a fallback here, for now
 
     /**

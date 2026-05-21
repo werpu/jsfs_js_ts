@@ -281,7 +281,22 @@ Tests
 - Added tests for HiddenInputBuilder, Lang, and async queue     
 
 
-## 4.1.0-beta.13
+## 4.1.0-beta.15
+
+- Type system improvements
+  - `$faces()` in `Const.ts` now returns `typeof faces` instead of `any`, giving full type-safe access to the faces namespace throughout the implementation and catching typos at compile time.
+  - Stale hand-written method interface definitions (`IErrorData`, `IEventData`, `Ajax`, `Util`, `Push`, `FacesAPI`, `OAM`, `MyFacesAPI`) removed from `index.d.ts`; the `Window` augmentation now derives its types directly from `_api.ts` via `typeof faces` / `typeof myfaces`.
+  - `ErrorData` and `EventData` no longer implement the removed `IErrorData` / `IEventData` interfaces.
+
+- Build improvements
+  - Self-contained `dist/window/faces.d.ts` and `dist/window/jsf.d.ts` declaration files are now generated deterministically via `@microsoft/api-extractor` as part of the build (`npm run build-dts`).
+  - `jsf.d.ts` is derived from `faces.d.ts` by automated text transforms: namespace renamed to `jsf`, `contextpath` removed, `onerror` parameter removed from `push.init` (JSF 2.3 compatibility).
+  - A dedicated `tsconfig.ae.json` isolates the api-extractor compiler program from source `.ts` files, preventing the `ae-wrong-input-file-type` error caused by the `index.d.ts` import chain.
+  - Generated `faces.d.ts` is a strict superset of the Jakarta Faces specification `faces.d.ts` — all spec members are present; widened unions and additional optional fields are implementation extensions.
+  - `specversion`, `implversion`, `separatorchar`, and `contextpath` are now declared as `const` (matching the Jakarta Faces 5.0 spec) instead of `var` in both `_api.ts` and the generated declaration files.
+  - Post-processing now restores the missing `export` keyword on `const` namespace members in the generated `faces.d.ts` and `jsf.d.ts` (api-extractor omits it for `const` declarations); without it, members like `faces.specversion` would not be TypeScript-accessible.
+
+## 4.1.0-beta.13 / 4.1.0-beta.14
 
 - Added AI disclaimers to fulfill the ASF criteria for code being integrated into the Apache MyFaces codebase
 

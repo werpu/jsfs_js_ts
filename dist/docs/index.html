@@ -252,6 +252,16 @@ enqueues on separate instances to cancel each other's debounce window</li>
 <h2 id="410-beta15" class="tsd-anchor-link">4.1.0-beta.15<a href="#410-beta15" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <ul>
 <li>
+<p>Tests added or expanded</p>
+<ul>
+<li>Added tests for <code>ExtDomQuery.runHeadInserts(false)</code> — covers the <code>suppressDoubleIncludes=false</code> path in <code>resourceIsNew</code> that bypasses deduplication.</li>
+<li>Added test for checked checkbox as issuing element with <code>execute=&quot;@none&quot;</code> — covers <code>XhrRequest.appendIssuingItem</code> adding the element keyed by its ID when it is absent from the encoded form data.</li>
+<li>Added test verifying <code>execute=&quot;@none&quot;</code> deletes <code>P_EXECUTE</code> from the pass-through context via <code>AjaxImpl.remapDefaultConstants</code>.</li>
+<li>Added unit tests for <code>StateHolder.hasNameSpace</code> — covers the getter returning <code>false</code> (no namespace prefix) and <code>true</code> (namespace prefix present).</li>
+<li>Added test for <code>ExtLang.getMessage</code> with a key that exists in <code>Messages</code> — covers the left branch of the <code>??</code> fallback chain.</li>
+</ul>
+</li>
+<li>
 <p>Type system improvements</p>
 <ul>
 <li><code>$faces()</code> in <code>Const.ts</code> now returns <code>typeof faces</code> instead of <code>any</code>, giving full type-safe access to the faces namespace throughout the implementation and catching typos at compile time.</li>

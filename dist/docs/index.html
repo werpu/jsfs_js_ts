@@ -266,6 +266,8 @@ enqueues on separate instances to cancel each other's debounce window</li>
 <li><code>jsf.d.ts</code> is derived from <code>faces.d.ts</code> by automated text transforms: namespace renamed to <code>jsf</code>, <code>contextpath</code> removed, <code>onerror</code> parameter removed from <code>push.init</code> (JSF 2.3 compatibility).</li>
 <li>A dedicated <code>tsconfig.ae.json</code> isolates the api-extractor compiler program from source <code>.ts</code> files, preventing the <code>ae-wrong-input-file-type</code> error caused by the <code>index.d.ts</code> import chain.</li>
 <li>Generated <code>faces.d.ts</code> is a strict superset of the Jakarta Faces specification <code>faces.d.ts</code> — all spec members are present; widened unions and additional optional fields are implementation extensions.</li>
+<li><code>specversion</code>, <code>implversion</code>, <code>separatorchar</code>, and <code>contextpath</code> are now declared as <code>const</code> (matching the Jakarta Faces 5.0 spec) instead of <code>var</code> in both <code>_api.ts</code> and the generated declaration files.</li>
+<li>Post-processing now restores the missing <code>export</code> keyword on <code>const</code> namespace members in the generated <code>faces.d.ts</code> and <code>jsf.d.ts</code> (api-extractor omits it for <code>const</code> declarations); without it, members like <code>faces.specversion</code> would not be TypeScript-accessible.</li>
 </ul>
 </li>
 </ul>

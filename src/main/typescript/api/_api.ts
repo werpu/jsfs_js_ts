@@ -17,12 +17,61 @@ import {Implementation} from "../impl/AjaxImpl";
 import {PushImpl} from "../impl/PushImpl";
 import {oam as _oam} from "../myfaces/OamSubmit";
 import {$nsp, CTX_OPTIONS_EXECUTE, CTX_OPTIONS_PARAMS, CTX_PARAM_RENDER, P_BEHAVIOR_EVENT} from "../impl/core/Const";
-import {ErrorData} from "../impl/xhrCore/ErrorData";
-import {EventData} from "../impl/xhrCore/EventData";
 
 //we use modules to get a proper jsdoc and static/map structure in the calls
 //as per spec requirement
 export namespace faces {
+
+    /**
+     * Project stage values, mirroring jakarta.faces.application.ProjectStage.
+     */
+    export type ProjectStage = "Development" | "UnitTest" | "SystemTest" | "Production";
+
+    /**
+     * Status values sent to ajax event callbacks.
+     */
+    export type AjaxEventStatus = "begin" | "complete" | "success";
+
+    /**
+     * Status values sent to ajax error callbacks.
+     */
+    export type AjaxErrorStatus = "httpError" | "emptyResponse" | "malformedXML" | "serverError";
+
+    /**
+     * Common shape for the data passed to ajax callbacks.
+     */
+    export interface AjaxData {
+        source?: Element;
+        responseCode?: number;
+        responseText?: string;
+        responseXML?: XMLDocument;
+    }
+
+    /**
+     * Data passed to ajax event callbacks.
+     */
+    export interface AjaxEvent extends AjaxData {
+        type: "event";
+        status: AjaxEventStatus;
+    }
+
+    /**
+     * Data passed to ajax error callbacks.
+     */
+    export interface AjaxError extends AjaxData {
+        type: "error";
+        status: AjaxErrorStatus | "clientError" | "timeout";
+        errorName?: string;
+        errorMessage?: string;
+        /** @deprecated MyFaces compatibility alias. */
+        serverErrorName?: string;
+        /** @deprecated MyFaces compatibility alias. */
+        serverErrorMessage?: string;
+        /** MyFaces compatibility detail. */
+        description?: string;
+        /** MyFaces compatibility detail. */
+        typeDetails?: unknown;
+    }
 
 
     /**
@@ -72,8 +121,8 @@ export namespace faces {
      * @return {String} the current project state emitted by the server side method:
      * <i>jakarta.faces.application.Application.getProjectStage()</i>
      */
-    export function getProjectStage(): string | null {
-        return Implementation.getProjectStage();
+    export function getProjectStage(): ProjectStage {
+        return Implementation.getProjectStage() as ProjectStage;
     }
 
     /**
@@ -113,6 +162,42 @@ export namespace faces {
         "use strict";
 
         /**
+         * Callback signature for ajax lifecycle events.
+         */
+        export type OnEventCallback = (data: AjaxEvent) => void;
+
+        /**
+         * Callback signature for ajax errors.
+         */
+        export type OnErrorCallback = (data: AjaxError) => void;
+
+        /**
+         * Options object for faces.ajax.request.
+         */
+        export interface RequestOptions {
+            execute?: string;
+            render?: string;
+            onevent?: OnEventCallback;
+            onerror?: OnErrorCallback;
+            params?: Record<string, string | number | boolean>;
+            delay?: number | "none";
+            resetValues?: boolean;
+            /** MyFaces extension/pass-through compatibility. */
+            [key: string]: any;
+        }
+
+        /**
+         * Per-request context object passed to faces.ajax.response.
+         */
+        export interface RequestContext {
+            sourceid?: string;
+            onerror?: OnErrorCallback;
+            onevent?: OnEventCallback;
+            /** MyFaces extension/pass-through compatibility. */
+            [key: string]: any;
+        }
+
+        /**
          * this function has to send the ajax requests
          *
          * following request conditions must be met:
@@ -127,8 +212,8 @@ export namespace faces {
          * @param {EVENT} event: any javascript event supported by that object
          * @param {Map} options : map of options being pushed into the ajax cycle
          */
-        export function request(element: Element, event?: Event, options?: Options): void {
-            Implementation.request(element, event, options)
+        export function request(element: Element | string, event?: Event | null, options?: RequestOptions): void {
+            Implementation.request(element, event as any, options as any)
         }
 
         /**
@@ -137,7 +222,7 @@ export namespace faces {
          * @param context the request context
          *
          */
-        export function response(request: XMLHttpRequest, context?: Context): void {
+        export function response(request: XMLHttpRequest, context?: RequestContext): void {
             Implementation.response(request, context as any);
         }
 
@@ -158,7 +243,7 @@ export namespace faces {
          *
          * @param errorFunc error handler must be of the format <i>function errorListener(&lt;errorData&gt;)</i>
          */
-        export function addOnError(errorFunc: (data: ErrorData) => void): void {
+        export function addOnError(errorFunc: OnErrorCallback): void {
             Implementation.addOnError(errorFunc as any);
         }
 
@@ -168,7 +253,7 @@ export namespace faces {
          *
          * @param eventFunc event must be of the format <i>function eventListener(&lt;eventData&gt;)</i>
          */
-        export function addOnEvent(eventFunc: (data: EventData) => void): void {
+        export function addOnEvent(eventFunc: OnEventCallback): void {
             Implementation.addOnEvent(eventFunc as any);
         }
     }
@@ -186,12 +271,32 @@ export namespace faces {
          * @param funcs ... arbitrary array of functions or strings
          * @returns true if the chain has succeeded false otherwise
          */
-        export function chain(source: HTMLElement | string, event: Event | null, ...funcs: Array<Function | string>): boolean {
-            return Implementation.chain(source, event, ...(funcs as EvalFuncs));
+        export function chain(source: HTMLElement | string, event?: Event | null, ...funcs: Array<Function | string>): boolean {
+            return Implementation.chain(source, event ?? null, ...(funcs as EvalFuncs));
         }
     }
 
     export namespace push {
+        /**
+         * Invoked when the websocket is opened.
+         */
+        export type OnOpenHandler = (channel: string) => void;
+
+        /**
+         * Invoked when a message is received from the server.
+         */
+        export type OnMessageHandler = (message: unknown, channel: string, event: MessageEvent) => void;
+
+        /**
+         * Invoked when a connection error occurs and the websocket will attempt to reconnect.
+         */
+        export type OnErrorHandler = (code: number, channel: string, event: CloseEvent) => void;
+
+        /**
+         * Invoked when the websocket is closed and will not attempt to reconnect.
+         */
+        export type OnCloseHandler = (code: number, channel: string, event: CloseEvent) => void;
+
         /**
          * @param socketClientId the sockets client identifier
          * @param url the uri to reach the socket
@@ -206,13 +311,13 @@ export namespace faces {
         export function init(socketClientId: string,
                              url: string,
                              channel: string,
-                             onopen: PushImpl.OpenCallback | string,
-                             onmessage: PushImpl.MessageCallback | string,
-                             onerror: PushImpl.ErrorCallback | string,
-                             onclose: PushImpl.CloseCallback | string,
-                             behaviors: any,
+                             onopen: OnOpenHandler | string | null,
+                             onmessage: OnMessageHandler | string | null,
+                             onerror: OnErrorHandler | string | null,
+                             onclose: OnCloseHandler | string | null,
+                             behaviors: Record<string, Array<() => void>>,
                              autoConnect: boolean): void {
-            PushImpl.init(socketClientId, url, channel, onopen, onmessage, onerror, onclose, behaviors, autoConnect);
+            PushImpl.init(socketClientId, url, channel, onopen as any, onmessage as any, onerror as any, onclose as any, behaviors, autoConnect);
         }
 
         /**
@@ -250,7 +355,7 @@ export namespace myfaces {
      * @param options the options which need to be merged in
      * @param userParameters a set of user parameters which go into the final options under params, they can override whatever is passed via options
      */
-    export function ab(source: Element, event: Event, eventName: string, execute: string, render: string, options: Options = {}, userParameters: Options = {}): void {
+    export function ab(source: Element, event: Event, eventName: string, execute: string, render: string, options: faces.ajax.RequestOptions = {}, userParameters: faces.ajax.RequestOptions = {}): void {
         if(!options) {
             options = {};
         }
@@ -277,7 +382,7 @@ export namespace myfaces {
             options["params"][key] = userParameters[key];
         }
 
-        (window?.faces ?? window.jsf).ajax.request(source, event, options);
+        (window?.faces ?? window.jsf).ajax.request(source, event, options as any);
     }
 
 

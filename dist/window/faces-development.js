@@ -5260,7 +5260,7 @@ var faces;
          * @returns true if the chain has succeeded false otherwise
          */
         function chain(source, event, ...funcs) {
-            return _impl_AjaxImpl__WEBPACK_IMPORTED_MODULE_0__.Implementation.chain(source, event, ...funcs);
+            return _impl_AjaxImpl__WEBPACK_IMPORTED_MODULE_0__.Implementation.chain(source, event !== null && event !== void 0 ? event : null, ...funcs);
         }
         util.chain = chain;
     })(util = faces.util || (faces.util = {}));
@@ -6211,12 +6211,16 @@ var PushImpl;
     // @deprecated because we can assume at least for the newer versions
     // that the protocol is properly set!
     const URL_PROTOCOL = mona_dish__WEBPACK_IMPORTED_MODULE_1__.DQ.global().location.protocol.replace("http", "ws") + "//";
+    /** @internal */
     PushImpl.sockets = {};
     /* component attributes by clientId */
+    /** @internal */
     PushImpl.components = {};
     /* client ids by token (share websocket connection) */
+    /** @internal */
     PushImpl.clientIdsByTokens = {};
     // needed for testing
+    /** @internal */
     function reset() {
         Object.values(PushImpl.sockets).forEach(s => { try {
             s.close();
@@ -6795,7 +6799,7 @@ const UNKNOWN = "UNKNOWN";
  */
 function $faces() {
     var _a;
-    return ((_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : window === null || window === void 0 ? void 0 : window.jsf);
+    return (_a = window === null || window === void 0 ? void 0 : window.faces) !== null && _a !== void 0 ? _a : window === null || window === void 0 ? void 0 : window.jsf;
 }
 function $nsp(inputNamespace) {
     if ((!inputNamespace) || !(inputNamespace === null || inputNamespace === void 0 ? void 0 : inputNamespace.replace)) {
@@ -8136,6 +8140,7 @@ var ErrorType;
  * I will add deprecated myfaces backwards compatibility attributes as well
  */
 class ErrorData extends _EventData__WEBPACK_IMPORTED_MODULE_2__.EventData {
+    /** @internal */
     constructor(source, errorName, errorMessage, responseText = null, responseXML = null, responseCode = -1, statusOverride = null, type = ErrorType.CLIENT_ERROR) {
         super();
         this.type = "error";
@@ -8157,13 +8162,16 @@ class ErrorData extends _EventData__WEBPACK_IMPORTED_MODULE_2__.EventData {
             this.serverErrorMessage = this.errorMessage;
         }
     }
+    /** @internal */
     static fromClient(e) {
         var _a, _b, _c, _d;
         return new ErrorData((_a = e === null || e === void 0 ? void 0 : e.source) !== null && _a !== void 0 ? _a : "client", (_b = e === null || e === void 0 ? void 0 : e.name) !== null && _b !== void 0 ? _b : _core_Const__WEBPACK_IMPORTED_MODULE_0__.EMPTY_STR, (_c = e === null || e === void 0 ? void 0 : e.message) !== null && _c !== void 0 ? _c : _core_Const__WEBPACK_IMPORTED_MODULE_0__.EMPTY_STR, (_d = e === null || e === void 0 ? void 0 : e.stack) !== null && _d !== void 0 ? _d : _core_Const__WEBPACK_IMPORTED_MODULE_0__.EMPTY_STR);
     }
+    /** @internal */
     static fromHttpConnection(source, name, message, responseText, responseXML, responseCode, status = _core_Const__WEBPACK_IMPORTED_MODULE_0__.EMPTY_STR) {
         return new ErrorData(source, name, message, responseText, responseXML, responseCode, status, ErrorType.HTTP_ERROR);
     }
+    /** @internal */
     static fromGeneric(context, errorCode, errorType = ErrorType.SERVER_ERROR) {
         let getMsg = this.getMsg;
         let source = getMsg(context, _core_Const__WEBPACK_IMPORTED_MODULE_0__.SOURCE);
@@ -8177,6 +8185,7 @@ class ErrorData extends _EventData__WEBPACK_IMPORTED_MODULE_2__.EventData {
     static getMsg(context, param) {
         return getMessage(context.getIf(param).orElse(_core_Const__WEBPACK_IMPORTED_MODULE_0__.EMPTY_STR).value);
     }
+    /** @internal */
     static fromServerError(context) {
         return this.fromGeneric(context, -1);
     }
@@ -8215,6 +8224,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 class EventData {
+    /** @internal */
     static createFromRequest(request, internalContext, context, /*event name*/ name) {
         let eventData = new EventData();
         let internalSource = "_internal._source";

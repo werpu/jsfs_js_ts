@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "es2015",
+    "lib": [
+      "es2015.collection",
+      "es2019.array",
+      "dom"
+    ],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "skipLibCheck": true,
+    "types": []
+  },
+  "files": [
+    "target/dts/src/main/typescript/api/_api.d.ts"
+  ]
+}

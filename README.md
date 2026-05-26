@@ -281,6 +281,16 @@ Tests
 - Added tests for HiddenInputBuilder, Lang, and async queue     
 
 
+## 4.1.0-beta.16
+
+- Dependency update
+  - Updated `mona-dish` to `0.50.0-beta.2`
+
+- Build / tooling improvements
+  - `dist/**`, `target/**`, `**/*.d.ts`, and `**/*.mjs` are now excluded from the `nyc` coverage report so only the implementation source is measured.
+  - Apache license header added to `dist/window/faces.d.ts` and `dist/window/jsf.d.ts` (prepended by the `build-dts` post-processing step).
+  - Apache license header added to `scripts/build-dts.mjs` and `webpack.config.ts`.
+
 ## 4.1.0-beta.15
 
 - Tests added or expanded

@@ -784,7 +784,9 @@ function waitUntilDom(root, condition, options = {
             });
         }
         else { // fallback for legacy browsers without mutation observer
-            let interval = setInterval(() => {
+            let interval;
+            let timeout;
+            interval = setInterval(() => {
                 let found = findElement(root, condition);
                 if (!!found) {
                     if (timeout) {
@@ -795,7 +797,7 @@ function waitUntilDom(root, condition, options = {
                     success(new DomQuery(found || root));
                 }
             }, options.interval);
-            let timeout = setTimeout(() => {
+            timeout = setTimeout(() => {
                 if (interval) {
                     clearInterval(interval);
                     error(MUT_ERROR);
@@ -823,7 +825,6 @@ class ElementAttribute extends _Monad__WEBPACK_IMPORTED_MODULE_0__.ValueEmbedder
         for (let cnt = 0; cnt < val.length; cnt++) {
             val[cnt].setAttribute(this.name, value);
         }
-        val[0].setAttribute(this.name, value);
     }
     getClass() {
         return ElementAttribute;
@@ -853,10 +854,10 @@ class Style extends _Monad__WEBPACK_IMPORTED_MODULE_0__.ValueEmbedder {
         }
     }
     getClass() {
-        return ElementAttribute;
+        return Style;
     }
     static fromNullable(value, valueKey = "value") {
-        return new ElementAttribute(value, valueKey);
+        return new Style(value, valueKey);
     }
 }
 /**
@@ -1017,10 +1018,10 @@ class DomQuery {
     }
     get elements() {
         // a simple querySelectorAll should suffice
-        return this.querySelectorAll("input, checkbox, select, textarea, fieldset");
+        return this.querySelectorAll("input, select, textarea, fieldset");
     }
     get deepElements() {
-        let elemStr = "input, select, textarea, checkbox, fieldset";
+        let elemStr = "input, select, textarea, fieldset";
         return this.querySelectorAllDeep(elemStr);
     }
     /**
@@ -1165,7 +1166,6 @@ class DomQuery {
      * @param markup the markup code to be executed from
      */
     static fromMarkup(markup) {
-        // https:// developer.mozilla.org/de/docs/Web/API/DOMParser license creative commons
         const doc = document.implementation.createHTMLDocument("");
         markup = trim(markup);
         let lowerMarkup = markup.toLowerCase();
@@ -1184,19 +1184,17 @@ class DomQuery {
             };
             let dummyPlaceHolder = new DomQuery(document.createElement("div"));
             // table needs special treatment due to the browsers auto creation
-            if (startsWithTag(lowerMarkup, "thead") || startsWithTag(lowerMarkup, "tbody")) {
+            if (startsWithTag(lowerMarkup, "thead")
+                || startsWithTag(lowerMarkup, "tbody")
+                || startsWithTag(lowerMarkup, "tfoot")) {
                 dummyPlaceHolder.html(`<table>${markup}</table>`);
                 return dummyPlaceHolder.querySelectorAll("table").get(0).childNodes.detach();
-            }
-            else if (startsWithTag(lowerMarkup, "tfoot")) {
-                dummyPlaceHolder.html(`<table><thead></thead><tbody><tbody${markup}</table>`);
-                return dummyPlaceHolder.querySelectorAll("table").get(2).childNodes.detach();
             }
             else if (startsWithTag(lowerMarkup, "tr")) {
                 dummyPlaceHolder.html(`<table><tbody>${markup}</tbody></table>`);
                 return dummyPlaceHolder.querySelectorAll("tbody").get(0).childNodes.detach();
             }
-            else if (startsWithTag(lowerMarkup, "td")) {
+            else if (startsWithTag(lowerMarkup, "td") || startsWithTag(lowerMarkup, "th")) {
                 dummyPlaceHolder.html(`<table><tbody><tr>${markup}</tr></tbody></table>`);
                 return dummyPlaceHolder.querySelectorAll("tr").get(0).childNodes.detach();
             }
@@ -1502,14 +1500,14 @@ class DomQuery {
         return this;
     }
     firstElem(func = item => item) {
-        if (this.rootNode.length > 1) {
+        if (this.rootNode.length > 0) {
             func(this.rootNode[0], 0);
         }
         return this;
     }
     lastElem(func = item => item) {
-        if (this.rootNode.length > 1) {
-            func(this.rootNode[this.rootNode.length - 1], 0);
+        if (this.rootNode.length > 0) {
+            func(this.rootNode[this.rootNode.length - 1], this.rootNode.length - 1);
         }
         return this;
     }
@@ -2357,7 +2355,7 @@ class DomQuery {
     static setCaretPosition(ctrl, pos) {
         (ctrl === null || ctrl === void 0 ? void 0 : ctrl.focus) ? ctrl === null || ctrl === void 0 ? void 0 : ctrl.focus() : null;
         // the selection range is our caret position
-        (ctrl === null || ctrl === void 0 ? void 0 : ctrl.setSelectiongRange) ? ctrl === null || ctrl === void 0 ? void 0 : ctrl.setSelectiongRange(pos, pos) : null;
+        (ctrl === null || ctrl === void 0 ? void 0 : ctrl.setSelectionRange) ? ctrl === null || ctrl === void 0 ? void 0 : ctrl.setSelectionRange(pos, pos) : null;
     }
     /**
      * Implementation of an iterator
@@ -2975,8 +2973,6 @@ var Lang;
         return it instanceof Function || typeof it === "function";
     }
     Lang.isFunc = isFunc;
-    // code from https://developer.mozilla.org/de/docs/Web/JavaScript/Reference/Global_Objects/Object/assign
-    // license https://creativecommons.org/licenses/by-sa/2.5/
     function objAssign(target, ...theArgs) {
         if (target == null) { // TypeError if undefined or null
             throw new TypeError('Cannot convert undefined or null to object');
@@ -2988,9 +2984,11 @@ var Lang;
         }
         theArgs.filter(item => item != null).forEach(item => {
             let nextSource = item;
-            Object.keys(nextSource)
-                .filter(nextKey => Object.prototype.hasOwnProperty.call(nextSource, nextKey))
-                .forEach(nextKey => to[nextKey] = nextSource[nextKey]);
+            const stringKeys = Object.keys(nextSource);
+            const symbolKeys = Object.getOwnPropertySymbols(nextSource)
+                .filter(sym => Object.prototype.propertyIsEnumerable.call(nextSource, sym));
+            [...stringKeys, ...symbolKeys]
+                .forEach(key => to[key] = nextSource[key]);
         });
         return to;
     }

@@ -281,6 +281,21 @@ Tests
 - Added tests for HiddenInputBuilder, Lang, and async queue     
 
 
+## 4.1.0-beta.17
+
+- Bugfix: caret position regression on partial updates
+  - After typing into an input that triggers an ajax request, the keyboard caret jumped to
+    the beginning of the field (e.g. typing `123` resulted in `321`). This regressed in
+    `mona-dish` `0.50.0-beta.3`'s caret restoration and is fixed there; the focused input now
+    keeps its caret whether a partial response re-renders a different component or the input
+    itself.
+- Dependency update
+  - Updated `mona-dish` to `0.50.0-beta.3`
+- Tests added
+  - Added two protocol-level regression tests (`ResponseTest`) reproducing the Tobago
+    `<tc:in>`/`<tc:out>` scenario: typing `123` keeps the caret in order for both the
+    "re-render only the output" and the "re-render the input itself" cases.
+
 ## 4.1.0-beta.16
 
 - Dependency update

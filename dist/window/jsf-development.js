@@ -1827,11 +1827,16 @@ class DomQuery {
         if (this.isAbsent()) {
             return undefined;
         }
-        let focusElementId = (_a = document === null || document === void 0 ? void 0 : document.activeElement) === null || _a === void 0 ? void 0 : _a.id;
-        let caretPosition = (focusElementId) ? DomQuery.getCaretPosition(document.activeElement) : null;
+        let toReplace = this.getAsElem(0).value;
+        let activeElement = document === null || document === void 0 ? void 0 : document.activeElement;
+        let focusElementId = activeElement === null || activeElement === void 0 ? void 0 : activeElement.id;
+        // only save/restore the caret if the focused element is actually part of the
+        // subtree that gets replaced. Otherwise updating an unrelated component would
+        // reset the caret of a different, still focused input field.
+        let restoreFocus = !!focusElementId && !!((_a = toReplace === null || toReplace === void 0 ? void 0 : toReplace.contains) === null || _a === void 0 ? void 0 : _a.call(toReplace, activeElement));
+        let caretPosition = restoreFocus ? DomQuery.getCaretPosition(activeElement) : null;
         let nodes = DomQuery.fromMarkup(markup);
         let res = [];
-        let toReplace = this.getAsElem(0).value;
         let firstInsert = nodes.get(0);
         let parentNode = toReplace.parentNode;
         let replaced = firstInsert.getAsElem(0).value;
@@ -1852,10 +1857,12 @@ class DomQuery {
         if (runEmbeddedCss) {
             this.runCss();
         }
-        let focusElement = DomQuery.byId(focusElementId);
-        if (focusElementId && focusElement.isPresent() &&
-            caretPosition != null && "undefined" != typeof caretPosition) {
-            focusElement.eachElem(item => DomQuery.setCaretPosition(item, caretPosition));
+        if (restoreFocus) {
+            let focusElement = DomQuery.byId(focusElementId);
+            if (focusElement.isPresent() &&
+                caretPosition != null && "undefined" != typeof caretPosition) {
+                focusElement.eachElem(item => DomQuery.setCaretPosition(item, caretPosition));
+            }
         }
         return nodes;
     }
@@ -2327,7 +2334,12 @@ class DomQuery {
     static getCaretPosition(ctrl) {
         let caretPos = 0;
         try {
-            if (document === null || document === void 0 ? void 0 : document.selection) {
+            if (typeof (ctrl === null || ctrl === void 0 ? void 0 : ctrl.selectionStart) === "number") {
+                // modern browsers expose the caret position directly via selectionStart
+                caretPos = ctrl.selectionStart;
+            }
+            else if (document === null || document === void 0 ? void 0 : document.selection) {
+                // legacy IE fallback
                 ctrl.focus();
                 let selection = document.selection.createRange();
                 // the selection now is start zero

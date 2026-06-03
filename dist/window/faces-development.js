@@ -6925,7 +6925,7 @@ class Messages {
         /** @constant */
         this.ERR_TRANSPORT = "Transport type {0} does not exist";
         /** @constant */
-        this.ERR_EVT_PASS = "an event must be passed down (either a an event object null or undefined) ";
+        this.ERR_EVT_PASS = "an event must be passed down (either an event object null or undefined) ";
         /** @constant */
         this.ERR_CONSTRUCT = "Parts of the response couldn't be retrieved when constructing the event data= {0} ";
         /** @constant */
@@ -7172,7 +7172,7 @@ class AsyncRunnable {
     }
     /**
      * registers a finally functor
-     * @param func the functor for the finally handling chanin
+     * @param func the functor for the finally handling chain
      */
     finally(func) {
         // no ie11 support we probably are going to revert to shims for that one
@@ -9802,7 +9802,7 @@ class XhrRequest extends _util_AsyncRunnable__WEBPACK_IMPORTED_MODULE_0__.AsyncR
     appendIssuingItem(formData) {
         var _a, _b;
         const issuingItemId = this.internalContext.getIf(_core_Const__WEBPACK_IMPORTED_MODULE_7__.CTX_PARAM_SRC_CTL_ID).value;
-        //to avoid sideffects with buttons we only can append the issuing item if no behavior event is set
+        //to avoid side effects with buttons we only can append the issuing item if no behavior event is set
         //MYFACES-4679!
         const eventType = (_b = (_a = formData.getIf((0,_core_Const__WEBPACK_IMPORTED_MODULE_7__.$nsp)(_core_Const__WEBPACK_IMPORTED_MODULE_7__.P_BEHAVIOR_EVENT)).value) === null || _a === void 0 ? void 0 : _a[0]) !== null && _b !== void 0 ? _b : null;
         const isBehaviorEvent = !!eventType && eventType !== 'click';

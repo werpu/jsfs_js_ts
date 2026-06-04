@@ -2329,30 +2329,18 @@ class DomQuery {
         }
         return false;
     }
-    // from
-    // http:// blog.vishalon.net/index.php/javascript-getting-and-setting-caret-position-in-textarea/
     static getCaretPosition(ctrl) {
-        let caretPos = 0;
         try {
+            // selectionStart is supported on text inputs/textareas in every relevant
+            // browser (IE9+ and all modern engines)
             if (typeof (ctrl === null || ctrl === void 0 ? void 0 : ctrl.selectionStart) === "number") {
-                // modern browsers expose the caret position directly via selectionStart
-                caretPos = ctrl.selectionStart;
-            }
-            else if (document === null || document === void 0 ? void 0 : document.selection) {
-                // legacy IE fallback
-                ctrl.focus();
-                let selection = document.selection.createRange();
-                // the selection now is start zero
-                selection.moveStart('character', -ctrl.value.length);
-                // the caret-position is the selection start
-                caretPos = selection.text.length;
+                return ctrl.selectionStart;
             }
         }
         catch (e) {
-            // now this is ugly, but not supported input types throw errors for selectionStart
-            // just in case someone dumps this code onto unsupported browsers
+            // some input types throw on selectionStart access; treat as "no caret"
         }
-        return caretPos;
+        return 0;
     }
     /**
      * sets the caret position

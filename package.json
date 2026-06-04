@@ -39,18 +39,18 @@
     "jsdom": "^29.1.1",
     "mocha": "^11.7.6",
     "nise": "^6.1.5",
-    "npm-check-updates": "^22.2.0",
+    "npm-check-updates": "^22.2.2",
     "nyc": "^18.0.0",
     "rxjs": "^7.8.2",
     "sinon": "^22.0.0",
-    "terser-webpack-plugin": "^5.6.0",
-    "ts-loader": "^9.5.7",
+    "terser-webpack-plugin": "^5.6.1",
+    "ts-loader": "^9.6.0",
     "tsconfig-paths": "^4.2.0",
-    "tsx": "^4.22.3",
+    "tsx": "^4.22.4",
     "typedoc": "^0.28.19",
     "typescript": "^6.0.3",
-    "webpack": "^5.107.1",
-    "webpack-cli": "^7.0.2"
+    "webpack": "^5.107.2",
+    "webpack-cli": "^7.0.3"
   },
   "overrides": {
     "diff": "^9.0.0",
@@ -58,6 +58,6 @@
     "uuid": "^14.0.0"
   },
   "dependencies": {
-    "mona-dish": "0.50.0-beta.3"
+    "mona-dish": "0.50.0-beta.4"
   }
 }

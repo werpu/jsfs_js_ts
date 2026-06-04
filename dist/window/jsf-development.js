@@ -7515,6 +7515,21 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var mona_dish__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! mona-dish */ "./node_modules/mona-dish/src/main/typescript/index_core.ts");
 /* harmony import */ var _ExtDomQuery__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./ExtDomQuery */ "./src/main/typescript/impl/util/ExtDomQuery.ts");
 /* harmony import */ var _core_Const__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../core/Const */ "./src/main/typescript/impl/core/Const.ts");
+/*! Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 
 
@@ -7991,6 +8006,21 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   XhrQueueController: () => (/* binding */ XhrQueueController)
 /* harmony export */ });
 /* harmony import */ var _Lang__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Lang */ "./src/main/typescript/impl/util/Lang.ts");
+/*! Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 const debounce = _Lang__WEBPACK_IMPORTED_MODULE_0__.ExtLang.debounce;
 /**

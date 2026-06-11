@@ -1,6 +1,6 @@
 {
   "name": "jsf.js_next_gen",
-  "version": "4.1.0-beta.18",
+  "version": "4.1.0-beta.19",
   "description": "A next generation typescript reimplementation of jsf.js",
   "main": "dist/window/faces.js",
   "scripts": {
@@ -25,10 +25,10 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@istanbuljs/nyc-config-typescript": "^1.0.2",
-    "@microsoft/api-extractor": "^7.58.7",
+    "@microsoft/api-extractor": "^7.58.8",
     "@types/chai": "^5.2.3",
     "@types/mocha": "^10.0.10",
-    "@types/node": "^25.9.1",
+    "@types/node": "^25.9.3",
     "@types/sinon": "^21.0.1",
     "babel-plugin-syntax-dynamic-import": "^6.18.0",
     "chai": "^6.2.2",
@@ -39,7 +39,7 @@
     "jsdom": "^29.1.1",
     "mocha": "^11.7.6",
     "nise": "^6.1.5",
-    "npm-check-updates": "^22.2.2",
+    "npm-check-updates": "^22.2.3",
     "nyc": "^18.0.0",
     "rxjs": "^7.8.2",
     "sinon": "^22.0.0",
@@ -58,6 +58,6 @@
     "uuid": "^14.0.0"
   },
   "dependencies": {
-    "mona-dish": "0.50.0-beta.4"
+    "mona-dish": "0.50.0-beta.5"
   }
 }

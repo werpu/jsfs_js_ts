@@ -91,7 +91,7 @@ function append(target, ...accessPath) {
                 if (!Array.isArray(lastPathItem.target[lastPathItem.key])) {
                     lastPathItem.target[lastPathItem.key] = [lastPathItem.target[lastPathItem.key]];
                 }
-                lastPathItem.target[lastPathItem.key].push(...value);
+                (0,_Es2019Array__WEBPACK_IMPORTED_MODULE_0__.pushChunked)(lastPathItem.target[lastPathItem.key], value);
             }
         }
     })();
@@ -165,7 +165,7 @@ function alloc(arr, length, defaultVal = {}) {
     let toAdd = [];
     toAdd.length = length;
     toAdd[length - 1] = defaultVal;
-    arr.push(...toAdd);
+    (0,_Es2019Array__WEBPACK_IMPORTED_MODULE_0__.pushChunked)(arr, toAdd);
 }
 function flattenAccessPath(accessPath) {
     return new _Es2019Array__WEBPACK_IMPORTED_MODULE_0__.Es2019Array(...accessPath).flatMap((path) => path.split("["))
@@ -272,7 +272,7 @@ function _appendWithOverwrite(withAppend, target, key, arr, toAssign) {
             });
             target[key] = new _Es2019Array__WEBPACK_IMPORTED_MODULE_0__.Es2019Array(...[]);
             target[key].push(oldVal);
-            target[key].push(...newVals);
+            (0,_Es2019Array__WEBPACK_IMPORTED_MODULE_0__.pushChunked)(target[key], newVals);
         }
         else {
             let oldVal = target[key];
@@ -283,7 +283,7 @@ function _appendWithOverwrite(withAppend, target, key, arr, toAssign) {
                     newVals.push(item);
                 }
             });
-            target[key].push(...newVals);
+            (0,_Es2019Array__WEBPACK_IMPORTED_MODULE_0__.pushChunked)(target[key], newVals);
         }
     }
 }
@@ -301,10 +301,10 @@ function _appendWithoutOverwrite(withAppend, target, key, arr, toAssign) {
             let oldVal = target[key];
             target[key] = new _Es2019Array__WEBPACK_IMPORTED_MODULE_0__.Es2019Array(...[]);
             target[key].push(oldVal);
-            target[key].push(...toAssign);
+            (0,_Es2019Array__WEBPACK_IMPORTED_MODULE_0__.pushChunked)(target[key], toAssign);
         }
         else {
-            target[key].push(...toAssign);
+            (0,_Es2019Array__WEBPACK_IMPORTED_MODULE_0__.pushChunked)(target[key], toAssign);
         }
     }
 }
@@ -472,7 +472,7 @@ class Config extends _Monad__WEBPACK_IMPORTED_MODULE_1__.Optional {
         let newThis = (0,_AssocArray__WEBPACK_IMPORTED_MODULE_3__.shallowMerge)(overwrite, withAppend, this.value, other.value);
         if (Array.isArray(this._value)) {
             this._value.length = 0;
-            this._value.push(...newThis);
+            (0,_Es2019Array__WEBPACK_IMPORTED_MODULE_0__.pushChunked)(this._value, newThis);
         }
         else {
             Object.getOwnPropertyNames(this._value).forEach(key => delete this._value[key]);
@@ -579,7 +579,7 @@ class Config extends _Monad__WEBPACK_IMPORTED_MODULE_1__.Optional {
             if (this.isArray(arrPos)) {
                 if (currKey != "") {
                     currAccessPos = Array.isArray(currAccessPos.value) ?
-                        _Monad__WEBPACK_IMPORTED_MODULE_1__.Optional.fromNullable((_b = (_a = new _Es2019Array__WEBPACK_IMPORTED_MODULE_0__.Es2019Array(...currAccessPos.value)
+                        _Monad__WEBPACK_IMPORTED_MODULE_1__.Optional.fromNullable((_b = (_a = (0,_Es2019Array__WEBPACK_IMPORTED_MODULE_0__.Es2019ArrayFrom)(currAccessPos.value)
                             .find(item => {
                             var _a;
                             return !!((_a = item === null || item === void 0 ? void 0 : item[currKey]) !== null && _a !== void 0 ? _a : false);
@@ -594,7 +594,7 @@ class Config extends _Monad__WEBPACK_IMPORTED_MODULE_1__.Optional {
             }
             else {
                 //we now have an array and go further with a singular key
-                currAccessPos = (Array.isArray(currAccessPos.value)) ? _Monad__WEBPACK_IMPORTED_MODULE_1__.Optional.fromNullable((_g = new _Es2019Array__WEBPACK_IMPORTED_MODULE_0__.Es2019Array(...currAccessPos.value)
+                currAccessPos = (Array.isArray(currAccessPos.value)) ? _Monad__WEBPACK_IMPORTED_MODULE_1__.Optional.fromNullable((_g = (0,_Es2019Array__WEBPACK_IMPORTED_MODULE_0__.Es2019ArrayFrom)(currAccessPos.value)
                     .find(item => {
                     var _a;
                     return !!((_a = item === null || item === void 0 ? void 0 : item[currKey]) !== null && _a !== void 0 ? _a : false);
@@ -676,6 +676,21 @@ const isString = _Lang__WEBPACK_IMPORTED_MODULE_2__.Lang.isString;
 const eqi = _Lang__WEBPACK_IMPORTED_MODULE_2__.Lang.equalsIgnoreCase;
 const objToArray = _Lang__WEBPACK_IMPORTED_MODULE_2__.Lang.objToArray;
 
+/**
+ * chunk-safe version of target.prepend(...elements)
+ * (spreading a large element list overflows the argument stack)
+ *
+ * the chunks are prepended in reverse order, so the resulting
+ * element order is the same as a single prepend call would produce,
+ * for less than MAX_ARG_LENGTH elements this boils down to exactly
+ * one native prepend call
+ */
+function prependChunked(target, elements) {
+    for (let end = elements.length; end > 0; end -= _Es2019Array__WEBPACK_IMPORTED_MODULE_4__.MAX_ARG_LENGTH) {
+        const start = Math.max(0, end - _Es2019Array__WEBPACK_IMPORTED_MODULE_4__.MAX_ARG_LENGTH);
+        target.prepend(...elements.slice(start, end));
+    }
+}
 class NonceValueEmbedder extends _Monad__WEBPACK_IMPORTED_MODULE_0__.ValueEmbedder {
     constructor(rootElems) {
         super(rootElems === null || rootElems === void 0 ? void 0 : rootElems[0], "nonce");
@@ -905,11 +920,16 @@ class DomQuery {
                 else if (isString(rootNode[cnt])) {
                     let foundElement = DomQuery.querySelectorAll(rootNode[cnt]);
                     if (!foundElement.isAbsent()) {
-                        rootNode.push(...foundElement.values);
+                        (0,_Es2019Array__WEBPACK_IMPORTED_MODULE_4__.pushChunked)(rootNode, foundElement.values);
                     }
                 }
                 else if (rootNode[cnt] instanceof DomQuery) {
-                    this.rootNode.push(...rootNode[cnt].values);
+                    (0,_Es2019Array__WEBPACK_IMPORTED_MODULE_4__.pushChunked)(this.rootNode, rootNode[cnt].values);
+                }
+                else if (Array.isArray(rootNode[cnt])) {
+                    // flatten array arguments into the work list, so large element
+                    // arrays can be passed without spreading them into the call
+                    (0,_Es2019Array__WEBPACK_IMPORTED_MODULE_4__.pushChunked)(rootNode, rootNode[cnt]);
                 }
                 else {
                     this.rootNode.push(rootNode[cnt]);
@@ -1011,7 +1031,7 @@ class DomQuery {
         this.id.value = value;
     }
     get checked() {
-        return new _Es2019Array__WEBPACK_IMPORTED_MODULE_4__.Es2019Array(...this.values).every(el => !!el.checked);
+        return (0,_Es2019Array__WEBPACK_IMPORTED_MODULE_4__.Es2019ArrayFrom)(this.values).every(el => !!el.checked);
     }
     set checked(newChecked) {
         this.eachElem(el => el.checked = newChecked);
@@ -1042,7 +1062,7 @@ class DomQuery {
                 found.push(shadowRes);
             }
         }
-        return new DomQuery(...found);
+        return new DomQuery(found);
     }
     /**
      * disabled flag
@@ -1067,11 +1087,11 @@ class DomQuery {
         this.eachElem((item) => {
             childNodeArr = childNodeArr.concat(objToArray(item.childNodes));
         });
-        return new DomQuery(...childNodeArr);
+        return new DomQuery(childNodeArr);
     }
     get asArray() {
         // filter not supported by IE11
-        let items = new _Es2019Array__WEBPACK_IMPORTED_MODULE_4__.Es2019Array(...this.rootNode).filter(item => {
+        let items = (0,_Es2019Array__WEBPACK_IMPORTED_MODULE_4__.Es2019ArrayFrom)(this.rootNode).filter(item => {
             return item != null;
         }).map(item => {
             return DomQuery.byId(item);
@@ -1079,31 +1099,31 @@ class DomQuery {
         return items;
     }
     get offsetWidth() {
-        return new _Es2019Array__WEBPACK_IMPORTED_MODULE_4__.Es2019Array(...this.rootNode)
+        return (0,_Es2019Array__WEBPACK_IMPORTED_MODULE_4__.Es2019ArrayFrom)(this.rootNode)
             .filter(item => item != null)
             .map(elem => elem.offsetWidth)
             .reduce((accumulate, incoming) => accumulate + incoming, 0);
     }
     get offsetHeight() {
-        return new _Es2019Array__WEBPACK_IMPORTED_MODULE_4__.Es2019Array(...this.rootNode)
+        return (0,_Es2019Array__WEBPACK_IMPORTED_MODULE_4__.Es2019ArrayFrom)(this.rootNode)
             .filter(item => item != null)
             .map(elem => elem.offsetHeight)
             .reduce((accumulate, incoming) => accumulate + incoming, 0);
     }
     get offsetLeft() {
-        return new _Es2019Array__WEBPACK_IMPORTED_MODULE_4__.Es2019Array(...this.rootNode)
+        return (0,_Es2019Array__WEBPACK_IMPORTED_MODULE_4__.Es2019ArrayFrom)(this.rootNode)
             .filter(item => item != null)
             .map(elem => elem.offsetLeft)
             .reduce((accumulate, incoming) => accumulate + incoming, 0);
     }
     get offsetTop() {
-        return new _Es2019Array__WEBPACK_IMPORTED_MODULE_4__.Es2019Array(this.rootNode)
+        return (0,_Es2019Array__WEBPACK_IMPORTED_MODULE_4__.Es2019ArrayFrom)(this.rootNode)
             .filter(item => item != null)
             .map(elem => elem.offsetTop)
             .reduce((accumulate, incoming) => accumulate + incoming, 0);
     }
     get asNodeArray() {
-        return new _Es2019Array__WEBPACK_IMPORTED_MODULE_4__.Es2019Array(...this.rootNode.filter(item => item != null));
+        return (0,_Es2019Array__WEBPACK_IMPORTED_MODULE_4__.Es2019ArrayFrom)(this.rootNode.filter(item => item != null));
     }
     get nonce() {
         return new NonceValueEmbedder(this.rootNode);
@@ -1302,7 +1322,7 @@ class DomQuery {
     byId(id, includeRoot) {
         let res = [];
         if (includeRoot) {
-            res = res.concat(...new _Es2019Array__WEBPACK_IMPORTED_MODULE_4__.Es2019Array(...((this === null || this === void 0 ? void 0 : this.rootNode) || []))
+            res = res.concat((0,_Es2019Array__WEBPACK_IMPORTED_MODULE_4__.Es2019ArrayFrom)((this === null || this === void 0 ? void 0 : this.rootNode) || [])
                 .filter((item) => id == item.id)
                 .map(item => new DomQuery(item)));
         }
@@ -1310,12 +1330,12 @@ class DomQuery {
         // on hidden elements we use the attributes match selector
         // that works
         res = res.concat(this.querySelectorAll(`[id="${id}"]`));
-        return new DomQuery(...res);
+        return new DomQuery(res);
     }
     byIdDeep(id, includeRoot) {
         let res = [];
         if (includeRoot) {
-            res = res.concat(new _Es2019Array__WEBPACK_IMPORTED_MODULE_4__.Es2019Array(...((this === null || this === void 0 ? void 0 : this.rootNode) || []))
+            res = res.concat((0,_Es2019Array__WEBPACK_IMPORTED_MODULE_4__.Es2019ArrayFrom)((this === null || this === void 0 ? void 0 : this.rootNode) || [])
                 .filter(item => id == item.id)
                 .map(item => new DomQuery(item)));
         }
@@ -1323,7 +1343,7 @@ class DomQuery {
         if (subItems.length) {
             res.push(subItems);
         }
-        return new DomQuery(...res);
+        return new DomQuery(res);
     }
     /**
      * same as byId just for the tag name
@@ -1335,12 +1355,12 @@ class DomQuery {
         var _a;
         let res = [];
         if (includeRoot) {
-            res = new _Es2019Array__WEBPACK_IMPORTED_MODULE_4__.Es2019Array(...((_a = this === null || this === void 0 ? void 0 : this.rootNode) !== null && _a !== void 0 ? _a : []))
+            res = (0,_Es2019Array__WEBPACK_IMPORTED_MODULE_4__.Es2019ArrayFrom)((_a = this === null || this === void 0 ? void 0 : this.rootNode) !== null && _a !== void 0 ? _a : [])
                 .filter(element => (element === null || element === void 0 ? void 0 : element.tagName) == tagName)
                 .reduce((reduction, item) => reduction.concat([item]), res);
         }
         (deep) ? res.push(this.querySelectorAllDeep(tagName)) : res.push(this.querySelectorAll(tagName));
-        return new DomQuery(...res);
+        return new DomQuery(res);
     }
     /**
      * attr accessor, usage myQuery.attr("class").value = "bla"
@@ -1461,7 +1481,7 @@ class DomQuery {
                 matched.push(item);
             }
         });
-        return new DomQuery(...matched);
+        return new DomQuery(matched);
     }
     /**
      * checks whether any item in this domQuery level matches the selector
@@ -1512,7 +1532,7 @@ class DomQuery {
         return this;
     }
     each(func) {
-        new _Es2019Array__WEBPACK_IMPORTED_MODULE_4__.Es2019Array(...this.rootNode)
+        (0,_Es2019Array__WEBPACK_IMPORTED_MODULE_4__.Es2019ArrayFrom)(this.rootNode)
             .forEach((item, cnt) => {
             // we could use a filter, but for the best performance we don´t
             if (item == null) {
@@ -1581,7 +1601,7 @@ class DomQuery {
         this.each((item) => {
             func(item) ? reArr.push(item) : null;
         });
-        return new DomQuery(...reArr);
+        return new DomQuery(reArr);
     }
     /**
      * global eval head appendix method
@@ -1696,7 +1716,7 @@ class DomQuery {
         let res = [];
         res.push(this);
         res = res.concat(toInsertParams);
-        return new DomQuery(...res);
+        return new DomQuery(res);
     }
     insertBefore(...toInsertParams) {
         this.each(existingItem => {
@@ -1711,7 +1731,7 @@ class DomQuery {
         let res = [];
         res.push(this);
         res = res.concat(toInsertParams);
-        return new DomQuery(...res);
+        return new DomQuery(res);
     }
     orElse(...elseValue) {
         if (this.isPresent()) {
@@ -1742,7 +1762,7 @@ class DomQuery {
             }
             parent = parent.parent();
         }
-        return new DomQuery(...ret);
+        return new DomQuery(ret);
     }
     /**
      * finds the first parent in the hierarchy for which the selector matches
@@ -1769,7 +1789,7 @@ class DomQuery {
             retArr.push(parent);
             parent = parent.parent().filter(item => item.matchesSelector(selector));
         }
-        return new DomQuery(...retArr);
+        return new DomQuery(retArr);
     }
     parent() {
         let ret = [];
@@ -1779,7 +1799,7 @@ class DomQuery {
                 ret.push(parent);
             }
         });
-        return new DomQuery(...ret);
+        return new DomQuery(ret);
     }
     copyAttrs(sourceItem) {
         sourceItem.eachElem((sourceNode) => {
@@ -1848,8 +1868,8 @@ class DomQuery {
         }
         let insertAdditionalItems = [];
         if (nodes.length > 1) {
-            insertAdditionalItems = insertAdditionalItems.concat(...nodes.values.slice(1));
-            res.push(DomQuery.byId(replaced).insertAfter(new DomQuery(...insertAdditionalItems)));
+            insertAdditionalItems = insertAdditionalItems.concat(nodes.values.slice(1));
+            res.push(DomQuery.byId(replaced).insertAfter(new DomQuery(insertAdditionalItems)));
         }
         if (runEmbeddedScripts) {
             this.runScripts();
@@ -1879,7 +1899,7 @@ class DomQuery {
                 // scripts before we run the 'include' command
                 // this.globalEval(finalScripts.join("\n"));
                 let joinedScripts = [];
-                new _Es2019Array__WEBPACK_IMPORTED_MODULE_4__.Es2019Array(...scriptsToProcess).forEach(item => {
+                (0,_Es2019Array__WEBPACK_IMPORTED_MODULE_4__.Es2019ArrayFrom)(scriptsToProcess).forEach(item => {
                     if (!item.nonce) {
                         joinedScripts.push(item.evalText);
                     }
@@ -2234,7 +2254,7 @@ class DomQuery {
         if (_Monad__WEBPACK_IMPORTED_MODULE_0__.Optional.fromNullable(to).isAbsent()) {
             to = this.length;
         }
-        return new DomQuery(...this.rootNode.slice(from, Math.min(to, this.length)));
+        return new DomQuery(this.rootNode.slice(from, Math.min(to, this.length)));
     }
     limits(end) {
         this._limits = end;
@@ -2282,7 +2302,7 @@ class DomQuery {
                 throw new Error("Shadow dom creation not supported by the browser, please use a shim, to gain this functionality");
             }
         });
-        return new DomQuery(...shadowRoots);
+        return new DomQuery(shadowRoots);
     }
     /**
      * helper to fix a common dom problem
@@ -2310,7 +2330,7 @@ class DomQuery {
         let mapped = (shadowElements.allElems() || [])
             .map(element => element.shadowRoot)
             .filter((root) => !!root);
-        return new DomQuery(...mapped);
+        return new DomQuery(mapped);
     }
     get shadowRoot() {
         let shadowRoots = [];
@@ -2319,7 +2339,7 @@ class DomQuery {
                 shadowRoots.push(this.rootNode[cnt].shadowRoot);
             }
         }
-        return new DomQuery(...shadowRoots);
+        return new DomQuery(shadowRoots);
     }
     get hasShadow() {
         for (let cnt = 0; cnt < this.rootNode.length; cnt++) {
@@ -2380,13 +2400,13 @@ class DomQuery {
      */
     concat(toAttach, filterDoubles = true) {
         let domQueries = this.asArray;
-        const ret = new DomQuery(...domQueries.concat(toAttach.asArray));
+        const ret = new DomQuery(domQueries.concat(toAttach.asArray));
         // we now filter the doubles out
         if (!filterDoubles) {
             return ret;
         }
         let idx = {}; // ie11 does not support sets, we have to fake it
-        return new DomQuery(...ret.asArray.filter(node => {
+        return new DomQuery(ret.asArray.filter(node => {
             const notFound = !(idx === null || idx === void 0 ? void 0 : idx[node.value.value.outerHTML]);
             idx[node.value.value.outerHTML] = true;
             return notFound;
@@ -2398,13 +2418,13 @@ class DomQuery {
     }
     prependTo(elem) {
         elem.eachElem(item => {
-            item.prepend(...this.allElems());
+            prependChunked(item, this.allElems());
         });
         return this;
     }
     prepend(elem) {
         this.eachElem(item => {
-            item.prepend(...elem.allElems());
+            prependChunked(item, elem.allElems());
         });
         return this;
     }
@@ -2425,9 +2445,9 @@ class DomQuery {
                 continue;
             }
             let res = this.rootNode[cnt].querySelectorAll(selector);
-            nodes = nodes.concat(...objToArray(res));
+            nodes = nodes.concat(objToArray(res));
         }
-        return new DomQuery(...nodes);
+        return new DomQuery(nodes);
     }
     /*deep with a selector and a pseudo /shadow/ marker to break into the next level*/
     _querySelectorAllDeep(selector) {
@@ -2435,7 +2455,7 @@ class DomQuery {
         if (!((_a = this === null || this === void 0 ? void 0 : this.rootNode) === null || _a === void 0 ? void 0 : _a.length)) {
             return this;
         }
-        let foundNodes = new DomQuery(...this.rootNode);
+        let foundNodes = new DomQuery(this.rootNode);
         let selectors = selector.split(/\/shadow\//);
         for (let cnt2 = 0; cnt2 < selectors.length; cnt2++) {
             if (selectors[cnt2] == "") {
@@ -2466,9 +2486,9 @@ class DomQuery {
                 continue;
             }
             let res = [this.rootNode[cnt].closest(selector)];
-            nodes = nodes.concat(...res);
+            nodes = nodes.concat(res);
         }
-        return new DomQuery(...nodes);
+        return new DomQuery(nodes);
     }
     /*deep with a selector and a pseudo /shadow/ marker to break into the next level*/
     _closestDeep(selector) {
@@ -2476,7 +2496,7 @@ class DomQuery {
         if (!((_a = this === null || this === void 0 ? void 0 : this.rootNode) === null || _a === void 0 ? void 0 : _a.length)) {
             return this;
         }
-        let foundNodes = new DomQuery(...this.rootNode);
+        let foundNodes = new DomQuery(this.rootNode);
         let selectors = selector.split(/\/shadow\//);
         for (let cnt2 = 0; cnt2 < selectors.length; cnt2++) {
             if (selectors[cnt2] == "") {
@@ -2613,7 +2633,7 @@ class DomQueryCollector {
         this.data.push(element);
     }
     get finalValue() {
-        return new DomQuery(...this.data);
+        return new DomQuery(this.data);
     }
 }
 /**
@@ -2638,25 +2658,54 @@ const DQ$ = DomQuery.querySelectorAll;
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   Es2019Array: () => (/* binding */ Es2019Array),
-/* harmony export */   _Es2019Array: () => (/* binding */ _Es2019Array)
+/* harmony export */   Es2019ArrayFrom: () => (/* binding */ Es2019ArrayFrom),
+/* harmony export */   MAX_ARG_LENGTH: () => (/* binding */ MAX_ARG_LENGTH),
+/* harmony export */   _Es2019Array: () => (/* binding */ _Es2019Array),
+/* harmony export */   _Es2019ArrayFromArr: () => (/* binding */ _Es2019ArrayFromArr),
+/* harmony export */   pushChunked: () => (/* binding */ pushChunked)
 /* harmony export */ });
 /**
  * Extended array
  */
+/**
+ * Max number of elements passed per function call.
+ * Spreading or applying a large array into a single call
+ * ("fn(...data)") overflows the argument stack on most browsers
+ * (Chrome throws "RangeError: Maximum call stack size exceeded"
+ * at roughly 65k arguments), so bulk operations must be chunked.
+ */
+const MAX_ARG_LENGTH = 30000;
+/**
+ * Appends the contents of source to target in argument-stack-safe chunks,
+ * the chunk-safe replacement for target.push(...source)
+ *
+ * @param target the array to append to
+ * @param source the elements to append
+ * @returns target for chaining
+ */
+function pushChunked(target, source) {
+    for (let start = 0, len = source.length; start < len; start += MAX_ARG_LENGTH) {
+        Array.prototype.push.apply(target, Array.prototype.slice.call(source, start, start + MAX_ARG_LENGTH));
+    }
+    return target;
+}
 /**
  * Extended array which adds various es 2019 shim functions to the normal array
  * We must remap all array producing functions in order to keep
  * the delegation active, once we are in!
  */
 class Es2019Array_ extends Array {
-    constructor(...another) {
-        super(...another);
+    constructor(another = []) {
+        super();
+        // species constructors and legacy code paths may pass a scalar
+        another = Array.isArray(another) ? another : [another];
         if (another._another) {
             this._another = another._another;
         }
         else {
             this._another = another;
         }
+        pushChunked(this, another);
         //for testing it definitely runs into this branch because we are on es5 level
         //if (!(Array.prototype).flatMap as any) {
         this.flatMap = (flatMapFun) => this._flatMap(flatMapFun);
@@ -2667,27 +2716,27 @@ class Es2019Array_ extends Array {
     }
     map(callbackfn, thisArg) {
         const ret = Array.prototype.map.call(this._another, callbackfn, thisArg);
-        return new _Es2019Array(...ret);
+        return _Es2019ArrayFromArr(ret);
     }
     concat(...items) {
-        const ret = Array.prototype.concat.call(this._another, ...items);
-        return new _Es2019Array(...ret);
+        const ret = Array.prototype.concat.apply(this._another, items);
+        return _Es2019ArrayFromArr(ret);
     }
     reverse() {
         const ret = Array.prototype.reverse.call(this._another);
-        return new _Es2019Array(...ret);
+        return _Es2019ArrayFromArr(ret);
     }
     slice(start, end) {
         const ret = Array.prototype.slice.call(this._another, start, end);
-        return new _Es2019Array(...ret);
+        return _Es2019ArrayFromArr(ret);
     }
     splice(start, deleteCount) {
         const ret = Array.prototype.splice.call(this._another, start, deleteCount !== null && deleteCount !== void 0 ? deleteCount : 0);
-        return new _Es2019Array(...ret);
+        return _Es2019ArrayFromArr(ret);
     }
     filter(predicate, thisArg) {
         const ret = Array.prototype.filter.call(this._another, predicate, thisArg);
-        return new _Es2019Array(...ret);
+        return _Es2019ArrayFromArr(ret);
     }
     reduce(callbackfn, initialValue) {
         const ret = Array.prototype.reduce.call(this._another, callbackfn, initialValue);
@@ -2712,7 +2761,7 @@ class Es2019Array_ extends Array {
             res = res.concat(mapped);
         };
         arr.forEach(reFlat);
-        return new Es2019Array(...res);
+        return Es2019ArrayFrom(res);
     }
     _flatMap(mapperFunction) {
         let res = this.map(item => mapperFunction(item));
@@ -2722,7 +2771,14 @@ class Es2019Array_ extends Array {
 //let _Es2019Array = function<T>(...data: T[]) {};
 //let oldProto = Es2019Array.prototype;
 function _Es2019Array(...data) {
-    let ret = new Es2019Array_(...data);
+    return _Es2019ArrayFromArr(data);
+}
+/**
+ * chunk-safe variant of _Es2019Array which takes the backing array
+ * directly instead of spreading it into the call
+ */
+function _Es2019ArrayFromArr(data) {
+    let ret = new Es2019Array_(data);
     let proxied = new Proxy(ret, {
         get(target, p, receiver) {
             if ("symbol" == typeof p) {
@@ -2750,8 +2806,20 @@ var Es2019Array = ((Array.prototype.flatMap) ? function (...data) {
     // but has no flatMap function, could be a node issue also or Typescript!
     // we remap that (could be related to: https://github.com/microsoft/TypeScript/issues/31033
     // the check and remap fixes the issue which should not exist in the first place
-    return (data === null || data === void 0 ? void 0 : data.flatMap) ? data : _Es2019Array(...data);
+    return (data === null || data === void 0 ? void 0 : data.flatMap) ? data : _Es2019ArrayFromArr(data);
 } : _Es2019Array);
+/**
+ * chunk-safe variant of new Es2019Array(...source) -
+ * spreading a large array into the constructor call overflows the
+ * argument stack ("Maximum call stack size exceeded"), this builder
+ * copies the data over in safe chunks instead
+ *
+ * @param source an array or array-like holding the initial data
+ */
+function Es2019ArrayFrom(source) {
+    const data = pushChunked([], source);
+    return (Array.prototype.flatMap) ? data : _Es2019ArrayFromArr(data);
+}
 
 
 /***/ },
@@ -2926,7 +2994,7 @@ var Lang;
         //special condition array delivered no offset no pack
         if ((obj) instanceof Array && !offset && !pack)
             return obj;
-        return new _Es2019Array__WEBPACK_IMPORTED_MODULE_1__.Es2019Array(...pack.concat(Array.prototype.slice.call(obj, offset)));
+        return (0,_Es2019Array__WEBPACK_IMPORTED_MODULE_1__.Es2019ArrayFrom)(pack.concat(Array.prototype.slice.call(obj, offset)));
     }
     Lang.objToArray = objToArray;
     /**
@@ -3722,7 +3790,17 @@ class MultiStreamDatasource {
     constructor(first, ...strms) {
         this.first = first;
         this.selectedPos = 0;
-        this.strms = [first].concat(...strms);
+        // callers may pass single data sources or entire arrays of them,
+        // we flatten one level here (chunk-safe, no spread into a call)
+        this.strms = [first];
+        strms.forEach(strm => {
+            if (Array.isArray(strm)) {
+                (0,_Es2019Array__WEBPACK_IMPORTED_MODULE_0__.pushChunked)(this.strms, strm);
+            }
+            else {
+                this.strms.push(strm);
+            }
+        });
         this.activeStrm = this.strms[this.selectedPos];
     }
     current() {
@@ -3823,6 +3901,18 @@ class ArrayStreamDataSource {
     constructor(...value) {
         this.dataPos = -1;
         this.value = value;
+    }
+    /**
+     * chunk-safe factory, takes the backing array directly instead
+     * of spreading it into the constructor call (spreading large arrays
+     * overflows the argument stack)
+     *
+     * @param data the array to stream over
+     */
+    static ofArray(data) {
+        const ret = new ArrayStreamDataSource();
+        ret.value = data !== null && data !== void 0 ? data : [];
+        return ret;
     }
     lookAhead(cnt = 1) {
         if ((this.dataPos + cnt) > this.value.length - 1) {
@@ -4077,7 +4167,7 @@ class QueryFormStringCollector {
         }
     }
     get finalValue() {
-        return new _Es2019Array__WEBPACK_IMPORTED_MODULE_0__.Es2019Array(...this.formData)
+        return (0,_Es2019Array__WEBPACK_IMPORTED_MODULE_0__.Es2019ArrayFrom)(this.formData)
             .map((keyVal) => keyVal.join("="))
             .reduce((item1, item2) => [item1, item2].join("&"));
     }
@@ -4204,7 +4294,7 @@ class FlatMapStreamDataSource {
         }
     }
     toDatasource(mapped) {
-        let ds = Array.isArray(mapped) ? new _SourcesCollectors__WEBPACK_IMPORTED_MODULE_1__.ArrayStreamDataSource(...mapped) : mapped;
+        let ds = Array.isArray(mapped) ? _SourcesCollectors__WEBPACK_IMPORTED_MODULE_1__.ArrayStreamDataSource.ofArray(mapped) : mapped;
         this.walkedDataSources.push(ds);
         return ds;
     }
@@ -4254,23 +4344,35 @@ class Stream {
         this.value = value;
     }
     static of(...data) {
-        return new Stream(...data);
+        return Stream.ofArr(data);
+    }
+    /**
+     * chunk-safe factory, takes the backing array directly instead of
+     * spreading it into the call (Stream.of(...largeArray) overflows the
+     * argument stack on large arrays)
+     *
+     * @param data the array to stream over
+     */
+    static ofArr(data) {
+        const ret = new Stream();
+        ret.value = data !== null && data !== void 0 ? data : [];
+        return ret;
     }
     static ofAssoc(data) {
-        return this.of(...Object.keys(data)).map(key => [key, data[key]]);
+        return this.ofArr(Object.keys(data)).map(key => [key, data[key]]);
     }
     static ofDataSource(dataSource) {
         let value = [];
         while (dataSource.hasNext()) {
             value.push(dataSource.next());
         }
-        return new Stream(...value);
+        return Stream.ofArr(value);
     }
     static ofDomQuery(value) {
-        return Stream.of(...value.asArray);
+        return Stream.ofArr(value.asArray);
     }
     static ofConfig(value) {
-        return Stream.of(...Object.keys(value.value)).map(key => [key, value.value[key]]);
+        return Stream.ofArr(Object.keys(value.value)).map(key => [key, value.value[key]]);
     }
     current() {
         if (this.pos == -1) {
@@ -4291,7 +4393,7 @@ class Stream {
      */
     concat(...toAppend) {
         let toConcat = [this].concat(toAppend);
-        return Stream.of(...toConcat).flatMap(item => item);
+        return Stream.ofArr(toConcat).flatMap(item => item);
     }
     onElem(fn) {
         for (let cnt = 0; cnt < this.value.length && (this._limits == -1 || cnt < this._limits); cnt++) {
@@ -4313,7 +4415,7 @@ class Stream {
         this.each((item) => {
             res.push(fn(item));
         });
-        return new Stream(...res);
+        return Stream.ofArr(res);
     }
     /*
      * we need to implement it to fulfill the contract, although it is used only internally
@@ -4325,7 +4427,7 @@ class Stream {
             let strmR = fn(item);
             ret = Array.isArray(strmR) ? ret.concat(strmR) : ret.concat(strmR.value);
         });
-        return Stream.of(...ret);
+        return Stream.ofArr(ret);
     }
     filter(fn) {
         let res = [];
@@ -4334,7 +4436,7 @@ class Stream {
                 res.push(data);
             }
         });
-        return new Stream(...res);
+        return Stream.ofArr(res);
     }
     reduce(fn, startVal = null) {
         let offset = startVal != null ? 0 : 1;
@@ -4389,7 +4491,7 @@ class Stream {
     }
     sort(comparator) {
         let newArr = this.value.slice().sort(comparator);
-        return Stream.of(...newArr);
+        return Stream.ofArr(newArr);
     }
     collect(collector) {
         this.each(data => collector.collect(data));
@@ -4464,19 +4566,29 @@ class Stream {
  */
 class LazyStream {
     static of(...values) {
-        return new LazyStream(new _SourcesCollectors__WEBPACK_IMPORTED_MODULE_1__.ArrayStreamDataSource(...values));
+        return LazyStream.ofArr(values);
+    }
+    /**
+     * chunk-safe factory, takes the backing array directly instead of
+     * spreading it into the call (LazyStream.of(...largeArray) overflows
+     * the argument stack on large arrays)
+     *
+     * @param data the array to stream over
+     */
+    static ofArr(data) {
+        return new LazyStream(_SourcesCollectors__WEBPACK_IMPORTED_MODULE_1__.ArrayStreamDataSource.ofArray(data));
     }
     static ofAssoc(data) {
-        return this.of(...Object.keys(data)).map(key => [key, data[key]]);
+        return this.ofArr(Object.keys(data)).map(key => [key, data[key]]);
     }
     static ofStreamDataSource(value) {
         return new LazyStream(value);
     }
     static ofDomQuery(value) {
-        return LazyStream.of(...value.asArray);
+        return LazyStream.ofArr(value.asArray);
     }
     static ofConfig(value) {
-        return LazyStream.of(...Object.keys(value.value)).map(key => [key, value.value[key]]);
+        return LazyStream.ofArr(Object.keys(value.value)).map(key => [key, value.value[key]]);
     }
     constructor(parent) {
         this._limits = -1;
@@ -4635,7 +4747,7 @@ class LazyStream {
     sort(comparator) {
         let arr = this.collect(new _SourcesCollectors__WEBPACK_IMPORTED_MODULE_1__.ArrayCollector());
         arr = arr.sort(comparator);
-        return LazyStream.of(...arr);
+        return LazyStream.ofArr(arr);
     }
     get value() {
         return this.collect(new _SourcesCollectors__WEBPACK_IMPORTED_MODULE_1__.ArrayCollector());

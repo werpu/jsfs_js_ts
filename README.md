@@ -281,6 +281,21 @@ Tests
 - Added tests for HiddenInputBuilder, Lang, and async queue     
 
 
+## 4.1.0-beta.19
+
+- Bugfix: Chromium error on huge DOM replacements
+  - Partial responses replacing very large DOM trees (~150,000 nodes) failed on Chromium-based
+    browsers because unchunked large arrays were passed in a single `push(...array)` /
+    constructor-spread call, exceeding the engine's argument-count limit. `mona-dish` now
+    appends in chunks of 30,000 elements (`pushChunked` / `Es2019ArrayFrom`), and all
+    `DomQuery` node-list paths go through the chunk-safe code.
+- Dependency update
+  - Updated `mona-dish` to `0.50.0-beta.5`
+
+## 4.1.0-beta.18
+
+- Added missing ASL2 license headers
+
 ## 4.1.0-beta.17
 
 - Bugfix: caret position regression on partial updates

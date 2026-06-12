@@ -1055,14 +1055,45 @@ class DomQuery {
         if (queryRes.length) {
             found.push(queryRes);
         }
-        let shadowRoots = this.querySelectorAll("*").shadowRoot;
+        let shadowRoots = this._collectShadowRoots();
         if (shadowRoots.length) {
-            let shadowRes = shadowRoots.querySelectorAllDeep(queryStr);
+            let shadowRes = new DomQuery(shadowRoots).querySelectorAllDeep(queryStr);
             if (shadowRes.length) {
                 found.push(shadowRes);
             }
         }
         return new DomQuery(found);
+    }
+    /**
+     * Collects the shadow roots hosted by the light-DOM descendants of each root
+     * node in a single pass.
+     *
+     * This replaces the prior `querySelectorAll("*").shadowRoot`, which
+     * materialized a DomQuery wrapping every element on the page and then walked
+     * that throwaway collection a second time through the shadowRoot getter. We
+     * still have to inspect every element - there is no CSS selector for "has a
+     * shadow root", so the cost stays O(number of elements) - but we drop the
+     * intermediate all-elements DomQuery and the redundant second traversal.
+     *
+     * @private
+     */
+    _collectShadowRoots() {
+        var _a, _b;
+        let shadowRoots = [];
+        for (let cnt = 0; cnt < ((_b = (_a = this === null || this === void 0 ? void 0 : this.rootNode) === null || _a === void 0 ? void 0 : _a.length) !== null && _b !== void 0 ? _b : 0); cnt++) {
+            let root = this.rootNode[cnt];
+            if (!(root === null || root === void 0 ? void 0 : root.querySelectorAll)) {
+                continue;
+            }
+            let all = root.querySelectorAll("*");
+            for (let i = 0, len = all.length; i < len; i++) {
+                let shadowRoot = all[i].shadowRoot;
+                if (shadowRoot) {
+                    shadowRoots.push(shadowRoot);
+                }
+            }
+        }
+        return shadowRoots;
     }
     /**
      * disabled flag
@@ -1085,7 +1116,11 @@ class DomQuery {
     get childNodes() {
         let childNodeArr = [];
         this.eachElem((item) => {
-            childNodeArr = childNodeArr.concat(objToArray(item.childNodes));
+            // push the live childNodes list straight into the single target in
+            // chunks instead of concat(objToArray(...)) per root, which both
+            // copied each child list and reallocated the growing accumulator
+            // (O(roots * total children))
+            (0,_Es2019Array__WEBPACK_IMPORTED_MODULE_4__.pushChunked)(childNodeArr, item.childNodes);
         });
         return new DomQuery(childNodeArr);
     }
@@ -1339,6 +1374,11 @@ class DomQuery {
                 .filter(item => id == item.id)
                 .map(item => new DomQuery(item)));
         }
+        // a "deep" id search must collect matches across every scope: ids are
+        // unique only within a single node-tree, so the same id may legitimately
+        // exist in the light DOM and inside one or more shadow roots at once.
+        // We therefore cannot short-circuit on a light-DOM hit and must run the
+        // full deep search.
         let subItems = this.querySelectorAllDeep(`[id="${id}"]`);
         if (subItems.length) {
             res.push(subItems);
@@ -1355,9 +1395,12 @@ class DomQuery {
         var _a;
         let res = [];
         if (includeRoot) {
-            res = (0,_Es2019Array__WEBPACK_IMPORTED_MODULE_4__.Es2019ArrayFrom)((_a = this === null || this === void 0 ? void 0 : this.rootNode) !== null && _a !== void 0 ? _a : [])
-                .filter(element => (element === null || element === void 0 ? void 0 : element.tagName) == tagName)
-                .reduce((reduction, item) => reduction.concat([item]), res);
+            // append the matching roots in a single pass; the prior
+            // reduce(reduction.concat([item])) reallocated the accumulator on
+            // every match (O(matches^2))
+            let matchingRoots = (0,_Es2019Array__WEBPACK_IMPORTED_MODULE_4__.Es2019ArrayFrom)((_a = this === null || this === void 0 ? void 0 : this.rootNode) !== null && _a !== void 0 ? _a : [])
+                .filter(element => (element === null || element === void 0 ? void 0 : element.tagName) == tagName);
+            (0,_Es2019Array__WEBPACK_IMPORTED_MODULE_4__.pushChunked)(res, matchingRoots);
         }
         (deep) ? res.push(this.querySelectorAllDeep(tagName)) : res.push(this.querySelectorAll(tagName));
         return new DomQuery(res);
@@ -2457,7 +2500,11 @@ class DomQuery {
                 continue;
             }
             let res = this.rootNode[cnt].querySelectorAll(selector);
-            nodes = nodes.concat(objToArray(res));
+            // push the NodeList straight into the single target array in
+            // argument-stack-safe chunks; this avoids the objToArray copy plus
+            // the concat reallocation, which doubled a large result set (e.g. the
+            // querySelectorAll("*") shadow scan) on every root iteration
+            (0,_Es2019Array__WEBPACK_IMPORTED_MODULE_4__.pushChunked)(nodes, res);
         }
         return new DomQuery(nodes);
     }

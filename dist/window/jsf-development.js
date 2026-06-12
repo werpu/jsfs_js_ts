@@ -2375,7 +2375,19 @@ class DomQuery {
     static setCaretPosition(ctrl, pos) {
         (ctrl === null || ctrl === void 0 ? void 0 : ctrl.focus) ? ctrl === null || ctrl === void 0 ? void 0 : ctrl.focus() : null;
         // the selection range is our caret position
-        (ctrl === null || ctrl === void 0 ? void 0 : ctrl.setSelectionRange) ? ctrl === null || ctrl === void 0 ? void 0 : ctrl.setSelectionRange(pos, pos) : null;
+        //
+        // setSelectionRange exists on every HTMLInputElement, but the DOM spec
+        // mandates that calling it on input types which do not support text
+        // selection (checkbox, radio, button, file, ...) throws an
+        // InvalidStateError. Hence a plain existence check is not enough; we
+        // additionally swallow the error so the focus above still takes effect
+        // (silent fail as documented).
+        try {
+            (ctrl === null || ctrl === void 0 ? void 0 : ctrl.setSelectionRange) ? ctrl === null || ctrl === void 0 ? void 0 : ctrl.setSelectionRange(pos, pos) : null;
+        }
+        catch (e) {
+            // input type does not support a caret/selection -> nothing to set
+        }
     }
     /**
      * Implementation of an iterator

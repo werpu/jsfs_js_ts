@@ -281,6 +281,13 @@ Tests
 - Added tests for HiddenInputBuilder, Lang, and async queue     
 
 
+## 4.1.0-beta.20
+
+- Bugfix: focus bug in the new refocus code of `mona-dish`
+  - Fixed upstream in `mona-dish` `0.50.0-beta.6`; the bundles are rebuilt against that version.
+- Dependency update
+  - Updated `mona-dish` to `0.50.0-beta.6`
+
 ## 4.1.0-beta.19
 
 - Bugfix: Chromium error on huge DOM replacements

@@ -281,6 +281,16 @@ Tests
 - Added tests for HiddenInputBuilder, Lang, and async queue     
 
 
+## 4.1.0-beta.21
+
+- Performance improvements on DOM operations
+  - Faster deep element lookups on large pages: shadow-root collection in `mona-dish`
+    now iterates the raw `NodeList` directly instead of materializing every element of
+    the page into intermediate arrays, avoiding several full-page-size array copies per
+    deep search (relevant for partial updates replacing very large DOM trees).
+- Dependency update
+  - Updated `mona-dish` to `0.50.0-beta.8`
+
 ## 4.1.0-beta.20
 
 - Bugfix: focus bug in the new refocus code of `mona-dish`

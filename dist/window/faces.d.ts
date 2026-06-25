@@ -289,5 +289,32 @@ declare namespace myfaces {
     /**
      * legacy oam functions
      */
-    export const oam: typeof oam;
+    export namespace oam {
+
+        /**
+         * sets a hidden input field
+         * @param formName the formName
+         * @param name the hidden field
+         * @param value the value to be rendered
+         */
+        export const setHiddenInput: (formName: string, name: string, value: string) => void;
+        /**
+         * clears a hidden input field
+         *
+         * @param formName formName for the input
+         * @param name the name of the input field
+         */
+        export const clearHiddenInput: (formName: string, name: string) => void;
+        /**
+         * does special form submit remapping
+         * re-maps the issuing command link into something,
+         * the "decode" of the command link on the server can understand
+         *
+         * @param formName
+         * @param linkId
+         * @param target
+         * @param params
+         */
+        export const submitForm: (formName: string, linkId?: string | null, target?: string | null, params?: Record<string, any> | [string, any][] | null) => boolean;
+    }
 }

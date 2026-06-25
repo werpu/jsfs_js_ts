@@ -156,7 +156,7 @@ function makeGlobalDeclaration(content) {
       // Replace 'const oam: typeof oam;' with the inlined nested namespace.
       // 'export namespace' so that myfaces.oam is visible to TypeScript.
       content = content.replace(
-        /^([ \t]*)const oam: typeof oam;/m,
+        /^([ \t]*)(?:export )?const oam: typeof oam;/m,
         `$1export namespace oam {\n${inner}\n$1}`
       );
     }

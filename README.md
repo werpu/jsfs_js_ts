@@ -281,6 +281,13 @@ Tests
 - Added tests for HiddenInputBuilder, Lang, and async queue     
 
 
+## 4.1.0-beta.22
+
+- Bugfix: `faces.d.ts` circular type reference `const oam: typeof oam` (TS2502)
+  - The `build-dts.mjs` post-processor now correctly replaces the self-referential
+    `export const oam` declaration with an inlined `export namespace oam { ... }` block
+    containing the real member signatures (`setHiddenInput`, `clearHiddenInput`, `submitForm`).
+
 ## 4.1.0-beta.21
 
 - Performance improvements on DOM operations

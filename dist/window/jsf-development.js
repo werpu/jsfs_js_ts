@@ -91,7 +91,7 @@ function append(target, ...accessPath) {
                 if (!Array.isArray(lastPathItem.target[lastPathItem.key])) {
                     lastPathItem.target[lastPathItem.key] = [lastPathItem.target[lastPathItem.key]];
                 }
-                (0,_Es2019Array__WEBPACK_IMPORTED_MODULE_0__.pushChunked)(lastPathItem.target[lastPathItem.key], value);
+                ;(0,_Es2019Array__WEBPACK_IMPORTED_MODULE_0__.pushChunked)(lastPathItem.target[lastPathItem.key], value);
             }
         }
     })();
@@ -1575,7 +1575,7 @@ class DomQuery {
         return this;
     }
     each(func) {
-        (0,_Es2019Array__WEBPACK_IMPORTED_MODULE_4__.Es2019ArrayFrom)(this.rootNode)
+        ;(0,_Es2019Array__WEBPACK_IMPORTED_MODULE_4__.Es2019ArrayFrom)(this.rootNode)
             .forEach((item, cnt) => {
             // we could use a filter, but for the best performance we don´t
             if (item == null) {
@@ -2260,7 +2260,7 @@ class DomQuery {
                             return;
                         }
                         //checkboxes etc.. need to be appended
-                        (0,_AssocArray__WEBPACK_IMPORTED_MODULE_5__.append)(target, name).value = element.inputValue.value;
+                        ;(0,_AssocArray__WEBPACK_IMPORTED_MODULE_5__.append)(target, name).value = element.inputValue.value;
                     }
                 }
             }
@@ -4891,7 +4891,7 @@ if ("undefined" != typeof _Global__WEBPACK_IMPORTED_MODULE_1__._global$) {
         if (void 0 === (0,_Global__WEBPACK_IMPORTED_MODULE_1__._global$)().Reflect || void 0 === (0,_Global__WEBPACK_IMPORTED_MODULE_1__._global$)().customElements || ((0,_Global__WEBPACK_IMPORTED_MODULE_1__._global$)().customElements).polyfillWrapFlushCallback)
             return;
         const a = HTMLElement;
-        (0,_Global__WEBPACK_IMPORTED_MODULE_1__._global$)().HTMLElement = {
+        ;(0,_Global__WEBPACK_IMPORTED_MODULE_1__._global$)().HTMLElement = {
             HTMLElement: function HTMLElement() {
                 return Reflect.construct(a, [], this.constructor);
             }
@@ -5002,7 +5002,7 @@ class TagBuilder {
                     }
                 });
             }
-            (0,_Global__WEBPACK_IMPORTED_MODULE_1__._global$)().customElements.define(this.tagName, this.clazz, this.theOptions || null);
+            ;(0,_Global__WEBPACK_IMPORTED_MODULE_1__._global$)().customElements.define(this.tagName, this.clazz, this.theOptions || null);
         }
         else {
             let _t_ = this;

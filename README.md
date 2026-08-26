@@ -32,7 +32,7 @@ where I just ran a set of 20 integration tests on a macro scale.
 ## Status
 
 We now have a stable version!
-The current stable version, and first stable version, is 4.0.
+The current stable version is 4.1.0; the first stable version was 4.0.
 Why 4.0 and not 1.0?
 The reason is that it is Faces 4.0 compliant, but also Faces 2.3 compliant,
 and is used in MyFaces 4.0.
@@ -280,6 +280,11 @@ Tests
 - Added tests for ExtDomQuery (nonce DOM fallback, runHeadInserts text-node path) and ExtConfig (append, appendIf, deepCopy)
 - Added tests for HiddenInputBuilder, Lang, and async queue     
 
+
+## 4.1.0
+
+- First stable release of the 4.1.0 line, promoted from the `4.1.0-beta.1` – `4.1.0-beta.23` series
+  - See "Changes since 4.0" above for the consolidated feature/fix summary, and the beta entries below for the individual increments
 
 ## 4.1.0-beta.23
 

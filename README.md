@@ -281,6 +281,11 @@ Tests
 - Added tests for HiddenInputBuilder, Lang, and async queue     
 
 
+## 4.1.1
+
+- Dependency update: `mona-dish` bumped from `0.50.0-beta.8` to `0.50.0-Final`
+- Eval CSP nonce support: `<eval>` partial-response nodes now carry an explicit `nonce` attribute through to the generated script element, per the CSP proposal tracked in [jakartaee/faces#1590](https://github.com/jakartaee/faces/issues/1590) for Jakarta Faces 5.0, falling back to the page's own CSP nonce when the server doesn't send one
+
 ## 4.1.0
 
 - First stable release of the 4.1.0 line, promoted from the `4.1.0-beta.1` – `4.1.0-beta.23` series

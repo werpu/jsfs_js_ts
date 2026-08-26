@@ -31,7 +31,7 @@ test coverage via Mocha-based unit tests.</p>
 where I just ran a set of 20 integration tests on a macro scale.</p>
 <h2 id="status" class="tsd-anchor-link">Status<a href="#status" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <p>We now have a stable version!
-The current stable version, and first stable version, is 4.0.
+The current stable version is 4.1.0; the first stable version was 4.0.
 Why 4.0 and not 1.0?
 The reason is that it is Faces 4.0 compliant, but also Faces 2.3 compliant,
 and is used in MyFaces 4.0.
@@ -259,6 +259,25 @@ enqueues on separate instances to cancel each other's debounce window</li>
 <li>Added tests for ExtDomQuery (nonce DOM fallback, runHeadInserts text-node path) and ExtConfig (append, appendIf, deepCopy)</li>
 <li>Added tests for HiddenInputBuilder, Lang, and async queue</li>
 </ul>
+<h2 id="410" class="tsd-anchor-link">4.1.0<a href="#410" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<ul>
+<li>First stable release of the 4.1.0 line, promoted from the <code>4.1.0-beta.1</code> – <code>4.1.0-beta.23</code> series
+<ul>
+<li>See &quot;Changes since 4.0&quot; above for the consolidated feature/fix summary, and the beta entries below for the individual increments</li>
+</ul>
+</li>
+</ul>
+<h2 id="410-beta23" class="tsd-anchor-link">4.1.0-beta.23<a href="#410-beta23" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<ul>
+<li>Added a response test covering table cell, row insert/delete, and header/footer replacement in a single ajax response</li>
+<li>Dependency updates (<code>npm-check-updates</code>)
+<ul>
+<li>Updated <code>@microsoft/api-extractor</code>, <code>@types/node</code>, <code>@types/sinon</code>, <code>html-webpack-plugin</code>, <code>mocha</code>, <code>sinon</code>, <code>tsx</code>, <code>typedoc</code>, <code>webpack</code>, <code>webpack-cli</code></li>
+<li><code>typescript</code> and <code>jsdom</code> kept on their current minor lines (<code>^6.0.3</code> / <code>^29.1.1</code>), since <code>typedoc@0.28.x</code> and <code>global-jsdom@29.x</code> don't yet support their next majors (TypeScript 7, jsdom 30)</li>
+</ul>
+</li>
+<li><code>npm audit fix</code>: resolved 3 high-severity transitive advisories (<code>brace-expansion</code>, <code>fast-uri</code>, <code>js-yaml</code>)</li>
+</ul>
 <h2 id="410-beta22" class="tsd-anchor-link">4.1.0-beta.22<a href="#410-beta22" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <ul>
 <li>Bugfix: <code>faces.d.ts</code> circular type reference <code>const oam: typeof oam</code> (TS2502)
@@ -430,6 +449,8 @@ See AI_CONTRIBUTIONS.md for full disclosure</p>
 <li><a href="#upload-support"><span>Upload <wbr/>Support</span></a></li>
 <li><a href="#changes-since-40"><span>Changes since 4.0</span></a></li>
 <li><a href="#changes-since-410-beta-10"><span>Changes since 4.1.0-<wbr/>beta-<wbr/>10</span></a></li>
+<li><a href="#410"><span>4.1.0</span></a></li>
+<li><a href="#410-beta23"><span>4.1.0-<wbr/>beta.23</span></a></li>
 <li><a href="#410-beta22"><span>4.1.0-<wbr/>beta.22</span></a></li>
 <li><a href="#410-beta21"><span>4.1.0-<wbr/>beta.21</span></a></li>
 <li><a href="#410-beta20"><span>4.1.0-<wbr/>beta.20</span></a></li>

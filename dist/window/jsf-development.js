@@ -1966,7 +1966,7 @@ class DomQuery {
             return scriptsToProcess;
         };
         let finalScripts = [], allowedItemTypes = ["", "script", "text/javascript", "text/ecmascript", "ecmascript"], execScript = (item) => {
-            var _a, _b, _c, _d;
+            var _a;
             let tagName = item.tagName;
             let itemType = ((_a = item === null || item === void 0 ? void 0 : item.type) !== null && _a !== void 0 ? _a : '').toLowerCase();
             if (tagName &&
@@ -1976,7 +1976,7 @@ class DomQuery {
                 if ('undefined' != typeof src
                     && null != src
                     && src.length > 0) {
-                    let nonce = (_b = item === null || item === void 0 ? void 0 : item.nonce) !== null && _b !== void 0 ? _b : item.getAttribute('nonce').value;
+                    let nonce = (item === null || item === void 0 ? void 0 : item.nonce) || item.getAttribute('nonce');
                     // we have to move this into an inner if because chrome otherwise chokes
                     // due to changing the and order instead of relying on left to right
                     // if jsf.js is already registered we do not replace it anymore
@@ -2015,7 +2015,7 @@ class DomQuery {
                             go = true;
                         }
                     }
-                    let nonce = (_d = (_c = item === null || item === void 0 ? void 0 : item.nonce) !== null && _c !== void 0 ? _c : item.getAttribute('nonce').value) !== null && _d !== void 0 ? _d : '';
+                    let nonce = (item === null || item === void 0 ? void 0 : item.nonce) || item.getAttribute('nonce') || '';
                     // we have to run the script under a global context
                     // we store the script for fewer calls to eval
                     finalScripts.push({
@@ -6688,6 +6688,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   APPLIED_VST: () => (/* binding */ APPLIED_VST),
 /* harmony export */   ATTR_ID: () => (/* binding */ ATTR_ID),
 /* harmony export */   ATTR_NAME: () => (/* binding */ ATTR_NAME),
+/* harmony export */   ATTR_NONCE: () => (/* binding */ ATTR_NONCE),
 /* harmony export */   ATTR_URL: () => (/* binding */ ATTR_URL),
 /* harmony export */   ATTR_VALUE: () => (/* binding */ ATTR_VALUE),
 /* harmony export */   BEGIN: () => (/* binding */ BEGIN),
@@ -6930,6 +6931,7 @@ const ATTR_URL = "url";
 const ATTR_NAME = "name";
 const ATTR_VALUE = "value";
 const ATTR_ID = "id";
+const ATTR_NONCE = "nonce";
 /*partial response types*/
 const XML_TAG_PARTIAL_RESP = "partial-response";
 /*partial commands*/
@@ -9068,10 +9070,17 @@ class ResponseProcessor {
     /**
      * Leaf Tag eval... process whatever is in the eval cdata block
      *
+     * if the eval node carries an explicit nonce attribute (Jakarta Faces 5.0 CSP proposal,
+     * see https://github.com/jakartaee/faces/issues/1590) it is used, otherwise this falls
+     * back to the page's own CSP nonce, the same one applied to embedded scripts in update/insert
+     * blocks, so evaluated code is never silently dropped under a strict CSP script-src policy
+     *
      * @param node the node to eval
      */
     eval(node) {
-        _util_ExtDomQuery__WEBPACK_IMPORTED_MODULE_7__.ExtDomQuery.globalEval(node.cDATAAsString);
+        var _a;
+        const nonce = ((_a = node.attr(_core_Const__WEBPACK_IMPORTED_MODULE_6__.ATTR_NONCE).value) !== null && _a !== void 0 ? _a : _util_ExtDomQuery__WEBPACK_IMPORTED_MODULE_7__.ExtDomQuery.nonce.value);
+        _util_ExtDomQuery__WEBPACK_IMPORTED_MODULE_7__.ExtDomQuery.globalEval(node.cDATAAsString, nonce);
     }
     /**
      * processes an incoming error from the response

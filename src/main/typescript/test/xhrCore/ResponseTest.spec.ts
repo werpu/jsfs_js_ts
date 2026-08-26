@@ -320,6 +320,44 @@ describe('Tests of the various aspects of the response protocol functionality', 
 
     });
 
+    it("must forward an explicit nonce attribute on the eval node to the generated script element", function () {
+        const createElementSpy = sinon.spy(document, "createElement");
+
+        DQ.byId("cmd_eval").click();
+        this.respond(XmlResponses.EVAL_WITH_EXPLICIT_NONCE);
+
+        const evalScript: any = createElementSpy.returnValues.find((el: any) =>
+            el?.tagName === "SCRIPT" && (el.innerHTML ?? "").indexOf("eval test succeeded") != -1);
+
+        expect(evalScript, "the eval code must have run through a generated script element").to.exist;
+        expect(evalScript.nonce).to.eq("serverSuppliedNonce");
+
+        createElementSpy.restore();
+    });
+
+    it("must fall back to the page's own CSP nonce when the eval node carries none", function () {
+        // window.myfaces is a shared module-level singleton, not per-jsdom-window state,
+        // so this mutation must be restored or it leaks into unrelated tests later in the run
+        const originalConfig = window.myfaces.config;
+        window.myfaces.config = {...window.myfaces.config, cspMeta: {nonce: "fallbackNonce"}};
+
+        const createElementSpy = sinon.spy(document, "createElement");
+
+        try {
+            DQ.byId("cmd_eval").click();
+            this.respond(XmlResponses.EVAL_1);
+
+            const evalScript: any = createElementSpy.returnValues.find((el: any) =>
+                el?.tagName === "SCRIPT" && (el.innerHTML ?? "").indexOf("eval test succeeded") != -1);
+
+            expect(evalScript, "the eval code must have run through a generated script element").to.exist;
+            expect(evalScript.nonce).to.eq("fallbackNonce");
+        } finally {
+            createElementSpy.restore();
+            window.myfaces.config = originalConfig;
+        }
+    });
+
     it("must have updated the viewstates properly", function (done) {
         DQ.byId("cmd_eval").click();
         /*js full submit form, coming from the integration tests*/

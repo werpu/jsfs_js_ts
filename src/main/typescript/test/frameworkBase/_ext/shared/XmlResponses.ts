@@ -26,6 +26,20 @@ export class XmlResponses {
     </partial-response>
     `;
 
+    /**
+     * server-supplied nonce on the eval node itself, per the CSP proposal for
+     * Jakarta Faces 5.0 (https://github.com/jakartaee/faces/issues/1590)
+     */
+    static EVAL_WITH_EXPLICIT_NONCE = `
+    <partial-response>
+    <changes>
+        <eval nonce="serverSuppliedNonce"><![CDATA[
+            document.getElementById('evalarea1').innerHTML = 'eval test succeeded';
+        ]]></eval>
+    </changes>
+    </partial-response>
+    `;
+
     static UPDATE_INSERT_1 = `
     <partial-response>
     <changes>

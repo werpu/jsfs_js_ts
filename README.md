@@ -281,6 +281,14 @@ Tests
 - Added tests for HiddenInputBuilder, Lang, and async queue     
 
 
+## 4.1.0-beta.23
+
+- Added a response test covering table cell, row insert/delete, and header/footer replacement in a single ajax response
+- Dependency updates (`npm-check-updates`)
+  - Updated `@microsoft/api-extractor`, `@types/node`, `@types/sinon`, `html-webpack-plugin`, `mocha`, `sinon`, `tsx`, `typedoc`, `webpack`, `webpack-cli`
+  - `typescript` and `jsdom` kept on their current minor lines (`^6.0.3` / `^29.1.1`), since `typedoc@0.28.x` and `global-jsdom@29.x` don't yet support their next majors (TypeScript 7, jsdom 30)
+- `npm audit fix`: resolved 3 high-severity transitive advisories (`brace-expansion`, `fast-uri`, `js-yaml`)
+
 ## 4.1.0-beta.22
 
 - Bugfix: `faces.d.ts` circular type reference `const oam: typeof oam` (TS2502)

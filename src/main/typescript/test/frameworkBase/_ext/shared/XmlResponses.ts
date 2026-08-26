@@ -125,6 +125,34 @@ export class XmlResponses {
     </partial-response>
     `;
 
+    /**
+     * exercises a table with an existing header, footer and 10 rows:
+     * a single cell replace, a row insert before an existing row,
+     * a row insert after an existing row, a row delete,
+     * a header (thead) replace and a footer (tfoot) replace,
+     * all in one partial response, the way a real jsf response would batch them.
+     */
+    static TABLE_ROW_CELL_HEADER_FOOTER_UPDATE = `
+    <partial-response>
+    <changes>
+        <update id="cell_5"><![CDATA[<td id="cell_5">name5-updated</td>]]></update>
+        <insert id="insert_before_row2" before="row_2"><![CDATA[
+            <tr id="row_inserted_before"><td id="cell_inserted_before">insertedBeforeRow2</td><td>extra</td></tr>
+        ]]></insert>
+        <insert id="insert_after_row7" after="row_7"><![CDATA[
+            <tr id="row_inserted_after"><td id="cell_inserted_after">insertedAfterRow7</td><td>extra</td></tr>
+        ]]></insert>
+        <delete id="row_9"></delete>
+        <update id="dataTable_header"><![CDATA[
+            <thead id="dataTable_header"><tr id="header_row"><th id="header_cell">NameUpdated</th><th id="header_cell2">ValueUpdated</th></tr></thead>
+        ]]></update>
+        <update id="dataTable_footer"><![CDATA[
+            <tfoot id="dataTable_footer"><tr id="footer_row"><td id="footer_cell">FooterUpdated</td><td id="footer_cell2">&nbsp;</td></tr></tfoot>
+        ]]></update>
+    </changes>
+    </partial-response>
+    `;
+
     static VIEWSTATE_1 = `
     <partial-response>
     <changes>

@@ -281,6 +281,11 @@ Tests
 - Added tests for HiddenInputBuilder, Lang, and async queue     
 
 
+## 4.1.2
+
+- Dependency update: `mona-dish` bumped from `0.50.0-Final` to `0.60.0`
+- Build: install scripts for `esbuild` and `fsevents` are now explicitly approved via `allowScripts` in `package.json`
+
 ## 4.1.1
 
 - Dependency update: `mona-dish` bumped from `0.50.0-beta.8` to `0.50.0-Final`

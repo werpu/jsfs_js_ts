@@ -27,7 +27,8 @@
  *   node scripts/build-dts.mjs
  */
 
-import { Extractor, ExtractorConfig } from "@microsoft/api-extractor";
+import { rollup } from "rollup";
+import { dts } from "rollup-plugin-dts";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 import { readFileSync, writeFileSync } from "fs";
@@ -59,24 +60,16 @@ const typescriptCompilerFolder = dirname(
     .resolve("typescript/package.json")
 );
 
-// --- Step 1: run api-extractor for faces.d.ts ---
+// --- Step 1: roll up the emitted .d.ts files into dist/window/faces.d.ts ---
 
-const configPath = resolve(projectRoot, "api-extractor.faces.json");
-console.log(`\napi-extractor: processing api-extractor.faces.json`);
-
-const extractorConfig = ExtractorConfig.loadFileAndPrepare(configPath);
-
-const result = Extractor.invoke(extractorConfig, {
-  localBuild: true,
-  typescriptCompilerFolder,
-  showVerboseMessages: false,
+console.log("\nrollup-plugin-dts: bundling declarations");
+const bundle = await rollup({
+  input: resolve(projectRoot, "target/dts/src/main/typescript/api/_api.d.ts"),
+  plugins: [dts({ respectExternal: true, compilerOptions: { skipLibCheck: true } })],
 });
-
-if (!result.succeeded) {
-  console.error("  ✖  api-extractor.faces.json — FAILED");
-  process.exit(1);
-}
-console.log("  ✔  api-extractor.faces.json — completed successfully");
+await bundle.write({ file: resolve(projectRoot, "dist/window/faces.d.ts"), format: "es" });
+await bundle.close();
+console.log("  ✔  faces.d.ts — rolled up");
 
 // --- Step 2: post-process faces.d.ts into a global declaration file ---
 
@@ -116,12 +109,11 @@ function makeGlobalDeclaration(content) {
   content = content.replace(/^export (declare namespace )/gm, "$1");
 
   // B. Remove the module-marker line.
-  content = content.replace(/\nexport \{ \}\s*$/, "\n");
+  content = content.replace(/\nexport \{[^}]*\};?\s*$/, "\n");
 
   // D. api-extractor drops "export" from const declarations inside namespaces
   //    (it preserves it for functions/types/interfaces but not consts).
   //    Add it back so namespace members like faces.specversion are accessible.
-  content = content.replace(/^([ \t]+)const /gm, "$1export const ");
 
   // C. Inline the top-level oam namespace into myfaces.
   const oamNeedle = "\ndeclare namespace oam {";
@@ -190,6 +182,8 @@ const APACHE_HEADER =
 function postProcessFaces(facesPath) {
   let content = readFileSync(facesPath, "utf-8");
   content = makeGlobalDeclaration(content);
+  // rollup keeps the license header of the entry file, avoid duplicating it
+  content = content.replace(/^\/\*![\s\S]*?\*\/\s*/, "");
   content = APACHE_HEADER + content;
   writeFileSync(facesPath, content, "utf-8");
 }

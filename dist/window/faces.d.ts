@@ -18,19 +18,19 @@ declare namespace faces {
     /**
      * Project stage values, mirroring jakarta.faces.application.ProjectStage.
      */
-    export type ProjectStage = "Development" | "UnitTest" | "SystemTest" | "Production";
+    type ProjectStage = "Development" | "UnitTest" | "SystemTest" | "Production";
     /**
      * Status values sent to ajax event callbacks.
      */
-    export type AjaxEventStatus = "begin" | "complete" | "success";
+    type AjaxEventStatus = "begin" | "complete" | "success";
     /**
      * Status values sent to ajax error callbacks.
      */
-    export type AjaxErrorStatus = "httpError" | "emptyResponse" | "malformedXML" | "serverError";
+    type AjaxErrorStatus = "httpError" | "emptyResponse" | "malformedXML" | "serverError";
     /**
      * Common shape for the data passed to ajax callbacks.
      */
-    export interface AjaxData {
+    interface AjaxData {
         source?: Element;
         responseCode?: number;
         responseText?: string;
@@ -39,14 +39,14 @@ declare namespace faces {
     /**
      * Data passed to ajax event callbacks.
      */
-    export interface AjaxEvent extends AjaxData {
+    interface AjaxEvent extends AjaxData {
         type: "event";
         status: AjaxEventStatus;
     }
     /**
      * Data passed to ajax error callbacks.
      */
-    export interface AjaxError extends AjaxData {
+    interface AjaxError extends AjaxData {
         type: "error";
         status: AjaxErrorStatus | "clientError" | "timeout";
         errorName?: string;
@@ -70,7 +70,7 @@ declare namespace faces {
      * <li>right two digits bug release number</li>
      * </ul>
      */
-    export const specversion: number;
+    const specversion: number;
     /**
      * Implementation version as specified within the jsf specification.
      * <p />
@@ -78,15 +78,15 @@ declare namespace faces {
      * and reset by moving to a new spec release number
      *
      */
-    export const implversion: number;
+    const implversion: number;
     /**
      * SeparatorChar as defined by facesContext.getNamingContainerSeparatorChar()
      */
-    export const separatorchar: string;
+    const separatorchar: string;
     /**
      * Context Path as defined externalContext.requestContextPath
      */
-    export const contextpath: string;
+    const contextpath: string;
     /**
      * This method is responsible for the return of a given project stage as defined
      * by the jsf specification.
@@ -102,7 +102,7 @@ declare namespace faces {
      * @return {String} the current project state emitted by the server side method:
      * <i>jakarta.faces.application.Application.getProjectStage()</i>
      */
-    export function getProjectStage(): ProjectStage;
+    function getProjectStage(): ProjectStage;
     /**
      * collect and encode data for a given form element (must be of type form)
      * find the jakarta.faces.ViewState element and encode its value as well!
@@ -111,26 +111,26 @@ declare namespace faces {
      * @throws an exception in case of the given element not being of type form!
      * https://issues.apache.org/jira/browse/MYFACES-2110
      */
-    export function getViewState(formElement: Element | string): string;
+    function getViewState(formElement: Element | string): string;
     /**
      * returns the window identifier for the given node / window
      * @return the window identifier or null if none is found
      * @param rootNode
      */
-    export function getClientWindow(rootNode?: Element | string): string | null;
-    export namespace ajax {
+    function getClientWindow(rootNode?: Element | string): string | null;
+    namespace ajax {
         /**
          * Callback signature for ajax lifecycle events.
          */
-        export type OnEventCallback = (data: AjaxEvent) => void;
+        type OnEventCallback = (data: AjaxEvent) => void;
         /**
          * Callback signature for ajax errors.
          */
-        export type OnErrorCallback = (data: AjaxError) => void;
+        type OnErrorCallback = (data: AjaxError) => void;
         /**
          * Options object for faces.ajax.request.
          */
-        export interface RequestOptions {
+        interface RequestOptions {
             execute?: string;
             render?: string;
             onevent?: OnEventCallback;
@@ -144,7 +144,7 @@ declare namespace faces {
         /**
          * Per-request context object passed to faces.ajax.response.
          */
-        export interface RequestContext {
+        interface RequestContext {
             sourceid?: string;
             onerror?: OnErrorCallback;
             onevent?: OnEventCallback;
@@ -166,14 +166,14 @@ declare namespace faces {
          * @param {EVENT} event: any javascript event supported by that object
          * @param {Map} options : map of options being pushed into the ajax cycle
          */
-        export function request(element: Element | string, event?: Event | null, options?: RequestOptions): void;
+        function request(element: Element | string, event?: Event | null, options?: RequestOptions): void;
         /**
          * response handler
          * @param request the request object having triggered this response
          * @param context the request context
          *
          */
-        export function response(request: XMLHttpRequest, context?: RequestContext): void;
+        function response(request: XMLHttpRequest, context?: RequestContext): void;
         /**
          * Adds an error handler to our global error queue.
          * the error handler must be of the format <i>function errorListener(&lt;errorData&gt;)</i>
@@ -191,16 +191,16 @@ declare namespace faces {
          *
          * @param errorFunc error handler must be of the format <i>function errorListener(&lt;errorData&gt;)</i>
          */
-        export function addOnError(errorFunc: OnErrorCallback): void;
+        function addOnError(errorFunc: OnErrorCallback): void;
         /**
          * Adds a global event listener to the ajax event queue. The event listener must be a function
          * of following format: <i>function eventListener(&lt;eventData&gt;)</i>
          *
          * @param eventFunc event must be of the format <i>function eventListener(&lt;eventData&gt;)</i>
          */
-        export function addOnEvent(eventFunc: OnEventCallback): void;
+        function addOnEvent(eventFunc: OnEventCallback): void;
     }
-    export namespace util {
+    namespace util {
         /**
          * varargs function which executes a chain of code (functions or any other code)
          *
@@ -212,25 +212,25 @@ declare namespace faces {
          * @param funcs ... arbitrary array of functions or strings
          * @returns true if the chain has succeeded false otherwise
          */
-        export function chain(source: HTMLElement | string, event?: Event | null, ...funcs: Array<Function | string>): boolean;
+        function chain(source: HTMLElement | string, event?: Event | null, ...funcs: Array<Function | string>): boolean;
     }
-    export namespace push {
+    namespace push {
         /**
          * Invoked when the websocket is opened.
          */
-        export type OnOpenHandler = (channel: string) => void;
+        type OnOpenHandler = (channel: string) => void;
         /**
          * Invoked when a message is received from the server.
          */
-        export type OnMessageHandler = (message: unknown, channel: string, event: MessageEvent) => void;
+        type OnMessageHandler = (message: unknown, channel: string, event: MessageEvent) => void;
         /**
          * Invoked when a connection error occurs and the websocket will attempt to reconnect.
          */
-        export type OnErrorHandler = (code: number, channel: string, event: CloseEvent) => void;
+        type OnErrorHandler = (code: number, channel: string, event: CloseEvent) => void;
         /**
          * Invoked when the websocket is closed and will not attempt to reconnect.
          */
-        export type OnCloseHandler = (code: number, channel: string, event: CloseEvent) => void;
+        type OnCloseHandler = (code: number, channel: string, event: CloseEvent) => void;
         /**
          * @param socketClientId the sockets client identifier
          * @param url the uri to reach the socket
@@ -242,22 +242,21 @@ declare namespace faces {
          * @param behaviors functions which are invoked whenever a message is received
          * @param autoConnect Whether or not to automatically open the socket. Defaults to <code>false</code>.
          */
-        export function init(socketClientId: string, url: string, channel: string, onopen: OnOpenHandler | string | null, onmessage: OnMessageHandler | string | null, onerror: OnErrorHandler | string | null, onclose: OnCloseHandler | string | null, behaviors: Record<string, Array<() => void>>, autoConnect: boolean): void;
+        function init(socketClientId: string, url: string, channel: string, onopen: OnOpenHandler | string | null, onmessage: OnMessageHandler | string | null, onerror: OnErrorHandler | string | null, onclose: OnCloseHandler | string | null, behaviors: Record<string, Array<() => void>>, autoConnect: boolean): void;
         /**
          * Open the web socket on the given channel.
          * @param  socketClientId The name of the web socket channel.
          * @throws  Error is thrown, if the channel is unknown.
          */
-        export function open(socketClientId: string): void;
+        function open(socketClientId: string): void;
         /**
          * Close the web socket on the given channel.
          * @param  socketClientId The id of the web socket client.
          * @throws  Error is thrown, if the channel is unknown.
          */
-        export function close(socketClientId: string): void;
+        function close(socketClientId: string): void;
     }
 }
-
 declare namespace myfaces {
     /**
      * AB function similar to mojarra and Primefaces
@@ -272,7 +271,7 @@ declare namespace myfaces {
      * @param options the options which need to be merged in
      * @param userParameters a set of user parameters which go into the final options under params, they can override whatever is passed via options
      */
-    export function ab(source: Element, event: Event, eventName: string, execute: string, render: string, options?: faces.ajax.RequestOptions, userParameters?: faces.ajax.RequestOptions): void;
+    function ab(source: Element, event: Event, eventName: string, execute: string, render: string, options?: faces.ajax.RequestOptions, userParameters?: faces.ajax.RequestOptions): void;
     /**
      * Helper function in the myfaces namespace to handle document ready properly for the load case
      * the ajax case, does not need proper treatment, since it is deferred anyway.
@@ -280,12 +279,12 @@ declare namespace myfaces {
      *
      * @param executionFunc the function to be executed upon ready
      */
-    export function onDomReady(executionFunc: () => void): void;
+    function onDomReady(executionFunc: () => void): void;
     /**
      * reserve a namespace for the given string
      * @param namespace the namespace to reserve with '.' as separator
      */
-    export function reserveNamespace(namespace: string): void;
+    function reserveNamespace(namespace: string): void;
     /**
      * legacy oam functions
      */

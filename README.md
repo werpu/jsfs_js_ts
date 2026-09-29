@@ -281,6 +281,13 @@ Tests
 - Added tests for HiddenInputBuilder, Lang, and async queue     
 
 
+## 4.5.0
+
+- Build: the project now builds on TypeScript 7 (`tsc` for the typecheck and the declaration emit), continuing the move started with 4.1.2
+- Build: declaration bundling (`dist/window/faces.d.ts`, `dist/window/jsf.d.ts`) switched from `@microsoft/api-extractor` to `rollup-plugin-dts`, which needs the `@typescript/typescript6` compatibility package because TypeScript 7 has no JavaScript compiler API; `scripts/build-dts.mjs` restores the namespace `export` modifiers, so the generated declaration files are byte-identical to the previous output
+- Build: `@microsoft/api-extractor`, `api-extractor.faces.json`, `tsconfig.ae.json` and `_api_ae_stub.d.ts` removed
+- Build: `typedoc` still runs via `npx` with TypeScript 6.0.3, until it supports TypeScript 7
+
 ## 4.1.2
 
 - Dependency update: `mona-dish` bumped from `0.50.0-Final` to `0.60.0`

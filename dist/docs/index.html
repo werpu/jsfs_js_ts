@@ -259,6 +259,13 @@ enqueues on separate instances to cancel each other's debounce window</li>
 <li>Added tests for ExtDomQuery (nonce DOM fallback, runHeadInserts text-node path) and ExtConfig (append, appendIf, deepCopy)</li>
 <li>Added tests for HiddenInputBuilder, Lang, and async queue</li>
 </ul>
+<h2 id="450" class="tsd-anchor-link">4.5.0<a href="#450" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<ul>
+<li>Build: the project now builds on TypeScript 7 (<code>tsc</code> for the typecheck and the declaration emit), continuing the move started with 4.1.2</li>
+<li>Build: declaration bundling (<code>dist/window/faces.d.ts</code>, <code>dist/window/jsf.d.ts</code>) switched from <code>@microsoft/api-extractor</code> to <code>rollup-plugin-dts</code>, which needs the <code>@typescript/typescript6</code> compatibility package because TypeScript 7 has no JavaScript compiler API; <code>scripts/build-dts.mjs</code> restores the namespace <code>export</code> modifiers, so the generated declaration files are byte-identical to the previous output</li>
+<li>Build: <code>@microsoft/api-extractor</code>, <code>api-extractor.faces.json</code>, <code>tsconfig.ae.json</code> and <code>_api_ae_stub.d.ts</code> removed</li>
+<li>Build: <code>typedoc</code> still runs via <code>npx</code> with TypeScript 6.0.3, until it supports TypeScript 7</li>
+</ul>
 <h2 id="412" class="tsd-anchor-link">4.1.2<a href="#412" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <ul>
 <li>Dependency update: <code>mona-dish</code> bumped from <code>0.50.0-Final</code> to <code>0.60.0</code></li>
@@ -462,6 +469,7 @@ See AI_CONTRIBUTIONS.md for full disclosure</p>
 <li><a href="#upload-support"><span>Upload <wbr/>Support</span></a></li>
 <li><a href="#changes-since-40"><span>Changes since 4.0</span></a></li>
 <li><a href="#changes-since-410-beta-10"><span>Changes since 4.1.0-<wbr/>beta-<wbr/>10</span></a></li>
+<li><a href="#450"><span>4.5.0</span></a></li>
 <li><a href="#412"><span>4.1.2</span></a></li>
 <li><a href="#411"><span>4.1.1</span></a></li>
 <li><a href="#410"><span>4.1.0</span></a></li>

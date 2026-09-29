@@ -31,6 +31,7 @@ import { Extractor, ExtractorConfig } from "@microsoft/api-extractor";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 import { readFileSync, writeFileSync } from "fs";
+import { createRequire } from "module";
 
 // Suppress the "bundled TypeScript / newer than bundled" noise from api-extractor.
 function makeSuppressingWriter(original) {
@@ -51,8 +52,12 @@ process.stderr.write = makeSuppressingWriter(process.stderr.write.bind(process.s
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(__dirname, "..");
 
-// Resolve the local TypeScript compiler installed in the project.
-const typescriptCompilerFolder = resolve(projectRoot, "node_modules", "typescript");
+// api-extractor needs the JS compiler API, which TypeScript 7 (native compiler) no longer
+// ships, so use the TypeScript that api-extractor bundles instead of the project's own.
+const typescriptCompilerFolder = dirname(
+  createRequire(createRequire(import.meta.url).resolve("@microsoft/api-extractor/package.json"))
+    .resolve("typescript/package.json")
+);
 
 // --- Step 1: run api-extractor for faces.d.ts ---
 

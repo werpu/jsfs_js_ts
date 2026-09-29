@@ -52,11 +52,13 @@ function createConfig(env: { [key: string]: string }, mode: BuildMode): webpack.
                     test: /\.tsx?$/,
                     use: [
                         {
-                            loader: "ts-loader",
+                            // TS 7 has no JS compiler API, so ts-loader is out; esbuild only
+                            // transpiles, type checking is done by `npm run typecheck` (tsc)
+                            loader: "esbuild-loader",
                             options: {
-                                allowTsInNodeModules: true,
-                                configFile: path.resolve(__dirname, "src/main/typescript/tsconfig.json"),
-                                reportFiles: ["src/**/*.ts", "src/**/*.tsx", "!src/**/*.spec.ts", "!node_modules/**"],
+                                loader: "ts",
+                                target: "es2015",
+                                tsconfig: path.resolve(__dirname, "src/main/typescript/tsconfig.json"),
                             },
                         },
                     ],

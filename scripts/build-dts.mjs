@@ -110,10 +110,18 @@ function makeGlobalDeclaration(content) {
 
   // B. Remove the module-marker line.
   content = content.replace(/\nexport \{[^}]*\};?\s*$/, "\n");
+  content = content.replace(/^\}\ndeclare namespace /gm, "}\n\ndeclare namespace ");
 
   // D. api-extractor drops "export" from const declarations inside namespaces
   //    (it preserves it for functions/types/interfaces but not consts).
   //    Add it back so namespace members like faces.specversion are accessible.
+
+  // D. rollup-plugin-dts drops the "export" modifier of namespace members. Add it back
+  //    to every member declaration (api-extractor's output had it, consumers may rely on it).
+  content = content.replace(
+    /^([ \t]+)(?!export )((?:declare )?(?:type|interface|const|function|namespace) )/gm,
+    "$1export $2"
+  );
 
   // C. Inline the top-level oam namespace into myfaces.
   const oamNeedle = "\ndeclare namespace oam {";

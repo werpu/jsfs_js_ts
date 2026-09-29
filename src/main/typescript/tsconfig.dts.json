@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 /*
- * tsconfig for emitting declaration files (.d.ts) consumed by api-extractor.
+ * tsconfig for emitting declaration files (.d.ts) consumed by rollup-plugin-dts (scripts/build-dts.mjs).
  * Run: tsc -p src/main/typescript/tsconfig.dts.json
  * Output goes to target/dts/ and preserves the full source tree structure.
  */

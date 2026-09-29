@@ -15,13 +15,12 @@
  */
 
 /**
- * Programmatic api-extractor runner.
- * Suppresses the "bundled TypeScript is older than project" noise that appears
- * when the project uses a newer TypeScript than api-extractor bundles.
+ * Declaration bundling for dist/window/faces.d.ts and jsf.d.ts.
  *
- * After running api-extractor for faces, post-processes faces.d.ts into a
- * global declaration file, then derives jsf.d.ts from it via deterministic
- * text transforms (JSF 2.3 shim differences).
+ * Rolls the .d.ts files emitted by `tsc -p tsconfig.dts.json` (target/dts) up with
+ * rollup-plugin-dts, post-processes faces.d.ts into a global declaration file,
+ * then derives jsf.d.ts from it via deterministic text transforms
+ * (JSF 2.3 shim differences).
  *
  * Usage (called by npm scripts):
  *   node scripts/build-dts.mjs
@@ -32,33 +31,9 @@ import { dts } from "rollup-plugin-dts";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 import { readFileSync, writeFileSync } from "fs";
-import { createRequire } from "module";
-
-// Suppress the "bundled TypeScript / newer than bundled" noise from api-extractor.
-function makeSuppressingWriter(original) {
-  return function (chunk, ...args) {
-    const text = typeof chunk === "string" ? chunk : chunk.toString();
-    if (
-      text.includes("bundled TypeScript version") ||
-      text.includes("newer than the bundled compiler engine")
-    ) {
-      return true;
-    }
-    return original.call(this, chunk, ...args);
-  };
-}
-process.stdout.write = makeSuppressingWriter(process.stdout.write.bind(process.stdout));
-process.stderr.write = makeSuppressingWriter(process.stderr.write.bind(process.stderr));
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(__dirname, "..");
-
-// api-extractor needs the JS compiler API, which TypeScript 7 (native compiler) no longer
-// ships, so use the TypeScript that api-extractor bundles instead of the project's own.
-const typescriptCompilerFolder = dirname(
-  createRequire(createRequire(import.meta.url).resolve("@microsoft/api-extractor/package.json"))
-    .resolve("typescript/package.json")
-);
 
 // --- Step 1: roll up the emitted .d.ts files into dist/window/faces.d.ts ---
 
@@ -89,7 +64,7 @@ function findClosingBrace(content, openIdx) {
 }
 
 /**
- * Converts the api-extractor module output into a global declaration file:
+ * Converts the rolled up module output into a global declaration file:
  *
  *  A. Strips "export" from top-level namespace declarations so that
  *     "declare namespace faces { ... }" is a global ambient namespace,
@@ -98,9 +73,11 @@ function findClosingBrace(content, openIdx) {
  *  B. Removes "export { }" which makes the file a TypeScript module
  *     (and therefore prevents global treatment).
  *
+ *  D. Restores the "export" modifier on namespace members (rollup drops it).
+ *
  *  C. Inlines the top-level "declare namespace oam { ... }" block as a
  *     nested "namespace oam { ... }" inside myfaces, fixing the
- *     self-referential "const oam: typeof oam" that api-extractor emits.
+ *     self-referential "const oam: typeof oam" that the rollup output contains.
  */
 function makeGlobalDeclaration(content) {
   content = content.replace(/\r\n/g, "\n");
@@ -112,12 +89,9 @@ function makeGlobalDeclaration(content) {
   content = content.replace(/\nexport \{[^}]*\};?\s*$/, "\n");
   content = content.replace(/^\}\ndeclare namespace /gm, "}\n\ndeclare namespace ");
 
-  // D. api-extractor drops "export" from const declarations inside namespaces
-  //    (it preserves it for functions/types/interfaces but not consts).
-  //    Add it back so namespace members like faces.specversion are accessible.
-
   // D. rollup-plugin-dts drops the "export" modifier of namespace members. Add it back
-  //    to every member declaration (api-extractor's output had it, consumers may rely on it).
+  //    to every member declaration, so the output stays identical to what api-extractor
+  //    produced in earlier releases (importing projects may rely on it).
   content = content.replace(
     /^([ \t]+)(?!export )((?:declare )?(?:type|interface|const|function|namespace) )/gm,
     "$1export $2"

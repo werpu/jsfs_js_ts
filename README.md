@@ -286,7 +286,7 @@ Tests
 - Dependency update: `mona-dish` bumped from `0.50.0-Final` to `0.60.0`
 - Build: install scripts for `esbuild` and `fsevents` are now explicitly approved via `allowScripts` in `package.json`
 - Build: TypeScript updated to 7.0.2; `ts-loader` replaced by `esbuild-loader` for the webpack bundles (type checking stays with `tsc`, and `build-bundles` now runs the typecheck first)
-- Build: `api-extractor` uses its own bundled TypeScript, `typedoc` runs via `npx` with TypeScript 6.0.3
+- Build: `typedoc` runs via `npx` with TypeScript 6.0.3
 - Tests: added a smoke test (`DistBundles.spec.ts`) that loads the built `faces` and `jsf` bundles in jsdom and checks the public API
 
 ## 4.1.1

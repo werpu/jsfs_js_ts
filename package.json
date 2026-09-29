@@ -59,6 +59,10 @@
     "js-yaml": "^4.1.2"
   },
   "dependencies": {
-    "mona-dish": "0.50.0-Final"
+    "mona-dish": "^0.60.0"
+  },
+  "allowScripts": {
+    "esbuild@0.28.1": true,
+    "fsevents@2.3.3": true
   }
 }

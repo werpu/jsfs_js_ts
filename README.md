@@ -32,7 +32,7 @@ where I just ran a set of 20 integration tests on a macro scale.
 ## Status
 
 We now have a stable version!
-The current stable version is 4.1.0; the first stable version was 4.0.
+The current stable version is 4.5.0; the first stable version was 4.0.
 Why 4.0 and not 1.0?
 The reason is that it is Faces 4.0 compliant, but also Faces 2.3 compliant,
 and is used in MyFaces 4.0.
@@ -232,55 +232,6 @@ faces.ajax.request(document.getElementById("cmd_eval"), null,
     * Renamed the websocket test file from `WebsocketTest.ts` to `WebsocketTest.spec.ts`; the old name prevented the tests from running.
 
 
-## Changes since 4.1.0-beta-10
-
-* Core fixes
-
-  * Push/Websocket onOpen onClose callback lifecycle fixes according to spec behavior
-  * WebSocket `onopen` now fires only for the first connection attempt, not for automatic reconnects.
-  * Failed first WebSocket connection attempts are now treated as terminal: `onclose` is called, no reconnect is scheduled, and `onerror` is not called.
-  * WebSocket close code `1000` is now treated as terminal for any reason, not only `REASON_EXPIRED`.
-  * WebSocket close code `1008` (`Policy Violation`) is now treated as terminal and does not reconnect.
-  * WebSocket reconnect exhaustion now calls `onclose` and stops reconnecting after `MAX_RECONNECT_ATTEMPTS`.
-  * Terminal WebSocket closes now reset reconnect state so a later explicit `open()` starts as a fresh connection.
-
-* Tests added or expanded
-  * Added tests to verify the `onopen`/`onclose` callback lifecycle.
-  * Added tests that `onopen` is not fired again after a successful automatic reconnect.
-  * Added tests that reconnect attempts reset after a successful reconnect.
-  * Added tests that max reconnect exhaustion calls `onclose`.
-  * Added tests that close code `1008` is terminal and does not reconnect.
-  * Added tests that explicit `open()` after a terminal close fires `onopen` again as a fresh connection.
-  * JSF 2.3 jsf.push.init compatibility test added
-
-4.1.0-beta.12
-
-Bug Fixes
-
-- WebSocket push spec alignment (PushImpl.ts): Full compliance with the Jakarta Faces push specification on 4+ and 2.3 level
-  - hasEverConnected flag is now set before firing onopen callbacks (prevents re-entrant terminal-close edge case)
-  - Code 1000 (normal closure) is now always treated as terminal regardless of reason, per spec
-  - reconnectAttempts and hasEverConnected are reset after a terminal close, allowing faces.push.open() to re-establish a connection and fire onopen again
-- XhrQueueController debounce race condition: Each XhrQueueController instance now uses a unique debounce key — previously all instances shared one key, causing     
-  enqueues on separate instances to cancel each other's debounce window
-- Code cleanup: Removed dead exports from ResponseDataResolver.ts; minor cleanup in _api.ts and PushImpl.ts
-
-Improvements
-
-- PushImpl.ts readability: Lifecycle code refactored for clarity
-- FileUtils.ts: Minor code improvements (stricter equality, cleaner split)
-
-Tests
-
-- Added tests for WebSocket re-open after terminal close
-- Added XhrQueueController two-instance debounce isolation test
-- Added direct unit tests for FileUtils (encodeFormData, decodeEncodedValues, fixEmptyParameters)
-- Added tests for Assertions.ts — branch coverage up to ~88%
-- Added tests for ResponseDataResolver.resolveContexts
-- Added tests for ExtDomQuery (nonce DOM fallback, runHeadInserts text-node path) and ExtConfig (append, appendIf, deepCopy)
-- Added tests for HiddenInputBuilder, Lang, and async queue     
-
-
 ## 4.5.0
 
 - Build: the project now builds on TypeScript 7 (`tsc` for the typecheck and the declaration emit), continuing the move started with 4.1.2
@@ -403,6 +354,54 @@ Tests
 ## 4.1.0-beta.13 / 4.1.0-beta.14
 
 - Added AI disclaimers to fulfill the ASF criteria for code being integrated into the Apache MyFaces codebase
+
+## Changes since 4.1.0-beta-10
+
+* Core fixes
+
+  * Push/Websocket onOpen onClose callback lifecycle fixes according to spec behavior
+  * WebSocket `onopen` now fires only for the first connection attempt, not for automatic reconnects.
+  * Failed first WebSocket connection attempts are now treated as terminal: `onclose` is called, no reconnect is scheduled, and `onerror` is not called.
+  * WebSocket close code `1000` is now treated as terminal for any reason, not only `REASON_EXPIRED`.
+  * WebSocket close code `1008` (`Policy Violation`) is now treated as terminal and does not reconnect.
+  * WebSocket reconnect exhaustion now calls `onclose` and stops reconnecting after `MAX_RECONNECT_ATTEMPTS`.
+  * Terminal WebSocket closes now reset reconnect state so a later explicit `open()` starts as a fresh connection.
+
+* Tests added or expanded
+  * Added tests to verify the `onopen`/`onclose` callback lifecycle.
+  * Added tests that `onopen` is not fired again after a successful automatic reconnect.
+  * Added tests that reconnect attempts reset after a successful reconnect.
+  * Added tests that max reconnect exhaustion calls `onclose`.
+  * Added tests that close code `1008` is terminal and does not reconnect.
+  * Added tests that explicit `open()` after a terminal close fires `onopen` again as a fresh connection.
+  * JSF 2.3 jsf.push.init compatibility test added
+
+4.1.0-beta.12
+
+Bug Fixes
+
+- WebSocket push spec alignment (PushImpl.ts): Full compliance with the Jakarta Faces push specification on 4+ and 2.3 level
+  - hasEverConnected flag is now set before firing onopen callbacks (prevents re-entrant terminal-close edge case)
+  - Code 1000 (normal closure) is now always treated as terminal regardless of reason, per spec
+  - reconnectAttempts and hasEverConnected are reset after a terminal close, allowing faces.push.open() to re-establish a connection and fire onopen again
+- XhrQueueController debounce race condition: Each XhrQueueController instance now uses a unique debounce key — previously all instances shared one key, causing     
+  enqueues on separate instances to cancel each other's debounce window
+- Code cleanup: Removed dead exports from ResponseDataResolver.ts; minor cleanup in _api.ts and PushImpl.ts
+
+Improvements
+
+- PushImpl.ts readability: Lifecycle code refactored for clarity
+- FileUtils.ts: Minor code improvements (stricter equality, cleaner split)
+
+Tests
+
+- Added tests for WebSocket re-open after terminal close
+- Added XhrQueueController two-instance debounce isolation test
+- Added direct unit tests for FileUtils (encodeFormData, decodeEncodedValues, fixEmptyParameters)
+- Added tests for Assertions.ts — branch coverage up to ~88%
+- Added tests for ResponseDataResolver.resolveContexts
+- Added tests for ExtDomQuery (nonce DOM fallback, runHeadInserts text-node path) and ExtConfig (append, appendIf, deepCopy)
+- Added tests for HiddenInputBuilder, Lang, and async queue
 
 Note as of Version 4.0 starting with the ts6 conversion, the code has been improved with the help of 
 generative AI Tooling, as per https://www.apache.org/legal/generative-tooling.html

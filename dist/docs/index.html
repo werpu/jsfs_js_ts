@@ -31,7 +31,7 @@ test coverage via Mocha-based unit tests.</p>
 where I just ran a set of 20 integration tests on a macro scale.</p>
 <h2 id="status" class="tsd-anchor-link">Status<a href="#status" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <p>We now have a stable version!
-The current stable version is 4.1.0; the first stable version was 4.0.
+The current stable version is 4.5.0; the first stable version was 4.0.
 Why 4.0 and not 1.0?
 The reason is that it is Faces 4.0 compliant, but also Faces 2.3 compliant,
 and is used in MyFaces 4.0.
@@ -202,62 +202,6 @@ and adjusts the references in the resource according to the request patterns.</p
 <li>Renamed the websocket test file from <code>WebsocketTest.ts</code> to <code>WebsocketTest.spec.ts</code>; the old name prevented the tests from running.</li>
 </ul>
 </li>
-</ul>
-<h2 id="changes-since-410-beta-10" class="tsd-anchor-link">Changes since 4.1.0-beta-10<a href="#changes-since-410-beta-10" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
-<ul>
-<li>
-<p>Core fixes</p>
-<ul>
-<li>Push/Websocket onOpen onClose callback lifecycle fixes according to spec behavior</li>
-<li>WebSocket <code>onopen</code> now fires only for the first connection attempt, not for automatic reconnects.</li>
-<li>Failed first WebSocket connection attempts are now treated as terminal: <code>onclose</code> is called, no reconnect is scheduled, and <code>onerror</code> is not called.</li>
-<li>WebSocket close code <code>1000</code> is now treated as terminal for any reason, not only <code>REASON_EXPIRED</code>.</li>
-<li>WebSocket close code <code>1008</code> (<code>Policy Violation</code>) is now treated as terminal and does not reconnect.</li>
-<li>WebSocket reconnect exhaustion now calls <code>onclose</code> and stops reconnecting after <code>MAX_RECONNECT_ATTEMPTS</code>.</li>
-<li>Terminal WebSocket closes now reset reconnect state so a later explicit <code>open()</code> starts as a fresh connection.</li>
-</ul>
-</li>
-<li>
-<p>Tests added or expanded</p>
-<ul>
-<li>Added tests to verify the <code>onopen</code>/<code>onclose</code> callback lifecycle.</li>
-<li>Added tests that <code>onopen</code> is not fired again after a successful automatic reconnect.</li>
-<li>Added tests that reconnect attempts reset after a successful reconnect.</li>
-<li>Added tests that max reconnect exhaustion calls <code>onclose</code>.</li>
-<li>Added tests that close code <code>1008</code> is terminal and does not reconnect.</li>
-<li>Added tests that explicit <code>open()</code> after a terminal close fires <code>onopen</code> again as a fresh connection.</li>
-<li>JSF 2.3 jsf.push.init compatibility test added</li>
-</ul>
-</li>
-</ul>
-<p>4.1.0-beta.12</p>
-<p>Bug Fixes</p>
-<ul>
-<li>WebSocket push spec alignment (PushImpl.ts): Full compliance with the Jakarta Faces push specification on 4+ and 2.3 level
-<ul>
-<li>hasEverConnected flag is now set before firing onopen callbacks (prevents re-entrant terminal-close edge case)</li>
-<li>Code 1000 (normal closure) is now always treated as terminal regardless of reason, per spec</li>
-<li>reconnectAttempts and hasEverConnected are reset after a terminal close, allowing faces.push.open() to re-establish a connection and fire onopen again</li>
-</ul>
-</li>
-<li>XhrQueueController debounce race condition: Each XhrQueueController instance now uses a unique debounce key — previously all instances shared one key, causing<br>
-enqueues on separate instances to cancel each other's debounce window</li>
-<li>Code cleanup: Removed dead exports from ResponseDataResolver.ts; minor cleanup in _api.ts and PushImpl.ts</li>
-</ul>
-<p>Improvements</p>
-<ul>
-<li>PushImpl.ts readability: Lifecycle code refactored for clarity</li>
-<li>FileUtils.ts: Minor code improvements (stricter equality, cleaner split)</li>
-</ul>
-<p>Tests</p>
-<ul>
-<li>Added tests for WebSocket re-open after terminal close</li>
-<li>Added XhrQueueController two-instance debounce isolation test</li>
-<li>Added direct unit tests for FileUtils (encodeFormData, decodeEncodedValues, fixEmptyParameters)</li>
-<li>Added tests for Assertions.ts — branch coverage up to ~88%</li>
-<li>Added tests for ResponseDataResolver.resolveContexts</li>
-<li>Added tests for ExtDomQuery (nonce DOM fallback, runHeadInserts text-node path) and ExtConfig (append, appendIf, deepCopy)</li>
-<li>Added tests for HiddenInputBuilder, Lang, and async queue</li>
 </ul>
 <h2 id="450" class="tsd-anchor-link">4.5.0<a href="#450" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <ul>
@@ -435,6 +379,62 @@ itself.</li>
 <ul>
 <li>Added AI disclaimers to fulfill the ASF criteria for code being integrated into the Apache MyFaces codebase</li>
 </ul>
+<h2 id="changes-since-410-beta-10" class="tsd-anchor-link">Changes since 4.1.0-beta-10<a href="#changes-since-410-beta-10" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<ul>
+<li>
+<p>Core fixes</p>
+<ul>
+<li>Push/Websocket onOpen onClose callback lifecycle fixes according to spec behavior</li>
+<li>WebSocket <code>onopen</code> now fires only for the first connection attempt, not for automatic reconnects.</li>
+<li>Failed first WebSocket connection attempts are now treated as terminal: <code>onclose</code> is called, no reconnect is scheduled, and <code>onerror</code> is not called.</li>
+<li>WebSocket close code <code>1000</code> is now treated as terminal for any reason, not only <code>REASON_EXPIRED</code>.</li>
+<li>WebSocket close code <code>1008</code> (<code>Policy Violation</code>) is now treated as terminal and does not reconnect.</li>
+<li>WebSocket reconnect exhaustion now calls <code>onclose</code> and stops reconnecting after <code>MAX_RECONNECT_ATTEMPTS</code>.</li>
+<li>Terminal WebSocket closes now reset reconnect state so a later explicit <code>open()</code> starts as a fresh connection.</li>
+</ul>
+</li>
+<li>
+<p>Tests added or expanded</p>
+<ul>
+<li>Added tests to verify the <code>onopen</code>/<code>onclose</code> callback lifecycle.</li>
+<li>Added tests that <code>onopen</code> is not fired again after a successful automatic reconnect.</li>
+<li>Added tests that reconnect attempts reset after a successful reconnect.</li>
+<li>Added tests that max reconnect exhaustion calls <code>onclose</code>.</li>
+<li>Added tests that close code <code>1008</code> is terminal and does not reconnect.</li>
+<li>Added tests that explicit <code>open()</code> after a terminal close fires <code>onopen</code> again as a fresh connection.</li>
+<li>JSF 2.3 jsf.push.init compatibility test added</li>
+</ul>
+</li>
+</ul>
+<p>4.1.0-beta.12</p>
+<p>Bug Fixes</p>
+<ul>
+<li>WebSocket push spec alignment (PushImpl.ts): Full compliance with the Jakarta Faces push specification on 4+ and 2.3 level
+<ul>
+<li>hasEverConnected flag is now set before firing onopen callbacks (prevents re-entrant terminal-close edge case)</li>
+<li>Code 1000 (normal closure) is now always treated as terminal regardless of reason, per spec</li>
+<li>reconnectAttempts and hasEverConnected are reset after a terminal close, allowing faces.push.open() to re-establish a connection and fire onopen again</li>
+</ul>
+</li>
+<li>XhrQueueController debounce race condition: Each XhrQueueController instance now uses a unique debounce key — previously all instances shared one key, causing<br>
+enqueues on separate instances to cancel each other's debounce window</li>
+<li>Code cleanup: Removed dead exports from ResponseDataResolver.ts; minor cleanup in _api.ts and PushImpl.ts</li>
+</ul>
+<p>Improvements</p>
+<ul>
+<li>PushImpl.ts readability: Lifecycle code refactored for clarity</li>
+<li>FileUtils.ts: Minor code improvements (stricter equality, cleaner split)</li>
+</ul>
+<p>Tests</p>
+<ul>
+<li>Added tests for WebSocket re-open after terminal close</li>
+<li>Added XhrQueueController two-instance debounce isolation test</li>
+<li>Added direct unit tests for FileUtils (encodeFormData, decodeEncodedValues, fixEmptyParameters)</li>
+<li>Added tests for Assertions.ts — branch coverage up to ~88%</li>
+<li>Added tests for ResponseDataResolver.resolveContexts</li>
+<li>Added tests for ExtDomQuery (nonce DOM fallback, runHeadInserts text-node path) and ExtConfig (append, appendIf, deepCopy)</li>
+<li>Added tests for HiddenInputBuilder, Lang, and async queue</li>
+</ul>
 <p>Note as of Version 4.0 starting with the ts6 conversion, the code has been improved with the help of
 generative AI Tooling, as per <a href="https://www.apache.org/legal/generative-tooling.html">https://www.apache.org/legal/generative-tooling.html</a>
 disclosures now are added!
@@ -468,7 +468,6 @@ See AI_CONTRIBUTIONS.md for full disclosure</p>
 <li><a href="#changelist-compared-to-the-original-implementation"><span>Changelist compared to the original implementation</span></a></li></ul></li>
 <li><a href="#upload-support"><span>Upload <wbr/>Support</span></a></li>
 <li><a href="#changes-since-40"><span>Changes since 4.0</span></a></li>
-<li><a href="#changes-since-410-beta-10"><span>Changes since 4.1.0-<wbr/>beta-<wbr/>10</span></a></li>
 <li><a href="#450"><span>4.5.0</span></a></li>
 <li><a href="#412"><span>4.1.2</span></a></li>
 <li><a href="#411"><span>4.1.1</span></a></li>
@@ -482,7 +481,8 @@ See AI_CONTRIBUTIONS.md for full disclosure</p>
 <li><a href="#410-beta17"><span>4.1.0-<wbr/>beta.17</span></a></li>
 <li><a href="#410-beta16"><span>4.1.0-<wbr/>beta.16</span></a></li>
 <li><a href="#410-beta15"><span>4.1.0-<wbr/>beta.15</span></a></li>
-<li><a href="#410-beta13-410-beta14"><span>4.1.0-<wbr/>beta.13 / 4.1.0-<wbr/>beta.14</span></a></li></ul></div></details></div>
+<li><a href="#410-beta13-410-beta14"><span>4.1.0-<wbr/>beta.13 / 4.1.0-<wbr/>beta.14</span></a></li>
+<li><a href="#changes-since-410-beta-10"><span>Changes since 4.1.0-<wbr/>beta-<wbr/>10</span></a></li></ul></div></details></div>
 <div class="site-menu">
 <nav class="tsd-navigation"><a href="modules.html">jsf.js_next_gen</a>
 <ul class="tsd-small-nested-navigation" id="tsd-nav-container">

@@ -4961,6 +4961,9 @@ var Implementation;
     let ret = [];
     let processed = {};
     const remapNamingContainer = (componentIdToTransform) => {
+      if (!rootNamingContainerId) {
+        return componentIdToTransform;
+      }
       const rootNamingContainerPrefix = rootNamingContainerId.length ? rootNamingContainerId + SEP : _core_Const__WEBPACK_IMPORTED_MODULE_7__.EMPTY_STR;
       let formClientId = issuingForm.id.value;
       const nearestNamingContainer = formClientId.substring(0, formClientId.lastIndexOf(SEP));
